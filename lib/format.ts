@@ -11,3 +11,40 @@ export function gbp(amount: number): string {
 export function num(value: number): string {
   return new Intl.NumberFormat("en-GB").format(value);
 }
+
+/** Format an ISO date string as e.g. "24 Jun 2026". Returns "—" when empty. */
+export function fmtDate(iso: string | null | undefined): string {
+  if (!iso) return "—";
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return "—";
+  return new Intl.DateTimeFormat("en-GB", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+  }).format(d);
+}
+
+/** Compact relative-ish time for activity/last-seen, e.g. "2h ago", "Yesterday". */
+export function fmtRelative(iso: string | null | undefined): string {
+  if (!iso) return "—";
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return "—";
+  const diffMs = Date.now() - d.getTime();
+  const mins = Math.floor(diffMs / 60000);
+  if (mins < 1) return "Just now";
+  if (mins < 60) return `${mins}m ago`;
+  const hours = Math.floor(mins / 60);
+  if (hours < 24) return `${hours}h ago`;
+  const days = Math.floor(hours / 24);
+  if (days === 1) return "Yesterday";
+  if (days < 7) return `${days}d ago`;
+  return fmtDate(iso);
+}
+
+/** Capitalize the first letter of each word (for lowercase enum display). */
+export function titleCase(value: string): string {
+  return value
+    .split(/[\s_]+/)
+    .map((w) => (w ? w[0].toUpperCase() + w.slice(1) : w))
+    .join(" ");
+}

@@ -1,13 +1,9 @@
-import { ShoppingBag, TrendingUp, CheckCircle2, Wallet } from "lucide-react";
+import { ShoppingBag, TrendingUp, CheckCircle2, Wallet, BarChart3 } from "lucide-react";
 import { PageHeader } from "@/components/admin/page-header";
 import { StatCard } from "@/components/admin/stat-card";
 import { SectionCard } from "@/components/admin/section-card";
-import {
-  ORDERS_OVER_TIME,
-  REVENUE_BY_MONTH,
-  ORDERS_BY_STATUS,
-  TOP_EMPLOYEES,
-} from "@/lib/mock/admin";
+import { getOrders } from "@/lib/db/orders";
+import type { OrderWithRelations } from "@/lib/db/types";
 import { gbp } from "@/lib/format";
 
 /** Vertical bar chart (CSS). */
@@ -20,7 +16,7 @@ function BarChart({
   color?: string;
   format?: (v: number) => string;
 }) {
-  const max = Math.max(...data.map((d) => d.value));
+  const max = Math.max(1, ...data.map((d) => d.value));
   return (
     <div className="flex h-48 items-end gap-3">
       {data.map((d) => (
@@ -29,7 +25,7 @@ function BarChart({
             <div
               className="w-full rounded-t-md transition-all"
               style={{
-                height: `${Math.max((d.value / max) * 100, 4)}%`,
+                height: `${Math.max((d.value / max) * 100, 2)}%`,
                 backgroundColor: color,
               }}
               title={format ? format(d.value) : String(d.value)}
@@ -44,9 +40,12 @@ function BarChart({
   );
 }
 
-/** SVG donut chart. */
-function Donut() {
-  const total = ORDERS_BY_STATUS.reduce((s, d) => s + d.value, 0);
+function Donut({
+  data,
+}: {
+  data: { label: string; value: number; color: string }[];
+}) {
+  const total = data.reduce((s, d) => s + d.value, 0);
   const r = 56;
   const c = 2 * Math.PI * r;
   let offset = 0;
@@ -56,24 +55,25 @@ function Donut() {
       <div className="relative size-40 shrink-0">
         <svg viewBox="0 0 160 160" className="size-full -rotate-90">
           <circle cx="80" cy="80" r={r} fill="none" stroke="var(--muted)" strokeWidth="20" />
-          {ORDERS_BY_STATUS.map((d) => {
-            const len = (d.value / total) * c;
-            const seg = (
-              <circle
-                key={d.label}
-                cx="80"
-                cy="80"
-                r={r}
-                fill="none"
-                stroke={d.color}
-                strokeWidth="20"
-                strokeDasharray={`${len} ${c - len}`}
-                strokeDashoffset={-offset}
-              />
-            );
-            offset += len;
-            return seg;
-          })}
+          {total > 0 &&
+            data.map((d) => {
+              const len = (d.value / total) * c;
+              const seg = (
+                <circle
+                  key={d.label}
+                  cx="80"
+                  cy="80"
+                  r={r}
+                  fill="none"
+                  stroke={d.color}
+                  strokeWidth="20"
+                  strokeDasharray={`${len} ${c - len}`}
+                  strokeDashoffset={-offset}
+                />
+              );
+              offset += len;
+              return seg;
+            })}
         </svg>
         <div className="absolute inset-0 flex flex-col items-center justify-center">
           <span className="font-display text-2xl font-semibold text-foreground">
@@ -83,7 +83,7 @@ function Donut() {
         </div>
       </div>
       <ul className="grid w-full grid-cols-2 gap-3 sm:grid-cols-1">
-        {ORDERS_BY_STATUS.map((d) => (
+        {data.map((d) => (
           <li key={d.label} className="flex items-center gap-2.5 text-sm">
             <span className="size-2.5 rounded-full" style={{ backgroundColor: d.color }} />
             <span className="text-muted-foreground">{d.label}</span>
@@ -95,12 +95,11 @@ function Donut() {
   );
 }
 
-/** Horizontal bar list. */
-function TopEmployees() {
-  const max = Math.max(...TOP_EMPLOYEES.map((e) => e.closed));
+function TopEmployees({ data }: { data: { name: string; closed: number }[] }) {
+  const max = Math.max(1, ...data.map((e) => e.closed));
   return (
     <ul className="space-y-3.5">
-      {TOP_EMPLOYEES.map((e) => (
+      {data.map((e) => (
         <li key={e.name} className="space-y-1.5">
           <div className="flex items-center justify-between text-sm">
             <span className="font-medium text-foreground">{e.name}</span>
@@ -118,8 +117,66 @@ function TopEmployees() {
   );
 }
 
-export default function AnalyticsPage() {
-  const totalRevenue = REVENUE_BY_MONTH.reduce((s, d) => s + d.revenue, 0);
+// ---- aggregation helpers ----
+
+function lastSixMonths() {
+  const out: { key: string; label: string }[] = [];
+  const now = new Date();
+  for (let i = 5; i >= 0; i--) {
+    const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+    out.push({
+      key: `${d.getFullYear()}-${d.getMonth()}`,
+      label: d.toLocaleString("en-GB", { month: "short" }),
+    });
+  }
+  return out;
+}
+
+function monthKey(iso: string) {
+  const d = new Date(iso);
+  return `${d.getFullYear()}-${d.getMonth()}`;
+}
+
+export default async function AnalyticsPage() {
+  const orders: OrderWithRelations[] = await getOrders();
+
+  const hasData = orders.length > 0;
+
+  const months = lastSixMonths();
+  const ordersOverTime = months.map((m) => ({
+    label: m.label,
+    value: orders.filter((o) => monthKey(o.created_at) === m.key).length,
+  }));
+  const revenueByMonth = months.map((m) => ({
+    label: m.label,
+    value: orders
+      .filter((o) => monthKey(o.created_at) === m.key)
+      .reduce((s, o) => s + (o.selling_price ?? 0), 0),
+  }));
+
+  const statusData = [
+    { label: "Open", value: orders.filter((o) => o.status === "open").length, color: "#0088CC" },
+    { label: "Closed", value: orders.filter((o) => o.status === "closed").length, color: "#10B981" },
+    { label: "Cancelled", value: orders.filter((o) => o.status === "cancelled").length, color: "#F43F5E" },
+  ];
+
+  const closedByEmployee = new Map<string, number>();
+  for (const o of orders) {
+    if (o.status !== "closed") continue;
+    const name = o.created_by_profile?.full_name ?? "Unassigned";
+    closedByEmployee.set(name, (closedByEmployee.get(name) ?? 0) + 1);
+  }
+  const topEmployees = [...closedByEmployee.entries()]
+    .map(([name, closed]) => ({ name, closed }))
+    .sort((a, b) => b.closed - a.closed)
+    .slice(0, 5);
+
+  const totalRevenue = orders.reduce((s, o) => s + (o.selling_price ?? 0), 0);
+  const closedCount = orders.filter((o) => o.status === "closed").length;
+  const avgOrderValue = hasData ? Math.round(totalRevenue / orders.length) : 0;
+  const closedRate = hasData
+    ? Math.round((closedCount / orders.length) * 100)
+    : 0;
 
   return (
     <div className="space-y-7">
@@ -130,33 +187,58 @@ export default function AnalyticsPage() {
       />
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        <StatCard label="Total orders" value="152" icon={ShoppingBag} trend={{ dir: "up", value: "+11%" }} />
-        <StatCard label="Revenue (6mo)" value={gbp(totalRevenue)} icon={Wallet} trend={{ dir: "up", value: "+18%" }} />
-        <StatCard label="Avg order value" value={gbp(1610)} icon={TrendingUp} trend={{ dir: "up", value: "+3%" }} />
-        <StatCard label="Closed rate" value="71%" icon={CheckCircle2} trend={{ dir: "down", value: "-2%" }} />
+        <StatCard label="Total orders" value={String(orders.length)} icon={ShoppingBag} />
+        <StatCard label="Revenue" value={gbp(totalRevenue)} icon={Wallet} />
+        <StatCard label="Avg order value" value={gbp(avgOrderValue)} icon={TrendingUp} />
+        <StatCard label="Closed rate" value={`${closedRate}%`} icon={CheckCircle2} />
       </div>
 
-      <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
-        <SectionCard title="Orders over time" description="Monthly order volume">
-          <BarChart data={ORDERS_OVER_TIME.map((d) => ({ label: d.month, value: d.orders }))} />
+      {!hasData ? (
+        <SectionCard title="No data yet">
+          <div className="flex flex-col items-center gap-2 py-12 text-center">
+            <div className="flex size-12 items-center justify-center rounded-2xl bg-chip text-brand-dark">
+              <BarChart3 className="size-6" />
+            </div>
+            <p className="font-display text-base font-semibold text-foreground">
+              Nothing to chart yet
+            </p>
+            <p className="max-w-sm text-sm text-muted-foreground">
+              Once your team starts creating orders, trends, revenue and
+              leaderboards will show up here.
+            </p>
+          </div>
         </SectionCard>
-        <SectionCard title="Revenue by month" description="Gross revenue (GBP)">
-          <BarChart
-            data={REVENUE_BY_MONTH.map((d) => ({ label: d.month, value: d.revenue }))}
-            color="var(--navy)"
-            format={(v) => gbp(v)}
-          />
-        </SectionCard>
-      </div>
+      ) : (
+        <>
+          <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
+            <SectionCard title="Orders over time" description="Monthly order volume">
+              <BarChart data={ordersOverTime} />
+            </SectionCard>
+            <SectionCard title="Revenue by month" description="Gross revenue (GBP)">
+              <BarChart
+                data={revenueByMonth}
+                color="var(--navy)"
+                format={(v) => gbp(v)}
+              />
+            </SectionCard>
+          </div>
 
-      <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
-        <SectionCard title="Orders by status">
-          <Donut />
-        </SectionCard>
-        <SectionCard title="Top employees" description="By closed orders">
-          <TopEmployees />
-        </SectionCard>
-      </div>
+          <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
+            <SectionCard title="Orders by status">
+              <Donut data={statusData} />
+            </SectionCard>
+            <SectionCard title="Top employees" description="By closed orders">
+              {topEmployees.length === 0 ? (
+                <p className="py-6 text-center text-sm text-muted-foreground">
+                  No closed orders yet.
+                </p>
+              ) : (
+                <TopEmployees data={topEmployees} />
+              )}
+            </SectionCard>
+          </div>
+        </>
+      )}
     </div>
   );
 }

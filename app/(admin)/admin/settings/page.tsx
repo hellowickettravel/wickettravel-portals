@@ -42,6 +42,11 @@ export default function SettingsPage() {
         subtitle="Manage your business profile, branding and preferences."
       />
 
+      <div className="rounded-xl border border-amber-200 bg-amber-50/70 px-4 py-3 text-xs text-amber-700">
+        Heads up: settings on this page aren’t persisted yet. Saving shows a
+        confirmation, but changes aren’t stored until a settings store is wired up.
+      </div>
+
       {/* Business profile */}
       <SectionCard title="Business profile" description="Used across invoices and customer messages.">
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">

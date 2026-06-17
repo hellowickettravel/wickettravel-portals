@@ -7,10 +7,13 @@ import {
   ArrowRight,
   Inbox,
 } from "lucide-react";
+import { createClient } from "@/lib/supabase/server";
+import { getOrders } from "@/lib/db/orders";
+import type { OrderStatus } from "@/lib/db/types";
 import { PageHeader } from "@/components/admin/page-header";
 import { StatCard } from "@/components/admin/stat-card";
 import { SectionCard } from "@/components/admin/section-card";
-import { StatusBadge, orderTone } from "@/components/admin/status-badge";
+import { StatusBadge, type Tone } from "@/components/admin/status-badge";
 import {
   Table,
   TableBody,
@@ -19,21 +22,44 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { ORDERS, ACTIVITY, CONVERSATIONS } from "@/lib/mock/admin";
-import { gbp } from "@/lib/format";
-import { cn } from "@/lib/utils";
+import { gbp, fmtDate, fmtRelative, titleCase } from "@/lib/format";
 
-const ACTIVITY_DOT: Record<string, string> = {
-  blue: "bg-brand",
-  green: "bg-emerald-500",
-  amber: "bg-amber-500",
-  slate: "bg-slate-400",
+const ORDER_TONE: Record<OrderStatus, Tone> = {
+  open: "blue",
+  closed: "green",
+  cancelled: "red",
 };
 
-export default function AdminDashboardPage() {
-  const recentOrders = ORDERS.slice(0, 5);
-  const openConvos = CONVERSATIONS.filter((c) => c.status === "Open").length;
-  const unread = CONVERSATIONS.reduce((sum, c) => sum + c.unread, 0);
+function isThisMonth(iso: string) {
+  const d = new Date(iso);
+  const now = new Date();
+  return (
+    d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth()
+  );
+}
+
+export default async function AdminDashboardPage() {
+  const supabase = await createClient();
+
+  const [orders, employeesCount, conversationsCount] = await Promise.all([
+    getOrders(),
+    supabase
+      .from("profiles")
+      .select("id", { count: "exact", head: true })
+      .eq("role", "employee")
+      .then((r) => r.count ?? 0),
+    supabase
+      .from("conversations")
+      .select("id", { count: "exact", head: true })
+      .then((r) => r.count ?? 0),
+  ]);
+
+  const openOrders = orders.filter((o) => o.status === "open").length;
+  const commissionThisMonth = orders
+    .filter((o) => o.status === "closed" && isThisMonth(o.created_at))
+    .reduce((sum, o) => sum + (o.commission ?? 0), 0);
+
+  const recentOrders = orders.slice(0, 5);
 
   return (
     <div className="space-y-7">
@@ -45,10 +71,10 @@ export default function AdminDashboardPage() {
 
       {/* Stat cards */}
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        <StatCard label="Employees" value="6" icon={Users} trend={{ dir: "up", value: "+1" }} hint="active this month" />
-        <StatCard label="Open Orders" value="18" icon={ShoppingBag} trend={{ dir: "up", value: "+12%" }} />
-        <StatCard label="Conversations" value="47" icon={MessageSquare} trend={{ dir: "down", value: "-4%" }} />
-        <StatCard label="Revenue (Jun)" value={gbp(31250)} icon={TrendingUp} trend={{ dir: "up", value: "+9%" }} />
+        <StatCard label="Employees" value={String(employeesCount)} icon={Users} hint="active team members" />
+        <StatCard label="Open Orders" value={String(openOrders)} icon={ShoppingBag} hint="awaiting close" />
+        <StatCard label="Conversations" value={String(conversationsCount)} icon={MessageSquare} hint="total threads" />
+        <StatCard label="Commission (this month)" value={gbp(commissionThisMonth)} icon={TrendingUp} hint="from closed orders" />
       </div>
 
       {/* Recent orders + activity */}
@@ -66,53 +92,75 @@ export default function AdminDashboardPage() {
             </Link>
           }
         >
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead className="pl-6">Order</TableHead>
-                <TableHead>Customer</TableHead>
-                <TableHead>Route</TableHead>
-                <TableHead className="text-right">Price</TableHead>
-                <TableHead className="pr-6">Status</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {recentOrders.map((o) => (
-                <TableRow key={o.id}>
-                  <TableCell className="pl-6 font-medium text-navy">{o.id}</TableCell>
-                  <TableCell>{o.customer}</TableCell>
-                  <TableCell className="text-muted-foreground">
-                    {o.from} → {o.to}
-                  </TableCell>
-                  <TableCell className="text-right font-medium">{gbp(o.price)}</TableCell>
-                  <TableCell className="pr-6">
-                    <StatusBadge tone={orderTone(o.status)}>{o.status}</StatusBadge>
-                  </TableCell>
+          {recentOrders.length === 0 ? (
+            <p className="px-6 py-10 text-center text-sm text-muted-foreground">
+              No orders yet. They’ll appear here as your team creates them.
+            </p>
+          ) : (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead className="pl-6">Order</TableHead>
+                  <TableHead>Customer</TableHead>
+                  <TableHead>Route</TableHead>
+                  <TableHead className="text-right">Price</TableHead>
+                  <TableHead className="pr-6">Status</TableHead>
                 </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+              </TableHeader>
+              <TableBody>
+                {recentOrders.map((o) => (
+                  <TableRow key={o.id}>
+                    <TableCell className="pl-6 font-medium text-navy">
+                      #{o.id.slice(0, 8)}
+                    </TableCell>
+                    <TableCell>{o.customer?.name ?? "—"}</TableCell>
+                    <TableCell className="text-muted-foreground">
+                      {o.route_from ?? "—"} → {o.route_to ?? "—"}
+                    </TableCell>
+                    <TableCell className="text-right font-medium">
+                      {o.selling_price != null ? gbp(o.selling_price) : "—"}
+                    </TableCell>
+                    <TableCell className="pr-6">
+                      <StatusBadge tone={ORDER_TONE[o.status]}>
+                        {titleCase(o.status)}
+                      </StatusBadge>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          )}
         </SectionCard>
 
         <SectionCard title="Recent Activity">
-          <ol className="space-y-4">
-            {ACTIVITY.map((a) => (
-              <li key={a.id} className="flex gap-3">
-                <span
-                  className={cn(
-                    "mt-1.5 size-2 shrink-0 rounded-full",
-                    ACTIVITY_DOT[a.tone]
-                  )}
-                />
-                <div className="leading-snug">
-                  <p className="text-sm text-foreground">{a.text}</p>
-                  <p className="text-xs text-muted-foreground">
-                    {a.meta} · {a.time}
-                  </p>
-                </div>
-              </li>
-            ))}
-          </ol>
+          {recentOrders.length === 0 ? (
+            <p className="text-sm text-muted-foreground">No activity yet.</p>
+          ) : (
+            <ol className="space-y-4">
+              {recentOrders.map((o) => (
+                <li key={o.id} className="flex gap-3">
+                  <span
+                    className={`mt-1.5 size-2 shrink-0 rounded-full ${
+                      o.status === "closed"
+                        ? "bg-emerald-500"
+                        : o.status === "cancelled"
+                          ? "bg-rose-500"
+                          : "bg-brand"
+                    }`}
+                  />
+                  <div className="leading-snug">
+                    <p className="text-sm text-foreground">
+                      Order #{o.id.slice(0, 8)} · {titleCase(o.status)}
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      {o.route_from ?? "—"} → {o.route_to ?? "—"} ·{" "}
+                      {fmtRelative(o.created_at)}
+                    </p>
+                  </div>
+                </li>
+              ))}
+            </ol>
+          )}
         </SectionCard>
       </div>
 
@@ -124,29 +172,38 @@ export default function AdminDashboardPage() {
               <Inbox className="size-5" />
             </div>
             <div>
-              <p className="font-display text-xl font-semibold text-foreground">47</p>
+              <p className="font-display text-xl font-semibold text-foreground">
+                {conversationsCount}
+              </p>
               <p className="text-xs text-muted-foreground">Total conversations</p>
             </div>
           </div>
           <div className="flex items-center gap-3 rounded-xl bg-neutral-soft p-4">
             <div className="flex size-10 items-center justify-center rounded-xl bg-emerald-50 text-emerald-600">
-              <MessageSquare className="size-5" />
+              <ShoppingBag className="size-5" />
             </div>
             <div>
-              <p className="font-display text-xl font-semibold text-foreground">{openConvos}</p>
-              <p className="text-xs text-muted-foreground">Open right now</p>
+              <p className="font-display text-xl font-semibold text-foreground">
+                {orders.length}
+              </p>
+              <p className="text-xs text-muted-foreground">Total orders</p>
             </div>
           </div>
           <div className="flex items-center gap-3 rounded-xl bg-neutral-soft p-4">
             <div className="flex size-10 items-center justify-center rounded-xl bg-amber-50 text-amber-600">
-              <MessageSquare className="size-5" />
+              <TrendingUp className="size-5" />
             </div>
             <div>
-              <p className="font-display text-xl font-semibold text-foreground">{unread}</p>
-              <p className="text-xs text-muted-foreground">Unread messages</p>
+              <p className="font-display text-xl font-semibold text-foreground">
+                {gbp(orders.reduce((s, o) => s + (o.selling_price ?? 0), 0))}
+              </p>
+              <p className="text-xs text-muted-foreground">Total order value</p>
             </div>
           </div>
         </div>
+        <p className="mt-4 text-xs text-muted-foreground">
+          Last updated {fmtDate(new Date().toISOString())}.
+        </p>
       </SectionCard>
     </div>
   );

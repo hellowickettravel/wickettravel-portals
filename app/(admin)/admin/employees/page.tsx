@@ -1,7 +1,17 @@
 "use client";
 
 import { useState } from "react";
-import { UserPlus, MoreHorizontal, Pencil, Ban } from "lucide-react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import {
+  UserPlus,
+  MoreHorizontal,
+  Pencil,
+  Ban,
+  CheckCircle2,
+  Eye,
+  EyeOff,
+  Loader2,
+} from "lucide-react";
 import { toast } from "sonner";
 import { PageHeader } from "@/components/admin/page-header";
 import { SectionCard } from "@/components/admin/section-card";
@@ -24,7 +34,6 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { ConfirmDialog } from "@/components/portal/confirm-dialog";
 import {
   Table,
   TableBody,
@@ -33,34 +42,118 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { EMPLOYEES, type AccessLevel } from "@/lib/mock/admin";
+import { TableSkeleton } from "@/components/portal/skeletons";
+import { ConfirmDialog } from "@/components/portal/confirm-dialog";
+import {
+  listEmployees,
+  createEmployee,
+  setEmployeeActive,
+  setEmployeeAccess,
+} from "@/lib/actions/admin";
+import {
+  ACCESS_LEVEL_LABELS,
+  ACCESS_LEVELS,
+  normalizeAccess,
+  type AccessLevel,
+} from "@/lib/access";
+import type { Profile } from "@/lib/db/types";
+import { fmtDate } from "@/lib/format";
 
 const ACCESS_TONE: Record<AccessLevel, Tone> = {
-  Full: "blue",
-  "Chat-only": "violet",
-  "View-only": "slate",
+  full: "blue",
+  chat_only: "violet",
+  view_only: "slate",
 };
 
+const EMPLOYEES_KEY = ["admin", "employees"] as const;
+
 export default function EmployeesPage() {
+  const queryClient = useQueryClient();
+  const invalidate = () =>
+    queryClient.invalidateQueries({ queryKey: EMPLOYEES_KEY });
+
+  const { data: employees, isLoading, isError } = useQuery({
+    queryKey: EMPLOYEES_KEY,
+    queryFn: listEmployees,
+  });
+
+  // Add form state
   const [open, setOpen] = useState(false);
-  const [deactivating, setDeactivating] = useState<
-    (typeof EMPLOYEES)[number] | null
-  >(null);
+  const [fullName, setFullName] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [accessLevel, setAccessLevel] = useState<AccessLevel>("full");
+  const [showPassword, setShowPassword] = useState(false);
+
+  // Deactivate / edit-access targets
+  const [deactivating, setDeactivating] = useState<Profile | null>(null);
+  const [editing, setEditing] = useState<Profile | null>(null);
+  const [editAccess, setEditAccess] = useState<AccessLevel>("full");
+
+  const createMutation = useMutation({
+    mutationFn: createEmployee,
+    onSuccess: (res) => {
+      if (!res.ok) {
+        toast.error("Couldn't create employee", { description: res.error });
+        return;
+      }
+      toast.success("Employee created", {
+        description: "They can sign in with the email and password you set.",
+      });
+      setOpen(false);
+      setFullName("");
+      setEmail("");
+      setPassword("");
+      setAccessLevel("full");
+      setShowPassword(false);
+      invalidate();
+    },
+    onError: () =>
+      toast.error("Couldn't create employee", {
+        description: "Please try again.",
+      }),
+  });
+
+  const activeMutation = useMutation({
+    mutationFn: ({ id, isActive }: { id: string; isActive: boolean }) =>
+      setEmployeeActive(id, isActive),
+    onSuccess: (res, vars) => {
+      if (!res.ok) {
+        toast.error("Update failed", { description: res.error });
+        return;
+      }
+      toast.success(vars.isActive ? "Employee activated" : "Employee deactivated");
+      invalidate();
+    },
+    onError: () => toast.error("Update failed", { description: "Please try again." }),
+  });
+
+  const accessMutation = useMutation({
+    mutationFn: ({ id, level }: { id: string; level: AccessLevel }) =>
+      setEmployeeAccess(id, level),
+    onSuccess: (res) => {
+      if (!res.ok) {
+        toast.error("Update failed", { description: res.error });
+        return;
+      }
+      toast.success("Access level updated");
+      setEditing(null);
+      invalidate();
+    },
+    onError: () => toast.error("Update failed", { description: "Please try again." }),
+  });
 
   function handleCreate(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
-    setOpen(false);
-    toast.success("Employee saved", {
-      description: "UI only — this will create the account once wired up.",
+    createMutation.mutate({
+      fullName,
+      email,
+      password,
+      accessLevel,
     });
   }
 
-  function handleDeactivate() {
-    if (!deactivating) return;
-    toast.success(`${deactivating.name} deactivated`, {
-      description: "UI only — this will disable the account once wired up.",
-    });
-  }
+  const rows = employees ?? [];
 
   return (
     <div className="space-y-7">
@@ -77,60 +170,114 @@ export default function EmployeesPage() {
       />
 
       <SectionCard flush>
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead className="pl-6">Name</TableHead>
-              <TableHead>Email</TableHead>
-              <TableHead>Access</TableHead>
-              <TableHead className="text-center">Chats</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead className="pr-6 text-right">Actions</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {EMPLOYEES.map((emp) => (
-              <TableRow key={emp.id}>
-                <TableCell className="pl-6">
-                  <UserCell name={emp.name} />
-                </TableCell>
-                <TableCell className="text-muted-foreground">{emp.email}</TableCell>
-                <TableCell>
-                  <StatusBadge tone={ACCESS_TONE[emp.accessLevel]}>
-                    {emp.accessLevel}
-                  </StatusBadge>
-                </TableCell>
-                <TableCell className="text-center tabular-nums">{emp.chats}</TableCell>
-                <TableCell>
-                  <StatusBadge tone={emp.status === "Active" ? "green" : "slate"}>
-                    {emp.status}
-                  </StatusBadge>
-                </TableCell>
-                <TableCell className="pr-6 text-right">
-                  <DropdownMenu>
-                    <DropdownMenuTrigger aria-label={`Actions for ${emp.name}`} className="inline-flex size-8 items-center justify-center rounded-lg text-muted-foreground outline-none transition-colors hover:bg-muted hover:text-foreground focus-visible:ring-[3px] focus-visible:ring-brand/25">
-                      <MoreHorizontal className="size-4" />
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end" className="w-40">
-                      <DropdownMenuItem className="cursor-pointer">
-                        <Pencil className="size-4" />
-                        Edit
-                      </DropdownMenuItem>
-                      <DropdownMenuItem
-                        variant="destructive"
-                        className="cursor-pointer"
-                        onClick={() => setDeactivating(emp)}
-                      >
-                        <Ban className="size-4" />
-                        Deactivate
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                </TableCell>
+        {isLoading ? (
+          <div className="p-4">
+            <TableSkeleton rows={5} columns={6} />
+          </div>
+        ) : isError ? (
+          <p className="px-6 py-10 text-center text-sm text-muted-foreground">
+            Couldn’t load employees. Refresh to try again.
+          </p>
+        ) : rows.length === 0 ? (
+          <div className="flex flex-col items-center gap-2 px-6 py-14 text-center">
+            <div className="flex size-12 items-center justify-center rounded-2xl bg-chip text-brand-dark">
+              <UserPlus className="size-6" />
+            </div>
+            <p className="font-display text-base font-semibold text-foreground">
+              No employees yet
+            </p>
+            <p className="max-w-sm text-sm text-muted-foreground">
+              Add your first team member to give them portal access.
+            </p>
+            <Button className="mt-2" onClick={() => setOpen(true)}>
+              <UserPlus className="size-4" />
+              Add Employee
+            </Button>
+          </div>
+        ) : (
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead className="pl-6">Name</TableHead>
+                <TableHead>Email</TableHead>
+                <TableHead>Access</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead>Joined</TableHead>
+                <TableHead className="pr-6 text-right">Actions</TableHead>
               </TableRow>
-            ))}
-          </TableBody>
-        </Table>
+            </TableHeader>
+            <TableBody>
+              {rows.map((emp) => {
+                const level = normalizeAccess(emp.access_level);
+                return (
+                  <TableRow key={emp.id}>
+                    <TableCell className="pl-6">
+                      <UserCell name={emp.full_name || "Unnamed"} />
+                    </TableCell>
+                    <TableCell className="text-muted-foreground">
+                      {emp.email ?? "—"}
+                    </TableCell>
+                    <TableCell>
+                      <StatusBadge tone={ACCESS_TONE[level]}>
+                        {ACCESS_LEVEL_LABELS[level]}
+                      </StatusBadge>
+                    </TableCell>
+                    <TableCell>
+                      <StatusBadge tone={emp.is_active ? "green" : "slate"}>
+                        {emp.is_active ? "Active" : "Inactive"}
+                      </StatusBadge>
+                    </TableCell>
+                    <TableCell className="text-muted-foreground">
+                      {fmtDate(emp.created_at)}
+                    </TableCell>
+                    <TableCell className="pr-6 text-right">
+                      <DropdownMenu>
+                        <DropdownMenuTrigger
+                          aria-label={`Actions for ${emp.full_name || "employee"}`}
+                          className="inline-flex size-8 items-center justify-center rounded-lg text-muted-foreground outline-none transition-colors hover:bg-muted hover:text-foreground focus-visible:ring-[3px] focus-visible:ring-brand/25"
+                        >
+                          <MoreHorizontal className="size-4" />
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end" className="w-44">
+                          <DropdownMenuItem
+                            className="cursor-pointer"
+                            onClick={() => {
+                              setEditing(emp);
+                              setEditAccess(level);
+                            }}
+                          >
+                            <Pencil className="size-4" />
+                            Edit access
+                          </DropdownMenuItem>
+                          {emp.is_active ? (
+                            <DropdownMenuItem
+                              variant="destructive"
+                              className="cursor-pointer"
+                              onClick={() => setDeactivating(emp)}
+                            >
+                              <Ban className="size-4" />
+                              Deactivate
+                            </DropdownMenuItem>
+                          ) : (
+                            <DropdownMenuItem
+                              className="cursor-pointer"
+                              onClick={() =>
+                                activeMutation.mutate({ id: emp.id, isActive: true })
+                              }
+                            >
+                              <CheckCircle2 className="size-4" />
+                              Activate
+                            </DropdownMenuItem>
+                          )}
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </TableCell>
+                  </TableRow>
+                );
+              })}
+            </TableBody>
+          </Table>
+        )}
       </SectionCard>
 
       {/* Add Employee dialog */}
@@ -139,7 +286,7 @@ export default function EmployeesPage() {
           <DialogHeader>
             <DialogTitle className="font-display">Add Employee</DialogTitle>
             <DialogDescription>
-              Create a team member and set their access level.
+              Creates a login and team member with the access level you choose.
             </DialogDescription>
           </DialogHeader>
 
@@ -148,13 +295,30 @@ export default function EmployeesPage() {
               <Label htmlFor="emp-name" className="font-label text-xs font-medium uppercase tracking-wider text-slate-600">
                 Full name
               </Label>
-              <Input id="emp-name" placeholder="Jane Smith" required className="h-10 rounded-[10px] bg-neutral-soft" />
+              <Input
+                id="emp-name"
+                value={fullName}
+                onChange={(e) => setFullName(e.target.value)}
+                placeholder="Jane Smith"
+                required
+                disabled={createMutation.isPending}
+                className="h-10 rounded-[10px] bg-neutral-soft"
+              />
             </div>
             <div className="space-y-2">
               <Label htmlFor="emp-email" className="font-label text-xs font-medium uppercase tracking-wider text-slate-600">
                 Email
               </Label>
-              <Input id="emp-email" type="email" placeholder="jane@wicket.co.uk" required className="h-10 rounded-[10px] bg-neutral-soft" />
+              <Input
+                id="emp-email"
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="jane@wicket.co.uk"
+                required
+                disabled={createMutation.isPending}
+                className="h-10 rounded-[10px] bg-neutral-soft"
+              />
             </div>
             <div className="space-y-2">
               <Label htmlFor="emp-access" className="font-label text-xs font-medium uppercase tracking-wider text-slate-600">
@@ -162,19 +326,41 @@ export default function EmployeesPage() {
               </Label>
               <select
                 id="emp-access"
-                defaultValue="Full"
+                value={accessLevel}
+                onChange={(e) => setAccessLevel(e.target.value as AccessLevel)}
+                disabled={createMutation.isPending}
                 className="h-10 w-full rounded-[10px] border border-input bg-neutral-soft px-3 text-sm text-foreground outline-none transition-[color,box-shadow,border-color] duration-150 focus-visible:border-brand focus-visible:ring-[3px] focus-visible:ring-brand/25"
               >
-                <option value="Full">Full — manage chats, orders &amp; settings</option>
-                <option value="Chat-only">Chat-only — conversations only, no orders</option>
-                <option value="View-only">View-only — read-only, can&apos;t reply or edit</option>
+                <option value="full">Full — manage chats, orders &amp; settings</option>
+                <option value="chat_only">Chat-only — conversations only, no orders</option>
+                <option value="view_only">View-only — read-only, can&apos;t reply or edit</option>
               </select>
             </div>
             <div className="space-y-2">
               <Label htmlFor="emp-pass" className="font-label text-xs font-medium uppercase tracking-wider text-slate-600">
                 Temporary password
               </Label>
-              <Input id="emp-pass" type="text" placeholder="Set a temporary password" required className="h-10 rounded-[10px] bg-neutral-soft" />
+              <div className="relative">
+                <Input
+                  id="emp-pass"
+                  type={showPassword ? "text" : "password"}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="At least 8 characters"
+                  required
+                  minLength={8}
+                  disabled={createMutation.isPending}
+                  className="h-10 rounded-[10px] bg-neutral-soft pr-10"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword((s) => !s)}
+                  aria-label={showPassword ? "Hide password" : "Show password"}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 rounded-md p-1 text-muted-foreground transition-colors hover:text-foreground"
+                >
+                  {showPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
+                </button>
+              </div>
             </div>
 
             <DialogFooter className="gap-2">
@@ -182,12 +368,74 @@ export default function EmployeesPage() {
                 type="button"
                 variant="outline"
                 onClick={() => setOpen(false)}
+                disabled={createMutation.isPending}
               >
                 Cancel
               </Button>
-              <Button type="submit">Create employee</Button>
+              <Button type="submit" disabled={createMutation.isPending}>
+                {createMutation.isPending ? (
+                  <>
+                    <Loader2 className="size-4 animate-spin" />
+                    Creating…
+                  </>
+                ) : (
+                  "Create employee"
+                )}
+              </Button>
             </DialogFooter>
           </form>
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit access dialog */}
+      <Dialog open={editing !== null} onOpenChange={(o) => !o && setEditing(null)}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="font-display">Edit access level</DialogTitle>
+            <DialogDescription>
+              {editing?.full_name
+                ? `Change what ${editing.full_name} can do in the portal.`
+                : "Change what this employee can do in the portal."}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-2">
+            <Label htmlFor="edit-access" className="font-label text-xs font-medium uppercase tracking-wider text-slate-600">
+              Access level
+            </Label>
+            <select
+              id="edit-access"
+              value={editAccess}
+              onChange={(e) => setEditAccess(e.target.value as AccessLevel)}
+              className="h-10 w-full rounded-[10px] border border-input bg-neutral-soft px-3 text-sm text-foreground outline-none transition-[color,box-shadow,border-color] duration-150 focus-visible:border-brand focus-visible:ring-[3px] focus-visible:ring-brand/25"
+            >
+              {ACCESS_LEVELS.map((lvl) => (
+                <option key={lvl} value={lvl}>
+                  {ACCESS_LEVEL_LABELS[lvl]}
+                </option>
+              ))}
+            </select>
+          </div>
+          <DialogFooter className="gap-2">
+            <Button type="button" variant="outline" onClick={() => setEditing(null)}>
+              Cancel
+            </Button>
+            <Button
+              type="button"
+              disabled={accessMutation.isPending}
+              onClick={() =>
+                editing && accessMutation.mutate({ id: editing.id, level: editAccess })
+              }
+            >
+              {accessMutation.isPending ? (
+                <>
+                  <Loader2 className="size-4 animate-spin" />
+                  Saving…
+                </>
+              ) : (
+                "Save"
+              )}
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
 
@@ -198,12 +446,15 @@ export default function EmployeesPage() {
         title="Deactivate employee?"
         description={
           deactivating
-            ? `${deactivating.name} will lose access to the portal until reactivated. Their conversations and orders are kept.`
+            ? `${deactivating.full_name || "This employee"} will lose access to the portal until reactivated. Their conversations and orders are kept.`
             : ""
         }
         confirmLabel="Deactivate"
         destructive
-        onConfirm={handleDeactivate}
+        onConfirm={() =>
+          deactivating &&
+          activeMutation.mutate({ id: deactivating.id, isActive: false })
+        }
       />
     </div>
   );

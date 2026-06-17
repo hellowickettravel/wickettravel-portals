@@ -1,6 +1,11 @@
 import { createClient } from "@/lib/supabase/server";
 import type { Conversation, ConversationWithCustomer } from "./types";
 
+export type ConversationOverview = ConversationWithCustomer & {
+  assignedEmployee: string | null;
+  preview: string | null;
+};
+
 /**
  * Conversations access. RLS limits results: admins see all, employees see only
  * conversations assigned to them, customers see only their own.
@@ -36,6 +41,67 @@ export async function getConversationById(
 
   if (error) throw error;
   return data ?? null;
+}
+
+/**
+ * Admin overview: conversations + customer, enriched with the assigned employee
+ * name and the latest message preview. Uses plain `in()` lookups (no fragile
+ * nested embeds) and short-circuits on an empty DB so the screen never crashes.
+ */
+export async function getConversationsOverview(): Promise<
+  ConversationOverview[]
+> {
+  const base = await getConversations();
+  if (base.length === 0) return [];
+
+  const supabase = await createClient();
+  const ids = base.map((c) => c.id);
+
+  const { data: assignments } = await supabase
+    .from("assignments")
+    .select("conversation_id, employee_id")
+    .in("conversation_id", ids)
+    .returns<{ conversation_id: string; employee_id: string }[]>();
+
+  const employeeIds = [
+    ...new Set((assignments ?? []).map((a) => a.employee_id)),
+  ];
+
+  const { data: profiles } = employeeIds.length
+    ? await supabase
+        .from("profiles")
+        .select("id, full_name")
+        .in("id", employeeIds)
+        .returns<{ id: string; full_name: string | null }[]>()
+    : { data: [] as { id: string; full_name: string | null }[] };
+
+  const nameById = new Map((profiles ?? []).map((p) => [p.id, p.full_name]));
+  const employeeByConv = new Map<string, string | null>();
+  for (const a of assignments ?? []) {
+    if (!employeeByConv.has(a.conversation_id)) {
+      employeeByConv.set(a.conversation_id, nameById.get(a.employee_id) ?? null);
+    }
+  }
+
+  const { data: messages } = await supabase
+    .from("messages")
+    .select("conversation_id, body, created_at")
+    .in("conversation_id", ids)
+    .order("created_at", { ascending: false })
+    .returns<{ conversation_id: string; body: string; created_at: string }[]>();
+
+  const previewByConv = new Map<string, string>();
+  for (const m of messages ?? []) {
+    if (!previewByConv.has(m.conversation_id)) {
+      previewByConv.set(m.conversation_id, m.body);
+    }
+  }
+
+  return base.map((c) => ({
+    ...c,
+    assignedEmployee: employeeByConv.get(c.id) ?? null,
+    preview: previewByConv.get(c.id) ?? null,
+  }));
 }
 
 /**
