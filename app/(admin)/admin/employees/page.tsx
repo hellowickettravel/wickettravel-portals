@@ -43,6 +43,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { TableSkeleton } from "@/components/portal/skeletons";
+import { MobileRecordCard } from "@/components/portal/mobile-record-card";
 import { ConfirmDialog } from "@/components/portal/confirm-dialog";
 import {
   listEmployees,
@@ -168,6 +169,42 @@ export default function EmployeesPage() {
 
   const rows = employees ?? [];
 
+  // Shared row-actions menu, reused by the desktop table + mobile cards.
+  const renderActions = (emp: Profile) => (
+    <DropdownMenu>
+      <DropdownMenuTrigger
+        aria-label={`Actions for ${emp.full_name || "employee"}`}
+        className="inline-flex size-9 items-center justify-center rounded-lg text-muted-foreground outline-none transition-colors hover:bg-muted hover:text-foreground focus-visible:ring-[3px] focus-visible:ring-brand/25"
+      >
+        <MoreHorizontal className="size-4" />
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end" className="w-44">
+        <DropdownMenuItem className="cursor-pointer" onClick={() => openEdit(emp)}>
+          <Pencil className="size-4" />
+          Edit employee
+        </DropdownMenuItem>
+        {emp.is_active ? (
+          <DropdownMenuItem
+            variant="destructive"
+            className="cursor-pointer"
+            onClick={() => setDeactivating(emp)}
+          >
+            <Ban className="size-4" />
+            Deactivate
+          </DropdownMenuItem>
+        ) : (
+          <DropdownMenuItem
+            className="cursor-pointer"
+            onClick={() => activeMutation.mutate({ id: emp.id, isActive: true })}
+          >
+            <CheckCircle2 className="size-4" />
+            Activate
+          </DropdownMenuItem>
+        )}
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
+
   return (
     <div className="space-y-7">
       <PageHeader
@@ -208,85 +245,85 @@ export default function EmployeesPage() {
             </Button>
           </div>
         ) : (
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead className="pl-6">Name</TableHead>
-                <TableHead>Email</TableHead>
-                <TableHead>Access</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Joined</TableHead>
-                <TableHead className="pr-6 text-right">Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
+          <>
+            {/* Mobile: stacked cards (no horizontal scroll) */}
+            <div className="space-y-3 p-4 md:hidden">
               {rows.map((emp) => {
                 const level = normalizeAccess(emp.access_level);
                 return (
-                  <TableRow key={emp.id}>
-                    <TableCell className="pl-6">
-                      <UserCell name={emp.full_name || "Unnamed"} />
-                    </TableCell>
-                    <TableCell className="text-muted-foreground">
-                      {emp.email ?? "—"}
-                    </TableCell>
-                    <TableCell>
-                      <StatusBadge tone={ACCESS_TONE[level]}>
-                        {ACCESS_LEVEL_LABELS[level]}
-                      </StatusBadge>
-                    </TableCell>
-                    <TableCell>
+                  <MobileRecordCard
+                    key={emp.id}
+                    title={<UserCell name={emp.full_name || "Unnamed"} />}
+                    action={renderActions(emp)}
+                    badge={
                       <StatusBadge tone={emp.is_active ? "green" : "slate"}>
                         {emp.is_active ? "Active" : "Inactive"}
                       </StatusBadge>
-                    </TableCell>
-                    <TableCell className="text-muted-foreground">
-                      {fmtDate(emp.created_at)}
-                    </TableCell>
-                    <TableCell className="pr-6 text-right">
-                      <DropdownMenu>
-                        <DropdownMenuTrigger
-                          aria-label={`Actions for ${emp.full_name || "employee"}`}
-                          className="inline-flex size-8 items-center justify-center rounded-lg text-muted-foreground outline-none transition-colors hover:bg-muted hover:text-foreground focus-visible:ring-[3px] focus-visible:ring-brand/25"
-                        >
-                          <MoreHorizontal className="size-4" />
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end" className="w-44">
-                          <DropdownMenuItem
-                            className="cursor-pointer"
-                            onClick={() => openEdit(emp)}
-                          >
-                            <Pencil className="size-4" />
-                            Edit employee
-                          </DropdownMenuItem>
-                          {emp.is_active ? (
-                            <DropdownMenuItem
-                              variant="destructive"
-                              className="cursor-pointer"
-                              onClick={() => setDeactivating(emp)}
-                            >
-                              <Ban className="size-4" />
-                              Deactivate
-                            </DropdownMenuItem>
-                          ) : (
-                            <DropdownMenuItem
-                              className="cursor-pointer"
-                              onClick={() =>
-                                activeMutation.mutate({ id: emp.id, isActive: true })
-                              }
-                            >
-                              <CheckCircle2 className="size-4" />
-                              Activate
-                            </DropdownMenuItem>
-                          )}
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    </TableCell>
-                  </TableRow>
+                    }
+                    fields={[
+                      { label: "Email", value: emp.email ?? "—", wide: true },
+                      {
+                        label: "Access",
+                        value: (
+                          <StatusBadge tone={ACCESS_TONE[level]}>
+                            {ACCESS_LEVEL_LABELS[level]}
+                          </StatusBadge>
+                        ),
+                      },
+                      { label: "Joined", value: fmtDate(emp.created_at) },
+                    ]}
+                  />
                 );
               })}
-            </TableBody>
-          </Table>
+            </div>
+
+            {/* Desktop: full table */}
+            <div className="hidden md:block">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead className="pl-6">Name</TableHead>
+                    <TableHead>Email</TableHead>
+                    <TableHead>Access</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead>Joined</TableHead>
+                    <TableHead className="pr-6 text-right">Actions</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {rows.map((emp) => {
+                    const level = normalizeAccess(emp.access_level);
+                    return (
+                      <TableRow key={emp.id}>
+                        <TableCell className="pl-6">
+                          <UserCell name={emp.full_name || "Unnamed"} />
+                        </TableCell>
+                        <TableCell className="text-muted-foreground">
+                          {emp.email ?? "—"}
+                        </TableCell>
+                        <TableCell>
+                          <StatusBadge tone={ACCESS_TONE[level]}>
+                            {ACCESS_LEVEL_LABELS[level]}
+                          </StatusBadge>
+                        </TableCell>
+                        <TableCell>
+                          <StatusBadge tone={emp.is_active ? "green" : "slate"}>
+                            {emp.is_active ? "Active" : "Inactive"}
+                          </StatusBadge>
+                        </TableCell>
+                        <TableCell className="text-muted-foreground">
+                          {fmtDate(emp.created_at)}
+                        </TableCell>
+                        <TableCell className="pr-6 text-right">
+                          {renderActions(emp)}
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
+                </TableBody>
+              </Table>
+            </div>
+          </>
         )}
       </SectionCard>
 

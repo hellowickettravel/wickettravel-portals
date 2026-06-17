@@ -24,6 +24,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { TableSkeleton } from "@/components/portal/skeletons";
+import { MobileRecordCard } from "@/components/portal/mobile-record-card";
 import { listOrders } from "@/lib/actions/admin";
 import type { OrderStatus } from "@/lib/db/types";
 import { gbp, fmtDate, titleCase } from "@/lib/format";
@@ -174,23 +175,74 @@ export default function OrdersPage() {
             </p>
           </div>
         ) : (
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead className="pl-6">Order</TableHead>
-                <TableHead>Customer</TableHead>
-                <TableHead>Route</TableHead>
-                <TableHead>Travel date</TableHead>
-                <TableHead className="text-center">Pax</TableHead>
-                <TableHead className="text-right">Price</TableHead>
-                <TableHead className="text-right">Commission</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Created by</TableHead>
-                <TableHead className="pr-6 text-right">Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {filtered.map((o) => (
+          <>
+            {/* Mobile: stacked cards (no horizontal scroll) */}
+            <div className="space-y-3 p-4 md:hidden">
+              {filtered.length === 0 ? (
+                <p className="py-8 text-center text-sm text-muted-foreground">
+                  No orders match your filters.
+                </p>
+              ) : (
+                filtered.map((o) => (
+                  <MobileRecordCard
+                    key={o.id}
+                    title={<span className="text-navy">#{o.id.slice(0, 8)}</span>}
+                    subtitle={o.customer?.name ?? "—"}
+                    badge={
+                      <StatusBadge tone={ORDER_TONE[o.status]}>
+                        {titleCase(o.status)}
+                      </StatusBadge>
+                    }
+                    fields={[
+                      {
+                        label: "Route",
+                        value: `${o.route_from ?? "—"} → ${o.route_to ?? "—"}`,
+                        wide: true,
+                      },
+                      { label: "Travel date", value: fmtDate(o.travel_date) },
+                      { label: "Pax", value: o.passengers ?? "—" },
+                      {
+                        label: "Price",
+                        value: o.selling_price != null ? gbp(o.selling_price) : "—",
+                      },
+                      {
+                        label: "Commission",
+                        value: (
+                          <span className="text-emerald-600">
+                            {o.commission != null ? gbp(o.commission) : "—"}
+                          </span>
+                        ),
+                      },
+                      {
+                        label: "Created by",
+                        value: o.created_by_profile?.full_name ?? "—",
+                        wide: true,
+                      },
+                    ]}
+                  />
+                ))
+              )}
+            </div>
+
+            {/* Desktop: full table */}
+            <div className="hidden md:block">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead className="pl-6">Order</TableHead>
+                    <TableHead>Customer</TableHead>
+                    <TableHead>Route</TableHead>
+                    <TableHead>Travel date</TableHead>
+                    <TableHead className="text-center">Pax</TableHead>
+                    <TableHead className="text-right">Price</TableHead>
+                    <TableHead className="text-right">Commission</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead>Created by</TableHead>
+                    <TableHead className="pr-6 text-right">Actions</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {filtered.map((o) => (
                 <TableRow key={o.id}>
                   <TableCell className="pl-6 font-medium text-navy">
                     #{o.id.slice(0, 8)}
@@ -244,18 +296,20 @@ export default function OrdersPage() {
                   </TableCell>
                 </TableRow>
               ))}
-              {filtered.length === 0 ? (
-                <TableRow>
-                  <TableCell
-                    colSpan={10}
-                    className="py-10 text-center text-sm text-muted-foreground"
-                  >
-                    No orders match your filters.
-                  </TableCell>
-                </TableRow>
-              ) : null}
-            </TableBody>
-          </Table>
+                  {filtered.length === 0 ? (
+                    <TableRow>
+                      <TableCell
+                        colSpan={10}
+                        className="py-10 text-center text-sm text-muted-foreground"
+                      >
+                        No orders match your filters.
+                      </TableCell>
+                    </TableRow>
+                  ) : null}
+                </TableBody>
+              </Table>
+            </div>
+          </>
         )}
       </SectionCard>
     </div>

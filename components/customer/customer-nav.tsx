@@ -44,7 +44,7 @@ function NavLinks({ className }: { className?: string }) {
             key={item.href}
             href={item.href}
             className={cn(
-              "rounded-full px-3.5 py-1.5 text-sm font-medium whitespace-nowrap transition-colors",
+              "rounded-full px-4 py-2 text-sm font-medium whitespace-nowrap transition-colors",
               active
                 ? "bg-chip text-brand-dark"
                 : "text-muted-foreground hover:bg-muted hover:text-foreground"

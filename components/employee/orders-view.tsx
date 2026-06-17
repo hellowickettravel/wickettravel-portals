@@ -16,6 +16,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { TableSkeleton } from "@/components/portal/skeletons";
+import { MobileRecordCard } from "@/components/portal/mobile-record-card";
 import { CreateOrderDialog } from "@/components/employee/create-order-dialog";
 import { listMyOrders } from "@/lib/actions/employee";
 import { listMyInbox } from "@/lib/actions/employee";
@@ -112,48 +113,89 @@ export function EmployeeOrders({ accessLevel }: { accessLevel: AccessLevel }) {
             ) : null}
           </div>
         ) : (
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead className="pl-6">Customer</TableHead>
-                <TableHead>Route</TableHead>
-                <TableHead>Travel date</TableHead>
-                <TableHead className="text-center">Pax</TableHead>
-                <TableHead className="text-right">Price</TableHead>
-                <TableHead className="text-right">Commission</TableHead>
-                <TableHead className="pr-6">Status</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
+          <>
+            {/* Mobile: stacked cards (no horizontal scroll) */}
+            <div className="space-y-3 p-4 md:hidden">
               {rows.map((o) => (
-                <TableRow key={o.id}>
-                  <TableCell className="pl-6 font-medium text-navy">
-                    {o.customer?.name ?? "—"}
-                  </TableCell>
-                  <TableCell className="font-medium text-muted-foreground">
-                    {o.route_from ?? "?"} → {o.route_to ?? "?"}
-                  </TableCell>
-                  <TableCell className="text-muted-foreground">
-                    {fmtDate(o.travel_date)}
-                  </TableCell>
-                  <TableCell className="text-center tabular-nums">
-                    {o.passengers ?? "—"}
-                  </TableCell>
-                  <TableCell className="text-right font-medium tabular-nums">
-                    {o.selling_price != null ? gbp(o.selling_price) : "—"}
-                  </TableCell>
-                  <TableCell className="text-right tabular-nums text-emerald-600">
-                    {o.commission != null ? gbp(o.commission) : "—"}
-                  </TableCell>
-                  <TableCell className="pr-6">
+                <MobileRecordCard
+                  key={o.id}
+                  title={<span className="text-navy">{o.customer?.name ?? "—"}</span>}
+                  badge={
                     <StatusBadge tone={ORDER_TONE[o.status]}>
                       {titleCase(o.status)}
                     </StatusBadge>
-                  </TableCell>
-                </TableRow>
+                  }
+                  fields={[
+                    {
+                      label: "Route",
+                      value: `${o.route_from ?? "?"} → ${o.route_to ?? "?"}`,
+                      wide: true,
+                    },
+                    { label: "Travel date", value: fmtDate(o.travel_date) },
+                    { label: "Pax", value: o.passengers ?? "—" },
+                    {
+                      label: "Price",
+                      value: o.selling_price != null ? gbp(o.selling_price) : "—",
+                    },
+                    {
+                      label: "Commission",
+                      value: (
+                        <span className="text-emerald-600">
+                          {o.commission != null ? gbp(o.commission) : "—"}
+                        </span>
+                      ),
+                    },
+                  ]}
+                />
               ))}
-            </TableBody>
-          </Table>
+            </div>
+
+            {/* Desktop: full table */}
+            <div className="hidden md:block">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead className="pl-6">Customer</TableHead>
+                    <TableHead>Route</TableHead>
+                    <TableHead>Travel date</TableHead>
+                    <TableHead className="text-center">Pax</TableHead>
+                    <TableHead className="text-right">Price</TableHead>
+                    <TableHead className="text-right">Commission</TableHead>
+                    <TableHead className="pr-6">Status</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {rows.map((o) => (
+                    <TableRow key={o.id}>
+                      <TableCell className="pl-6 font-medium text-navy">
+                        {o.customer?.name ?? "—"}
+                      </TableCell>
+                      <TableCell className="font-medium text-muted-foreground">
+                        {o.route_from ?? "?"} → {o.route_to ?? "?"}
+                      </TableCell>
+                      <TableCell className="text-muted-foreground">
+                        {fmtDate(o.travel_date)}
+                      </TableCell>
+                      <TableCell className="text-center tabular-nums">
+                        {o.passengers ?? "—"}
+                      </TableCell>
+                      <TableCell className="text-right font-medium tabular-nums">
+                        {o.selling_price != null ? gbp(o.selling_price) : "—"}
+                      </TableCell>
+                      <TableCell className="text-right tabular-nums text-emerald-600">
+                        {o.commission != null ? gbp(o.commission) : "—"}
+                      </TableCell>
+                      <TableCell className="pr-6">
+                        <StatusBadge tone={ORDER_TONE[o.status]}>
+                          {titleCase(o.status)}
+                        </StatusBadge>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+          </>
         )}
       </SectionCard>
 

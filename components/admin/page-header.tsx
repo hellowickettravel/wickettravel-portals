@@ -17,7 +17,7 @@ export function PageHeader({ eyebrow, title, subtitle, actions }: PageHeaderProp
             {eyebrow}
           </p>
         ) : null}
-        <h1 className="mt-1 font-display text-2xl font-semibold tracking-tight text-navy">
+        <h1 className="mt-1 font-display text-xl font-semibold tracking-tight text-navy sm:text-2xl">
           {title}
         </h1>
         {subtitle ? (

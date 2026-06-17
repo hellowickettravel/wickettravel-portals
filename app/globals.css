@@ -136,6 +136,10 @@
   body {
     @apply bg-background text-foreground;
     font-family: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+    /* Safety net: the page itself must never scroll sideways on mobile —
+       only opted-in elements (overflow-x-auto regions) scroll. `clip` keeps
+       position: sticky working, unlike `hidden`. */
+    overflow-x: clip;
   }
   h1,
   h2,
