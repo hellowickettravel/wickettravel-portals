@@ -8,6 +8,7 @@ export type Profile = {
   full_name: string | null;
   role: UserRole | null;
   access_level: string | null;
+  is_active: boolean | null;
 };
 
 export type AuthResult = {
@@ -52,9 +53,18 @@ export async function getUserAndProfile(): Promise<AuthResult> {
 
   const { data: profile } = await supabase
     .from("profiles")
-    .select("id, full_name, role, access_level")
+    .select("id, full_name, role, access_level, is_active")
     .eq("id", user.id)
     .single<Profile>();
 
   return { user, profile: profile ?? null };
+}
+
+/**
+ * True when the profile belongs to a deactivated account. A null/missing
+ * is_active is treated as ACTIVE (only an explicit `false` blocks access), so
+ * legacy rows created before is_active existed don't get locked out.
+ */
+export function isDeactivated(profile: Profile | null): boolean {
+  return profile?.is_active === false;
 }

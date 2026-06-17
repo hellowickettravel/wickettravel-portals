@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation";
-import { getUserAndProfile, roleDashboardPath } from "@/lib/auth";
+import { getUserAndProfile, roleDashboardPath, isDeactivated } from "@/lib/auth";
 import { PortalShell, type NavItem } from "@/components/portal/portal-shell";
 
 const NAV: NavItem[] = [
@@ -20,6 +20,10 @@ export default async function AdminLayout({
 
   if (!user) {
     redirect("/login");
+  }
+  // Deactivated mid-session → lose access on the next request.
+  if (isDeactivated(profile)) {
+    redirect("/login?error=account_deactivated");
   }
   if (profile?.role !== "admin") {
     // Logged in but wrong portal → send to their own dashboard, not /login.

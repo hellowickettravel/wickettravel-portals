@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation";
-import { getUserAndProfile, roleDashboardPath } from "@/lib/auth";
+import { getUserAndProfile, roleDashboardPath, isDeactivated } from "@/lib/auth";
 import { CustomerNav } from "@/components/customer/customer-nav";
 
 export default async function CustomerLayout({
@@ -11,6 +11,10 @@ export default async function CustomerLayout({
 
   if (!user) {
     redirect("/login");
+  }
+  // Deactivated mid-session → lose access on the next request.
+  if (isDeactivated(profile)) {
+    redirect("/login?error=account_deactivated");
   }
   if (profile?.role !== "customer") {
     // Logged in but wrong portal → send to their own dashboard, not /login.

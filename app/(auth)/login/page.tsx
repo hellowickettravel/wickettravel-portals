@@ -28,6 +28,10 @@ export default function LoginPage() {
       toast.error("No portal access", {
         description: "This account isn't allowed to sign in to the portal.",
       });
+    } else if (err === "account_deactivated") {
+      toast.error("Account deactivated", {
+        description: "Your account has been deactivated. Contact your administrator.",
+      });
     } else if (err === "auth") {
       toast.error("Sign in link failed", {
         description: "We couldn't complete that link. Please try again.",
@@ -91,15 +95,25 @@ export default function LoginPage() {
     // read failure — so we can tell "no access" apart from a transient glitch.
     const { data: profile, error: profileError } = await supabase
       .from("profiles")
-      .select("role")
+      .select("role, is_active")
       .eq("id", data.user.id)
-      .maybeSingle<{ role: string | null }>();
+      .maybeSingle<{ role: string | null; is_active: boolean | null }>();
 
     if (profileError) {
       // Transient read failure — keep the session, don't bounce the user.
       setLoading(false);
       toast.error("Couldn't load your profile", {
         description: "Please check your connection and try again.",
+      });
+      return;
+    }
+
+    // Deactivated account → drop the session immediately, never land in a portal.
+    if (profile?.is_active === false) {
+      await supabase.auth.signOut();
+      setLoading(false);
+      toast.error("Account deactivated", {
+        description: "Your account has been deactivated. Contact your administrator.",
       });
       return;
     }

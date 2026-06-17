@@ -113,6 +113,15 @@ export async function setEmployeeActive(
 
   try {
     const admin = createAdminClient();
+
+    // Hard block at the auth layer: a banned user can't sign in OR refresh their
+    // access token, so even an existing session dies on the next token refresh —
+    // not just our UI checks. Lifting the ban (`none`) restores login.
+    const { error: banError } = await admin.auth.admin.updateUserById(id, {
+      ban_duration: isActive ? "none" : "876000h", // ~100 years
+    });
+    if (banError) return { ok: false, error: banError.message };
+
     const { error } = await admin
       .from("profiles")
       .update({ is_active: isActive })
