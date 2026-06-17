@@ -1,0 +1,180 @@
+"use client";
+
+import { useState } from "react";
+import { UserPlus, MoreHorizontal, Pencil, Ban } from "lucide-react";
+import { toast } from "sonner";
+import { PageHeader } from "@/components/admin/page-header";
+import { SectionCard } from "@/components/admin/section-card";
+import { StatusBadge, type Tone } from "@/components/admin/status-badge";
+import { UserCell } from "@/components/admin/user-cell";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { EMPLOYEES, type AccessLevel } from "@/lib/mock/admin";
+
+const ACCESS_TONE: Record<AccessLevel, Tone> = {
+  Full: "blue",
+  "Chat-only": "violet",
+  "View-only": "slate",
+};
+
+export default function EmployeesPage() {
+  const [open, setOpen] = useState(false);
+
+  function handleCreate(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    setOpen(false);
+    toast.success("Employee saved", {
+      description: "UI only — this will create the account once wired up.",
+    });
+  }
+
+  return (
+    <div className="space-y-7">
+      <PageHeader
+        eyebrow="Team"
+        title="Employees"
+        subtitle="Manage your team, their access levels and assignments."
+        actions={
+          <Button onClick={() => setOpen(true)}>
+            <UserPlus className="size-4" />
+            Add Employee
+          </Button>
+        }
+      />
+
+      <SectionCard flush>
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead className="pl-6">Name</TableHead>
+              <TableHead>Email</TableHead>
+              <TableHead>Access</TableHead>
+              <TableHead className="text-center">Chats</TableHead>
+              <TableHead>Status</TableHead>
+              <TableHead className="pr-6 text-right">Actions</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {EMPLOYEES.map((emp) => (
+              <TableRow key={emp.id}>
+                <TableCell className="pl-6">
+                  <UserCell name={emp.name} />
+                </TableCell>
+                <TableCell className="text-muted-foreground">{emp.email}</TableCell>
+                <TableCell>
+                  <StatusBadge tone={ACCESS_TONE[emp.accessLevel]}>
+                    {emp.accessLevel}
+                  </StatusBadge>
+                </TableCell>
+                <TableCell className="text-center tabular-nums">{emp.chats}</TableCell>
+                <TableCell>
+                  <StatusBadge tone={emp.status === "Active" ? "green" : "slate"}>
+                    {emp.status}
+                  </StatusBadge>
+                </TableCell>
+                <TableCell className="pr-6 text-right">
+                  <DropdownMenu>
+                    <DropdownMenuTrigger className="inline-flex size-8 items-center justify-center rounded-lg text-muted-foreground outline-none transition-colors hover:bg-muted hover:text-foreground">
+                      <MoreHorizontal className="size-4" />
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end" className="w-40">
+                      <DropdownMenuItem className="cursor-pointer">
+                        <Pencil className="size-4" />
+                        Edit
+                      </DropdownMenuItem>
+                      <DropdownMenuItem variant="destructive" className="cursor-pointer">
+                        <Ban className="size-4" />
+                        Deactivate
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </SectionCard>
+
+      {/* Add Employee dialog */}
+      <Dialog open={open} onOpenChange={setOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="font-display">Add Employee</DialogTitle>
+            <DialogDescription>
+              Create a team member and set their access level.
+            </DialogDescription>
+          </DialogHeader>
+
+          <form onSubmit={handleCreate} className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="emp-name" className="font-label text-[11px] uppercase tracking-wider text-slate-500">
+                Full name
+              </Label>
+              <Input id="emp-name" placeholder="Jane Smith" required className="h-10 rounded-[10px] bg-neutral-soft" />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="emp-email" className="font-label text-[11px] uppercase tracking-wider text-slate-500">
+                Email
+              </Label>
+              <Input id="emp-email" type="email" placeholder="jane@wicket.co.uk" required className="h-10 rounded-[10px] bg-neutral-soft" />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="emp-access" className="font-label text-[11px] uppercase tracking-wider text-slate-500">
+                Access level
+              </Label>
+              <select
+                id="emp-access"
+                defaultValue="Full"
+                className="h-10 w-full rounded-[10px] border border-input bg-neutral-soft px-3 text-sm text-foreground outline-none transition-colors focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
+              >
+                <option value="Full">Full — manage everything</option>
+                <option value="Chat-only">Chat-only — conversations & orders</option>
+                <option value="View-only">View-only — read access</option>
+              </select>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="emp-pass" className="font-label text-[11px] uppercase tracking-wider text-slate-500">
+                Temporary password
+              </Label>
+              <Input id="emp-pass" type="text" placeholder="Set a temporary password" required className="h-10 rounded-[10px] bg-neutral-soft" />
+            </div>
+
+            <DialogFooter className="gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setOpen(false)}
+              >
+                Cancel
+              </Button>
+              <Button type="submit">Create employee</Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+}
