@@ -126,6 +126,7 @@ export function MessagesInbox({ accessLevel }: { accessLevel: AccessLevel }) {
                 <button
                   type="button"
                   onClick={() => setActiveId(undefined)}
+                  aria-label="Back to conversations"
                   className="text-sm text-brand md:hidden"
                 >
                   ←
@@ -195,6 +196,7 @@ export function MessagesInbox({ accessLevel }: { accessLevel: AccessLevel }) {
                   type="button"
                   variant="ghost"
                   size="icon"
+                  aria-label="Attach image"
                   className="size-10 shrink-0 rounded-full text-muted-foreground"
                   onClick={() => toast.info("Attach image", { description: "UI only — image upload comes later." })}
                 >
@@ -206,7 +208,7 @@ export function MessagesInbox({ accessLevel }: { accessLevel: AccessLevel }) {
                   placeholder="Type a message…"
                   className="h-11 rounded-full bg-neutral-soft"
                 />
-                <Button type="submit" size="icon" className="size-11 shrink-0 rounded-full" disabled={!draft.trim()}>
+                <Button type="submit" size="icon" aria-label="Send message" className="size-11 shrink-0 rounded-full" disabled={!draft.trim()}>
                   <Send className="size-4" />
                 </Button>
               </form>

@@ -98,6 +98,7 @@ export default function CustomerMessagesPage() {
           <Button
             type="submit"
             size="icon"
+            aria-label="Send message"
             className="size-11 shrink-0 rounded-full"
             disabled={!draft.trim()}
           >

@@ -32,7 +32,7 @@ const FAQS = [
 
 function fieldLabel(text: string) {
   return (
-    <span className="font-label text-[11px] font-medium uppercase tracking-wider text-slate-500">
+    <span className="font-label text-xs font-medium uppercase tracking-wider text-slate-600">
       {text}
     </span>
   );

@@ -97,7 +97,7 @@ export default function EmployeesPage() {
                 </TableCell>
                 <TableCell className="pr-6 text-right">
                   <DropdownMenu>
-                    <DropdownMenuTrigger className="inline-flex size-8 items-center justify-center rounded-lg text-muted-foreground outline-none transition-colors hover:bg-muted hover:text-foreground">
+                    <DropdownMenuTrigger aria-label={`Actions for ${emp.name}`} className="inline-flex size-8 items-center justify-center rounded-lg text-muted-foreground outline-none transition-colors hover:bg-muted hover:text-foreground focus-visible:ring-[3px] focus-visible:ring-brand/25">
                       <MoreHorizontal className="size-4" />
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end" className="w-40">
@@ -130,25 +130,25 @@ export default function EmployeesPage() {
 
           <form onSubmit={handleCreate} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="emp-name" className="font-label text-[11px] uppercase tracking-wider text-slate-500">
+              <Label htmlFor="emp-name" className="font-label text-xs font-medium uppercase tracking-wider text-slate-600">
                 Full name
               </Label>
               <Input id="emp-name" placeholder="Jane Smith" required className="h-10 rounded-[10px] bg-neutral-soft" />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="emp-email" className="font-label text-[11px] uppercase tracking-wider text-slate-500">
+              <Label htmlFor="emp-email" className="font-label text-xs font-medium uppercase tracking-wider text-slate-600">
                 Email
               </Label>
               <Input id="emp-email" type="email" placeholder="jane@wicket.co.uk" required className="h-10 rounded-[10px] bg-neutral-soft" />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="emp-access" className="font-label text-[11px] uppercase tracking-wider text-slate-500">
+              <Label htmlFor="emp-access" className="font-label text-xs font-medium uppercase tracking-wider text-slate-600">
                 Access level
               </Label>
               <select
                 id="emp-access"
                 defaultValue="Full"
-                className="h-10 w-full rounded-[10px] border border-input bg-neutral-soft px-3 text-sm text-foreground outline-none transition-colors focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
+                className="h-10 w-full rounded-[10px] border border-input bg-neutral-soft px-3 text-sm text-foreground outline-none transition-[color,box-shadow,border-color] duration-150 focus-visible:border-brand focus-visible:ring-[3px] focus-visible:ring-brand/25"
               >
                 <option value="Full">Full — manage everything</option>
                 <option value="Chat-only">Chat-only — conversations & orders</option>
@@ -156,7 +156,7 @@ export default function EmployeesPage() {
               </select>
             </div>
             <div className="space-y-2">
-              <Label htmlFor="emp-pass" className="font-label text-[11px] uppercase tracking-wider text-slate-500">
+              <Label htmlFor="emp-pass" className="font-label text-xs font-medium uppercase tracking-wider text-slate-600">
                 Temporary password
               </Label>
               <Input id="emp-pass" type="text" placeholder="Set a temporary password" required className="h-10 rounded-[10px] bg-neutral-soft" />

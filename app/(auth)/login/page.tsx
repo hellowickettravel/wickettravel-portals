@@ -104,7 +104,7 @@ export default function LoginPage() {
       <AuthAside />
 
       {/* ===================== RIGHT / FORM PANEL ===================== */}
-      <section className="flex items-center justify-center bg-white px-6 py-12 sm:px-10">
+      <section className="relative flex items-center justify-center bg-white px-6 py-12 sm:px-10">
         <div className="w-full max-w-sm">
           {/* Mobile brand (left panel hidden on small screens) */}
           <div className="mb-10 flex items-center gap-2.5 lg:hidden">
@@ -130,7 +130,7 @@ export default function LoginPage() {
             <div className="space-y-2">
               <Label
                 htmlFor="email"
-                className="font-label text-[11px] font-medium uppercase tracking-wider text-slate-500"
+                className="font-label text-xs font-medium uppercase tracking-wider text-slate-600"
               >
                 Email
               </Label>
@@ -150,7 +150,7 @@ export default function LoginPage() {
             <div className="space-y-2">
               <Label
                 htmlFor="password"
-                className="font-label text-[11px] font-medium uppercase tracking-wider text-slate-500"
+                className="font-label text-xs font-medium uppercase tracking-wider text-slate-600"
               >
                 Password
               </Label>
@@ -179,7 +179,7 @@ export default function LoginPage() {
             <Button
               type="submit"
               disabled={loading}
-              className="h-11 w-full rounded-[10px] bg-brand text-sm font-medium text-white shadow-sm transition-colors hover:bg-brand-dark"
+              className="h-11 w-full rounded-[10px] bg-brand text-sm font-medium text-white shadow-sm transition-all duration-150 hover:bg-brand-dark hover:shadow-md hover:shadow-brand/20 hover:-translate-y-px"
             >
               {loading ? (
                 <>
@@ -207,9 +207,9 @@ export default function LoginPage() {
               Sign up
             </Link>
           </p>
-
-          <AuthFooter />
         </div>
+
+        <AuthFooter />
       </section>
     </main>
   );

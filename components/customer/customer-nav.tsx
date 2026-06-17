@@ -14,6 +14,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { NotificationsBell } from "@/components/portal/notifications-bell";
 
 const NAV = [
   { label: "Dashboard", href: "/customer", exact: true },
@@ -74,9 +75,11 @@ export function CustomerNav({ userName }: { userName: string }) {
         {/* Desktop nav */}
         <NavLinks className="hidden items-center gap-1 md:flex" />
 
-        {/* User menu */}
-        <DropdownMenu>
-          <DropdownMenuTrigger className="flex items-center gap-2.5 rounded-full py-1 pl-1 pr-2 outline-none transition-colors hover:bg-muted">
+        {/* Notifications + user menu */}
+        <div className="flex items-center gap-1">
+          <NotificationsBell />
+          <DropdownMenu>
+          <DropdownMenuTrigger className="flex items-center gap-2.5 rounded-full py-1 pl-1 pr-2 outline-none transition-colors hover:bg-muted focus-visible:ring-[3px] focus-visible:ring-brand/25">
             <Avatar className="size-9">
               <AvatarFallback className="bg-chip text-sm font-semibold text-brand-dark">
                 {initialsOf(userName)}
@@ -99,18 +102,19 @@ export function CustomerNav({ userName }: { userName: string }) {
               <User className="size-4" />
               Profile
             </DropdownMenuItem>
-            <DropdownMenuItem
-              variant="destructive"
-              className="cursor-pointer"
-              onClick={() => {
-                void signOut();
-              }}
-            >
-              <LogOut className="size-4" />
-              Sign out
-            </DropdownMenuItem>
+            <form action={signOut}>
+              <DropdownMenuItem
+                variant="destructive"
+                className="w-full cursor-pointer"
+                render={<button type="submit" />}
+              >
+                <LogOut className="size-4" />
+                Sign out
+              </DropdownMenuItem>
+            </form>
           </DropdownMenuContent>
-        </DropdownMenu>
+          </DropdownMenu>
+        </div>
       </div>
 
       {/* Mobile nav row */}

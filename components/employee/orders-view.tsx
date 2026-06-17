@@ -101,7 +101,7 @@ export function EmployeeOrders({ accessLevel }: { accessLevel: AccessLevel }) {
                 </TableCell>
                 <TableCell className="pr-6 text-right">
                   <DropdownMenu>
-                    <DropdownMenuTrigger className="inline-flex size-8 items-center justify-center rounded-lg text-muted-foreground outline-none transition-colors hover:bg-muted hover:text-foreground">
+                    <DropdownMenuTrigger aria-label={`Actions for order ${o.id}`} className="inline-flex size-8 items-center justify-center rounded-lg text-muted-foreground outline-none transition-colors hover:bg-muted hover:text-foreground focus-visible:ring-[3px] focus-visible:ring-brand/25">
                       <MoreHorizontal className="size-4" />
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end" className="w-36">

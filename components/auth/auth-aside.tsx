@@ -58,7 +58,7 @@ export function AuthAside({
               <p className="font-display text-2xl font-semibold text-white">
                 {stat.value}
               </p>
-              <p className="font-label mt-0.5 text-[11px] font-medium uppercase tracking-wider text-white/55">
+              <p className="font-label mt-0.5 text-[11px] font-medium uppercase tracking-wider text-white/75">
                 {stat.label}
               </p>
             </div>

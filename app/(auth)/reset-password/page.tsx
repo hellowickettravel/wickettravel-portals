@@ -67,7 +67,7 @@ export default function ResetPasswordPage() {
         supporting="Choose a new password to get back into your Wicket workspace."
       />
 
-      <section className="flex items-center justify-center bg-white px-6 py-12 sm:px-10">
+      <section className="relative flex items-center justify-center bg-white px-6 py-12 sm:px-10">
         <div className="w-full max-w-sm">
           <div className="mb-10 flex items-center gap-2.5 lg:hidden">
             <div className="flex size-9 items-center justify-center rounded-xl bg-primary text-primary-foreground">
@@ -92,7 +92,7 @@ export default function ResetPasswordPage() {
             <div className="space-y-2">
               <Label
                 htmlFor="password"
-                className="font-label text-[11px] font-medium uppercase tracking-wider text-slate-500"
+                className="font-label text-xs font-medium uppercase tracking-wider text-slate-600"
               >
                 New password
               </Label>
@@ -112,7 +112,7 @@ export default function ResetPasswordPage() {
             <div className="space-y-2">
               <Label
                 htmlFor="confirm"
-                className="font-label text-[11px] font-medium uppercase tracking-wider text-slate-500"
+                className="font-label text-xs font-medium uppercase tracking-wider text-slate-600"
               >
                 Confirm new password
               </Label>
@@ -132,7 +132,7 @@ export default function ResetPasswordPage() {
             <Button
               type="submit"
               disabled={loading}
-              className="h-11 w-full rounded-[10px] bg-brand text-sm font-medium text-white shadow-sm transition-colors hover:bg-brand-dark"
+              className="h-11 w-full rounded-[10px] bg-brand text-sm font-medium text-white shadow-sm transition-all duration-150 hover:bg-brand-dark hover:shadow-md hover:shadow-brand/20 hover:-translate-y-px"
             >
               {loading ? (
                 <>
@@ -154,9 +154,9 @@ export default function ResetPasswordPage() {
               Sign in
             </Link>
           </p>
-
-          <AuthFooter />
         </div>
+
+        <AuthFooter />
       </section>
     </main>
   );

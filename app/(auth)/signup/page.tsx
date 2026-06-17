@@ -114,7 +114,7 @@ export default function SignupPage() {
       />
 
       {/* ===================== RIGHT / FORM PANEL ===================== */}
-      <section className="flex items-center justify-center bg-white px-6 py-12 sm:px-10">
+      <section className="relative flex items-center justify-center bg-white px-6 py-12 sm:px-10">
         <div className="w-full max-w-sm">
           {/* Mobile brand */}
           <div className="mb-10 flex items-center gap-2.5 lg:hidden">
@@ -142,11 +142,11 @@ export default function SignupPage() {
               </p>
               <Link
                 href="/login"
-                className="mt-7 inline-flex h-11 w-full items-center justify-center rounded-[10px] bg-brand text-sm font-medium text-white shadow-sm transition-colors hover:bg-brand-dark"
+                className="mt-7 inline-flex h-11 w-full items-center justify-center rounded-[10px] bg-brand text-sm font-medium text-white shadow-sm transition-all duration-150 hover:bg-brand-dark hover:shadow-md hover:shadow-brand/20 hover:-translate-y-px"
               >
                 Go to sign in
               </Link>
-              <p className="mt-5 text-xs text-slate-400">
+              <p className="mt-5 text-xs text-slate-500">
                 Didn&apos;t get it? Check spam, or wait a minute and try again.
               </p>
             </div>
@@ -167,7 +167,7 @@ export default function SignupPage() {
                 <div className="space-y-2">
                   <Label
                     htmlFor="fullName"
-                    className="font-label text-[11px] font-medium uppercase tracking-wider text-slate-500"
+                    className="font-label text-xs font-medium uppercase tracking-wider text-slate-600"
                   >
                     Full name
                   </Label>
@@ -187,7 +187,7 @@ export default function SignupPage() {
                 <div className="space-y-2">
                   <Label
                     htmlFor="email"
-                    className="font-label text-[11px] font-medium uppercase tracking-wider text-slate-500"
+                    className="font-label text-xs font-medium uppercase tracking-wider text-slate-600"
                   >
                     Email
                   </Label>
@@ -207,7 +207,7 @@ export default function SignupPage() {
                 <div className="space-y-2">
                   <Label
                     htmlFor="password"
-                    className="font-label text-[11px] font-medium uppercase tracking-wider text-slate-500"
+                    className="font-label text-xs font-medium uppercase tracking-wider text-slate-600"
                   >
                     Password
                   </Label>
@@ -227,7 +227,7 @@ export default function SignupPage() {
                 <div className="space-y-2">
                   <Label
                     htmlFor="confirm"
-                    className="font-label text-[11px] font-medium uppercase tracking-wider text-slate-500"
+                    className="font-label text-xs font-medium uppercase tracking-wider text-slate-600"
                   >
                     Confirm password
                   </Label>
@@ -247,7 +247,7 @@ export default function SignupPage() {
                 <Button
                   type="submit"
                   disabled={loading}
-                  className="h-11 w-full rounded-[10px] bg-brand text-sm font-medium text-white shadow-sm transition-colors hover:bg-brand-dark"
+                  className="h-11 w-full rounded-[10px] bg-brand text-sm font-medium text-white shadow-sm transition-all duration-150 hover:bg-brand-dark hover:shadow-md hover:shadow-brand/20 hover:-translate-y-px"
                 >
                   {loading ? (
                     <>
@@ -277,9 +277,9 @@ export default function SignupPage() {
               </p>
             </>
           )}
-
-          <AuthFooter />
         </div>
+
+        <AuthFooter />
       </section>
     </main>
   );
