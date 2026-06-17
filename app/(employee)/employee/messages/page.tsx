@@ -3,7 +3,7 @@ import { normalizeAccess } from "@/lib/access";
 import { MessagesInbox } from "@/components/employee/messages-inbox";
 
 export default async function EmployeeMessagesPage() {
-  const { profile } = await getUserAndProfile();
+  const { user, profile } = await getUserAndProfile();
   const access = normalizeAccess(profile?.access_level);
 
   return (
@@ -16,7 +16,7 @@ export default async function EmployeeMessagesPage() {
           Your assigned conversations with customers.
         </p>
       </div>
-      <MessagesInbox accessLevel={access} />
+      <MessagesInbox accessLevel={access} currentUserId={user?.id ?? ""} />
     </div>
   );
 }

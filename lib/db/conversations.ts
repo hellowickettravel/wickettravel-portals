@@ -122,3 +122,85 @@ export async function getConversationsForEmployee(
   if (error) throw error;
   return data ?? [];
 }
+
+/** A conversation row enriched for the employee inbox left pane. */
+export type InboxConversation = ConversationWithCustomer & {
+  preview: string | null;
+  unreadCount: number;
+  lastReadAt: string | null;
+};
+
+/**
+ * The employee inbox: every conversation assigned to me, with the latest
+ * message preview and an unread count (incoming messages newer than my
+ * assignments.last_read_at — see migration 0005). Newest activity first.
+ *
+ * Uses plain `in()` lookups (no fragile nested embeds) and short-circuits on an
+ * empty assignment set so a brand-new employee never hits an error.
+ */
+export async function getInboxForEmployee(
+  employeeId: string
+): Promise<InboxConversation[]> {
+  const supabase = await createClient();
+
+  const { data: assigns, error: aErr } = await supabase
+    .from("assignments")
+    .select("conversation_id, last_read_at")
+    .eq("employee_id", employeeId)
+    .returns<{ conversation_id: string; last_read_at: string | null }[]>();
+
+  if (aErr) throw aErr;
+  if (!assigns || assigns.length === 0) return [];
+
+  const convIds = assigns.map((a) => a.conversation_id);
+  const lastReadByConv = new Map(
+    assigns.map((a) => [a.conversation_id, a.last_read_at])
+  );
+
+  const { data: convs, error: cErr } = await supabase
+    .from("conversations")
+    .select(CONVERSATION_WITH_CUSTOMER)
+    .in("id", convIds)
+    .order("last_message_at", { ascending: false, nullsFirst: false })
+    .returns<ConversationWithCustomer[]>();
+
+  if (cErr) throw cErr;
+
+  const { data: msgs } = await supabase
+    .from("messages")
+    .select("conversation_id, body, direction, created_at")
+    .in("conversation_id", convIds)
+    .order("created_at", { ascending: false })
+    .returns<
+      {
+        conversation_id: string;
+        body: string;
+        direction: string;
+        created_at: string;
+      }[]
+    >();
+
+  const previewByConv = new Map<string, string>();
+  const unreadByConv = new Map<string, number>();
+  for (const m of msgs ?? []) {
+    if (!previewByConv.has(m.conversation_id)) {
+      previewByConv.set(m.conversation_id, m.body);
+    }
+    if (m.direction === "incoming") {
+      const lr = lastReadByConv.get(m.conversation_id);
+      if (!lr || new Date(m.created_at) > new Date(lr)) {
+        unreadByConv.set(
+          m.conversation_id,
+          (unreadByConv.get(m.conversation_id) ?? 0) + 1
+        );
+      }
+    }
+  }
+
+  return (convs ?? []).map((c) => ({
+    ...c,
+    preview: previewByConv.get(c.id) ?? null,
+    unreadCount: unreadByConv.get(c.id) ?? 0,
+    lastReadAt: lastReadByConv.get(c.id) ?? null,
+  }));
+}

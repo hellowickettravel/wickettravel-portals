@@ -38,6 +38,24 @@ export async function getOrderById(
   return data ?? null;
 }
 
+/**
+ * Orders visible to the current employee, with relations. RLS
+ * (orders_select_employee) already scopes rows to those they created OR that
+ * are tied to a conversation assigned to them — exactly "my orders". Runs as the
+ * logged-in user, so no employeeId filter is needed.
+ */
+export async function getMyVisibleOrders(): Promise<OrderWithRelations[]> {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("orders")
+    .select(ORDER_WITH_RELATIONS)
+    .order("created_at", { ascending: false })
+    .returns<OrderWithRelations[]>();
+
+  if (error) throw error;
+  return data ?? [];
+}
+
 /** Orders created by a specific employee. */
 export async function getOrdersForEmployee(
   employeeId: string

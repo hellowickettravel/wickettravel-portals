@@ -1,66 +1,207 @@
 "use client";
 
-import { useState } from "react";
-import { Paperclip, Send, FilePlus2, Lock, Search } from "lucide-react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { Paperclip, Send, FilePlus2, Lock, Search, Inbox, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { StatusBadge, type Tone } from "@/components/admin/status-badge";
+import { ConversationListSkeleton } from "@/components/portal/skeletons";
+import { CreateOrderDialog } from "@/components/employee/create-order-dialog";
+import { createClient } from "@/lib/supabase/client";
 import {
-  MY_CONVERSATIONS,
-  type EmpConversation,
-  type EmpChatMessage,
-  type EmpConversationStatus,
-} from "@/lib/mock/employee";
+  listMyInbox,
+  listMyMessages,
+  sendMessage,
+  markConversationRead,
+} from "@/lib/actions/employee";
+import { MY_INBOX_KEY, myMessagesKey } from "@/lib/query-keys";
+import type { InboxConversation } from "@/lib/db/conversations";
+import type { Message, ConversationStatus } from "@/lib/db/types";
 import { type AccessLevel, isReadOnly } from "@/lib/access";
+import { fmtRelative } from "@/lib/format";
 import { cn } from "@/lib/utils";
 
-const CONVO_TONE: Record<EmpConversationStatus, Tone> = {
-  Open: "blue",
-  Pending: "amber",
-  Closed: "green",
+const CONVO_TONE: Record<ConversationStatus, Tone> = {
+  open: "blue",
+  closed: "green",
 };
 
 function initialsOf(name: string) {
   const parts = name.trim().split(/\s+/).filter(Boolean);
+  if (parts.length === 0) return "?";
   return parts.length === 1
     ? parts[0].slice(0, 2).toUpperCase()
     : (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
 }
 
-export function MessagesInbox({ accessLevel }: { accessLevel: AccessLevel }) {
-  const readOnly = isReadOnly(accessLevel);
-  const [activeId, setActiveId] = useState<string | undefined>(
-    MY_CONVERSATIONS[0]?.id
-  );
-  const [threads, setThreads] = useState<Record<string, EmpChatMessage[]>>(() =>
-    Object.fromEntries(MY_CONVERSATIONS.map((c) => [c.id, c.messages]))
-  );
-  const [draft, setDraft] = useState("");
+function fmtClock(iso: string) {
+  const d = new Date(iso);
+  return `${String(d.getHours()).padStart(2, "0")}:${String(
+    d.getMinutes()
+  ).padStart(2, "0")}`;
+}
 
-  const active: EmpConversation | undefined = MY_CONVERSATIONS.find(
-    (c) => c.id === activeId
+export function MessagesInbox({
+  accessLevel,
+  currentUserId,
+}: {
+  accessLevel: AccessLevel;
+  currentUserId: string;
+}) {
+  const readOnly = isReadOnly(accessLevel);
+  const queryClient = useQueryClient();
+  const supabase = useMemo(() => createClient(), []);
+
+  const [activeId, setActiveId] = useState<string | undefined>(undefined);
+  const [search, setSearch] = useState("");
+  const [draft, setDraft] = useState("");
+  const [orderOpen, setOrderOpen] = useState(false);
+
+  const scrollRef = useRef<HTMLDivElement>(null);
+
+  // ----- Inbox list -----
+  const { data: inbox, isLoading: inboxLoading } = useQuery({
+    queryKey: MY_INBOX_KEY,
+    queryFn: listMyInbox,
+  });
+
+  const conversations = useMemo(() => inbox ?? [], [inbox]);
+
+  // Wire the search box to actually filter (name, phone, last message).
+  const filtered = useMemo(() => {
+    const q = search.trim().toLowerCase();
+    if (!q) return conversations;
+    return conversations.filter((c) => {
+      const name = c.customer?.name?.toLowerCase() ?? "";
+      const phone = c.customer?.wa_phone?.toLowerCase() ?? "";
+      const preview = c.preview?.toLowerCase() ?? "";
+      return name.includes(q) || phone.includes(q) || preview.includes(q);
+    });
+  }, [conversations, search]);
+
+  const active: InboxConversation | undefined = useMemo(
+    () => conversations.find((c) => c.id === activeId),
+    [conversations, activeId]
   );
-  const messages = activeId ? threads[activeId] ?? [] : [];
+
+  // ----- Active thread -----
+  const { data: messages, isLoading: messagesLoading } = useQuery({
+    queryKey: activeId ? myMessagesKey(activeId) : ["employee", "messages", "none"],
+    queryFn: () => listMyMessages(activeId as string),
+    enabled: !!activeId,
+  });
+
+  // Keep a ref of the active id for the realtime handler (avoids resubscribing).
+  const activeIdRef = useRef<string | undefined>(undefined);
+  useEffect(() => {
+    activeIdRef.current = activeId;
+  }, [activeId]);
+
+  // ----- Realtime: live messages + conversations for my assigned chats -----
+  // RLS scopes the stream — I only receive events for rows I can SELECT, i.e.
+  // conversations assigned to me and their messages.
+  useEffect(() => {
+    const channel = supabase
+      .channel(`employee-inbox-${currentUserId}`)
+      .on(
+        "postgres_changes",
+        { event: "INSERT", schema: "public", table: "messages" },
+        (payload) => {
+          const convId = (payload.new as { conversation_id?: string })
+            ?.conversation_id;
+          // Refresh the left list (preview / unread / ordering).
+          queryClient.invalidateQueries({ queryKey: MY_INBOX_KEY });
+          // Refresh the open thread if the message belongs to it.
+          if (convId && convId === activeIdRef.current) {
+            queryClient.invalidateQueries({ queryKey: myMessagesKey(convId) });
+            // Reading the open thread → keep it marked read.
+            markConversationRead(convId).then(() =>
+              queryClient.invalidateQueries({ queryKey: MY_INBOX_KEY })
+            );
+          }
+        }
+      )
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "conversations" },
+        () => {
+          // New assignment / status / last_message_at change → refresh list.
+          queryClient.invalidateQueries({ queryKey: MY_INBOX_KEY });
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [supabase, queryClient, currentUserId]);
+
+  // ----- Open a conversation: mark read -----
+  function openConversation(id: string) {
+    setActiveId(id);
+    markConversationRead(id).then(() =>
+      queryClient.invalidateQueries({ queryKey: MY_INBOX_KEY })
+    );
+  }
+
+  // Auto-scroll to newest whenever the thread changes.
+  useEffect(() => {
+    const el = scrollRef.current;
+    if (el) el.scrollTop = el.scrollHeight;
+  }, [messages, activeId]);
+
+  // ----- Send reply (mock send + optimistic) -----
+  const sendMutation = useMutation({
+    mutationFn: sendMessage,
+    onMutate: async (vars) => {
+      const key = myMessagesKey(vars.conversationId);
+      await queryClient.cancelQueries({ queryKey: key });
+      const previous = queryClient.getQueryData<Message[]>(key);
+      const optimistic: Message = {
+        id: `optimistic-${Date.now()}`,
+        conversation_id: vars.conversationId,
+        direction: "outgoing",
+        body: vars.body,
+        media_url: vars.mediaUrl ?? null,
+        sender_id: currentUserId,
+        created_at: new Date().toISOString(),
+      };
+      queryClient.setQueryData<Message[]>(key, (old) => [
+        ...(old ?? []),
+        optimistic,
+      ]);
+      return { key, previous };
+    },
+    onError: (_err, _vars, ctx) => {
+      if (ctx) queryClient.setQueryData(ctx.key, ctx.previous);
+      toast.error("Couldn't send", { description: "Please try again." });
+    },
+    onSuccess: (res, vars) => {
+      if (!res.ok) {
+        toast.error("Couldn't send", { description: res.error });
+        queryClient.invalidateQueries({ queryKey: myMessagesKey(vars.conversationId) });
+        return;
+      }
+    },
+    onSettled: (_res, _err, vars) => {
+      // Realtime confirms too, but invalidate so we converge on DB truth.
+      queryClient.invalidateQueries({ queryKey: myMessagesKey(vars.conversationId) });
+      queryClient.invalidateQueries({ queryKey: MY_INBOX_KEY });
+    },
+  });
 
   function send(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     const text = draft.trim();
-    if (!text || !activeId) return;
-    const now = new Date();
-    const time = `${String(now.getHours()).padStart(2, "0")}:${String(
-      now.getMinutes()
-    ).padStart(2, "0")}`;
-    setThreads((prev) => ({
-      ...prev,
-      [activeId]: [
-        ...(prev[activeId] ?? []),
-        { id: `local-${(prev[activeId]?.length ?? 0) + 1}`, from: "me", text, time },
-      ],
-    }));
+    if (!text || !activeId || readOnly) return;
+    sendMutation.mutate({ conversationId: activeId, body: text });
     setDraft("");
   }
+
+  const thread = messages ?? [];
 
   return (
     <div className="flex h-[calc(100dvh-9.5rem)] min-h-[460px] overflow-hidden rounded-2xl border border-border bg-card shadow-card">
@@ -74,46 +215,82 @@ export function MessagesInbox({ accessLevel }: { accessLevel: AccessLevel }) {
         <div className="border-b border-border p-3">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-            <Input placeholder="Search chats…" className="h-10 rounded-[10px] bg-neutral-soft pl-9" />
+            <Input
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Search chats…"
+              className="h-10 rounded-[10px] bg-neutral-soft pl-9"
+            />
           </div>
         </div>
-        <ul className="flex-1 overflow-y-auto">
-          {MY_CONVERSATIONS.map((c) => {
-            const isActive = c.id === activeId;
-            return (
-              <li key={c.id}>
-                <button
-                  type="button"
-                  onClick={() => setActiveId(c.id)}
-                  className={cn(
-                    "flex w-full items-center gap-3 border-b border-border/70 px-4 py-3 text-left transition-colors",
-                    isActive ? "bg-chip/60" : "hover:bg-neutral-soft"
-                  )}
-                >
-                  <Avatar className="size-10">
-                    <AvatarFallback className="bg-chip text-xs font-semibold text-brand-dark">
-                      {initialsOf(c.customer)}
-                    </AvatarFallback>
-                  </Avatar>
-                  <div className="min-w-0 flex-1">
-                    <div className="flex items-center justify-between gap-2">
-                      <p className="truncate text-sm font-medium text-foreground">{c.customer}</p>
-                      <span className="shrink-0 text-[11px] text-muted-foreground">{c.time}</span>
-                    </div>
-                    <div className="flex items-center justify-between gap-2">
-                      <p className="truncate text-xs text-muted-foreground">{c.preview}</p>
-                      {c.unread > 0 ? (
-                        <span className="inline-flex min-w-5 shrink-0 items-center justify-center rounded-full bg-primary py-0.5 text-[10px] font-semibold text-primary-foreground">
-                          {c.unread}
+
+        {inboxLoading ? (
+          <div className="flex-1 overflow-hidden">
+            <ConversationListSkeleton rows={7} />
+          </div>
+        ) : conversations.length === 0 ? (
+          <div className="flex flex-1 flex-col items-center justify-center gap-2 px-6 text-center">
+            <div className="flex size-12 items-center justify-center rounded-2xl bg-chip text-brand-dark">
+              <Inbox className="size-6" />
+            </div>
+            <p className="font-display text-sm font-semibold text-foreground">
+              No conversations yet
+            </p>
+            <p className="max-w-[16rem] text-xs text-muted-foreground">
+              Chats assigned to you will appear here. Ask an admin to assign one,
+              or use the simulate tool to test.
+            </p>
+          </div>
+        ) : filtered.length === 0 ? (
+          <div className="flex flex-1 items-center justify-center px-6 text-center text-sm text-muted-foreground">
+            No chats match “{search}”.
+          </div>
+        ) : (
+          <ul className="flex-1 overflow-y-auto">
+            {filtered.map((c) => {
+              const isActive = c.id === activeId;
+              const name = c.customer?.name || c.customer?.wa_phone || "Unknown";
+              return (
+                <li key={c.id}>
+                  <button
+                    type="button"
+                    onClick={() => openConversation(c.id)}
+                    className={cn(
+                      "flex w-full items-center gap-3 border-b border-border/70 px-4 py-3 text-left transition-colors",
+                      isActive ? "bg-chip/60" : "hover:bg-neutral-soft"
+                    )}
+                  >
+                    <Avatar className="size-10">
+                      <AvatarFallback className="bg-chip text-xs font-semibold text-brand-dark">
+                        {initialsOf(name)}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center justify-between gap-2">
+                        <p className="truncate text-sm font-medium text-foreground">
+                          {name}
+                        </p>
+                        <span className="shrink-0 text-[11px] text-muted-foreground">
+                          {fmtRelative(c.last_message_at)}
                         </span>
-                      ) : null}
+                      </div>
+                      <div className="flex items-center justify-between gap-2">
+                        <p className="truncate text-xs text-muted-foreground">
+                          {c.preview ?? "No messages yet"}
+                        </p>
+                        {c.unreadCount > 0 ? (
+                          <span className="inline-flex min-w-5 shrink-0 items-center justify-center rounded-full bg-primary px-1.5 py-0.5 text-[10px] font-semibold text-primary-foreground">
+                            {c.unreadCount}
+                          </span>
+                        ) : null}
+                      </div>
                     </div>
-                  </div>
-                </button>
-              </li>
-            );
-          })}
-        </ul>
+                  </button>
+                </li>
+              );
+            })}
+          </ul>
+        )}
       </aside>
 
       {/* RIGHT — conversation view */}
@@ -133,27 +310,23 @@ export function MessagesInbox({ accessLevel }: { accessLevel: AccessLevel }) {
                 </button>
                 <Avatar className="size-9">
                   <AvatarFallback className="bg-chip text-xs font-semibold text-brand-dark">
-                    {initialsOf(active.customer)}
+                    {initialsOf(active.customer?.name || active.customer?.wa_phone || "?")}
                   </AvatarFallback>
                 </Avatar>
                 <div className="leading-tight">
-                  <p className="font-display text-sm font-semibold text-navy">{active.customer}</p>
-                  <p className="text-xs text-muted-foreground">{active.phone}</p>
+                  <p className="font-display text-sm font-semibold text-navy">
+                    {active.customer?.name || "Unknown customer"}
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    {active.customer?.wa_phone ?? "No phone"}
+                  </p>
                 </div>
                 <StatusBadge tone={CONVO_TONE[active.status]} className="ml-1 hidden sm:inline-flex">
-                  {active.status}
+                  {active.status === "open" ? "Open" : "Closed"}
                 </StatusBadge>
               </div>
               {!readOnly ? (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() =>
-                    toast.success("Create order", {
-                      description: "UI only — pre-fills a new order from this chat.",
-                    })
-                  }
-                >
+                <Button variant="outline" size="sm" onClick={() => setOrderOpen(true)}>
                   <FilePlus2 className="size-4" />
                   <span className="hidden sm:inline">Create order</span>
                 </Button>
@@ -161,27 +334,54 @@ export function MessagesInbox({ accessLevel }: { accessLevel: AccessLevel }) {
             </div>
 
             {/* Messages */}
-            <div className="flex-1 space-y-3 overflow-y-auto bg-neutral-soft/50 px-4 py-5 md:px-6">
-              {messages.map((m) => {
-                const mine = m.from === "me";
-                return (
-                  <div key={m.id} className={cn("flex", mine ? "justify-end" : "justify-start")}>
-                    <div
-                      className={cn(
-                        "max-w-[80%] rounded-2xl px-3.5 py-2 text-sm shadow-sm sm:max-w-[60%]",
-                        mine
-                          ? "rounded-br-md bg-primary text-primary-foreground"
-                          : "rounded-bl-md border border-border bg-white text-foreground"
-                      )}
-                    >
-                      <p className="leading-relaxed">{m.text}</p>
-                      <span className={cn("mt-1 block text-right text-[10px]", mine ? "text-white/70" : "text-muted-foreground")}>
-                        {m.time}
-                      </span>
+            <div
+              ref={scrollRef}
+              className="flex-1 space-y-3 overflow-y-auto bg-neutral-soft/50 px-4 py-5 md:px-6"
+            >
+              {messagesLoading ? (
+                <div className="flex h-full items-center justify-center text-sm text-muted-foreground">
+                  <Loader2 className="mr-2 size-4 animate-spin" />
+                  Loading messages…
+                </div>
+              ) : thread.length === 0 ? (
+                <div className="flex h-full items-center justify-center text-sm text-muted-foreground">
+                  No messages yet — say hello.
+                </div>
+              ) : (
+                thread.map((m) => {
+                  const mine = m.direction === "outgoing";
+                  return (
+                    <div key={m.id} className={cn("flex", mine ? "justify-end" : "justify-start")}>
+                      <div
+                        className={cn(
+                          "max-w-[80%] rounded-2xl px-3.5 py-2 text-sm shadow-sm sm:max-w-[60%]",
+                          mine
+                            ? "rounded-br-md bg-primary text-primary-foreground"
+                            : "rounded-bl-md border border-border bg-white text-foreground"
+                        )}
+                      >
+                        {m.media_url ? (
+                          // eslint-disable-next-line @next/next/no-img-element
+                          <img
+                            src={m.media_url}
+                            alt="attachment"
+                            className="mb-1 max-h-60 rounded-lg object-cover"
+                          />
+                        ) : null}
+                        {m.body ? <p className="leading-relaxed">{m.body}</p> : null}
+                        <span
+                          className={cn(
+                            "mt-1 block text-right text-[10px]",
+                            mine ? "text-white/70" : "text-muted-foreground"
+                          )}
+                        >
+                          {fmtClock(m.created_at)}
+                        </span>
+                      </div>
                     </div>
-                  </div>
-                );
-              })}
+                  );
+                })
+              )}
             </div>
 
             {/* Input / read-only notice */}
@@ -198,7 +398,12 @@ export function MessagesInbox({ accessLevel }: { accessLevel: AccessLevel }) {
                   size="icon"
                   aria-label="Attach image"
                   className="size-10 shrink-0 rounded-full text-muted-foreground"
-                  onClick={() => toast.info("Attach image", { description: "UI only — image upload comes later." })}
+                  onClick={() =>
+                    toast.info("Attach image", {
+                      description:
+                        "Image upload is a stub — needs a Supabase Storage bucket (see notes).",
+                    })
+                  }
                 >
                   <Paperclip className="size-4" />
                 </Button>
@@ -208,7 +413,13 @@ export function MessagesInbox({ accessLevel }: { accessLevel: AccessLevel }) {
                   placeholder="Type a message…"
                   className="h-11 rounded-full bg-neutral-soft"
                 />
-                <Button type="submit" size="icon" aria-label="Send message" className="size-11 shrink-0 rounded-full" disabled={!draft.trim()}>
+                <Button
+                  type="submit"
+                  size="icon"
+                  aria-label="Send message"
+                  className="size-11 shrink-0 rounded-full"
+                  disabled={!draft.trim()}
+                >
                   <Send className="size-4" />
                 </Button>
               </form>
@@ -220,6 +431,16 @@ export function MessagesInbox({ accessLevel }: { accessLevel: AccessLevel }) {
           </div>
         )}
       </section>
+
+      {/* Create order from this chat */}
+      {active ? (
+        <CreateOrderDialog
+          open={orderOpen}
+          onOpenChange={setOrderOpen}
+          conversations={conversations}
+          presetConversationId={active.id}
+        />
+      ) : null}
     </div>
   );
 }

@@ -9,7 +9,7 @@ import {
 import { cn } from "@/lib/utils";
 
 type SectionCardProps = {
-  title?: string;
+  title?: ReactNode;
   description?: string;
   action?: ReactNode;
   children: ReactNode;

@@ -1,17 +1,12 @@
 "use client";
 
-import { Plus, MoreHorizontal, Eye, Pencil } from "lucide-react";
-import { toast } from "sonner";
+import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { Plus, ShoppingBag } from "lucide-react";
 import { PageHeader } from "@/components/admin/page-header";
 import { SectionCard } from "@/components/admin/section-card";
-import { StatusBadge, orderTone } from "@/components/admin/status-badge";
+import { StatusBadge, type Tone } from "@/components/admin/status-badge";
 import { Button } from "@/components/ui/button";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import {
   Table,
   TableBody,
@@ -20,34 +15,51 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { MY_ORDERS } from "@/lib/mock/employee";
+import { TableSkeleton } from "@/components/portal/skeletons";
+import { CreateOrderDialog } from "@/components/employee/create-order-dialog";
+import { listMyOrders } from "@/lib/actions/employee";
+import { listMyInbox } from "@/lib/actions/employee";
+import { MY_ORDERS_KEY, MY_INBOX_KEY } from "@/lib/query-keys";
+import type { OrderStatus } from "@/lib/db/types";
 import { type AccessLevel, isReadOnly } from "@/lib/access";
-import { gbp } from "@/lib/format";
+import { gbp, fmtDate, titleCase } from "@/lib/format";
 import { cn } from "@/lib/utils";
+
+const ORDER_TONE: Record<OrderStatus, Tone> = {
+  open: "blue",
+  closed: "green",
+  cancelled: "red",
+};
 
 export function EmployeeOrders({ accessLevel }: { accessLevel: AccessLevel }) {
   const readOnly = isReadOnly(accessLevel);
+  const [createOpen, setCreateOpen] = useState(false);
 
-  const myOpen = MY_ORDERS.filter(
-    (o) => o.status === "Open" || o.status === "In Progress"
-  ).length;
-  const myCommission = MY_ORDERS.reduce((s, o) => s + o.commission, 0);
+  const { data: orders, isLoading, isError } = useQuery({
+    queryKey: MY_ORDERS_KEY,
+    queryFn: listMyOrders,
+  });
+
+  // Conversations the employee can file an order against (the picker source).
+  const { data: inbox } = useQuery({
+    queryKey: MY_INBOX_KEY,
+    queryFn: listMyInbox,
+    enabled: !readOnly,
+  });
+
+  const rows = orders ?? [];
+  const myOpen = rows.filter((o) => o.status === "open").length;
+  const myCommission = rows.reduce((s, o) => s + (o.commission ?? 0), 0);
 
   return (
     <div className="space-y-7">
       <PageHeader
         eyebrow="My work"
         title="My Orders"
-        subtitle="Bookings assigned to you."
+        subtitle="Bookings you created or tied to your chats."
         actions={
           readOnly ? undefined : (
-            <Button
-              onClick={() =>
-                toast.success("New order", {
-                  description: "UI only — the order form lands here later.",
-                })
-              }
-            >
+            <Button onClick={() => setCreateOpen(true)}>
               <Plus className="size-4" />
               New Order
             </Button>
@@ -58,7 +70,7 @@ export function EmployeeOrders({ accessLevel }: { accessLevel: AccessLevel }) {
       {/* Personal totals (NOT company-wide) */}
       <div className="grid grid-cols-1 gap-4 rounded-2xl border border-border bg-card p-1 shadow-card sm:grid-cols-3">
         {[
-          { label: "My orders", value: String(MY_ORDERS.length) },
+          { label: "My orders", value: String(rows.length) },
           { label: "My open", value: String(myOpen) },
           { label: "My commission", value: gbp(myCommission) },
         ].map((t, i) => (
@@ -72,63 +84,90 @@ export function EmployeeOrders({ accessLevel }: { accessLevel: AccessLevel }) {
       </div>
 
       <SectionCard flush>
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead className="pl-6">Order</TableHead>
-              <TableHead>Customer</TableHead>
-              <TableHead>Route</TableHead>
-              <TableHead>Travel date</TableHead>
-              <TableHead className="text-center">Pax</TableHead>
-              <TableHead className="text-right">Price</TableHead>
-              <TableHead className="text-right">Commission</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead className="pr-6 text-right">Actions</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {MY_ORDERS.map((o) => (
-              <TableRow key={o.id}>
-                <TableCell className="pl-6 font-medium text-navy">{o.id}</TableCell>
-                <TableCell>{o.customer}</TableCell>
-                <TableCell className="font-medium text-muted-foreground">{o.from} → {o.to}</TableCell>
-                <TableCell className="text-muted-foreground">{o.date}</TableCell>
-                <TableCell className="text-center tabular-nums">{o.pax}</TableCell>
-                <TableCell className="text-right font-medium tabular-nums">{gbp(o.price)}</TableCell>
-                <TableCell className="text-right tabular-nums text-emerald-600">{gbp(o.commission)}</TableCell>
-                <TableCell>
-                  <StatusBadge tone={orderTone(o.status)}>{o.status}</StatusBadge>
-                </TableCell>
-                <TableCell className="pr-6 text-right">
-                  <DropdownMenu>
-                    <DropdownMenuTrigger aria-label={`Actions for order ${o.id}`} className="inline-flex size-8 items-center justify-center rounded-lg text-muted-foreground outline-none transition-colors hover:bg-muted hover:text-foreground focus-visible:ring-[3px] focus-visible:ring-brand/25">
-                      <MoreHorizontal className="size-4" />
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end" className="w-36">
-                      <DropdownMenuItem className="cursor-pointer">
-                        <Eye className="size-4" />
-                        View
-                      </DropdownMenuItem>
-                      {!readOnly ? (
-                        <DropdownMenuItem className="cursor-pointer">
-                          <Pencil className="size-4" />
-                          Edit
-                        </DropdownMenuItem>
-                      ) : null}
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                </TableCell>
+        {isLoading ? (
+          <div className="p-4">
+            <TableSkeleton rows={5} columns={7} />
+          </div>
+        ) : isError ? (
+          <p className="px-6 py-10 text-center text-sm text-muted-foreground">
+            Couldn’t load your orders. Refresh to try again.
+          </p>
+        ) : rows.length === 0 ? (
+          <div className="flex flex-col items-center gap-2 px-6 py-14 text-center">
+            <div className="flex size-12 items-center justify-center rounded-2xl bg-chip text-brand-dark">
+              <ShoppingBag className="size-6" />
+            </div>
+            <p className="font-display text-base font-semibold text-foreground">
+              No orders yet
+            </p>
+            <p className="max-w-sm text-sm text-muted-foreground">
+              Orders are born from chats — open a conversation and click “Create
+              order”, or use New Order to pick one.
+            </p>
+            {!readOnly ? (
+              <Button className="mt-2" onClick={() => setCreateOpen(true)}>
+                <Plus className="size-4" />
+                New Order
+              </Button>
+            ) : null}
+          </div>
+        ) : (
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead className="pl-6">Customer</TableHead>
+                <TableHead>Route</TableHead>
+                <TableHead>Travel date</TableHead>
+                <TableHead className="text-center">Pax</TableHead>
+                <TableHead className="text-right">Price</TableHead>
+                <TableHead className="text-right">Commission</TableHead>
+                <TableHead className="pr-6">Status</TableHead>
               </TableRow>
-            ))}
-          </TableBody>
-        </Table>
+            </TableHeader>
+            <TableBody>
+              {rows.map((o) => (
+                <TableRow key={o.id}>
+                  <TableCell className="pl-6 font-medium text-navy">
+                    {o.customer?.name ?? "—"}
+                  </TableCell>
+                  <TableCell className="font-medium text-muted-foreground">
+                    {o.route_from ?? "?"} → {o.route_to ?? "?"}
+                  </TableCell>
+                  <TableCell className="text-muted-foreground">
+                    {fmtDate(o.travel_date)}
+                  </TableCell>
+                  <TableCell className="text-center tabular-nums">
+                    {o.passengers ?? "—"}
+                  </TableCell>
+                  <TableCell className="text-right font-medium tabular-nums">
+                    {o.selling_price != null ? gbp(o.selling_price) : "—"}
+                  </TableCell>
+                  <TableCell className="text-right tabular-nums text-emerald-600">
+                    {o.commission != null ? gbp(o.commission) : "—"}
+                  </TableCell>
+                  <TableCell className="pr-6">
+                    <StatusBadge tone={ORDER_TONE[o.status]}>
+                      {titleCase(o.status)}
+                    </StatusBadge>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        )}
       </SectionCard>
 
       {readOnly ? (
         <p className="text-center text-xs text-muted-foreground">
           You have read-only access — viewing is allowed, editing is disabled.
         </p>
-      ) : null}
+      ) : (
+        <CreateOrderDialog
+          open={createOpen}
+          onOpenChange={setCreateOpen}
+          conversations={inbox ?? []}
+        />
+      )}
     </div>
   );
 }

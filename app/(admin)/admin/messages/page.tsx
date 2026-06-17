@@ -15,6 +15,7 @@ import {
 import { getConversationsOverview } from "@/lib/db/conversations";
 import type { ConversationStatus } from "@/lib/db/types";
 import { fmtRelative, titleCase } from "@/lib/format";
+import { InboxTools } from "@/components/admin/inbox-tools";
 
 const CONVO_TONE: Record<ConversationStatus, Tone> = {
   open: "blue",
@@ -31,6 +32,8 @@ export default async function MessagesPage() {
         title="Messages"
         subtitle="An overview of every customer conversation across the team."
       />
+
+      <InboxTools />
 
       <SectionCard flush>
         {conversations.length === 0 ? (
