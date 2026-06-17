@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation";
-import { getUserAndProfile } from "@/lib/auth";
+import { getUserAndProfile, roleDashboardPath } from "@/lib/auth";
 import { PortalShell, type NavItem } from "@/components/portal/portal-shell";
 
 const NAV: NavItem[] = [
@@ -18,8 +18,12 @@ export default async function AdminLayout({
 }) {
   const { user, profile } = await getUserAndProfile();
 
-  if (!user || profile?.role !== "admin") {
+  if (!user) {
     redirect("/login");
+  }
+  if (profile?.role !== "admin") {
+    // Logged in but wrong portal → send to their own dashboard, not /login.
+    redirect(roleDashboardPath(profile?.role) ?? "/login");
   }
 
   const userName = profile?.full_name?.trim() || user.email || "Admin";

@@ -1,19 +1,23 @@
 import { redirect } from "next/navigation";
-import { getUserAndProfile } from "@/lib/auth";
-import { normalizeAccess, type AccessLevel } from "@/lib/access";
+import { getUserAndProfile, roleDashboardPath } from "@/lib/auth";
+import {
+  normalizeAccess,
+  canAccessSection,
+  type EmployeeSection,
+} from "@/lib/access";
 import { PortalShell, type NavItem } from "@/components/portal/portal-shell";
 
-// Nav with the access levels allowed to see each item. Items the employee
-// can't use are filtered out entirely (not greyed). To test levels, set the
-// employee's profiles.access_level to 'chat_only' or 'view_only'.
-const ALL: AccessLevel[] = ["full", "chat_only", "view_only"];
-
-const NAV: (NavItem & { access: AccessLevel[] })[] = [
-  { label: "Dashboard", href: "/employee", icon: "LayoutDashboard", exact: true, access: ALL },
-  { label: "Messages", href: "/employee/messages", icon: "MessageSquare", access: ALL },
-  { label: "Orders", href: "/employee/orders", icon: "ShoppingBag", access: ["full", "view_only"] },
-  { label: "Support", href: "/employee/support", icon: "LifeBuoy", access: ALL },
-  { label: "Settings", href: "/employee/settings", icon: "Settings", access: ALL },
+// Nav items, each tagged with the section it belongs to. Visibility is derived
+// from the access matrix in lib/access.ts (the single source of truth) — items
+// the employee can't open are filtered out entirely (not greyed). The matching
+// route is ALSO guarded server-side on its page, so hiding the link is not the
+// only line of defence.
+const NAV: (NavItem & { section: EmployeeSection })[] = [
+  { label: "Dashboard", href: "/employee", icon: "LayoutDashboard", exact: true, section: "dashboard" },
+  { label: "Messages", href: "/employee/messages", icon: "MessageSquare", section: "messages" },
+  { label: "Orders", href: "/employee/orders", icon: "ShoppingBag", section: "orders" },
+  { label: "Support", href: "/employee/support", icon: "LifeBuoy", section: "support" },
+  { label: "Settings", href: "/employee/settings", icon: "Settings", section: "settings" },
 ];
 
 export default async function EmployeeLayout({
@@ -23,14 +27,18 @@ export default async function EmployeeLayout({
 }) {
   const { user, profile } = await getUserAndProfile();
 
-  if (!user || profile?.role !== "employee") {
+  if (!user) {
     redirect("/login");
+  }
+  if (profile?.role !== "employee") {
+    // Logged in but wrong portal → send to their own dashboard, not /login.
+    redirect(roleDashboardPath(profile?.role) ?? "/login");
   }
 
   const access = normalizeAccess(profile?.access_level);
-  const navItems: NavItem[] = NAV.filter((item) => item.access.includes(access)).map(
-    ({ access: _access, ...item }) => item
-  );
+  const navItems: NavItem[] = NAV.filter((item) =>
+    canAccessSection(item.section, access)
+  ).map(({ section: _section, ...item }) => item);
 
   const userName = profile?.full_name?.trim() || user.email || "Employee";
 

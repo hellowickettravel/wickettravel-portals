@@ -34,14 +34,16 @@ export async function GET(request: Request) {
     data: { user },
   } = await supabase.auth.getUser();
 
-  let dest = "/customer";
+  // Default to a safe "no access" bounce rather than silently landing unknown
+  // users in the customer portal.
+  let dest = "/login?error=no_access";
   if (user) {
     const { data: profile } = await supabase
       .from("profiles")
       .select("role")
       .eq("id", user.id)
-      .single<{ role: string | null }>();
-    dest = roleDashboardPath(profile?.role) ?? "/customer";
+      .maybeSingle<{ role: string | null }>();
+    dest = roleDashboardPath(profile?.role) ?? "/login?error=no_access";
   }
 
   return NextResponse.redirect(`${origin}${dest}`);

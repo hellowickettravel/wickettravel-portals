@@ -22,7 +22,7 @@ const FAQS = [
   },
   {
     q: "What do the access levels mean?",
-    a: "Full lets you manage chats and orders. Chat-only hides Orders. View-only is read-only — you can see conversations and orders but can't reply or edit.",
+    a: "Full — manage chats, orders and settings. Chat-only — conversations only, with no access to Orders. View-only — read-only: you can see conversations and orders but can't reply or edit.",
   },
   {
     q: "I can't see the Orders tab — why?",

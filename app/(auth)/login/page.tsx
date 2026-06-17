@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { Plane, Loader2 } from "lucide-react";
 import { toast } from "sonner";
@@ -17,6 +17,37 @@ export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
+  const [sendingReset, setSendingReset] = useState(false);
+
+  // Surface redirect errors handed back by the auth callback (e.g. an OAuth
+  // user with no portal role), then clean them out of the URL.
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const err = params.get("error");
+    if (err === "no_access") {
+      toast.error("No portal access", {
+        description: "This account isn't allowed to sign in to the portal.",
+      });
+    } else if (err === "auth") {
+      toast.error("Sign in link failed", {
+        description: "We couldn't complete that link. Please try again.",
+      });
+    }
+    if (err) window.history.replaceState({}, "", "/login");
+  }, []);
+
+  async function resendVerification(targetEmail: string) {
+    const supabase = createClient();
+    const { error } = await supabase.auth.resend({
+      type: "signup",
+      email: targetEmail,
+    });
+    if (error) {
+      toast.error("Couldn't resend email", { description: error.message });
+    } else {
+      toast.success("Verification email sent — check your inbox.");
+    }
+  }
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -37,6 +68,10 @@ export default function LoginPage() {
       if (code === "email_not_confirmed" || msg.includes("not confirmed")) {
         toast.error("Please verify your email first.", {
           description: "Check your inbox for the verification link.",
+          action: {
+            label: "Resend",
+            onClick: () => void resendVerification(email.trim()),
+          },
         });
       } else if (
         code === "invalid_credentials" ||
@@ -51,12 +86,23 @@ export default function LoginPage() {
       return;
     }
 
-    // Read the role to decide where to land.
-    const { data: profile } = await supabase
+    // Read the role to decide where to land. maybeSingle() returns null (no
+    // error) when the row is genuinely absent, and an error only on a real
+    // read failure — so we can tell "no access" apart from a transient glitch.
+    const { data: profile, error: profileError } = await supabase
       .from("profiles")
       .select("role")
       .eq("id", data.user.id)
-      .single<{ role: string | null }>();
+      .maybeSingle<{ role: string | null }>();
+
+    if (profileError) {
+      // Transient read failure — keep the session, don't bounce the user.
+      setLoading(false);
+      toast.error("Couldn't load your profile", {
+        description: "Please check your connection and try again.",
+      });
+      return;
+    }
 
     const role = profile?.role;
 
@@ -89,12 +135,16 @@ export default function LoginPage() {
       return;
     }
 
+    if (sendingReset) return; // guard against a double-tap firing two emails
+
+    setSendingReset(true);
     const supabase = createClient();
     // Supabase only sends the email if the account exists. We always show the
     // same neutral message so we never reveal whether an email is registered.
     await supabase.auth.resetPasswordForEmail(cleanEmail, {
       redirectTo: `${window.location.origin}/reset-password`,
     });
+    setSendingReset(false);
 
     toast.success("If an account exists for that email, a reset link has been sent.");
   }
@@ -169,9 +219,10 @@ export default function LoginPage() {
                 <button
                   type="button"
                   onClick={handleForgotPassword}
-                  className="text-xs font-medium text-brand transition-colors hover:text-brand-dark"
+                  disabled={sendingReset || loading}
+                  className="text-xs font-medium text-brand transition-colors hover:text-brand-dark disabled:opacity-50"
                 >
-                  Forgot password?
+                  {sendingReset ? "Sending…" : "Forgot password?"}
                 </button>
               </div>
             </div>

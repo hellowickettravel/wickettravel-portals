@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { ImageUp, AlertTriangle } from "lucide-react";
 import { toast } from "sonner";
 import { PageHeader } from "@/components/admin/page-header";
@@ -8,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
+import { ConfirmDialog } from "@/components/portal/confirm-dialog";
 
 const NOTIFICATIONS = [
   { id: "n1", label: "New order alerts", desc: "Notify admins when an order is created.", on: true },
@@ -25,6 +27,8 @@ function fieldLabel(text: string) {
 }
 
 export default function SettingsPage() {
+  const [resetOpen, setResetOpen] = useState(false);
+
   const save = (what: string) => () =>
     toast.success(`${what} saved`, {
       description: "UI only — changes persist once wired to Supabase.",
@@ -131,16 +135,27 @@ export default function SettingsPage() {
           <Button
             variant="outline"
             className="border-rose-300 text-rose-600 hover:bg-rose-100 hover:text-rose-700"
-            onClick={() =>
-              toast.error("Reset workspace", {
-                description: "UI only — this destructive action is disabled.",
-              })
-            }
+            onClick={() => setResetOpen(true)}
           >
             Reset
           </Button>
         </div>
       </SectionCard>
+
+      {/* Reset workspace confirmation */}
+      <ConfirmDialog
+        open={resetOpen}
+        onOpenChange={setResetOpen}
+        title="Reset workspace?"
+        description="This permanently deletes ALL orders, conversations and employees. This cannot be undone."
+        confirmLabel="Reset everything"
+        destructive
+        onConfirm={() =>
+          toast.error("Reset workspace", {
+            description: "UI only — this destructive action is disabled.",
+          })
+        }
+      />
     </div>
   );
 }

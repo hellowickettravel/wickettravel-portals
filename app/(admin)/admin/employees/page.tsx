@@ -24,6 +24,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { ConfirmDialog } from "@/components/portal/confirm-dialog";
 import {
   Table,
   TableBody,
@@ -42,12 +43,22 @@ const ACCESS_TONE: Record<AccessLevel, Tone> = {
 
 export default function EmployeesPage() {
   const [open, setOpen] = useState(false);
+  const [deactivating, setDeactivating] = useState<
+    (typeof EMPLOYEES)[number] | null
+  >(null);
 
   function handleCreate(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setOpen(false);
     toast.success("Employee saved", {
       description: "UI only — this will create the account once wired up.",
+    });
+  }
+
+  function handleDeactivate() {
+    if (!deactivating) return;
+    toast.success(`${deactivating.name} deactivated`, {
+      description: "UI only — this will disable the account once wired up.",
     });
   }
 
@@ -105,7 +116,11 @@ export default function EmployeesPage() {
                         <Pencil className="size-4" />
                         Edit
                       </DropdownMenuItem>
-                      <DropdownMenuItem variant="destructive" className="cursor-pointer">
+                      <DropdownMenuItem
+                        variant="destructive"
+                        className="cursor-pointer"
+                        onClick={() => setDeactivating(emp)}
+                      >
                         <Ban className="size-4" />
                         Deactivate
                       </DropdownMenuItem>
@@ -150,9 +165,9 @@ export default function EmployeesPage() {
                 defaultValue="Full"
                 className="h-10 w-full rounded-[10px] border border-input bg-neutral-soft px-3 text-sm text-foreground outline-none transition-[color,box-shadow,border-color] duration-150 focus-visible:border-brand focus-visible:ring-[3px] focus-visible:ring-brand/25"
               >
-                <option value="Full">Full — manage everything</option>
-                <option value="Chat-only">Chat-only — conversations & orders</option>
-                <option value="View-only">View-only — read access</option>
+                <option value="Full">Full — manage chats, orders &amp; settings</option>
+                <option value="Chat-only">Chat-only — conversations only, no orders</option>
+                <option value="View-only">View-only — read-only, can&apos;t reply or edit</option>
               </select>
             </div>
             <div className="space-y-2">
@@ -175,6 +190,21 @@ export default function EmployeesPage() {
           </form>
         </DialogContent>
       </Dialog>
+
+      {/* Deactivate confirmation */}
+      <ConfirmDialog
+        open={deactivating !== null}
+        onOpenChange={(o) => !o && setDeactivating(null)}
+        title="Deactivate employee?"
+        description={
+          deactivating
+            ? `${deactivating.name} will lose access to the portal until reactivated. Their conversations and orders are kept.`
+            : ""
+        }
+        confirmLabel="Deactivate"
+        destructive
+        onConfirm={handleDeactivate}
+      />
     </div>
   );
 }
