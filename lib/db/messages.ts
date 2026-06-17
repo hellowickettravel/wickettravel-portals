@@ -7,7 +7,7 @@ import type { Message } from "./types";
  */
 
 const MESSAGE_COLUMNS =
-  "id, conversation_id, sender_id, direction, body, created_at";
+  "id, conversation_id, direction, body, media_url, sender_id, created_at";
 
 /** Messages for a conversation, oldest first (chat order). */
 export async function getMessages(conversationId: string): Promise<Message[]> {

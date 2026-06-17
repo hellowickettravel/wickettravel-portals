@@ -7,9 +7,9 @@ import type { Order, OrderWithRelations } from "./types";
  */
 
 const ORDER_COLUMNS =
-  "id, reference, customer_id, conversation_id, created_by, from_airport, to_airport, travel_date, pax, price, commission, status, created_at";
+  "id, conversation_id, customer_id, route_from, route_to, travel_date, return_date, passengers, status, selling_price, cost_price, commission, notes, created_by, created_at";
 
-const ORDER_WITH_RELATIONS = `${ORDER_COLUMNS}, customer:customers(id, full_name), created_by_profile:profiles(id, full_name)`;
+const ORDER_WITH_RELATIONS = `${ORDER_COLUMNS}, customer:customers(id, name), created_by_profile:profiles(id, full_name)`;
 
 /** All orders visible to the caller, newest first. */
 export async function getOrders(): Promise<OrderWithRelations[]> {

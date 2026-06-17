@@ -7,9 +7,9 @@ import type { Conversation, ConversationWithCustomer } from "./types";
  */
 
 const CONVERSATION_COLUMNS =
-  "id, customer_id, status, last_message_at, last_message_preview, unread_count, created_at";
+  "id, customer_id, status, last_message_at, created_at";
 
-const CONVERSATION_WITH_CUSTOMER = `${CONVERSATION_COLUMNS}, customer:customers(id, full_name, phone)`;
+const CONVERSATION_WITH_CUSTOMER = `${CONVERSATION_COLUMNS}, customer:customers(id, name, wa_phone)`;
 
 /** All conversations visible to the caller, newest activity first. */
 export async function getConversations(): Promise<ConversationWithCustomer[]> {

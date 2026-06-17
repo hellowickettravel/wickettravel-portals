@@ -5,13 +5,17 @@
 -- Safe to run more than once: every policy is dropped-if-exists before create,
 -- and helper functions use CREATE OR REPLACE.
 --
--- MODEL / ASSUMPTIONS (adjust column names here if the live schema differs):
---   profiles(id = auth.uid(), full_name, email, role, access_level, is_active)
---   customers(id, profile_id -> auth.uid() for portal customers, full_name, phone, email)
---   conversations(id, customer_id -> customers.id, status, ...)
---   assignments(id, conversation_id -> conversations.id, employee_id -> profiles.id)
---   messages(id, conversation_id, sender_id -> profiles.id, direction, body)
---   orders(id, customer_id, conversation_id, created_by -> profiles.id, ...)
+-- SCHEMA (real, after 0003_schema_reconcile.sql adds profile_id/is_active/email):
+--   profiles(id = auth.uid(), full_name, role, access_level, created_at, is_active, email)
+--   customers(id, profile_id -> auth.uid() for portal customers, wa_phone, name, created_at)
+--   conversations(id, customer_id -> customers.id, status, last_message_at, created_at)
+--   assignments(id, conversation_id -> conversations.id, employee_id -> profiles.id, created_at)
+--   messages(id, conversation_id, direction 'incoming'|'outgoing', body, media_url, sender_id -> profiles.id, created_at)
+--   orders(id, conversation_id, customer_id, route_from, route_to, travel_date, return_date,
+--          passengers, status 'open'|'closed'|'cancelled', selling_price, cost_price, commission,
+--          notes, created_by -> profiles.id, created_at)
+--
+-- RUN ORDER: apply 0003_schema_reconcile.sql FIRST, then this file.
 --
 -- NOTE: the service-role key (used by server API routes like /api/signup-profile)
 -- BYPASSES RLS entirely, so those keep working regardless of the policies below.
@@ -237,7 +241,7 @@ create policy messages_insert_employee on public.messages
   for insert to authenticated
   with check (
     public.is_assigned_to_conversation(conversation_id)
-    and direction = 'outbound'
+    and direction = 'outgoing'
     and sender_id = auth.uid()
   );
 

@@ -3,14 +3,14 @@ import type { Customer } from "./types";
 
 /** Customers access. RLS scopes rows to the caller's role. */
 
-const CUSTOMER_COLUMNS = "id, profile_id, full_name, phone, email, created_at";
+const CUSTOMER_COLUMNS = "id, profile_id, wa_phone, name, created_at";
 
 export async function getCustomers(): Promise<Customer[]> {
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("customers")
     .select(CUSTOMER_COLUMNS)
-    .order("full_name", { ascending: true })
+    .order("name", { ascending: true })
     .returns<Customer[]>();
 
   if (error) throw error;

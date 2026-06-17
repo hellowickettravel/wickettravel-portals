@@ -61,5 +61,24 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 
-  return NextResponse.json({ ok: true });
+  // Link a customers row so customer-portal RLS resolves (owns_customer / own
+  // conversations + orders all key off customers.profile_id). Best-effort: a
+  // failure here shouldn't block account creation. Avoid duplicates on retry.
+  let customerLinked = true;
+  const { data: existingCustomer } = await admin
+    .from("customers")
+    .select("id")
+    .eq("profile_id", userId)
+    .maybeSingle();
+
+  if (!existingCustomer) {
+    const { error: customerError } = await admin.from("customers").insert({
+      profile_id: userId,
+      name: fullName ?? null,
+      wa_phone: null,
+    });
+    if (customerError) customerLinked = false;
+  }
+
+  return NextResponse.json({ ok: true, customerLinked });
 }
