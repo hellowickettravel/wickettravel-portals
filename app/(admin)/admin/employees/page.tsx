@@ -48,7 +48,7 @@ import {
   listEmployees,
   createEmployee,
   setEmployeeActive,
-  setEmployeeAccess,
+  updateEmployee,
 } from "@/lib/actions/admin";
 import {
   ACCESS_LEVEL_LABELS,
@@ -85,10 +85,19 @@ export default function EmployeesPage() {
   const [accessLevel, setAccessLevel] = useState<AccessLevel>("full");
   const [showPassword, setShowPassword] = useState(false);
 
-  // Deactivate / edit-access targets
+  // Deactivate / edit targets
   const [deactivating, setDeactivating] = useState<Profile | null>(null);
   const [editing, setEditing] = useState<Profile | null>(null);
+  const [editName, setEditName] = useState("");
+  const [editEmail, setEditEmail] = useState("");
   const [editAccess, setEditAccess] = useState<AccessLevel>("full");
+
+  function openEdit(emp: Profile) {
+    setEditing(emp);
+    setEditName(emp.full_name ?? "");
+    setEditEmail(emp.email ?? "");
+    setEditAccess(normalizeAccess(emp.access_level));
+  }
 
   const createMutation = useMutation({
     mutationFn: createEmployee,
@@ -128,15 +137,19 @@ export default function EmployeesPage() {
     onError: () => toast.error("Update failed", { description: "Please try again." }),
   });
 
-  const accessMutation = useMutation({
-    mutationFn: ({ id, level }: { id: string; level: AccessLevel }) =>
-      setEmployeeAccess(id, level),
+  const editMutation = useMutation({
+    mutationFn: (input: {
+      id: string;
+      fullName: string;
+      email: string;
+      accessLevel: AccessLevel;
+    }) => updateEmployee(input),
     onSuccess: (res) => {
       if (!res.ok) {
         toast.error("Update failed", { description: res.error });
         return;
       }
-      toast.success("Access level updated");
+      toast.success("Employee updated");
       setEditing(null);
       invalidate();
     },
@@ -241,13 +254,10 @@ export default function EmployeesPage() {
                         <DropdownMenuContent align="end" className="w-44">
                           <DropdownMenuItem
                             className="cursor-pointer"
-                            onClick={() => {
-                              setEditing(emp);
-                              setEditAccess(level);
-                            }}
+                            onClick={() => openEdit(emp)}
                           >
                             <Pencil className="size-4" />
-                            Edit access
+                            Edit employee
                           </DropdownMenuItem>
                           {emp.is_active ? (
                             <DropdownMenuItem
@@ -387,55 +397,96 @@ export default function EmployeesPage() {
         </DialogContent>
       </Dialog>
 
-      {/* Edit access dialog */}
+      {/* Edit employee dialog */}
       <Dialog open={editing !== null} onOpenChange={(o) => !o && setEditing(null)}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle className="font-display">Edit access level</DialogTitle>
+            <DialogTitle className="font-display">Edit employee</DialogTitle>
             <DialogDescription>
-              {editing?.full_name
-                ? `Change what ${editing.full_name} can do in the portal.`
-                : "Change what this employee can do in the portal."}
+              Update this team member’s details and access level.
             </DialogDescription>
           </DialogHeader>
-          <div className="space-y-2">
-            <Label htmlFor="edit-access" className="font-label text-xs font-medium uppercase tracking-wider text-slate-600">
-              Access level
-            </Label>
-            <select
-              id="edit-access"
-              value={editAccess}
-              onChange={(e) => setEditAccess(e.target.value as AccessLevel)}
-              className="h-10 w-full rounded-[10px] border border-input bg-neutral-soft px-3 text-sm text-foreground outline-none transition-[color,box-shadow,border-color] duration-150 focus-visible:border-brand focus-visible:ring-[3px] focus-visible:ring-brand/25"
-            >
-              {ACCESS_LEVELS.map((lvl) => (
-                <option key={lvl} value={lvl}>
-                  {ACCESS_LEVEL_LABELS[lvl]}
-                </option>
-              ))}
-            </select>
-          </div>
-          <DialogFooter className="gap-2">
-            <Button type="button" variant="outline" onClick={() => setEditing(null)}>
-              Cancel
-            </Button>
-            <Button
-              type="button"
-              disabled={accessMutation.isPending}
-              onClick={() =>
-                editing && accessMutation.mutate({ id: editing.id, level: editAccess })
-              }
-            >
-              {accessMutation.isPending ? (
-                <>
-                  <Loader2 className="size-4 animate-spin" />
-                  Saving…
-                </>
-              ) : (
-                "Save"
-              )}
-            </Button>
-          </DialogFooter>
+          <form
+            className="space-y-4"
+            onSubmit={(e) => {
+              e.preventDefault();
+              if (editing)
+                editMutation.mutate({
+                  id: editing.id,
+                  fullName: editName,
+                  email: editEmail,
+                  accessLevel: editAccess,
+                });
+            }}
+          >
+            <div className="space-y-2">
+              <Label htmlFor="edit-name" className="font-label text-xs font-medium uppercase tracking-wider text-slate-600">
+                Full name
+              </Label>
+              <Input
+                id="edit-name"
+                value={editName}
+                onChange={(e) => setEditName(e.target.value)}
+                placeholder="Jane Smith"
+                required
+                disabled={editMutation.isPending}
+                className="h-10 rounded-[10px] bg-neutral-soft"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="edit-email" className="font-label text-xs font-medium uppercase tracking-wider text-slate-600">
+                Email
+              </Label>
+              <Input
+                id="edit-email"
+                type="email"
+                value={editEmail}
+                onChange={(e) => setEditEmail(e.target.value)}
+                placeholder="jane@wicket.co.uk"
+                required
+                disabled={editMutation.isPending}
+                className="h-10 rounded-[10px] bg-neutral-soft"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="edit-access" className="font-label text-xs font-medium uppercase tracking-wider text-slate-600">
+                Access level
+              </Label>
+              <select
+                id="edit-access"
+                value={editAccess}
+                onChange={(e) => setEditAccess(e.target.value as AccessLevel)}
+                disabled={editMutation.isPending}
+                className="h-10 w-full rounded-[10px] border border-input bg-neutral-soft px-3 text-sm text-foreground outline-none transition-[color,box-shadow,border-color] duration-150 focus-visible:border-brand focus-visible:ring-[3px] focus-visible:ring-brand/25"
+              >
+                {ACCESS_LEVELS.map((lvl) => (
+                  <option key={lvl} value={lvl}>
+                    {ACCESS_LEVEL_LABELS[lvl]}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <DialogFooter className="gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setEditing(null)}
+                disabled={editMutation.isPending}
+              >
+                Cancel
+              </Button>
+              <Button type="submit" disabled={editMutation.isPending}>
+                {editMutation.isPending ? (
+                  <>
+                    <Loader2 className="size-4 animate-spin" />
+                    Saving…
+                  </>
+                ) : (
+                  "Save changes"
+                )}
+              </Button>
+            </DialogFooter>
+          </form>
         </DialogContent>
       </Dialog>
 

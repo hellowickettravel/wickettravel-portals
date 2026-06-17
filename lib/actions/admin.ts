@@ -111,14 +111,18 @@ export async function setEmployeeActive(
     return { ok: false, error: "Unauthorized" };
   }
 
-  const admin = createAdminClient();
-  const { error } = await admin
-    .from("profiles")
-    .update({ is_active: isActive })
-    .eq("id", id);
+  try {
+    const admin = createAdminClient();
+    const { error } = await admin
+      .from("profiles")
+      .update({ is_active: isActive })
+      .eq("id", id);
 
-  if (error) return { ok: false, error: error.message };
-  return { ok: true };
+    if (error) return { ok: false, error: error.message };
+    return { ok: true };
+  } catch (e) {
+    return { ok: false, error: e instanceof Error ? e.message : "Update failed." };
+  }
 }
 
 export async function setEmployeeAccess(
@@ -134,12 +138,59 @@ export async function setEmployeeAccess(
   if (!ACCESS_LEVELS.includes(accessLevel))
     return { ok: false, error: "Invalid access level." };
 
-  const admin = createAdminClient();
-  const { error } = await admin
-    .from("profiles")
-    .update({ access_level: accessLevel })
-    .eq("id", id);
+  try {
+    const admin = createAdminClient();
+    const { error } = await admin
+      .from("profiles")
+      .update({ access_level: accessLevel })
+      .eq("id", id);
 
-  if (error) return { ok: false, error: error.message };
-  return { ok: true };
+    if (error) return { ok: false, error: error.message };
+    return { ok: true };
+  } catch (e) {
+    return { ok: false, error: e instanceof Error ? e.message : "Update failed." };
+  }
+}
+
+export async function updateEmployee(input: {
+  id: string;
+  fullName: string;
+  email: string;
+  accessLevel: AccessLevel;
+}): Promise<ActionResult> {
+  try {
+    await requireAdmin();
+  } catch {
+    return { ok: false, error: "Unauthorized" };
+  }
+
+  const fullName = input.fullName.trim();
+  const email = input.email.trim().toLowerCase();
+
+  if (!fullName) return { ok: false, error: "Full name is required." };
+  if (!EMAIL_RE.test(email))
+    return { ok: false, error: "Enter a valid email address." };
+  if (!ACCESS_LEVELS.includes(input.accessLevel))
+    return { ok: false, error: "Invalid access level." };
+
+  try {
+    const admin = createAdminClient();
+
+    // Keep the auth login in sync — email + display name live on auth.users too.
+    const { error: authError } = await admin.auth.admin.updateUserById(input.id, {
+      email,
+      user_metadata: { full_name: fullName },
+    });
+    if (authError) return { ok: false, error: authError.message };
+
+    const { error } = await admin
+      .from("profiles")
+      .update({ full_name: fullName, email, access_level: input.accessLevel })
+      .eq("id", input.id);
+
+    if (error) return { ok: false, error: error.message };
+    return { ok: true };
+  } catch (e) {
+    return { ok: false, error: e instanceof Error ? e.message : "Update failed." };
+  }
 }
