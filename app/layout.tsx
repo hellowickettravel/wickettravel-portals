@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Outfit, Inter, Montserrat } from "next/font/google";
 import { Toaster } from "@/components/ui/sonner";
+import { Providers } from "./providers";
 import "./globals.css";
 
 const outfit = Outfit({
@@ -36,7 +37,7 @@ export default function RootLayout({
       <body
         className={`${outfit.variable} ${inter.variable} ${montserrat.variable} min-h-full font-sans antialiased`}
       >
-        {children}
+        <Providers>{children}</Providers>
         <Toaster richColors position="top-right" />
       </body>
     </html>
