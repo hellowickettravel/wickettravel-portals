@@ -132,15 +132,7 @@ function SidebarBrand({ portalLabel }: { portalLabel: string }) {
 function SidebarFooter() {
   return (
     <div className="px-6 py-4 text-[11px] text-sidebar-foreground/60">
-      © 2026 Wicket · Powered by{" "}
-      <a
-        href="https://www.getgrowthnexus.com/"
-        target="_blank"
-        rel="noopener noreferrer"
-        className="font-medium text-sidebar-foreground/80 underline-offset-2 transition-colors hover:text-white hover:underline"
-      >
-        Growth Nexus
-      </a>
+      © 2026 Wicket Travel. All rights reserved.
     </div>
   );
 }

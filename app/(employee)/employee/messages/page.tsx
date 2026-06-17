@@ -1,6 +1,6 @@
 import { getUserAndProfile } from "@/lib/auth";
 import { normalizeAccess } from "@/lib/access";
-import { MessagesInbox } from "@/components/employee/messages-inbox";
+import { ConversationInbox } from "@/components/portal/conversation-inbox";
 
 export default async function EmployeeMessagesPage() {
   const { user, profile } = await getUserAndProfile();
@@ -16,7 +16,11 @@ export default async function EmployeeMessagesPage() {
           Your assigned conversations with customers.
         </p>
       </div>
-      <MessagesInbox accessLevel={access} currentUserId={user?.id ?? ""} />
+      <ConversationInbox
+        scope="employee"
+        accessLevel={access}
+        currentUserId={user?.id ?? ""}
+      />
     </div>
   );
 }

@@ -1,10 +1,22 @@
 "use server";
 
 import { getUserAndProfile } from "@/lib/auth";
+import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { getEmployees } from "@/lib/db/profiles";
 import { getOrders } from "@/lib/db/orders";
-import type { Profile, OrderWithRelations, AccessLevel } from "@/lib/db/types";
+import { getMessages } from "@/lib/db/messages";
+import {
+  getConversationsOverview,
+  type InboxConversation,
+} from "@/lib/db/conversations";
+import type {
+  Profile,
+  OrderWithRelations,
+  AccessLevel,
+  Message,
+  BusinessSettings,
+} from "@/lib/db/types";
 
 /**
  * Admin-only server actions. Reads run through the RLS-aware helpers (admin
@@ -13,6 +25,10 @@ import type { Profile, OrderWithRelations, AccessLevel } from "@/lib/db/types";
  */
 
 type ActionResult = { ok: true } | { ok: false; error: string };
+type DataResult<T> = { ok: true; data: T } | { ok: false; error: string };
+
+const MESSAGE_COLUMNS =
+  "id, conversation_id, direction, body, media_url, sender_id, created_at";
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const MIN_PASSWORD = 8;
@@ -202,4 +218,118 @@ export async function updateEmployee(input: {
   } catch (e) {
     return { ok: false, error: e instanceof Error ? e.message : "Update failed." };
   }
+}
+
+// ----- Admin inbox (full access — admin RLS sees every conversation) -----
+
+/**
+ * Every conversation for the admin inbox, shaped like the employee inbox so the
+ * shared <ConversationInbox> can render both. Admins aren't assignment-scoped
+ * and there's no per-admin read tracking, so unreadCount is always 0.
+ */
+export async function listAdminInbox(): Promise<InboxConversation[]> {
+  await requireAdmin();
+  const overview = await getConversationsOverview();
+  return overview.map((c) => ({
+    ...c,
+    unreadCount: 0,
+    lastReadAt: null,
+  }));
+}
+
+export async function listAdminMessages(
+  conversationId: string
+): Promise<Message[]> {
+  await requireAdmin();
+  // RLS messages_admin_all lets admins read any conversation.
+  return getMessages(conversationId);
+}
+
+/**
+ * MOCK SEND (admin). Persists an outgoing reply to our DB only — the real
+ * WhatsApp Cloud API call lands here in Batch 6. Admins can reply in ANY
+ * conversation; messages_admin_all permits the insert.
+ */
+export async function adminSendMessage(input: {
+  conversationId: string;
+  body: string;
+  mediaUrl?: string | null;
+}): Promise<DataResult<Message>> {
+  const { user, profile } = await getUserAndProfile();
+  if (!user || profile?.role !== "admin") {
+    return { ok: false, error: "Unauthorized" };
+  }
+
+  const body = input.body.trim();
+  if (!body && !input.mediaUrl) return { ok: false, error: "Message is empty." };
+
+  const supabase = await createClient();
+
+  // 🔌 REAL WHATSAPP CLOUD API CALL GOES HERE (Batch 6) — mock save for now.
+  const { data, error } = await supabase
+    .from("messages")
+    .insert({
+      conversation_id: input.conversationId,
+      direction: "outgoing",
+      body: body || "",
+      media_url: input.mediaUrl ?? null,
+      sender_id: user.id,
+    })
+    .select(MESSAGE_COLUMNS)
+    .single<Message>();
+
+  if (error) return { ok: false, error: error.message };
+  return { ok: true, data };
+}
+
+// ----- Business settings -----
+
+export async function getBusinessSettings(): Promise<BusinessSettings | null> {
+  await requireAdmin();
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("business_settings")
+    .select(
+      "id, business_name, business_email, business_phone, business_address, default_commission, logo_url, updated_at"
+    )
+    .eq("id", 1)
+    .maybeSingle<BusinessSettings>();
+
+  if (error) throw error;
+  return data ?? null;
+}
+
+export async function saveBusinessSettings(input: {
+  businessName: string;
+  businessEmail: string;
+  businessPhone: string;
+  businessAddress: string;
+  defaultCommission: number | null;
+}): Promise<ActionResult> {
+  try {
+    await requireAdmin();
+  } catch {
+    return { ok: false, error: "Unauthorized" };
+  }
+
+  if (input.businessEmail && !EMAIL_RE.test(input.businessEmail.trim())) {
+    return { ok: false, error: "Enter a valid business email." };
+  }
+
+  const supabase = await createClient();
+  const { error } = await supabase.from("business_settings").upsert(
+    {
+      id: 1,
+      business_name: input.businessName.trim() || null,
+      business_email: input.businessEmail.trim() || null,
+      business_phone: input.businessPhone.trim() || null,
+      business_address: input.businessAddress.trim() || null,
+      default_commission: input.defaultCommission,
+      updated_at: new Date().toISOString(),
+    },
+    { onConflict: "id" }
+  );
+
+  if (error) return { ok: false, error: error.message };
+  return { ok: true };
 }

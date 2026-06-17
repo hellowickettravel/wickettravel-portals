@@ -90,7 +90,11 @@ export default async function AdminConversationPage({
         </div>
 
         <div className="border-t border-border bg-muted/40 px-5 py-3 text-center text-xs text-muted-foreground">
-          Read-only admin view — replies are sent by the assigned employee.
+          Read-only snapshot.{" "}
+          <Link href="/admin/messages" className="font-medium text-brand hover:text-brand-dark">
+            Open the inbox
+          </Link>{" "}
+          to reply or send attachments.
         </div>
       </div>
     </div>

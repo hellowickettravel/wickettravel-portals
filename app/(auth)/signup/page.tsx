@@ -8,6 +8,7 @@ import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { PasswordInput } from "@/components/portal/password-input";
 import { AuthAside } from "@/components/auth/auth-aside";
 import { GoogleButton } from "@/components/auth/google-button";
 import { OrDivider } from "@/components/auth/or-divider";
@@ -211,9 +212,8 @@ export default function SignupPage() {
                   >
                     Password
                   </Label>
-                  <Input
+                  <PasswordInput
                     id="password"
-                    type="password"
                     autoComplete="new-password"
                     placeholder="At least 8 characters"
                     value={password}
@@ -231,9 +231,8 @@ export default function SignupPage() {
                   >
                     Confirm password
                   </Label>
-                  <Input
+                  <PasswordInput
                     id="confirm"
-                    type="password"
                     autoComplete="new-password"
                     placeholder="Re-enter your password"
                     value={confirm}

@@ -17,6 +17,21 @@ export async function getCustomers(): Promise<Customer[]> {
   return data ?? [];
 }
 
+/** The customer record linked to a portal account (customers.profile_id). */
+export async function getCustomerByProfileId(
+  profileId: string
+): Promise<Customer | null> {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("customers")
+    .select(CUSTOMER_COLUMNS)
+    .eq("profile_id", profileId)
+    .maybeSingle<Customer>();
+
+  if (error) throw error;
+  return data ?? null;
+}
+
 export async function getCustomerById(id: string): Promise<Customer | null> {
   const supabase = await createClient();
   const { data, error } = await supabase

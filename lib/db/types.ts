@@ -77,6 +77,17 @@ export type Order = {
   created_at: string;
 };
 
+export type BusinessSettings = {
+  id: number;
+  business_name: string | null;
+  business_email: string | null;
+  business_phone: string | null;
+  business_address: string | null;
+  default_commission: number | null;
+  logo_url: string | null;
+  updated_at: string;
+};
+
 // ----- Joined / view shapes the UI consumes -----
 
 export type ConversationWithCustomer = Conversation & {

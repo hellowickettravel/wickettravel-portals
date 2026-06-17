@@ -1,6 +1,8 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { useQueryClient } from "@tanstack/react-query";
 import {
   Plane,
   Minus,
@@ -9,6 +11,7 @@ import {
   Calendar,
   Users,
   Sparkles,
+  Loader2,
 } from "lucide-react";
 import { toast } from "sonner";
 import { PageHeader } from "@/components/admin/page-header";
@@ -17,6 +20,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { createQuoteRequest } from "@/lib/actions/customer";
+import { CUSTOMER_ORDERS_KEY } from "@/lib/query-keys";
 import { cn } from "@/lib/utils";
 
 type TripType = "One-way" | "Return";
@@ -64,6 +69,8 @@ function Stepper({
 }
 
 export default function BookFlightPage() {
+  const router = useRouter();
+  const queryClient = useQueryClient();
   const [tripType, setTripType] = useState<TripType>("Return");
   const [from, setFrom] = useState("");
   const [to, setTo] = useState("");
@@ -73,10 +80,11 @@ export default function BookFlightPage() {
   const [children, setChildren] = useState(0);
   const [cabin, setCabin] = useState<Cabin>("Economy");
   const [notes, setNotes] = useState("");
+  const [submitting, setSubmitting] = useState(false);
 
   const pax = adults + children;
 
-  function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     if (!from.trim() || !to.trim() || !depart) {
       toast.error("Missing details", {
@@ -84,9 +92,40 @@ export default function BookFlightPage() {
       });
       return;
     }
-    toast.success("Quote requested", {
-      description: "UI only — our team would receive this and reply with fares.",
+
+    // Cabin/trip type aren't dedicated columns — fold them into notes so the
+    // team sees the full request.
+    const summary = [
+      `${tripType}, ${cabin}`,
+      `${adults} adult${adults !== 1 ? "s" : ""}${
+        children ? `, ${children} child${children !== 1 ? "ren" : ""}` : ""
+      }`,
+      notes.trim(),
+    ]
+      .filter(Boolean)
+      .join(" · ");
+
+    setSubmitting(true);
+    const res = await createQuoteRequest({
+      routeFrom: from,
+      routeTo: to,
+      travelDate: depart || null,
+      returnDate: tripType === "Return" ? ret || null : null,
+      passengers: pax,
+      notes: summary,
     });
+    setSubmitting(false);
+
+    if (!res.ok) {
+      toast.error("Couldn't send request", { description: res.error });
+      return;
+    }
+
+    queryClient.invalidateQueries({ queryKey: CUSTOMER_ORDERS_KEY });
+    toast.success("Quote requested", {
+      description: "Our team will reply with fares. You can track it in My Orders.",
+    });
+    router.push("/customer/orders");
   }
 
   return (
@@ -223,9 +262,18 @@ export default function BookFlightPage() {
               </li>
             </ul>
 
-            <Button type="submit" className="h-11 w-full rounded-[10px]">
-              Request Quote
-              <ArrowRight className="size-4" />
+            <Button type="submit" disabled={submitting} className="h-11 w-full rounded-[10px]">
+              {submitting ? (
+                <>
+                  <Loader2 className="size-4 animate-spin" />
+                  Sending…
+                </>
+              ) : (
+                <>
+                  Request Quote
+                  <ArrowRight className="size-4" />
+                </>
+              )}
             </Button>
             <p className="text-center text-xs text-muted-foreground">
               No payment now — we&apos;ll reply with fares.

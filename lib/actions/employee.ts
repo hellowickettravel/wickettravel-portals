@@ -173,21 +173,3 @@ export async function createOrderFromChat(input: {
   if (error) return { ok: false, error: error.message };
   return { ok: true };
 }
-
-/** Update my own display name (RLS: profiles_update_own allows full_name). */
-export async function updateMyName(
-  fullName: string
-): Promise<ActionResult> {
-  const { userId } = await requireUser();
-  const name = fullName.trim();
-  if (!name) return { ok: false, error: "Name can't be empty." };
-
-  const supabase = await createClient();
-  const { error } = await supabase
-    .from("profiles")
-    .update({ full_name: name })
-    .eq("id", userId);
-
-  if (error) return { ok: false, error: error.message };
-  return { ok: true };
-}

@@ -7,32 +7,41 @@ import {
   ArrowUpRight,
 } from "lucide-react";
 import { getUserAndProfile } from "@/lib/auth";
+import { getCustomerByProfileId } from "@/lib/db/customers";
+import { getOrdersForCustomer } from "@/lib/db/orders";
 import { StatCard } from "@/components/admin/stat-card";
 import { SectionCard } from "@/components/admin/section-card";
-import { StatusBadge } from "@/components/admin/status-badge";
-import {
-  CUSTOMER_ORDERS,
-  customerStatusTone,
-} from "@/lib/mock/customer";
-import { gbp } from "@/lib/format";
+import { StatusBadge, type Tone } from "@/components/admin/status-badge";
+import type { Order, OrderStatus } from "@/lib/db/types";
+import { gbp, fmtDate } from "@/lib/format";
+
+const ORDER_TONE: Record<OrderStatus, Tone> = {
+  open: "amber",
+  closed: "green",
+  cancelled: "red",
+};
+
+const STATUS_LABEL: Record<OrderStatus, string> = {
+  open: "In progress",
+  closed: "Completed",
+  cancelled: "Cancelled",
+};
 
 export default async function CustomerDashboardPage() {
   const { user, profile } = await getUserAndProfile();
   const fullName = profile?.full_name?.trim() || user?.email || "Traveller";
   const firstName = fullName.split(/\s+/)[0];
 
-  const active = CUSTOMER_ORDERS.filter(
-    (o) => o.status === "Confirmed" || o.status === "Ticketed"
-  ).length;
-  const completed = CUSTOMER_ORDERS.filter((o) => o.status === "Completed").length;
-  const pending = CUSTOMER_ORDERS.filter(
-    (o) => o.status === "Quote requested"
-  ).length;
-  const recent = CUSTOMER_ORDERS.slice(0, 3);
+  const customer = user ? await getCustomerByProfileId(user.id) : null;
+  const orders: Order[] = customer ? await getOrdersForCustomer(customer.id) : [];
+
+  const active = orders.filter((o) => o.status === "open").length;
+  const completed = orders.filter((o) => o.status === "closed").length;
+  const cancelled = orders.filter((o) => o.status === "cancelled").length;
+  const recent = orders.slice(0, 3);
 
   return (
     <div className="space-y-7">
-      {/* Welcome */}
       <div>
         <h1 className="font-display text-2xl font-semibold tracking-tight text-navy">
           Welcome back, {firstName} 👋
@@ -42,11 +51,10 @@ export default async function CustomerDashboardPage() {
         </p>
       </div>
 
-      {/* Stats */}
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-        <StatCard label="Active Orders" value={String(active)} icon={Plane} hint="confirmed & ticketed" />
+        <StatCard label="Active Orders" value={String(active)} icon={Plane} hint="in progress" />
         <StatCard label="Completed Trips" value={String(completed)} icon={CheckCircle2} hint="all time" />
-        <StatCard label="Pending Quotes" value={String(pending)} icon={Clock} hint="awaiting your reply" />
+        <StatCard label="Cancelled" value={String(cancelled)} icon={Clock} hint="cancelled requests" />
       </div>
 
       {/* CTA */}
@@ -83,42 +91,46 @@ export default async function CustomerDashboardPage() {
           </Link>
         }
       >
-        <ul className="divide-y divide-border">
-          {recent.map((o) => (
-            <li
-              key={o.id}
-              className="flex flex-col gap-3 py-3.5 first:pt-0 last:pb-0 sm:flex-row sm:items-center sm:justify-between"
-            >
-              <div className="flex items-center gap-3">
-                <div className="flex size-10 items-center justify-center rounded-xl bg-chip text-brand-dark">
-                  <Plane className="size-5 -rotate-45" />
+        {recent.length === 0 ? (
+          <p className="py-6 text-center text-sm text-muted-foreground">
+            No orders yet — request a quote to get started.
+          </p>
+        ) : (
+          <ul className="divide-y divide-border">
+            {recent.map((o) => (
+              <li
+                key={o.id}
+                className="flex flex-col gap-3 py-3.5 first:pt-0 last:pb-0 sm:flex-row sm:items-center sm:justify-between"
+              >
+                <div className="flex items-center gap-3">
+                  <div className="flex size-10 items-center justify-center rounded-xl bg-chip text-brand-dark">
+                    <Plane className="size-5 -rotate-45" />
+                  </div>
+                  <div className="leading-tight">
+                    <p className="font-medium text-foreground">
+                      {o.route_from ?? "?"} → {o.route_to ?? "?"}
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      {fmtDate(o.travel_date)}
+                      {o.return_date ? ` · ${fmtDate(o.return_date)}` : ""} ·{" "}
+                      {o.passengers ?? 1} pax
+                    </p>
+                  </div>
                 </div>
-                <div className="leading-tight">
-                  <p className="font-medium text-foreground">
-                    {o.from} → {o.to}
-                    <span className="ml-2 text-xs font-normal text-muted-foreground">
-                      {o.fromCity} – {o.toCity}
+                <div className="flex items-center gap-4 pl-13 sm:pl-0">
+                  {o.selling_price != null ? (
+                    <span className="font-display text-sm font-semibold text-foreground">
+                      {gbp(o.selling_price)}
                     </span>
-                  </p>
-                  <p className="text-xs text-muted-foreground">
-                    {o.departDate}
-                    {o.returnDate ? ` · ${o.returnDate}` : ""} · {o.pax} pax
-                  </p>
+                  ) : null}
+                  <StatusBadge tone={ORDER_TONE[o.status]}>
+                    {STATUS_LABEL[o.status]}
+                  </StatusBadge>
                 </div>
-              </div>
-              <div className="flex items-center gap-4 pl-13 sm:pl-0">
-                {o.price ? (
-                  <span className="font-display text-sm font-semibold text-foreground">
-                    {gbp(o.price)}
-                  </span>
-                ) : null}
-                <StatusBadge tone={customerStatusTone(o.status)}>
-                  {o.status}
-                </StatusBadge>
-              </div>
-            </li>
-          ))}
-        </ul>
+              </li>
+            ))}
+          </ul>
+        )}
       </SectionCard>
 
       {/* Help footer */}

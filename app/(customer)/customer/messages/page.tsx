@@ -1,29 +1,125 @@
 "use client";
 
-import { useState } from "react";
-import { Plane, Send } from "lucide-react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { Plane, Send, Paperclip, Loader2, MessageCircle } from "lucide-react";
+import { toast } from "sonner";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { CHAT_MESSAGES, type ChatMessage } from "@/lib/mock/customer";
+import { MessageAttachment } from "@/components/portal/message-attachment";
+import { createClient } from "@/lib/supabase/client";
+import { getMyThread, sendCustomerMessage } from "@/lib/actions/customer";
+import { CUSTOMER_THREAD_KEY } from "@/lib/query-keys";
+import { uploadAttachment, ATTACHMENT_ACCEPT } from "@/lib/storage";
+import type { Message } from "@/lib/db/types";
 import { cn } from "@/lib/utils";
 
+function fmtClock(iso: string) {
+  const d = new Date(iso);
+  return `${String(d.getHours()).padStart(2, "0")}:${String(
+    d.getMinutes()
+  ).padStart(2, "0")}`;
+}
+
 export default function CustomerMessagesPage() {
-  const [messages, setMessages] = useState<ChatMessage[]>(CHAT_MESSAGES);
+  const queryClient = useQueryClient();
+  const supabase = useMemo(() => createClient(), []);
   const [draft, setDraft] = useState("");
+  const [uploading, setUploading] = useState(false);
+  const fileRef = useRef<HTMLInputElement>(null);
+  const scrollRef = useRef<HTMLDivElement>(null);
+
+  const { data, isLoading } = useQuery({
+    queryKey: CUSTOMER_THREAD_KEY,
+    queryFn: getMyThread,
+  });
+
+  const conversation = data?.conversation ?? null;
+  const messages = useMemo(() => data?.messages ?? [], [data]);
+  const conversationId = conversation?.id;
+
+  // Realtime: my conversation's messages (RLS limits the stream to my own).
+  useEffect(() => {
+    if (!conversationId) return;
+    const channel = supabase
+      .channel(`customer-thread-${conversationId}`)
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "messages",
+          filter: `conversation_id=eq.${conversationId}`,
+        },
+        () => queryClient.invalidateQueries({ queryKey: CUSTOMER_THREAD_KEY })
+      )
+      .subscribe();
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [supabase, queryClient, conversationId]);
+
+  useEffect(() => {
+    const el = scrollRef.current;
+    if (el) el.scrollTop = el.scrollHeight;
+  }, [messages]);
+
+  const sendMutation = useMutation({
+    mutationFn: (vars: { conversationId: string; body: string; mediaUrl?: string | null }) =>
+      sendCustomerMessage(vars),
+    onMutate: async (vars) => {
+      await queryClient.cancelQueries({ queryKey: CUSTOMER_THREAD_KEY });
+      const previous = queryClient.getQueryData<typeof data>(CUSTOMER_THREAD_KEY);
+      const optimistic: Message = {
+        id: `optimistic-${Date.now()}`,
+        conversation_id: vars.conversationId,
+        direction: "incoming",
+        body: vars.body,
+        media_url: vars.mediaUrl ?? null,
+        sender_id: null,
+        created_at: new Date().toISOString(),
+      };
+      queryClient.setQueryData(CUSTOMER_THREAD_KEY, (old: typeof data) =>
+        old
+          ? { ...old, messages: [...old.messages, optimistic] }
+          : old
+      );
+      return { previous };
+    },
+    onError: (_err, _vars, ctx) => {
+      if (ctx?.previous) queryClient.setQueryData(CUSTOMER_THREAD_KEY, ctx.previous);
+      toast.error("Couldn't send", { description: "Please try again." });
+    },
+    onSuccess: (res) => {
+      if (!res.ok) toast.error("Couldn't send", { description: res.error });
+    },
+    onSettled: () =>
+      queryClient.invalidateQueries({ queryKey: CUSTOMER_THREAD_KEY }),
+  });
 
   function send(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     const text = draft.trim();
-    if (!text) return;
-    const now = new Date();
-    const time = `${String(now.getHours()).padStart(2, "0")}:${String(
-      now.getMinutes()
-    ).padStart(2, "0")}`;
-    setMessages((prev) => [
-      ...prev,
-      { id: `local-${prev.length}`, from: "customer", text, time },
-    ]);
+    if (!text || !conversationId) return;
+    sendMutation.mutate({ conversationId, body: text });
     setDraft("");
+  }
+
+  async function handleFile(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    e.target.value = "";
+    if (!file || !conversationId) return;
+    setUploading(true);
+    const result = await uploadAttachment(file, conversationId);
+    if (!result.ok) {
+      setUploading(false);
+      toast.error("Upload failed", { description: result.error });
+      return;
+    }
+    sendMutation.mutate(
+      { conversationId, body: "", mediaUrl: result.url },
+      { onSettled: () => setUploading(false) }
+    );
   }
 
   return (
@@ -48,40 +144,67 @@ export default function CustomerMessagesPage() {
           </div>
           <div className="leading-tight">
             <p className="font-display text-sm font-semibold text-navy">Wicket Team</p>
-            <p className="text-xs text-emerald-600">Online · typically replies in minutes</p>
+            <p className="text-xs text-emerald-600">Typically replies in minutes</p>
           </div>
         </div>
 
         {/* Messages */}
-        <div className="flex-1 space-y-3 overflow-y-auto bg-neutral-soft/50 px-4 py-5 md:px-6">
-          {messages.map((m) => {
-            const mine = m.from === "customer";
-            return (
-              <div
-                key={m.id}
-                className={cn("flex", mine ? "justify-end" : "justify-start")}
-              >
-                <div
-                  className={cn(
-                    "max-w-[78%] rounded-2xl px-3.5 py-2 text-sm shadow-sm sm:max-w-[65%]",
-                    mine
-                      ? "rounded-br-md bg-primary text-primary-foreground"
-                      : "rounded-bl-md border border-border bg-white text-foreground"
-                  )}
-                >
-                  <p className="leading-relaxed">{m.text}</p>
-                  <span
+        <div
+          ref={scrollRef}
+          className="flex-1 space-y-3 overflow-y-auto bg-neutral-soft/50 px-4 py-5 md:px-6"
+        >
+          {isLoading ? (
+            <div className="flex h-full items-center justify-center text-sm text-muted-foreground">
+              <Loader2 className="mr-2 size-4 animate-spin" />
+              Loading…
+            </div>
+          ) : !conversation ? (
+            <div className="flex h-full flex-col items-center justify-center gap-2 text-center">
+              <div className="flex size-12 items-center justify-center rounded-2xl bg-chip text-brand-dark">
+                <MessageCircle className="size-6" />
+              </div>
+              <p className="font-display text-sm font-semibold text-foreground">
+                No conversation yet
+              </p>
+              <p className="max-w-xs text-xs text-muted-foreground">
+                Your chat with the team will appear here. Request a quote and
+                we&apos;ll be in touch — your real conversations happen on WhatsApp.
+              </p>
+            </div>
+          ) : messages.length === 0 ? (
+            <div className="flex h-full items-center justify-center text-sm text-muted-foreground">
+              No messages yet — say hello.
+            </div>
+          ) : (
+            messages.map((m) => {
+              // Customer's own messages are stored as 'incoming' (inbound to the
+              // business); in THIS portal they're "mine" → right/blue.
+              const mine = m.direction === "incoming";
+              return (
+                <div key={m.id} className={cn("flex", mine ? "justify-end" : "justify-start")}>
+                  <div
                     className={cn(
-                      "mt-1 block text-right text-[10px]",
-                      mine ? "text-white/70" : "text-muted-foreground"
+                      "max-w-[78%] rounded-2xl px-3.5 py-2 text-sm shadow-sm sm:max-w-[65%]",
+                      mine
+                        ? "rounded-br-md bg-primary text-primary-foreground"
+                        : "rounded-bl-md border border-border bg-white text-foreground"
                     )}
                   >
-                    {m.time}
-                  </span>
+                    {m.media_url ? <MessageAttachment url={m.media_url} mine={mine} /> : null}
+                    {m.body ? <p className="leading-relaxed">{m.body}</p> : null}
+                    <span
+                      className={cn(
+                        "mt-1 block text-right text-[10px]",
+                        mine ? "text-white/70" : "text-muted-foreground"
+                      )}
+                    >
+                      {fmtClock(m.created_at)}
+                    </span>
+                  </div>
                 </div>
-              </div>
-            );
-          })}
+              );
+            })
+          )}
         </div>
 
         {/* Input */}
@@ -89,10 +212,29 @@ export default function CustomerMessagesPage() {
           onSubmit={send}
           className="flex items-center gap-2 border-t border-border bg-card px-4 py-3"
         >
+          <input
+            ref={fileRef}
+            type="file"
+            accept={ATTACHMENT_ACCEPT}
+            className="hidden"
+            onChange={handleFile}
+          />
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon"
+            aria-label="Attach file"
+            disabled={!conversation || uploading}
+            className="size-10 shrink-0 rounded-full text-muted-foreground"
+            onClick={() => fileRef.current?.click()}
+          >
+            {uploading ? <Loader2 className="size-4 animate-spin" /> : <Paperclip className="size-4" />}
+          </Button>
           <Input
             value={draft}
             onChange={(e) => setDraft(e.target.value)}
-            placeholder="Type a message…"
+            placeholder={conversation ? "Type a message…" : "No conversation yet"}
+            disabled={!conversation}
             className="h-11 rounded-full bg-neutral-soft"
           />
           <Button
@@ -100,7 +242,7 @@ export default function CustomerMessagesPage() {
             size="icon"
             aria-label="Send message"
             className="size-11 shrink-0 rounded-full"
-            disabled={!draft.trim()}
+            disabled={!draft.trim() || !conversation}
           >
             <Send className="size-4" />
           </Button>

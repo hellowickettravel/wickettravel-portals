@@ -2,24 +2,37 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { useQuery } from "@tanstack/react-query";
 import {
   Plane,
   ChevronDown,
   Calendar,
   Users,
   Ticket,
-  UserRound,
   ArrowRight,
 } from "lucide-react";
 import { PageHeader } from "@/components/admin/page-header";
-import { StatusBadge } from "@/components/admin/status-badge";
+import { SectionCard } from "@/components/admin/section-card";
+import { StatusBadge, type Tone } from "@/components/admin/status-badge";
 import { Button } from "@/components/ui/button";
-import {
-  CUSTOMER_ORDERS,
-  customerStatusTone,
-} from "@/lib/mock/customer";
-import { gbp } from "@/lib/format";
+import { TableSkeleton } from "@/components/portal/skeletons";
+import { listMyCustomerOrders } from "@/lib/actions/customer";
+import { CUSTOMER_ORDERS_KEY } from "@/lib/query-keys";
+import type { OrderStatus } from "@/lib/db/types";
+import { gbp, fmtDate } from "@/lib/format";
 import { cn } from "@/lib/utils";
+
+const ORDER_TONE: Record<OrderStatus, Tone> = {
+  open: "amber",
+  closed: "green",
+  cancelled: "red",
+};
+
+const STATUS_LABEL: Record<OrderStatus, string> = {
+  open: "In progress",
+  closed: "Completed",
+  cancelled: "Cancelled",
+};
 
 function DetailRow({
   icon: Icon,
@@ -40,8 +53,13 @@ function DetailRow({
 }
 
 export default function CustomerOrdersPage() {
-  const [openId, setOpenId] = useState<string | null>(CUSTOMER_ORDERS[0]?.id ?? null);
-  const orders = CUSTOMER_ORDERS;
+  const { data: orders, isLoading } = useQuery({
+    queryKey: CUSTOMER_ORDERS_KEY,
+    queryFn: listMyCustomerOrders,
+  });
+  const [openId, setOpenId] = useState<string | null>(null);
+
+  const rows = orders ?? [];
 
   return (
     <div className="space-y-7">
@@ -51,7 +69,13 @@ export default function CustomerOrdersPage() {
         subtitle="Every quote and booking you've made with Wicket."
       />
 
-      {orders.length === 0 ? (
+      {isLoading ? (
+        <SectionCard flush>
+          <div className="p-4">
+            <TableSkeleton rows={4} columns={4} />
+          </div>
+        </SectionCard>
+      ) : rows.length === 0 ? (
         <div className="flex flex-col items-center justify-center gap-3 rounded-2xl border border-border bg-card py-16 text-center shadow-card">
           <div className="flex size-12 items-center justify-center rounded-2xl bg-chip text-brand-dark">
             <Plane className="size-6 -rotate-45" />
@@ -69,14 +93,13 @@ export default function CustomerOrdersPage() {
         </div>
       ) : (
         <div className="space-y-4">
-          {orders.map((o) => {
+          {rows.map((o) => {
             const open = openId === o.id;
             return (
               <div
                 key={o.id}
                 className="overflow-hidden rounded-2xl border border-border bg-card shadow-card"
               >
-                {/* Header row */}
                 <button
                   type="button"
                   onClick={() => setOpenId(open ? null : o.id)}
@@ -87,23 +110,23 @@ export default function CustomerOrdersPage() {
                   </div>
                   <div className="min-w-0 flex-1">
                     <p className="font-display text-base font-semibold text-navy">
-                      {o.from} → {o.to}
+                      {o.route_from ?? "?"} → {o.route_to ?? "?"}
                     </p>
                     <p className="truncate text-xs text-muted-foreground">
-                      {o.fromCity} – {o.toCity} · {o.departDate}
-                      {o.returnDate ? ` → ${o.returnDate}` : ""}
+                      {fmtDate(o.travel_date)}
+                      {o.return_date ? ` → ${fmtDate(o.return_date)}` : ""}
                     </p>
                   </div>
                   <div className="hidden items-center gap-4 sm:flex">
-                    {o.price ? (
+                    {o.selling_price != null ? (
                       <span className="font-display text-sm font-semibold text-foreground">
-                        {gbp(o.price)}
+                        {gbp(o.selling_price)}
                       </span>
                     ) : (
                       <span className="text-xs text-muted-foreground">No quote yet</span>
                     )}
-                    <StatusBadge tone={customerStatusTone(o.status)}>
-                      {o.status}
+                    <StatusBadge tone={ORDER_TONE[o.status]}>
+                      {STATUS_LABEL[o.status]}
                     </StatusBadge>
                   </div>
                   <ChevronDown
@@ -114,37 +137,36 @@ export default function CustomerOrdersPage() {
                   />
                 </button>
 
-                {/* Mobile status row */}
                 <div className="flex items-center justify-between px-5 pb-3 sm:hidden">
-                  {o.price ? (
+                  {o.selling_price != null ? (
                     <span className="font-display text-sm font-semibold text-foreground">
-                      {gbp(o.price)}
+                      {gbp(o.selling_price)}
                     </span>
                   ) : (
                     <span className="text-xs text-muted-foreground">No quote yet</span>
                   )}
-                  <StatusBadge tone={customerStatusTone(o.status)}>
-                    {o.status}
+                  <StatusBadge tone={ORDER_TONE[o.status]}>
+                    {STATUS_LABEL[o.status]}
                   </StatusBadge>
                 </div>
 
-                {/* Detail panel */}
                 {open ? (
                   <div className="border-t border-border bg-neutral-soft/60 px-5 py-5">
                     <div className="grid grid-cols-1 gap-x-8 gap-y-3 text-sm sm:grid-cols-2">
-                      <DetailRow icon={Ticket} label="Reference" value={o.reference} />
-                      <DetailRow icon={Plane} label="Trip type" value={o.tripType} />
-                      <DetailRow icon={Calendar} label="Departure" value={o.departDate} />
-                      <DetailRow icon={Calendar} label="Return" value={o.returnDate ?? "—"} />
-                      <DetailRow icon={Users} label="Passengers" value={`${o.pax}`} />
-                      <DetailRow icon={UserRound} label="Cabin" value={o.cabin} />
-                      <DetailRow icon={UserRound} label="Your agent" value={o.agent} />
+                      <DetailRow icon={Calendar} label="Departure" value={fmtDate(o.travel_date)} />
+                      <DetailRow icon={Calendar} label="Return" value={o.return_date ? fmtDate(o.return_date) : "—"} />
+                      <DetailRow icon={Users} label="Passengers" value={`${o.passengers ?? 1}`} />
                       <DetailRow
                         icon={Ticket}
                         label="Total price"
-                        value={o.price ? gbp(o.price) : "Awaiting quote"}
+                        value={o.selling_price != null ? gbp(o.selling_price) : "Awaiting quote"}
                       />
                     </div>
+                    {o.notes ? (
+                      <p className="mt-4 rounded-lg bg-white p-3 text-sm text-muted-foreground">
+                        {o.notes}
+                      </p>
+                    ) : null}
                     <div className="mt-5 flex flex-wrap gap-2">
                       <Button
                         render={<Link href="/customer/messages" />}

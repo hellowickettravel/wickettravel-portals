@@ -13,9 +13,9 @@ import { createClient } from "@/lib/supabase/client";
 import { updateMyName } from "@/lib/actions/account";
 
 const PREFS = [
-  { id: "n1", label: "New chat assigned", desc: "When a conversation is assigned to you.", on: true },
-  { id: "n2", label: "New customer message", desc: "When a customer replies in your chats.", on: true },
-  { id: "n3", label: "Order status changes", desc: "When one of your orders changes status.", on: false },
+  { id: "p1", label: "Order updates", desc: "Quote, ticket and status changes.", on: true },
+  { id: "p2", label: "Promotions", desc: "Occasional deals and fare drops.", on: false },
+  { id: "p3", label: "WhatsApp notifications", desc: "Get updates on WhatsApp too.", on: true },
 ];
 
 function fieldLabel(text: string) {
@@ -26,12 +26,14 @@ function fieldLabel(text: string) {
   );
 }
 
-export function SettingsForm({
+export function CustomerProfileForm({
   initialName,
   email,
+  phone,
 }: {
   initialName: string;
   email: string;
+  phone: string;
 }) {
   const [name, setName] = useState(initialName);
   const [savingName, setSavingName] = useState(false);
@@ -55,9 +57,7 @@ export function SettingsForm({
   async function savePassword(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     if (newPassword.length < 8) {
-      toast.error("Password too short", {
-        description: "Use at least 8 characters.",
-      });
+      toast.error("Password too short", { description: "Use at least 8 characters." });
       return;
     }
     if (newPassword !== confirmPassword) {
@@ -81,12 +81,12 @@ export function SettingsForm({
     <div className="space-y-7">
       <PageHeader
         eyebrow="Account"
-        title="Settings"
-        subtitle="Manage your personal details and preferences."
+        title="Profile"
+        subtitle="Manage your details and preferences."
       />
 
-      {/* Profile */}
-      <SectionCard title="My profile">
+      {/* Personal info */}
+      <SectionCard title="Personal information">
         <form onSubmit={saveName}>
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div className="space-y-2">
@@ -103,6 +103,15 @@ export function SettingsForm({
               <Input
                 id="email"
                 value={email}
+                readOnly
+                className="h-10 cursor-not-allowed rounded-[10px] bg-muted text-muted-foreground"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="phone">{fieldLabel("WhatsApp phone (read-only)")}</Label>
+              <Input
+                id="phone"
+                value={phone || "—"}
                 readOnly
                 className="h-10 cursor-not-allowed rounded-[10px] bg-muted text-muted-foreground"
               />
@@ -124,7 +133,7 @@ export function SettingsForm({
       </SectionCard>
 
       {/* Password */}
-      <SectionCard title="Password" description="Update your account password.">
+      <SectionCard title="Password" description="Update the password for your account.">
         <form onSubmit={savePassword}>
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div className="space-y-2">
@@ -171,7 +180,7 @@ export function SettingsForm({
       {/* Notifications (UI only) */}
       <SectionCard
         title="Notification preferences"
-        description="Choose what you'd like to be alerted about. (Not yet persisted.)"
+        description="Choose what you'd like to hear about. (Not yet persisted.)"
       >
         <ul className="divide-y divide-border">
           {PREFS.map((p) => (
@@ -186,9 +195,7 @@ export function SettingsForm({
               <Switch
                 defaultChecked={p.on}
                 onCheckedChange={() =>
-                  toast.info("Notification prefs", {
-                    description: "UI only — not saved yet.",
-                  })
+                  toast.info("Notification prefs", { description: "UI only — not saved yet." })
                 }
               />
             </li>

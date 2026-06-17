@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { StatusBadge, type Tone } from "@/components/admin/status-badge";
 import { ConversationListSkeleton } from "@/components/portal/skeletons";
+import { MessageAttachment } from "@/components/portal/message-attachment";
 import { CreateOrderDialog } from "@/components/employee/create-order-dialog";
 import { createClient } from "@/lib/supabase/client";
 import {
@@ -17,7 +18,18 @@ import {
   sendMessage,
   markConversationRead,
 } from "@/lib/actions/employee";
-import { MY_INBOX_KEY, myMessagesKey } from "@/lib/query-keys";
+import {
+  listAdminInbox,
+  listAdminMessages,
+  adminSendMessage,
+} from "@/lib/actions/admin";
+import {
+  MY_INBOX_KEY,
+  myMessagesKey,
+  ADMIN_INBOX_KEY,
+  adminMessagesKey,
+} from "@/lib/query-keys";
+import { uploadAttachment, ATTACHMENT_ACCEPT } from "@/lib/storage";
 import type { InboxConversation } from "@/lib/db/conversations";
 import type { Message, ConversationStatus } from "@/lib/db/types";
 import { type AccessLevel, isReadOnly } from "@/lib/access";
@@ -44,33 +56,53 @@ function fmtClock(iso: string) {
   ).padStart(2, "0")}`;
 }
 
-export function MessagesInbox({
-  accessLevel,
+type Scope = "admin" | "employee";
+
+/**
+ * Shared WhatsApp-style inbox used by BOTH the employee and admin portals.
+ * `scope` selects the data-access actions, channel, and capabilities:
+ *   - employee: assignment-scoped, respects access level (view_only = read-only),
+ *               unread tracking, "create order from chat"
+ *   - admin:    full access to every conversation, always read+reply, no order CTA
+ * Realtime (RLS-scoped) keeps both live.
+ */
+export function ConversationInbox({
+  scope,
   currentUserId,
+  accessLevel = "full",
 }: {
-  accessLevel: AccessLevel;
+  scope: Scope;
   currentUserId: string;
+  accessLevel?: AccessLevel;
 }) {
-  const readOnly = isReadOnly(accessLevel);
+  const isAdmin = scope === "admin";
+  const readOnly = !isAdmin && isReadOnly(accessLevel);
+  const canCreateOrder = !isAdmin && !readOnly;
+
   const queryClient = useQueryClient();
   const supabase = useMemo(() => createClient(), []);
+
+  const inboxKey = isAdmin ? ADMIN_INBOX_KEY : MY_INBOX_KEY;
+  const messagesKeyFor = isAdmin ? adminMessagesKey : myMessagesKey;
+  const loadInbox = isAdmin ? listAdminInbox : listMyInbox;
+  const loadMessages = isAdmin ? listAdminMessages : listMyMessages;
+  const sendAction = isAdmin ? adminSendMessage : sendMessage;
 
   const [activeId, setActiveId] = useState<string | undefined>(undefined);
   const [search, setSearch] = useState("");
   const [draft, setDraft] = useState("");
   const [orderOpen, setOrderOpen] = useState(false);
-
+  const [uploading, setUploading] = useState(false);
+  const fileRef = useRef<HTMLInputElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
 
   // ----- Inbox list -----
   const { data: inbox, isLoading: inboxLoading } = useQuery({
-    queryKey: MY_INBOX_KEY,
-    queryFn: listMyInbox,
+    queryKey: inboxKey,
+    queryFn: loadInbox,
   });
-
   const conversations = useMemo(() => inbox ?? [], [inbox]);
 
-  // Wire the search box to actually filter (name, phone, last message).
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
     if (!q) return conversations;
@@ -89,75 +121,70 @@ export function MessagesInbox({
 
   // ----- Active thread -----
   const { data: messages, isLoading: messagesLoading } = useQuery({
-    queryKey: activeId ? myMessagesKey(activeId) : ["employee", "messages", "none"],
-    queryFn: () => listMyMessages(activeId as string),
+    queryKey: activeId ? messagesKeyFor(activeId) : [scope, "messages", "none"],
+    queryFn: () => loadMessages(activeId as string),
     enabled: !!activeId,
   });
 
-  // Keep a ref of the active id for the realtime handler (avoids resubscribing).
   const activeIdRef = useRef<string | undefined>(undefined);
   useEffect(() => {
     activeIdRef.current = activeId;
   }, [activeId]);
 
-  // ----- Realtime: live messages + conversations for my assigned chats -----
-  // RLS scopes the stream — I only receive events for rows I can SELECT, i.e.
-  // conversations assigned to me and their messages.
+  // ----- Realtime (RLS-scoped to what this user can SELECT) -----
   useEffect(() => {
     const channel = supabase
-      .channel(`employee-inbox-${currentUserId}`)
+      .channel(`${scope}-inbox-${currentUserId}`)
       .on(
         "postgres_changes",
         { event: "INSERT", schema: "public", table: "messages" },
         (payload) => {
           const convId = (payload.new as { conversation_id?: string })
             ?.conversation_id;
-          // Refresh the left list (preview / unread / ordering).
-          queryClient.invalidateQueries({ queryKey: MY_INBOX_KEY });
-          // Refresh the open thread if the message belongs to it.
+          queryClient.invalidateQueries({ queryKey: inboxKey });
           if (convId && convId === activeIdRef.current) {
-            queryClient.invalidateQueries({ queryKey: myMessagesKey(convId) });
-            // Reading the open thread → keep it marked read.
-            markConversationRead(convId).then(() =>
-              queryClient.invalidateQueries({ queryKey: MY_INBOX_KEY })
-            );
+            queryClient.invalidateQueries({ queryKey: messagesKeyFor(convId) });
+            if (!isAdmin) {
+              markConversationRead(convId).then(() =>
+                queryClient.invalidateQueries({ queryKey: inboxKey })
+              );
+            }
           }
         }
       )
       .on(
         "postgres_changes",
         { event: "*", schema: "public", table: "conversations" },
-        () => {
-          // New assignment / status / last_message_at change → refresh list.
-          queryClient.invalidateQueries({ queryKey: MY_INBOX_KEY });
-        }
+        () => queryClient.invalidateQueries({ queryKey: inboxKey })
       )
       .subscribe();
 
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [supabase, queryClient, currentUserId]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [supabase, queryClient, currentUserId, scope]);
 
-  // ----- Open a conversation: mark read -----
   function openConversation(id: string) {
     setActiveId(id);
-    markConversationRead(id).then(() =>
-      queryClient.invalidateQueries({ queryKey: MY_INBOX_KEY })
-    );
+    if (!isAdmin) {
+      markConversationRead(id).then(() =>
+        queryClient.invalidateQueries({ queryKey: inboxKey })
+      );
+    }
   }
 
-  // Auto-scroll to newest whenever the thread changes.
   useEffect(() => {
     const el = scrollRef.current;
     if (el) el.scrollTop = el.scrollHeight;
   }, [messages, activeId]);
 
-  // ----- Send reply (mock send + optimistic) -----
+  // ----- Send reply (mock save + optimistic) -----
   const sendMutation = useMutation({
-    mutationFn: sendMessage,
+    mutationFn: (vars: { conversationId: string; body: string; mediaUrl?: string | null }) =>
+      sendAction(vars),
     onMutate: async (vars) => {
-      const key = myMessagesKey(vars.conversationId);
+      const key = messagesKeyFor(vars.conversationId);
       await queryClient.cancelQueries({ queryKey: key });
       const previous = queryClient.getQueryData<Message[]>(key);
       const optimistic: Message = {
@@ -169,10 +196,7 @@ export function MessagesInbox({
         sender_id: currentUserId,
         created_at: new Date().toISOString(),
       };
-      queryClient.setQueryData<Message[]>(key, (old) => [
-        ...(old ?? []),
-        optimistic,
-      ]);
+      queryClient.setQueryData<Message[]>(key, (old) => [...(old ?? []), optimistic]);
       return { key, previous };
     },
     onError: (_err, _vars, ctx) => {
@@ -182,14 +206,12 @@ export function MessagesInbox({
     onSuccess: (res, vars) => {
       if (!res.ok) {
         toast.error("Couldn't send", { description: res.error });
-        queryClient.invalidateQueries({ queryKey: myMessagesKey(vars.conversationId) });
-        return;
+        queryClient.invalidateQueries({ queryKey: messagesKeyFor(vars.conversationId) });
       }
     },
     onSettled: (_res, _err, vars) => {
-      // Realtime confirms too, but invalidate so we converge on DB truth.
-      queryClient.invalidateQueries({ queryKey: myMessagesKey(vars.conversationId) });
-      queryClient.invalidateQueries({ queryKey: MY_INBOX_KEY });
+      queryClient.invalidateQueries({ queryKey: messagesKeyFor(vars.conversationId) });
+      queryClient.invalidateQueries({ queryKey: inboxKey });
     },
   });
 
@@ -199,6 +221,23 @@ export function MessagesInbox({
     if (!text || !activeId || readOnly) return;
     sendMutation.mutate({ conversationId: activeId, body: text });
     setDraft("");
+  }
+
+  async function handleFile(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    e.target.value = ""; // allow re-selecting the same file
+    if (!file || !activeId || readOnly) return;
+    setUploading(true);
+    const result = await uploadAttachment(file, activeId);
+    if (!result.ok) {
+      setUploading(false);
+      toast.error("Upload failed", { description: result.error });
+      return;
+    }
+    sendMutation.mutate(
+      { conversationId: activeId, body: "", mediaUrl: result.url },
+      { onSettled: () => setUploading(false) }
+    );
   }
 
   const thread = messages ?? [];
@@ -237,8 +276,9 @@ export function MessagesInbox({
               No conversations yet
             </p>
             <p className="max-w-[16rem] text-xs text-muted-foreground">
-              Chats assigned to you will appear here. Ask an admin to assign one,
-              or use the simulate tool to test.
+              {isAdmin
+                ? "Conversations appear here as customers message in. Use the dev tools above to simulate one."
+                : "Chats assigned to you will appear here."}
             </p>
           </div>
         ) : filtered.length === 0 ? (
@@ -267,9 +307,7 @@ export function MessagesInbox({
                     </Avatar>
                     <div className="min-w-0 flex-1">
                       <div className="flex items-center justify-between gap-2">
-                        <p className="truncate text-sm font-medium text-foreground">
-                          {name}
-                        </p>
+                        <p className="truncate text-sm font-medium text-foreground">{name}</p>
                         <span className="shrink-0 text-[11px] text-muted-foreground">
                           {fmtRelative(c.last_message_at)}
                         </span>
@@ -297,7 +335,6 @@ export function MessagesInbox({
       <section className={cn("flex min-w-0 flex-1 flex-col", !active && "hidden md:flex")}>
         {active ? (
           <>
-            {/* Header */}
             <div className="flex items-center justify-between gap-3 border-b border-border px-4 py-3">
               <div className="flex items-center gap-3">
                 <button
@@ -325,7 +362,7 @@ export function MessagesInbox({
                   {active.status === "open" ? "Open" : "Closed"}
                 </StatusBadge>
               </div>
-              {!readOnly ? (
+              {canCreateOrder ? (
                 <Button variant="outline" size="sm" onClick={() => setOrderOpen(true)}>
                   <FilePlus2 className="size-4" />
                   <span className="hidden sm:inline">Create order</span>
@@ -360,14 +397,7 @@ export function MessagesInbox({
                             : "rounded-bl-md border border-border bg-white text-foreground"
                         )}
                       >
-                        {m.media_url ? (
-                          // eslint-disable-next-line @next/next/no-img-element
-                          <img
-                            src={m.media_url}
-                            alt="attachment"
-                            className="mb-1 max-h-60 rounded-lg object-cover"
-                          />
-                        ) : null}
+                        {m.media_url ? <MessageAttachment url={m.media_url} mine={mine} /> : null}
                         {m.body ? <p className="leading-relaxed">{m.body}</p> : null}
                         <span
                           className={cn(
@@ -392,20 +422,27 @@ export function MessagesInbox({
               </div>
             ) : (
               <form onSubmit={send} className="flex items-center gap-2 border-t border-border bg-card px-3 py-3">
+                <input
+                  ref={fileRef}
+                  type="file"
+                  accept={ATTACHMENT_ACCEPT}
+                  className="hidden"
+                  onChange={handleFile}
+                />
                 <Button
                   type="button"
                   variant="ghost"
                   size="icon"
-                  aria-label="Attach image"
+                  aria-label="Attach file"
+                  disabled={uploading}
                   className="size-10 shrink-0 rounded-full text-muted-foreground"
-                  onClick={() =>
-                    toast.info("Attach image", {
-                      description:
-                        "Image upload is a stub — needs a Supabase Storage bucket (see notes).",
-                    })
-                  }
+                  onClick={() => fileRef.current?.click()}
                 >
-                  <Paperclip className="size-4" />
+                  {uploading ? (
+                    <Loader2 className="size-4 animate-spin" />
+                  ) : (
+                    <Paperclip className="size-4" />
+                  )}
                 </Button>
                 <Input
                   value={draft}
@@ -432,8 +469,7 @@ export function MessagesInbox({
         )}
       </section>
 
-      {/* Create order from this chat */}
-      {active ? (
+      {canCreateOrder && active ? (
         <CreateOrderDialog
           open={orderOpen}
           onOpenChange={setOrderOpen}

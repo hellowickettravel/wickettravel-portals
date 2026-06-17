@@ -1,7 +1,8 @@
 "use client";
 
-import { useState } from "react";
-import { ImageUp, AlertTriangle } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { ImageUp, AlertTriangle, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { PageHeader } from "@/components/admin/page-header";
 import { SectionCard } from "@/components/admin/section-card";
@@ -10,6 +11,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { ConfirmDialog } from "@/components/portal/confirm-dialog";
+import { createClient } from "@/lib/supabase/client";
+import { getBusinessSettings, saveBusinessSettings } from "@/lib/actions/admin";
+import { ADMIN_SETTINGS_KEY } from "@/lib/query-keys";
 
 const NOTIFICATIONS = [
   { id: "n1", label: "New order alerts", desc: "Notify admins when an order is created.", on: true },
@@ -27,12 +31,77 @@ function fieldLabel(text: string) {
 }
 
 export default function SettingsPage() {
+  const queryClient = useQueryClient();
+  const supabase = useMemo(() => createClient(), []);
   const [resetOpen, setResetOpen] = useState(false);
 
-  const save = (what: string) => () =>
-    toast.success(`${what} saved`, {
-      description: "UI only — changes persist once wired to Supabase.",
+  const { data: settings, isLoading } = useQuery({
+    queryKey: ADMIN_SETTINGS_KEY,
+    queryFn: getBusinessSettings,
+  });
+
+  // Form state — hydrated from the loaded settings.
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [phone, setPhone] = useState("");
+  const [address, setAddress] = useState("");
+  const [commission, setCommission] = useState("");
+
+  useEffect(() => {
+    if (settings) {
+      setName(settings.business_name ?? "");
+      setEmail(settings.business_email ?? "");
+      setPhone(settings.business_phone ?? "");
+      setAddress(settings.business_address ?? "");
+      setCommission(
+        settings.default_commission != null ? String(settings.default_commission) : ""
+      );
+    }
+  }, [settings]);
+
+  // Realtime: settings changes from another admin appear live.
+  useEffect(() => {
+    const channel = supabase
+      .channel("business-settings")
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "business_settings" },
+        () => queryClient.invalidateQueries({ queryKey: ADMIN_SETTINGS_KEY })
+      )
+      .subscribe();
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [supabase, queryClient]);
+
+  const saveMutation = useMutation({
+    mutationFn: saveBusinessSettings,
+    onSuccess: (res) => {
+      if (!res.ok) {
+        toast.error("Couldn't save", { description: res.error });
+        return;
+      }
+      toast.success("Settings saved");
+      queryClient.invalidateQueries({ queryKey: ADMIN_SETTINGS_KEY });
+    },
+    onError: () => toast.error("Couldn't save", { description: "Please try again." }),
+  });
+
+  function save(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    const parsedCommission = commission.trim() === "" ? null : Number(commission);
+    if (parsedCommission != null && !Number.isFinite(parsedCommission)) {
+      toast.error("Commission must be a number");
+      return;
+    }
+    saveMutation.mutate({
+      businessName: name,
+      businessEmail: email,
+      businessPhone: phone,
+      businessAddress: address,
+      defaultCommission: parsedCommission,
     });
+  }
 
   return (
     <div className="space-y-7">
@@ -42,44 +111,61 @@ export default function SettingsPage() {
         subtitle="Manage your business profile, branding and preferences."
       />
 
-      <div className="rounded-xl border border-amber-200 bg-amber-50/70 px-4 py-3 text-xs text-amber-700">
-        Heads up: settings on this page aren’t persisted yet. Saving shows a
-        confirmation, but changes aren’t stored until a settings store is wired up.
-      </div>
+      <form onSubmit={save} className="space-y-7">
+        {/* Business profile + commission (persisted) */}
+        <SectionCard title="Business profile" description="Used across invoices and customer messages.">
+          {isLoading ? (
+            <div className="flex items-center gap-2 py-6 text-sm text-muted-foreground">
+              <Loader2 className="size-4 animate-spin" />
+              Loading settings…
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              <div className="space-y-2">
+                <Label htmlFor="biz-name">{fieldLabel("Business name")}</Label>
+                <Input id="biz-name" value={name} onChange={(e) => setName(e.target.value)} className="h-10 rounded-[10px] bg-neutral-soft" />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="biz-email">{fieldLabel("Email")}</Label>
+                <Input id="biz-email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} className="h-10 rounded-[10px] bg-neutral-soft" />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="biz-phone">{fieldLabel("Phone")}</Label>
+                <Input id="biz-phone" value={phone} onChange={(e) => setPhone(e.target.value)} className="h-10 rounded-[10px] bg-neutral-soft" />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="biz-address">{fieldLabel("Address")}</Label>
+                <Input id="biz-address" value={address} onChange={(e) => setAddress(e.target.value)} className="h-10 rounded-[10px] bg-neutral-soft" />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="commission">{fieldLabel("Default commission (%)")}</Label>
+                <Input id="commission" type="number" value={commission} onChange={(e) => setCommission(e.target.value)} className="h-10 max-w-xs rounded-[10px] bg-neutral-soft" />
+              </div>
+            </div>
+          )}
+          <div className="mt-5 flex justify-end">
+            <Button type="submit" disabled={saveMutation.isPending || isLoading}>
+              {saveMutation.isPending ? (
+                <>
+                  <Loader2 className="size-4 animate-spin" />
+                  Saving…
+                </>
+              ) : (
+                "Save changes"
+              )}
+            </Button>
+          </div>
+        </SectionCard>
+      </form>
 
-      {/* Business profile */}
-      <SectionCard title="Business profile" description="Used across invoices and customer messages.">
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-          <div className="space-y-2">
-            <Label htmlFor="biz-name">{fieldLabel("Business name")}</Label>
-            <Input id="biz-name" defaultValue="Wicket Travel" className="h-10 rounded-[10px] bg-neutral-soft" />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="biz-email">{fieldLabel("Email")}</Label>
-            <Input id="biz-email" type="email" defaultValue="hello@wicket.co.uk" className="h-10 rounded-[10px] bg-neutral-soft" />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="biz-phone">{fieldLabel("Phone")}</Label>
-            <Input id="biz-phone" defaultValue="+44 20 1234 5678" className="h-10 rounded-[10px] bg-neutral-soft" />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="biz-address">{fieldLabel("Address")}</Label>
-            <Input id="biz-address" defaultValue="221B Baker Street, London" className="h-10 rounded-[10px] bg-neutral-soft" />
-          </div>
-        </div>
-        <div className="mt-5 flex justify-end">
-          <Button onClick={save("Business profile")}>Save changes</Button>
-        </div>
-      </SectionCard>
-
-      {/* Branding */}
+      {/* Branding (stub) */}
       <SectionCard title="Branding" description="Your logo and brand colour.">
         <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
           <div className="space-y-2">
-            {fieldLabel("Logo")}
-            <div className="flex h-28 cursor-pointer flex-col items-center justify-center gap-2 rounded-xl border border-dashed border-border bg-neutral-soft text-muted-foreground transition-colors hover:border-brand hover:text-brand">
+            {fieldLabel("Logo (coming soon)")}
+            <div className="flex h-28 flex-col items-center justify-center gap-2 rounded-xl border border-dashed border-border bg-neutral-soft text-muted-foreground">
               <ImageUp className="size-6" />
-              <span className="text-xs font-medium">Upload logo (PNG/SVG)</span>
+              <span className="text-xs font-medium">Logo upload — not wired yet</span>
             </div>
           </div>
           <div className="space-y-2">
@@ -88,26 +174,15 @@ export default function SettingsPage() {
               <div className="size-12 rounded-xl bg-brand shadow-sm ring-1 ring-black/5" />
               <div>
                 <p className="font-display text-sm font-semibold text-foreground">#0088CC</p>
-                <p className="text-xs text-muted-foreground">Wicket Blue · brand primary</p>
+                <p className="text-xs text-muted-foreground">Wicket Blue · brand primary (display-only)</p>
               </div>
             </div>
           </div>
         </div>
       </SectionCard>
 
-      {/* Commission model */}
-      <SectionCard title="Commission model" description="Default commission applied to new orders.">
-        <div className="max-w-xs space-y-2">
-          <Label htmlFor="commission">{fieldLabel("Default commission (%)")}</Label>
-          <Input id="commission" type="number" defaultValue={12} className="h-10 rounded-[10px] bg-neutral-soft" />
-        </div>
-        <div className="mt-5 flex justify-end">
-          <Button onClick={save("Commission model")}>Save</Button>
-        </div>
-      </SectionCard>
-
-      {/* Notifications */}
-      <SectionCard title="Notifications" description="Choose what your team gets alerted about.">
+      {/* Notifications (stub) */}
+      <SectionCard title="Notifications" description="Choose what your team gets alerted about. (Not yet persisted.)">
         <ul className="divide-y divide-border">
           {NOTIFICATIONS.map((n) => (
             <li key={n.id} className="flex items-center justify-between gap-4 py-3.5 first:pt-0 last:pb-0">
@@ -115,13 +190,18 @@ export default function SettingsPage() {
                 <p className="text-sm font-medium text-foreground">{n.label}</p>
                 <p className="text-xs text-muted-foreground">{n.desc}</p>
               </div>
-              <Switch defaultChecked={n.on} />
+              <Switch
+                defaultChecked={n.on}
+                onCheckedChange={() =>
+                  toast.info("Notifications", { description: "UI only — not saved yet." })
+                }
+              />
             </li>
           ))}
         </ul>
       </SectionCard>
 
-      {/* Danger zone */}
+      {/* Danger zone (guarded stub) */}
       <SectionCard
         title="Danger zone"
         description="Irreversible actions — proceed with caution."
@@ -147,7 +227,6 @@ export default function SettingsPage() {
         </div>
       </SectionCard>
 
-      {/* Reset workspace confirmation */}
       <ConfirmDialog
         open={resetOpen}
         onOpenChange={setResetOpen}
@@ -157,7 +236,7 @@ export default function SettingsPage() {
         destructive
         onConfirm={() =>
           toast.error("Reset workspace", {
-            description: "UI only — this destructive action is disabled.",
+            description: "Disabled — this destructive action is intentionally not wired.",
           })
         }
       />
