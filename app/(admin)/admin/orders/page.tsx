@@ -25,6 +25,7 @@ import {
 } from "@/components/ui/table";
 import { TableSkeleton } from "@/components/portal/skeletons";
 import { MobileRecordCard } from "@/components/portal/mobile-record-card";
+import { AdminCreateOrderDialog } from "@/components/admin/create-order-dialog";
 import { listOrders } from "@/lib/actions/admin";
 import type { OrderStatus } from "@/lib/db/types";
 import { gbp, fmtDate, titleCase } from "@/lib/format";
@@ -44,6 +45,7 @@ const ORDERS_KEY = ["admin", "orders"] as const;
 export default function OrdersPage() {
   const [tab, setTab] = useState<Tab>("All");
   const [query, setQuery] = useState("");
+  const [createOpen, setCreateOpen] = useState(false);
 
   const { data: orders, isLoading, isError } = useQuery({
     queryKey: ORDERS_KEY,
@@ -87,19 +89,14 @@ export default function OrdersPage() {
         title="Orders"
         subtitle="Track every booking, its commission and who created it."
         actions={
-          <Button
-            onClick={() =>
-              toast.info("New Order", {
-                description:
-                  "Coming in a later step — order creation form is not wired yet.",
-              })
-            }
-          >
+          <Button onClick={() => setCreateOpen(true)}>
             <Plus className="size-4" />
             New Order
           </Button>
         }
       />
+
+      <AdminCreateOrderDialog open={createOpen} onOpenChange={setCreateOpen} />
 
       {/* Totals strip */}
       <div className="grid grid-cols-2 gap-4 rounded-2xl border border-border bg-card p-1 shadow-card sm:grid-cols-4">

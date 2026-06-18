@@ -5,6 +5,7 @@ import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { getEmployees } from "@/lib/db/profiles";
 import { getOrders } from "@/lib/db/orders";
+import { getCustomers } from "@/lib/db/customers";
 import { getMessages } from "@/lib/db/messages";
 import {
   getConversationsOverview,
@@ -12,7 +13,9 @@ import {
 } from "@/lib/db/conversations";
 import type {
   Profile,
+  Customer,
   OrderWithRelations,
+  OrderStatus,
   AccessLevel,
   Message,
   BusinessSettings,
@@ -52,6 +55,63 @@ export async function listEmployees(): Promise<Profile[]> {
 export async function listOrders(): Promise<OrderWithRelations[]> {
   await requireAdmin();
   return getOrders();
+}
+
+/** Customers for the admin "New Order" picker (admin RLS sees all). */
+export async function listCustomers(): Promise<Customer[]> {
+  await requireAdmin();
+  return getCustomers();
+}
+
+/**
+ * Admin creates an order for any customer (standalone "New Order"). Inserted
+ * through the RLS-aware client — orders_admin_all permits the write — with
+ * created_by = the admin and no conversation_id (not tied to a chat).
+ */
+export async function createOrder(input: {
+  customerId: string;
+  routeFrom: string;
+  routeTo: string;
+  travelDate: string | null;
+  returnDate: string | null;
+  passengers: number | null;
+  sellingPrice: number | null;
+  costPrice: number | null;
+  commission: number | null;
+  notes: string | null;
+  status: OrderStatus;
+}): Promise<ActionResult> {
+  const { user, profile } = await getUserAndProfile();
+  if (!user || profile?.role !== "admin") {
+    return { ok: false, error: "Unauthorized" };
+  }
+
+  if (!input.customerId) return { ok: false, error: "Please choose a customer." };
+  const routeFrom = input.routeFrom.trim();
+  const routeTo = input.routeTo.trim();
+  if (!routeFrom || !routeTo) {
+    return { ok: false, error: "Both From and To are required." };
+  }
+
+  const supabase = await createClient();
+  const { error } = await supabase.from("orders").insert({
+    customer_id: input.customerId,
+    conversation_id: null,
+    route_from: routeFrom,
+    route_to: routeTo,
+    travel_date: input.travelDate,
+    return_date: input.returnDate,
+    passengers: input.passengers,
+    selling_price: input.sellingPrice,
+    cost_price: input.costPrice,
+    commission: input.commission,
+    notes: input.notes?.trim() || null,
+    status: input.status,
+    created_by: user.id,
+  });
+
+  if (error) return { ok: false, error: error.message };
+  return { ok: true };
 }
 
 // ----- Writes (service-role) -----
