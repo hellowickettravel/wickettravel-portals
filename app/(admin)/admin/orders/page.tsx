@@ -1,9 +1,10 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
 import { Plus, Search, MoreHorizontal, Eye } from "lucide-react";
-import { toast } from "sonner";
 import { PageHeader } from "@/components/admin/page-header";
 import { SectionCard } from "@/components/admin/section-card";
 import { StatusBadge, type Tone } from "@/components/admin/status-badge";
@@ -43,6 +44,7 @@ type Tab = (typeof TABS)[number];
 const ORDERS_KEY = ["admin", "orders"] as const;
 
 export default function OrdersPage() {
+  const router = useRouter();
   const [tab, setTab] = useState<Tab>("All");
   const [query, setQuery] = useState("");
   const [createOpen, setCreateOpen] = useState(false);
@@ -74,6 +76,7 @@ export default function OrdersPage() {
           o.route_from ?? "",
           o.route_to ?? "",
           o.created_by_profile?.full_name ?? "",
+          o.assigned_employee?.full_name ?? "",
         ]
           .join(" ")
           .toLowerCase()
@@ -181,42 +184,43 @@ export default function OrdersPage() {
                 </p>
               ) : (
                 filtered.map((o) => (
-                  <MobileRecordCard
-                    key={o.id}
-                    title={<span className="text-navy">#{o.id.slice(0, 8)}</span>}
-                    subtitle={o.customer?.name ?? "—"}
-                    badge={
-                      <StatusBadge tone={ORDER_TONE[o.status]}>
-                        {titleCase(o.status)}
-                      </StatusBadge>
-                    }
-                    fields={[
-                      {
-                        label: "Route",
-                        value: `${o.route_from ?? "—"} → ${o.route_to ?? "—"}`,
-                        wide: true,
-                      },
-                      { label: "Travel date", value: fmtDate(o.travel_date) },
-                      { label: "Pax", value: o.passengers ?? "—" },
-                      {
-                        label: "Price",
-                        value: o.selling_price != null ? gbp(o.selling_price) : "—",
-                      },
-                      {
-                        label: "Commission",
-                        value: (
-                          <span className="text-emerald-600">
-                            {o.commission != null ? gbp(o.commission) : "—"}
-                          </span>
-                        ),
-                      },
-                      {
-                        label: "Created by",
-                        value: o.created_by_profile?.full_name ?? "—",
-                        wide: true,
-                      },
-                    ]}
-                  />
+                  <Link key={o.id} href={`/admin/orders/${o.id}`} className="block">
+                    <MobileRecordCard
+                      title={<span className="text-navy">#{o.id.slice(0, 8)}</span>}
+                      subtitle={o.customer?.name ?? "—"}
+                      badge={
+                        <StatusBadge tone={ORDER_TONE[o.status]}>
+                          {titleCase(o.status)}
+                        </StatusBadge>
+                      }
+                      fields={[
+                        {
+                          label: "Route",
+                          value: `${o.route_from ?? "—"} → ${o.route_to ?? "—"}`,
+                          wide: true,
+                        },
+                        { label: "Travel date", value: fmtDate(o.travel_date) },
+                        { label: "Pax", value: o.passengers ?? "—" },
+                        {
+                          label: "Price",
+                          value: o.selling_price != null ? gbp(o.selling_price) : "—",
+                        },
+                        {
+                          label: "Commission",
+                          value: (
+                            <span className="text-emerald-600">
+                              {o.commission != null ? gbp(o.commission) : "—"}
+                            </span>
+                          ),
+                        },
+                        {
+                          label: "Assigned",
+                          value: o.assigned_employee?.full_name ?? "Unassigned",
+                          wide: true,
+                        },
+                      ]}
+                    />
+                  </Link>
                 ))
               )}
             </div>
@@ -235,14 +239,25 @@ export default function OrdersPage() {
                     <TableHead className="text-right">Commission</TableHead>
                     <TableHead>Status</TableHead>
                     <TableHead>Created by</TableHead>
+                    <TableHead>Assigned</TableHead>
                     <TableHead className="pr-6 text-right">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {filtered.map((o) => (
-                <TableRow key={o.id}>
+                <TableRow
+                  key={o.id}
+                  className="cursor-pointer"
+                  onClick={() => router.push(`/admin/orders/${o.id}`)}
+                >
                   <TableCell className="pl-6 font-medium text-navy">
-                    #{o.id.slice(0, 8)}
+                    <Link
+                      href={`/admin/orders/${o.id}`}
+                      className="hover:text-brand"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      #{o.id.slice(0, 8)}
+                    </Link>
                   </TableCell>
                   <TableCell>{o.customer?.name ?? "—"}</TableCell>
                   <TableCell className="font-medium text-muted-foreground">
@@ -266,12 +281,17 @@ export default function OrdersPage() {
                     </StatusBadge>
                   </TableCell>
                   <TableCell className="text-muted-foreground">
-                    {o.created_by_profile?.full_name ?? "—"}
+                    {o.created_by_profile?.full_name ??
+                      (o.created_by ? "—" : "Customer")}
+                  </TableCell>
+                  <TableCell className="text-muted-foreground">
+                    {o.assigned_employee?.full_name ?? "—"}
                   </TableCell>
                   <TableCell className="pr-6 text-right">
                     <DropdownMenu>
                       <DropdownMenuTrigger
                         aria-label={`Actions for order ${o.id.slice(0, 8)}`}
+                        onClick={(e) => e.stopPropagation()}
                         className="inline-flex size-8 items-center justify-center rounded-lg text-muted-foreground outline-none transition-colors hover:bg-muted hover:text-foreground focus-visible:ring-[3px] focus-visible:ring-brand/25"
                       >
                         <MoreHorizontal className="size-4" />
@@ -279,11 +299,7 @@ export default function OrdersPage() {
                       <DropdownMenuContent align="end" className="w-36">
                         <DropdownMenuItem
                           className="cursor-pointer"
-                          onClick={() =>
-                            toast.info("Order detail", {
-                              description: "Detailed order view is coming next.",
-                            })
-                          }
+                          onClick={() => router.push(`/admin/orders/${o.id}`)}
                         >
                           <Eye className="size-4" />
                           View
@@ -296,7 +312,7 @@ export default function OrdersPage() {
                   {filtered.length === 0 ? (
                     <TableRow>
                       <TableCell
-                        colSpan={10}
+                        colSpan={11}
                         className="py-10 text-center text-sm text-muted-foreground"
                       >
                         No orders match your filters.

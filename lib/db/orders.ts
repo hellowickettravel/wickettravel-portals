@@ -7,9 +7,11 @@ import type { Order, OrderWithRelations } from "./types";
  */
 
 const ORDER_COLUMNS =
-  "id, conversation_id, customer_id, route_from, route_to, travel_date, return_date, passengers, status, selling_price, cost_price, commission, notes, created_by, created_at";
+  "id, conversation_id, customer_id, route_from, route_to, travel_date, return_date, passengers, status, selling_price, cost_price, commission, notes, created_by, assigned_employee_id, closed_at, created_at";
 
-const ORDER_WITH_RELATIONS = `${ORDER_COLUMNS}, customer:customers(id, name), created_by_profile:profiles(id, full_name)`;
+// Two FKs point at profiles (created_by, assigned_employee_id), so each embed
+// is disambiguated with its source column (PostgREST relationship hint).
+const ORDER_WITH_RELATIONS = `${ORDER_COLUMNS}, customer:customers(id, name, wa_phone), created_by_profile:profiles!created_by(id, full_name), assigned_employee:profiles!assigned_employee_id(id, full_name)`;
 
 /** All orders visible to the caller, newest first. */
 export async function getOrders(): Promise<OrderWithRelations[]> {

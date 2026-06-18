@@ -142,6 +142,9 @@ export default async function AnalyticsPage() {
 
   const hasData = orders.length > 0;
 
+  // Revenue counts every order EXCEPT cancelled ones.
+  const revenueOrders = orders.filter((o) => o.status !== "cancelled");
+
   const months = lastSixMonths();
   const ordersOverTime = months.map((m) => ({
     label: m.label,
@@ -149,7 +152,7 @@ export default async function AnalyticsPage() {
   }));
   const revenueByMonth = months.map((m) => ({
     label: m.label,
-    value: orders
+    value: revenueOrders
       .filter((o) => monthKey(o.created_at) === m.key)
       .reduce((s, o) => s + (o.selling_price ?? 0), 0),
   }));
@@ -171,9 +174,14 @@ export default async function AnalyticsPage() {
     .sort((a, b) => b.closed - a.closed)
     .slice(0, 5);
 
-  const totalRevenue = orders.reduce((s, o) => s + (o.selling_price ?? 0), 0);
+  const totalRevenue = revenueOrders.reduce(
+    (s, o) => s + (o.selling_price ?? 0),
+    0
+  );
   const closedCount = orders.filter((o) => o.status === "closed").length;
-  const avgOrderValue = hasData ? Math.round(totalRevenue / orders.length) : 0;
+  const avgOrderValue = revenueOrders.length
+    ? Math.round(totalRevenue / revenueOrders.length)
+    : 0;
   const closedRate = hasData
     ? Math.round((closedCount / orders.length) * 100)
     : 0;

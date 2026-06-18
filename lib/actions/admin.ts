@@ -114,6 +114,108 @@ export async function createOrder(input: {
   return { ok: true };
 }
 
+const ORDER_STATUSES: OrderStatus[] = ["open", "closed", "cancelled"];
+
+/**
+ * Edit an existing order's trip + pricing fields. Admin-only; the write goes
+ * through orders_admin_all RLS. Customer/conversation links aren't editable here.
+ */
+export async function updateOrder(input: {
+  id: string;
+  routeFrom: string;
+  routeTo: string;
+  travelDate: string | null;
+  returnDate: string | null;
+  passengers: number | null;
+  sellingPrice: number | null;
+  costPrice: number | null;
+  commission: number | null;
+  notes: string | null;
+}): Promise<ActionResult> {
+  try {
+    await requireAdmin();
+  } catch {
+    return { ok: false, error: "Unauthorized" };
+  }
+
+  const routeFrom = input.routeFrom.trim();
+  const routeTo = input.routeTo.trim();
+  if (!routeFrom || !routeTo) {
+    return { ok: false, error: "Both From and To are required." };
+  }
+
+  const supabase = await createClient();
+  const { error } = await supabase
+    .from("orders")
+    .update({
+      route_from: routeFrom,
+      route_to: routeTo,
+      travel_date: input.travelDate,
+      return_date: input.returnDate,
+      passengers: input.passengers,
+      selling_price: input.sellingPrice,
+      cost_price: input.costPrice,
+      commission: input.commission,
+      notes: input.notes?.trim() || null,
+    })
+    .eq("id", input.id);
+
+  if (error) return { ok: false, error: error.message };
+  return { ok: true };
+}
+
+/**
+ * Change an order's status. Stamps closed_at when moving to 'closed' and clears
+ * it on reopen/cancel, so analytics can time closed orders accurately.
+ */
+export async function setOrderStatus(input: {
+  id: string;
+  status: OrderStatus;
+}): Promise<ActionResult> {
+  try {
+    await requireAdmin();
+  } catch {
+    return { ok: false, error: "Unauthorized" };
+  }
+
+  if (!ORDER_STATUSES.includes(input.status)) {
+    return { ok: false, error: "Invalid status." };
+  }
+
+  const supabase = await createClient();
+  const { error } = await supabase
+    .from("orders")
+    .update({
+      status: input.status,
+      closed_at: input.status === "closed" ? new Date().toISOString() : null,
+    })
+    .eq("id", input.id);
+
+  if (error) return { ok: false, error: error.message };
+  return { ok: true };
+}
+
+/** Assign (or, with null, unassign) an order to an employee. */
+export async function assignOrder(input: {
+  id: string;
+  employeeId: string | null;
+}): Promise<ActionResult> {
+  try {
+    await requireAdmin();
+  } catch {
+    return { ok: false, error: "Unauthorized" };
+  }
+
+  const supabase = await createClient();
+  const { error } = await supabase
+    .from("orders")
+    .update({ assigned_employee_id: input.employeeId || null })
+    .eq("id", input.id);
+
+  if (error) return { ok: false, error: error.message };
+  return { ok: true };
+}
+
 // ----- Writes (service-role) -----
 
 export async function createEmployee(input: {

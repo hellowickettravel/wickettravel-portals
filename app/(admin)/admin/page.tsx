@@ -55,8 +55,10 @@ export default async function AdminDashboardPage() {
   ]);
 
   const openOrders = orders.filter((o) => o.status === "open").length;
+  // Commission realised this month = closed orders whose closed_at falls in the
+  // current month (not creation date), so the figure tracks when revenue lands.
   const commissionThisMonth = orders
-    .filter((o) => o.status === "closed" && isThisMonth(o.created_at))
+    .filter((o) => o.status === "closed" && o.closed_at != null && isThisMonth(o.closed_at))
     .reduce((sum, o) => sum + (o.commission ?? 0), 0);
 
   const recentOrders = orders.slice(0, 5);
@@ -111,7 +113,9 @@ export default async function AdminDashboardPage() {
                 {recentOrders.map((o) => (
                   <TableRow key={o.id}>
                     <TableCell className="pl-6 font-medium text-navy">
-                      #{o.id.slice(0, 8)}
+                      <Link href={`/admin/orders/${o.id}`} className="hover:text-brand">
+                        #{o.id.slice(0, 8)}
+                      </Link>
                     </TableCell>
                     <TableCell>{o.customer?.name ?? "—"}</TableCell>
                     <TableCell className="text-muted-foreground">

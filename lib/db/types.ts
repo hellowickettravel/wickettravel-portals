@@ -73,7 +73,9 @@ export type Order = {
   cost_price: number | null;
   commission: number | null;
   notes: string | null;
-  created_by: string | null; // -> profiles.id (the employee)
+  created_by: string | null; // -> profiles.id (the employee/admin); null for customer-created
+  assigned_employee_id: string | null; // -> profiles.id (added in 0008)
+  closed_at: string | null; // set when status becomes 'closed' (added in 0008)
   created_at: string;
 };
 
@@ -95,6 +97,7 @@ export type ConversationWithCustomer = Conversation & {
 };
 
 export type OrderWithRelations = Order & {
-  customer: Pick<Customer, "id" | "name"> | null;
+  customer: Pick<Customer, "id" | "name" | "wa_phone"> | null;
   created_by_profile: Pick<Profile, "id" | "full_name"> | null;
+  assigned_employee: Pick<Profile, "id" | "full_name"> | null;
 };
