@@ -294,7 +294,21 @@ export function OrderDetail({
         {/* Customer */}
         <SectionCard title="Customer">
           <div className="divide-y divide-border">
-            <DataRow label="Name" value={order.customer?.name ?? "—"} />
+            <DataRow
+              label="Name"
+              value={
+                order.customer?.id ? (
+                  <Link
+                    href={`/admin/customers/${order.customer.id}`}
+                    className="text-brand hover:text-brand-dark"
+                  >
+                    {order.customer.name || "View customer"}
+                  </Link>
+                ) : (
+                  order.customer?.name ?? "—"
+                )
+              }
+            />
             <DataRow label="WhatsApp" value={order.customer?.wa_phone ?? "—"} />
             <DataRow
               label="Conversation"

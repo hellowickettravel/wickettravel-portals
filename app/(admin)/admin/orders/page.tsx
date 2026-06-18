@@ -1,10 +1,10 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
-import { Plus, Search, MoreHorizontal, Eye } from "lucide-react";
+import { Plus, Search, MoreHorizontal, Eye, Download } from "lucide-react";
 import { PageHeader } from "@/components/admin/page-header";
 import { SectionCard } from "@/components/admin/section-card";
 import { StatusBadge, type Tone } from "@/components/admin/status-badge";
@@ -30,7 +30,10 @@ import { AdminCreateOrderDialog } from "@/components/admin/create-order-dialog";
 import { listOrders } from "@/lib/actions/admin";
 import type { OrderStatus } from "@/lib/db/types";
 import { gbp, fmtDate, titleCase } from "@/lib/format";
+import { downloadCsv } from "@/lib/csv";
 import { cn } from "@/lib/utils";
+
+const PAGE_SIZE = 15;
 
 const ORDER_TONE: Record<OrderStatus, Tone> = {
   open: "blue",
@@ -55,11 +58,14 @@ export default function OrdersPage() {
   });
 
   const all = orders ?? [];
+  const [limit, setLimit] = useState(PAGE_SIZE);
 
   const totals = useMemo(() => {
     const open = all.filter((o) => o.status === "open").length;
-    const revenue = all.reduce((s, o) => s + (o.selling_price ?? 0), 0);
-    const commission = all.reduce((s, o) => s + (o.commission ?? 0), 0);
+    // Revenue + commission exclude cancelled orders.
+    const live = all.filter((o) => o.status !== "cancelled");
+    const revenue = live.reduce((s, o) => s + (o.selling_price ?? 0), 0);
+    const commission = live.reduce((s, o) => s + (o.commission ?? 0), 0);
     return { total: all.length, open, revenue, commission };
   }, [all]);
 
@@ -85,6 +91,46 @@ export default function OrdersPage() {
     });
   }, [all, tab, query]);
 
+  // Reset paging whenever the filters change.
+  useEffect(() => {
+    setLimit(PAGE_SIZE);
+  }, [tab, query]);
+
+  const visible = filtered.slice(0, limit);
+  const hasMore = filtered.length > limit;
+
+  function exportCsv() {
+    downloadCsv(
+      "orders.csv",
+      [
+        "Order",
+        "Customer",
+        "From",
+        "To",
+        "Travel date",
+        "Passengers",
+        "Status",
+        "Selling price",
+        "Commission",
+        "Created by",
+        "Assigned",
+      ],
+      filtered.map((o) => [
+        o.id.slice(0, 8),
+        o.customer?.name ?? "",
+        o.route_from ?? "",
+        o.route_to ?? "",
+        fmtDate(o.travel_date),
+        o.passengers ?? "",
+        o.status,
+        o.selling_price ?? "",
+        o.commission ?? "",
+        o.created_by_profile?.full_name ?? (o.created_by ? "" : "Customer"),
+        o.assigned_employee?.full_name ?? "",
+      ])
+    );
+  }
+
   return (
     <div className="space-y-7">
       <PageHeader
@@ -92,10 +138,16 @@ export default function OrdersPage() {
         title="Orders"
         subtitle="Track every booking, its commission and who created it."
         actions={
-          <Button onClick={() => setCreateOpen(true)}>
-            <Plus className="size-4" />
-            New Order
-          </Button>
+          <>
+            <Button variant="outline" onClick={exportCsv} disabled={all.length === 0}>
+              <Download className="size-4" />
+              Export CSV
+            </Button>
+            <Button onClick={() => setCreateOpen(true)}>
+              <Plus className="size-4" />
+              New Order
+            </Button>
+          </>
         }
       />
 
@@ -183,7 +235,7 @@ export default function OrdersPage() {
                   No orders match your filters.
                 </p>
               ) : (
-                filtered.map((o) => (
+                visible.map((o) => (
                   <Link key={o.id} href={`/admin/orders/${o.id}`} className="block">
                     <MobileRecordCard
                       title={<span className="text-navy">#{o.id.slice(0, 8)}</span>}
@@ -244,7 +296,7 @@ export default function OrdersPage() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {filtered.map((o) => (
+                  {visible.map((o) => (
                 <TableRow
                   key={o.id}
                   className="cursor-pointer"
@@ -322,6 +374,14 @@ export default function OrdersPage() {
                 </TableBody>
               </Table>
             </div>
+
+            {hasMore ? (
+              <div className="flex justify-center border-t border-border p-4">
+                <Button variant="outline" size="sm" onClick={() => setLimit((l) => l + PAGE_SIZE)}>
+                  Load more ({filtered.length - visible.length} more)
+                </Button>
+              </div>
+            ) : null}
           </>
         )}
       </SectionCard>

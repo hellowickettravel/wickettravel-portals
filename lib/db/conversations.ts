@@ -3,6 +3,7 @@ import type { Conversation, ConversationWithCustomer } from "./types";
 
 export type ConversationOverview = ConversationWithCustomer & {
   assignedEmployee: string | null;
+  assignedEmployeeId: string | null;
   preview: string | null;
 };
 
@@ -77,9 +78,11 @@ export async function getConversationsOverview(): Promise<
 
   const nameById = new Map((profiles ?? []).map((p) => [p.id, p.full_name]));
   const employeeByConv = new Map<string, string | null>();
+  const employeeIdByConv = new Map<string, string>();
   for (const a of assignments ?? []) {
     if (!employeeByConv.has(a.conversation_id)) {
       employeeByConv.set(a.conversation_id, nameById.get(a.employee_id) ?? null);
+      employeeIdByConv.set(a.conversation_id, a.employee_id);
     }
   }
 
@@ -100,6 +103,7 @@ export async function getConversationsOverview(): Promise<
   return base.map((c) => ({
     ...c,
     assignedEmployee: employeeByConv.get(c.id) ?? null,
+    assignedEmployeeId: employeeIdByConv.get(c.id) ?? null,
     preview: previewByConv.get(c.id) ?? null,
   }));
 }
@@ -128,6 +132,8 @@ export type InboxConversation = ConversationWithCustomer & {
   preview: string | null;
   unreadCount: number;
   lastReadAt: string | null;
+  /** Admin inbox only: the currently assigned employee (for the reassign control). */
+  assignedEmployeeId?: string | null;
 };
 
 /**

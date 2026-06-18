@@ -1,6 +1,8 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   UserPlus,
@@ -11,6 +13,7 @@ import {
   Eye,
   EyeOff,
   Loader2,
+  Search,
 } from "lucide-react";
 import { toast } from "sonner";
 import { PageHeader } from "@/components/admin/page-header";
@@ -45,6 +48,7 @@ import {
 import { TableSkeleton } from "@/components/portal/skeletons";
 import { MobileRecordCard } from "@/components/portal/mobile-record-card";
 import { ConfirmDialog } from "@/components/portal/confirm-dialog";
+import { useListControls } from "@/lib/hooks/use-list-controls";
 import {
   listEmployees,
   createEmployee,
@@ -69,6 +73,7 @@ const ACCESS_TONE: Record<AccessLevel, Tone> = {
 const EMPLOYEES_KEY = ["admin", "employees"] as const;
 
 export default function EmployeesPage() {
+  const router = useRouter();
   const queryClient = useQueryClient();
   const invalidate = () =>
     queryClient.invalidateQueries({ queryKey: EMPLOYEES_KEY });
@@ -167,7 +172,14 @@ export default function EmployeesPage() {
     });
   }
 
-  const rows = employees ?? [];
+  const all = employees ?? [];
+  const { query, setQuery, visible, total, hasMore, loadMore } = useListControls(
+    all,
+    10,
+    (emp, q) =>
+      (emp.full_name ?? "").toLowerCase().includes(q) ||
+      (emp.email ?? "").toLowerCase().includes(q)
+  );
 
   // Shared row-actions menu, reused by the desktop table + mobile cards.
   const renderActions = (emp: Profile) => (
@@ -179,6 +191,13 @@ export default function EmployeesPage() {
         <MoreHorizontal className="size-4" />
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-44">
+        <DropdownMenuItem
+          className="cursor-pointer"
+          onClick={() => router.push(`/admin/employees/${emp.id}`)}
+        >
+          <Eye className="size-4" />
+          View details
+        </DropdownMenuItem>
         <DropdownMenuItem className="cursor-pointer" onClick={() => openEdit(emp)}>
           <Pencil className="size-4" />
           Edit employee
@@ -219,6 +238,18 @@ export default function EmployeesPage() {
         }
       />
 
+      {all.length > 0 ? (
+        <div className="relative sm:w-80">
+          <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+          <Input
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder="Search by name or email…"
+            className="h-10 rounded-[10px] bg-card pl-9"
+          />
+        </div>
+      ) : null}
+
       <SectionCard flush>
         {isLoading ? (
           <div className="p-4">
@@ -228,7 +259,7 @@ export default function EmployeesPage() {
           <p className="px-6 py-10 text-center text-sm text-muted-foreground">
             Couldn’t load employees. Refresh to try again.
           </p>
-        ) : rows.length === 0 ? (
+        ) : all.length === 0 ? (
           <div className="flex flex-col items-center gap-2 px-6 py-14 text-center">
             <div className="flex size-12 items-center justify-center rounded-2xl bg-chip text-brand-dark">
               <UserPlus className="size-6" />
@@ -248,12 +279,16 @@ export default function EmployeesPage() {
           <>
             {/* Mobile: stacked cards (no horizontal scroll) */}
             <div className="space-y-3 p-4 md:hidden">
-              {rows.map((emp) => {
+              {visible.map((emp) => {
                 const level = normalizeAccess(emp.access_level);
                 return (
                   <MobileRecordCard
                     key={emp.id}
-                    title={<UserCell name={emp.full_name || "Unnamed"} />}
+                    title={
+                      <Link href={`/admin/employees/${emp.id}`} className="hover:text-brand">
+                        <UserCell name={emp.full_name || "Unnamed"} />
+                      </Link>
+                    }
                     action={renderActions(emp)}
                     badge={
                       <StatusBadge tone={emp.is_active ? "green" : "slate"}>
@@ -291,12 +326,22 @@ export default function EmployeesPage() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {rows.map((emp) => {
+                  {visible.map((emp) => {
                     const level = normalizeAccess(emp.access_level);
                     return (
-                      <TableRow key={emp.id}>
+                      <TableRow
+                        key={emp.id}
+                        className="cursor-pointer"
+                        onClick={() => router.push(`/admin/employees/${emp.id}`)}
+                      >
                         <TableCell className="pl-6">
-                          <UserCell name={emp.full_name || "Unnamed"} />
+                          <Link
+                            href={`/admin/employees/${emp.id}`}
+                            className="hover:text-brand"
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            <UserCell name={emp.full_name || "Unnamed"} />
+                          </Link>
                         </TableCell>
                         <TableCell className="text-muted-foreground">
                           {emp.email ?? "—"}
@@ -314,7 +359,10 @@ export default function EmployeesPage() {
                         <TableCell className="text-muted-foreground">
                           {fmtDate(emp.created_at)}
                         </TableCell>
-                        <TableCell className="pr-6 text-right">
+                        <TableCell
+                          className="pr-6 text-right"
+                          onClick={(e) => e.stopPropagation()}
+                        >
                           {renderActions(emp)}
                         </TableCell>
                       </TableRow>
@@ -323,6 +371,14 @@ export default function EmployeesPage() {
                 </TableBody>
               </Table>
             </div>
+
+            {hasMore ? (
+              <div className="flex justify-center border-t border-border p-4">
+                <Button variant="outline" size="sm" onClick={loadMore}>
+                  Load more ({total - visible.length} more)
+                </Button>
+              </div>
+            ) : null}
           </>
         )}
       </SectionCard>

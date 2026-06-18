@@ -79,6 +79,32 @@ export type Order = {
   created_at: string;
 };
 
+export type NotificationType =
+  | "new_message"
+  | "new_order"
+  | "assignment"
+  | "status_change";
+
+export type Notification = {
+  id: string;
+  recipient_id: string;
+  type: NotificationType;
+  title: string;
+  body: string | null;
+  link: string | null;
+  is_read: boolean;
+  created_at: string;
+};
+
+export type NotificationPrefs = {
+  user_id: string;
+  new_message: boolean;
+  new_order: boolean;
+  status_change: boolean;
+  daily_summary: boolean;
+  updated_at: string;
+};
+
 export type BusinessSettings = {
   id: number;
   business_name: string | null;

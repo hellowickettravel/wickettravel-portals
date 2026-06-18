@@ -9,6 +9,7 @@ import {
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { getOrders } from "@/lib/db/orders";
+import { getRecentActivity } from "@/lib/db/activity";
 import type { OrderStatus } from "@/lib/db/types";
 import { PageHeader } from "@/components/admin/page-header";
 import { StatCard } from "@/components/admin/stat-card";
@@ -41,7 +42,7 @@ function isThisMonth(iso: string) {
 export default async function AdminDashboardPage() {
   const supabase = await createClient();
 
-  const [orders, employeesCount, conversationsCount] = await Promise.all([
+  const [orders, employeesCount, conversationsCount, activity] = await Promise.all([
     getOrders(),
     supabase
       .from("profiles")
@@ -52,6 +53,7 @@ export default async function AdminDashboardPage() {
       .from("conversations")
       .select("id", { count: "exact", head: true })
       .then((r) => r.count ?? 0),
+    getRecentActivity(8),
   ]);
 
   const openOrders = orders.filter((o) => o.status === "open").length;
@@ -137,30 +139,29 @@ export default async function AdminDashboardPage() {
         </SectionCard>
 
         <SectionCard title="Recent Activity">
-          {recentOrders.length === 0 ? (
+          {activity.length === 0 ? (
             <p className="text-sm text-muted-foreground">No activity yet.</p>
           ) : (
             <ol className="space-y-4">
-              {recentOrders.map((o) => (
-                <li key={o.id} className="flex gap-3">
+              {activity.map((a) => (
+                <li key={a.id} className="flex gap-3">
                   <span
                     className={`mt-1.5 size-2 shrink-0 rounded-full ${
-                      o.status === "closed"
-                        ? "bg-emerald-500"
-                        : o.status === "cancelled"
-                          ? "bg-rose-500"
-                          : "bg-brand"
+                      a.kind === "order"
+                        ? "bg-brand"
+                        : a.kind === "message"
+                          ? "bg-emerald-500"
+                          : "bg-amber-500"
                     }`}
                   />
-                  <div className="leading-snug">
-                    <p className="text-sm text-foreground">
-                      Order #{o.id.slice(0, 8)} · {titleCase(o.status)}
+                  <Link href={a.link} className="group leading-snug">
+                    <p className="text-sm text-foreground group-hover:text-brand">
+                      {a.title}
                     </p>
-                    <p className="text-xs text-muted-foreground">
-                      {o.route_from ?? "—"} → {o.route_to ?? "—"} ·{" "}
-                      {fmtRelative(o.created_at)}
+                    <p className="truncate text-xs text-muted-foreground">
+                      {a.detail} · {fmtRelative(a.at)}
                     </p>
-                  </div>
+                  </Link>
                 </li>
               ))}
             </ol>

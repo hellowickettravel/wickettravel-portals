@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { ShoppingBag, TrendingUp, CheckCircle2, Wallet, BarChart3 } from "lucide-react";
 import { PageHeader } from "@/components/admin/page-header";
 import { StatCard } from "@/components/admin/stat-card";
@@ -5,6 +6,14 @@ import { SectionCard } from "@/components/admin/section-card";
 import { getOrders } from "@/lib/db/orders";
 import type { OrderWithRelations } from "@/lib/db/types";
 import { gbp } from "@/lib/format";
+import { cn } from "@/lib/utils";
+
+const RANGES = [
+  { key: "30d", label: "30 days", days: 30 },
+  { key: "90d", label: "90 days", days: 90 },
+  { key: "6m", label: "6 months", days: 180 },
+  { key: "all", label: "All time", days: null },
+] as const;
 
 /** Vertical bar chart (CSS). */
 function BarChart({
@@ -137,8 +146,23 @@ function monthKey(iso: string) {
   return `${d.getFullYear()}-${d.getMonth()}`;
 }
 
-export default async function AnalyticsPage() {
-  const orders: OrderWithRelations[] = await getOrders();
+export default async function AnalyticsPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ range?: string }>;
+}) {
+  const { range: rangeParam } = await searchParams;
+  const range = RANGES.find((r) => r.key === rangeParam) ?? RANGES[2]; // default 6 months
+
+  const allOrders: OrderWithRelations[] = await getOrders();
+  const orders =
+    range.days == null
+      ? allOrders
+      : allOrders.filter((o) => {
+          const ageDays =
+            (Date.now() - new Date(o.created_at).getTime()) / 86_400_000;
+          return ageDays <= range.days!;
+        });
 
   const hasData = orders.length > 0;
 
@@ -192,6 +216,24 @@ export default async function AnalyticsPage() {
         eyebrow="Insights"
         title="Analytics"
         subtitle="Performance across orders, revenue and your team."
+        actions={
+          <div className="inline-flex items-center gap-1 rounded-xl bg-muted p-1">
+            {RANGES.map((r) => (
+              <Link
+                key={r.key}
+                href={`/admin/analytics?range=${r.key}`}
+                className={cn(
+                  "rounded-lg px-3 py-1.5 text-sm font-medium transition-colors",
+                  r.key === range.key
+                    ? "bg-primary text-primary-foreground shadow-sm"
+                    : "text-muted-foreground hover:text-foreground"
+                )}
+              >
+                {r.label}
+              </Link>
+            ))}
+          </div>
+        }
       />
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">

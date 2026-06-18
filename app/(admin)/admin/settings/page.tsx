@@ -1,8 +1,8 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { ImageUp, AlertTriangle, Loader2 } from "lucide-react";
+import { ImageUp, Loader2, Trash2, Lock } from "lucide-react";
 import { toast } from "sonner";
 import { PageHeader } from "@/components/admin/page-header";
 import { SectionCard } from "@/components/admin/section-card";
@@ -10,17 +10,20 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
-import { ConfirmDialog } from "@/components/portal/confirm-dialog";
 import { createClient } from "@/lib/supabase/client";
-import { getBusinessSettings, saveBusinessSettings } from "@/lib/actions/admin";
+import {
+  getBusinessSettings,
+  saveBusinessSettings,
+  saveBrandLogo,
+} from "@/lib/actions/admin";
+import {
+  getMyNotificationPrefs,
+  saveMyNotificationPrefs,
+} from "@/lib/actions/notifications";
+import { uploadAttachment } from "@/lib/storage";
 import { ADMIN_SETTINGS_KEY } from "@/lib/query-keys";
 
-const NOTIFICATIONS = [
-  { id: "n1", label: "New order alerts", desc: "Notify admins when an order is created.", on: true },
-  { id: "n2", label: "New message alerts", desc: "Notify when a customer sends a message.", on: true },
-  { id: "n3", label: "Daily summary email", desc: "A daily digest of orders and activity.", on: false },
-  { id: "n4", label: "Employee activity", desc: "Alerts when employees change order status.", on: false },
-];
+const PREFS_KEY = ["notification-prefs"] as const;
 
 function fieldLabel(text: string) {
   return (
@@ -33,19 +36,31 @@ function fieldLabel(text: string) {
 export default function SettingsPage() {
   const queryClient = useQueryClient();
   const supabase = useMemo(() => createClient(), []);
-  const [resetOpen, setResetOpen] = useState(false);
+  const logoInputRef = useRef<HTMLInputElement>(null);
+  const [uploadingLogo, setUploadingLogo] = useState(false);
 
   const { data: settings, isLoading } = useQuery({
     queryKey: ADMIN_SETTINGS_KEY,
     queryFn: getBusinessSettings,
   });
 
-  // Form state — hydrated from the loaded settings.
+  const { data: prefs } = useQuery({
+    queryKey: PREFS_KEY,
+    queryFn: getMyNotificationPrefs,
+  });
+
+  // Business profile form state.
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
   const [address, setAddress] = useState("");
   const [commission, setCommission] = useState("");
+
+  // Notification prefs form state.
+  const [newOrder, setNewOrder] = useState(true);
+  const [newMessage, setNewMessage] = useState(true);
+  const [dailySummary, setDailySummary] = useState(false);
+  const [statusChange, setStatusChange] = useState(true);
 
   useEffect(() => {
     if (settings) {
@@ -58,6 +73,15 @@ export default function SettingsPage() {
       );
     }
   }, [settings]);
+
+  useEffect(() => {
+    if (prefs) {
+      setNewOrder(prefs.new_order);
+      setNewMessage(prefs.new_message);
+      setDailySummary(prefs.daily_summary);
+      setStatusChange(prefs.status_change);
+    }
+  }, [prefs]);
 
   // Realtime: settings changes from another admin appear live.
   useEffect(() => {
@@ -87,6 +111,20 @@ export default function SettingsPage() {
     onError: () => toast.error("Couldn't save", { description: "Please try again." }),
   });
 
+  const prefsMutation = useMutation({
+    mutationFn: saveMyNotificationPrefs,
+    onSuccess: (res) => {
+      if (!res.ok) {
+        toast.error("Couldn't save preferences", { description: res.error });
+        return;
+      }
+      toast.success("Notification preferences saved");
+      queryClient.invalidateQueries({ queryKey: PREFS_KEY });
+    },
+    onError: () =>
+      toast.error("Couldn't save preferences", { description: "Please try again." }),
+  });
+
   function save(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     const parsedCommission = commission.trim() === "" ? null : Number(commission);
@@ -103,6 +141,50 @@ export default function SettingsPage() {
     });
   }
 
+  function savePrefs() {
+    prefsMutation.mutate({
+      newOrder,
+      newMessage,
+      dailySummary,
+      statusChange,
+    });
+  }
+
+  async function handleLogo(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    e.target.value = "";
+    if (!file) return;
+    setUploadingLogo(true);
+    const uploaded = await uploadAttachment(file, "branding");
+    if (!uploaded.ok) {
+      setUploadingLogo(false);
+      toast.error("Upload failed", { description: uploaded.error });
+      return;
+    }
+    const saved = await saveBrandLogo(uploaded.url);
+    setUploadingLogo(false);
+    if (!saved.ok) {
+      toast.error("Couldn't save logo", { description: saved.error });
+      return;
+    }
+    toast.success("Logo updated", {
+      description: "It now appears in the portal sidebar.",
+    });
+    queryClient.invalidateQueries({ queryKey: ADMIN_SETTINGS_KEY });
+  }
+
+  async function removeLogo() {
+    const saved = await saveBrandLogo(null);
+    if (!saved.ok) {
+      toast.error("Couldn't remove logo", { description: saved.error });
+      return;
+    }
+    toast.success("Logo removed");
+    queryClient.invalidateQueries({ queryKey: ADMIN_SETTINGS_KEY });
+  }
+
+  const logoUrl = settings?.logo_url ?? null;
+
   return (
     <div className="space-y-7">
       <PageHeader
@@ -112,7 +194,6 @@ export default function SettingsPage() {
       />
 
       <form onSubmit={save} className="space-y-7">
-        {/* Business profile + commission (persisted) */}
         <SectionCard title="Business profile" description="Used across invoices and customer messages.">
           {isLoading ? (
             <div className="flex items-center gap-2 py-6 text-sm text-muted-foreground">
@@ -158,14 +239,61 @@ export default function SettingsPage() {
         </SectionCard>
       </form>
 
-      {/* Branding (stub) */}
-      <SectionCard title="Branding" description="Your logo and brand colour.">
+      {/* Branding */}
+      <SectionCard title="Branding" description="Your logo. The brand colour is fixed by the Wicket design system.">
         <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
           <div className="space-y-2">
-            {fieldLabel("Logo (coming soon)")}
-            <div className="flex h-28 flex-col items-center justify-center gap-2 rounded-xl border border-dashed border-border bg-neutral-soft text-muted-foreground">
-              <ImageUp className="size-6" />
-              <span className="text-xs font-medium">Logo upload — not wired yet</span>
+            {fieldLabel("Logo")}
+            <div className="flex items-center gap-4">
+              <div className="flex size-20 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-border bg-neutral-soft">
+                {logoUrl ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={logoUrl} alt="Business logo" className="size-full object-cover" />
+                ) : (
+                  <ImageUp className="size-6 text-muted-foreground" />
+                )}
+              </div>
+              <div className="space-y-2">
+                <input
+                  ref={logoInputRef}
+                  type="file"
+                  accept=".png,.jpg,.jpeg"
+                  className="hidden"
+                  onChange={handleLogo}
+                />
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  disabled={uploadingLogo}
+                  onClick={() => logoInputRef.current?.click()}
+                >
+                  {uploadingLogo ? (
+                    <>
+                      <Loader2 className="size-4 animate-spin" />
+                      Uploading…
+                    </>
+                  ) : (
+                    <>
+                      <ImageUp className="size-4" />
+                      {logoUrl ? "Replace logo" : "Upload logo"}
+                    </>
+                  )}
+                </Button>
+                {logoUrl ? (
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    className="text-rose-600 hover:bg-rose-50 hover:text-rose-700"
+                    onClick={removeLogo}
+                  >
+                    <Trash2 className="size-4" />
+                    Remove
+                  </Button>
+                ) : null}
+                <p className="text-xs text-muted-foreground">PNG or JPG, up to 10MB.</p>
+              </div>
             </div>
           </div>
           <div className="space-y-2">
@@ -174,72 +302,47 @@ export default function SettingsPage() {
               <div className="size-12 rounded-xl bg-brand shadow-sm ring-1 ring-black/5" />
               <div>
                 <p className="font-display text-sm font-semibold text-foreground">#0088CC</p>
-                <p className="text-xs text-muted-foreground">Wicket Blue · brand primary (display-only)</p>
+                <p className="flex items-center gap-1 text-xs text-muted-foreground">
+                  <Lock className="size-3" />
+                  Wicket Blue · locked by the design system
+                </p>
               </div>
             </div>
           </div>
         </div>
       </SectionCard>
 
-      {/* Notifications (stub) */}
-      <SectionCard title="Notifications" description="Choose what your team gets alerted about. (Not yet persisted.)">
+      {/* Notifications (persisted, per-admin) */}
+      <SectionCard title="Notifications" description="Choose what you get alerted about. Saved to your account.">
         <ul className="divide-y divide-border">
-          {NOTIFICATIONS.map((n) => (
-            <li key={n.id} className="flex items-center justify-between gap-4 py-3.5 first:pt-0 last:pb-0">
+          {[
+            { label: "New order alerts", desc: "Notify you when an order is created.", checked: newOrder, set: setNewOrder },
+            { label: "New message alerts", desc: "Notify when a customer sends a message.", checked: newMessage, set: setNewMessage },
+            { label: "Order status changes", desc: "Alerts when an order's status changes.", checked: statusChange, set: setStatusChange },
+            { label: "Daily summary email", desc: "A daily digest of orders and activity (coming soon).", checked: dailySummary, set: setDailySummary },
+          ].map((n) => (
+            <li key={n.label} className="flex items-center justify-between gap-4 py-3.5 first:pt-0 last:pb-0">
               <div>
                 <p className="text-sm font-medium text-foreground">{n.label}</p>
                 <p className="text-xs text-muted-foreground">{n.desc}</p>
               </div>
-              <Switch
-                defaultChecked={n.on}
-                onCheckedChange={() =>
-                  toast.info("Notifications", { description: "UI only — not saved yet." })
-                }
-              />
+              <Switch checked={n.checked} onCheckedChange={(v) => n.set(Boolean(v))} />
             </li>
           ))}
         </ul>
-      </SectionCard>
-
-      {/* Danger zone (guarded stub) */}
-      <SectionCard
-        title="Danger zone"
-        description="Irreversible actions — proceed with caution."
-        className="border-rose-200"
-      >
-        <div className="flex flex-col gap-3 rounded-xl bg-rose-50/60 p-4 sm:flex-row sm:items-center sm:justify-between">
-          <div className="flex items-start gap-3">
-            <AlertTriangle className="mt-0.5 size-5 shrink-0 text-rose-500" />
-            <div>
-              <p className="text-sm font-medium text-rose-700">Reset workspace</p>
-              <p className="text-xs text-rose-600/80">
-                Permanently delete all orders, conversations and employees.
-              </p>
-            </div>
-          </div>
-          <Button
-            variant="outline"
-            className="border-rose-300 text-rose-600 hover:bg-rose-100 hover:text-rose-700"
-            onClick={() => setResetOpen(true)}
-          >
-            Reset
+        <div className="mt-5 flex justify-end">
+          <Button type="button" onClick={savePrefs} disabled={prefsMutation.isPending}>
+            {prefsMutation.isPending ? (
+              <>
+                <Loader2 className="size-4 animate-spin" />
+                Saving…
+              </>
+            ) : (
+              "Save preferences"
+            )}
           </Button>
         </div>
       </SectionCard>
-
-      <ConfirmDialog
-        open={resetOpen}
-        onOpenChange={setResetOpen}
-        title="Reset workspace?"
-        description="This permanently deletes ALL orders, conversations and employees. This cannot be undone."
-        confirmLabel="Reset everything"
-        destructive
-        onConfirm={() =>
-          toast.error("Reset workspace", {
-            description: "Disabled — this destructive action is intentionally not wired.",
-          })
-        }
-      />
     </div>
   );
 }

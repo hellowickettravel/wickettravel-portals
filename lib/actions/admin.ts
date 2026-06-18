@@ -3,9 +3,13 @@
 import { getUserAndProfile } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { getEmployees } from "@/lib/db/profiles";
-import { getOrders } from "@/lib/db/orders";
-import { getCustomers } from "@/lib/db/customers";
+import { getEmployees, getProfileById } from "@/lib/db/profiles";
+import {
+  getOrders,
+  getOrdersForCustomer,
+  getOrdersForEmployee,
+} from "@/lib/db/orders";
+import { getCustomers, getCustomerById } from "@/lib/db/customers";
 import { getMessages } from "@/lib/db/messages";
 import {
   getConversationsOverview,
@@ -14,6 +18,8 @@ import {
 import type {
   Profile,
   Customer,
+  Order,
+  Conversation,
   OrderWithRelations,
   OrderStatus,
   AccessLevel,
@@ -61,6 +67,68 @@ export async function listOrders(): Promise<OrderWithRelations[]> {
 export async function listCustomers(): Promise<Customer[]> {
   await requireAdmin();
   return getCustomers();
+}
+
+export type CustomerWithStats = Customer & {
+  orderCount: number;
+  conversationCount: number;
+};
+
+/** Customers enriched with their order + conversation counts for the list page. */
+export async function listCustomersWithStats(): Promise<CustomerWithStats[]> {
+  await requireAdmin();
+  const customers = await getCustomers();
+  if (customers.length === 0) return [];
+
+  const supabase = await createClient();
+  const [{ data: orders }, { data: convs }] = await Promise.all([
+    supabase.from("orders").select("customer_id").returns<{ customer_id: string | null }[]>(),
+    supabase
+      .from("conversations")
+      .select("customer_id")
+      .returns<{ customer_id: string | null }[]>(),
+  ]);
+
+  const orderCounts = new Map<string, number>();
+  for (const o of orders ?? []) {
+    if (o.customer_id) orderCounts.set(o.customer_id, (orderCounts.get(o.customer_id) ?? 0) + 1);
+  }
+  const convCounts = new Map<string, number>();
+  for (const c of convs ?? []) {
+    if (c.customer_id) convCounts.set(c.customer_id, (convCounts.get(c.customer_id) ?? 0) + 1);
+  }
+
+  return customers.map((c) => ({
+    ...c,
+    orderCount: orderCounts.get(c.id) ?? 0,
+    conversationCount: convCounts.get(c.id) ?? 0,
+  }));
+}
+
+export type CustomerDetail = {
+  customer: Customer;
+  orders: Order[];
+  conversations: Pick<Conversation, "id" | "status" | "last_message_at" | "created_at">[];
+};
+
+/** A single customer with their orders + conversations for the detail page. */
+export async function getCustomerDetail(id: string): Promise<CustomerDetail | null> {
+  await requireAdmin();
+  const customer = await getCustomerById(id);
+  if (!customer) return null;
+
+  const supabase = await createClient();
+  const [orders, { data: conversations }] = await Promise.all([
+    getOrdersForCustomer(id),
+    supabase
+      .from("conversations")
+      .select("id, status, last_message_at, created_at")
+      .eq("customer_id", id)
+      .order("last_message_at", { ascending: false, nullsFirst: false })
+      .returns<Pick<Conversation, "id" | "status" | "last_message_at" | "created_at">[]>(),
+  ]);
+
+  return { customer, orders, conversations: conversations ?? [] };
 }
 
 /**
@@ -312,31 +380,57 @@ export async function setEmployeeActive(
   }
 }
 
-export async function setEmployeeAccess(
-  id: string,
-  accessLevel: AccessLevel
-): Promise<ActionResult> {
+/**
+ * Reset an employee's password to a freshly generated temporary one (service
+ * role). Returns the temp password so the admin can hand it over — email
+ * delivery isn't relied upon. The employee can change it later from Settings.
+ */
+export async function resetEmployeePassword(
+  id: string
+): Promise<{ ok: true; tempPassword: string } | { ok: false; error: string }> {
   try {
     await requireAdmin();
   } catch {
     return { ok: false, error: "Unauthorized" };
   }
 
-  if (!ACCESS_LEVELS.includes(accessLevel))
-    return { ok: false, error: "Invalid access level." };
-
+  const tempPassword = "Wk-" + crypto.randomUUID().slice(0, 10);
   try {
     const admin = createAdminClient();
-    const { error } = await admin
-      .from("profiles")
-      .update({ access_level: accessLevel })
-      .eq("id", id);
-
+    const { error } = await admin.auth.admin.updateUserById(id, {
+      password: tempPassword,
+    });
     if (error) return { ok: false, error: error.message };
-    return { ok: true };
+    return { ok: true, tempPassword };
   } catch (e) {
-    return { ok: false, error: e instanceof Error ? e.message : "Update failed." };
+    return { ok: false, error: e instanceof Error ? e.message : "Reset failed." };
   }
+}
+
+export type EmployeeDetail = {
+  profile: Profile;
+  ordersCreated: Order[];
+  assignmentCount: number;
+};
+
+/** An employee with the orders they created + how many conversations they hold. */
+export async function getEmployeeDetail(
+  id: string
+): Promise<EmployeeDetail | null> {
+  await requireAdmin();
+  const profile = await getProfileById(id);
+  if (!profile || profile.role !== "employee") return null;
+
+  const supabase = await createClient();
+  const [ordersCreated, { count }] = await Promise.all([
+    getOrdersForEmployee(id),
+    supabase
+      .from("assignments")
+      .select("id", { count: "exact", head: true })
+      .eq("employee_id", id),
+  ]);
+
+  return { profile, ordersCreated, assignmentCount: count ?? 0 };
 }
 
 export async function updateEmployee(input: {
@@ -396,7 +490,67 @@ export async function listAdminInbox(): Promise<InboxConversation[]> {
     ...c,
     unreadCount: 0,
     lastReadAt: null,
+    assignedEmployeeId: c.assignedEmployeeId,
   }));
+}
+
+/**
+ * Assign (or reassign) a conversation to a single employee — or unassign with a
+ * null employeeId. Service-role after an admin check: clears any existing
+ * assignment for the conversation, then inserts the new one (the assignments
+ * insert fires the assignment notification trigger).
+ */
+export async function setConversationAssignee(input: {
+  conversationId: string;
+  employeeId: string | null;
+}): Promise<ActionResult> {
+  try {
+    await requireAdmin();
+  } catch {
+    return { ok: false, error: "Unauthorized" };
+  }
+
+  const admin = createAdminClient();
+
+  const { error: delError } = await admin
+    .from("assignments")
+    .delete()
+    .eq("conversation_id", input.conversationId);
+  if (delError) return { ok: false, error: delError.message };
+
+  if (input.employeeId) {
+    const { error: insError } = await admin
+      .from("assignments")
+      .insert({ conversation_id: input.conversationId, employee_id: input.employeeId });
+    if (insError) return { ok: false, error: insError.message };
+  }
+
+  return { ok: true };
+}
+
+/** Close or reopen a conversation. */
+export async function setConversationStatus(input: {
+  conversationId: string;
+  status: "open" | "closed";
+}): Promise<ActionResult> {
+  try {
+    await requireAdmin();
+  } catch {
+    return { ok: false, error: "Unauthorized" };
+  }
+
+  if (input.status !== "open" && input.status !== "closed") {
+    return { ok: false, error: "Invalid status." };
+  }
+
+  const supabase = await createClient();
+  const { error } = await supabase
+    .from("conversations")
+    .update({ status: input.status })
+    .eq("id", input.conversationId);
+
+  if (error) return { ok: false, error: error.message };
+  return { ok: true };
 }
 
 export async function listAdminMessages(
@@ -491,6 +645,26 @@ export async function saveBusinessSettings(input: {
     },
     { onConflict: "id" }
   );
+
+  if (error) return { ok: false, error: error.message };
+  return { ok: true };
+}
+
+/** Save (or clear) the business logo URL after it's uploaded to Storage. */
+export async function saveBrandLogo(logoUrl: string | null): Promise<ActionResult> {
+  try {
+    await requireAdmin();
+  } catch {
+    return { ok: false, error: "Unauthorized" };
+  }
+
+  const supabase = await createClient();
+  const { error } = await supabase
+    .from("business_settings")
+    .upsert(
+      { id: 1, logo_url: logoUrl, updated_at: new Date().toISOString() },
+      { onConflict: "id" }
+    );
 
   if (error) return { ok: false, error: error.message };
   return { ok: true };

@@ -5,6 +5,7 @@ import {
   canAccessSection,
   type EmployeeSection,
 } from "@/lib/access";
+import { getBrandLogoUrl } from "@/lib/db/branding";
 import { PortalShell, type NavItem } from "@/components/portal/portal-shell";
 
 // Nav items, each tagged with the section it belongs to. Visibility is derived
@@ -45,6 +46,7 @@ export default async function EmployeeLayout({
   ).map(({ section: _section, ...item }) => item);
 
   const userName = profile?.full_name?.trim() || user.email || "Employee";
+  const logoUrl = await getBrandLogoUrl();
 
   return (
     <PortalShell
@@ -52,6 +54,8 @@ export default async function EmployeeLayout({
       portalLabel="Employee Portal"
       userName={userName}
       roleLabel="Employee"
+      userId={user.id}
+      logoUrl={logoUrl}
     >
       {children}
     </PortalShell>

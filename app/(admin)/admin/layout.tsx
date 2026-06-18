@@ -1,10 +1,12 @@
 import { redirect } from "next/navigation";
 import { getUserAndProfile, roleDashboardPath, isDeactivated } from "@/lib/auth";
+import { getBrandLogoUrl } from "@/lib/db/branding";
 import { PortalShell, type NavItem } from "@/components/portal/portal-shell";
 
 const NAV: NavItem[] = [
   { label: "Dashboard", href: "/admin", icon: "LayoutDashboard", exact: true },
   { label: "Employees", href: "/admin/employees", icon: "Users" },
+  { label: "Customers", href: "/admin/customers", icon: "Contact" },
   { label: "Orders", href: "/admin/orders", icon: "ShoppingBag" },
   { label: "Messages", href: "/admin/messages", icon: "MessageSquare" },
   { label: "Analytics", href: "/admin/analytics", icon: "BarChart3" },
@@ -31,6 +33,7 @@ export default async function AdminLayout({
   }
 
   const userName = profile?.full_name?.trim() || user.email || "Admin";
+  const logoUrl = await getBrandLogoUrl();
 
   return (
     <PortalShell
@@ -38,6 +41,8 @@ export default async function AdminLayout({
       portalLabel="Admin Panel"
       userName={userName}
       roleLabel="Administrator"
+      userId={user.id}
+      logoUrl={logoUrl}
     >
       {children}
     </PortalShell>

@@ -58,7 +58,13 @@ function NavLinks({ className }: { className?: string }) {
   );
 }
 
-export function CustomerNav({ userName }: { userName: string }) {
+export function CustomerNav({
+  userName,
+  userId,
+}: {
+  userName: string;
+  userId: string;
+}) {
   return (
     <header className="sticky top-0 z-30 border-b border-border bg-white/85 backdrop-blur">
       <div className="mx-auto flex h-16 w-full max-w-6xl items-center justify-between gap-4 px-5 md:px-8">
@@ -77,7 +83,7 @@ export function CustomerNav({ userName }: { userName: string }) {
 
         {/* Notifications + user menu */}
         <div className="flex items-center gap-1">
-          <NotificationsBell />
+          <NotificationsBell userId={userId} />
           <DropdownMenu>
           <DropdownMenuTrigger className="flex items-center gap-2.5 rounded-full py-1 pl-1 pr-2 outline-none transition-colors hover:bg-muted focus-visible:ring-[3px] focus-visible:ring-brand/25">
             <Avatar className="size-9">

@@ -25,7 +25,7 @@ export default async function CustomerLayout({
 
   return (
     <div className="min-h-dvh bg-background">
-      <CustomerNav userName={name} />
+      <CustomerNav userName={name} userId={user.id} />
       <main className="mx-auto w-full max-w-6xl px-5 py-8 md:px-8 md:py-10">
         {children}
       </main>

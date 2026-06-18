@@ -2,7 +2,17 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Paperclip, Send, FilePlus2, Lock, Search, Inbox, Loader2 } from "lucide-react";
+import {
+  Paperclip,
+  Send,
+  FilePlus2,
+  Lock,
+  Search,
+  Inbox,
+  Loader2,
+  CheckCircle2,
+  RotateCcw,
+} from "lucide-react";
 import { toast } from "sonner";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -22,6 +32,9 @@ import {
   listAdminInbox,
   listAdminMessages,
   adminSendMessage,
+  listEmployees,
+  setConversationAssignee,
+  setConversationStatus,
 } from "@/lib/actions/admin";
 import {
   MY_INBOX_KEY,
@@ -118,6 +131,45 @@ export function ConversationInbox({
     () => conversations.find((c) => c.id === activeId),
     [conversations, activeId]
   );
+
+  // Admin-only: active employees for the reassign dropdown.
+  const { data: employeesData } = useQuery({
+    queryKey: ["admin", "inbox", "employees"],
+    queryFn: listEmployees,
+    enabled: isAdmin,
+  });
+  const activeEmployees = useMemo(
+    () => (employeesData ?? []).filter((e) => e.is_active),
+    [employeesData]
+  );
+
+  const assignMutation = useMutation({
+    mutationFn: setConversationAssignee,
+    onSuccess: (res) => {
+      if (!res.ok) {
+        toast.error("Couldn't reassign", { description: res.error });
+        return;
+      }
+      toast.success("Conversation reassigned");
+      queryClient.invalidateQueries({ queryKey: inboxKey });
+    },
+    onError: () =>
+      toast.error("Couldn't reassign", { description: "Please try again." }),
+  });
+
+  const statusMutation = useMutation({
+    mutationFn: setConversationStatus,
+    onSuccess: (res) => {
+      if (!res.ok) {
+        toast.error("Couldn't update conversation", { description: res.error });
+        return;
+      }
+      toast.success("Conversation updated");
+      queryClient.invalidateQueries({ queryKey: inboxKey });
+    },
+    onError: () =>
+      toast.error("Couldn't update conversation", { description: "Please try again." }),
+  });
 
   // ----- Active thread -----
   const { data: messages, isLoading: messagesLoading } = useQuery({
@@ -362,12 +414,60 @@ export function ConversationInbox({
                   {active.status === "open" ? "Open" : "Closed"}
                 </StatusBadge>
               </div>
-              {canCreateOrder ? (
-                <Button variant="outline" size="sm" onClick={() => setOrderOpen(true)}>
-                  <FilePlus2 className="size-4" />
-                  <span className="hidden sm:inline">Create order</span>
-                </Button>
-              ) : null}
+              <div className="flex items-center gap-2">
+                {isAdmin ? (
+                  <>
+                    <select
+                      aria-label="Assign conversation to employee"
+                      value={active.assignedEmployeeId ?? ""}
+                      disabled={assignMutation.isPending}
+                      onChange={(e) =>
+                        assignMutation.mutate({
+                          conversationId: active.id,
+                          employeeId: e.target.value || null,
+                        })
+                      }
+                      className="h-9 max-w-[10rem] rounded-[10px] border border-input bg-neutral-soft px-2.5 text-sm text-foreground outline-none transition-colors focus-visible:border-brand focus-visible:ring-[3px] focus-visible:ring-brand/25 disabled:opacity-50"
+                    >
+                      <option value="">Unassigned</option>
+                      {activeEmployees.map((emp) => (
+                        <option key={emp.id} value={emp.id}>
+                          {emp.full_name || emp.email || "Employee"}
+                        </option>
+                      ))}
+                    </select>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      disabled={statusMutation.isPending}
+                      onClick={() =>
+                        statusMutation.mutate({
+                          conversationId: active.id,
+                          status: active.status === "open" ? "closed" : "open",
+                        })
+                      }
+                    >
+                      {active.status === "open" ? (
+                        <>
+                          <CheckCircle2 className="size-4" />
+                          <span className="hidden sm:inline">Close</span>
+                        </>
+                      ) : (
+                        <>
+                          <RotateCcw className="size-4" />
+                          <span className="hidden sm:inline">Reopen</span>
+                        </>
+                      )}
+                    </Button>
+                  </>
+                ) : null}
+                {canCreateOrder ? (
+                  <Button variant="outline" size="sm" onClick={() => setOrderOpen(true)}>
+                    <FilePlus2 className="size-4" />
+                    <span className="hidden sm:inline">Create order</span>
+                  </Button>
+                ) : null}
+              </div>
             </div>
 
             {/* Messages */}

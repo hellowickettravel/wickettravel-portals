@@ -9,6 +9,7 @@ import {
   Menu,
   LayoutDashboard,
   Users,
+  Contact,
   ShoppingBag,
   MessageSquare,
   BarChart3,
@@ -43,6 +44,7 @@ import { NotificationsBell } from "@/components/portal/notifications-bell";
 const ICONS = {
   LayoutDashboard,
   Users,
+  Contact,
   ShoppingBag,
   MessageSquare,
   BarChart3,
@@ -65,6 +67,10 @@ type PortalShellProps = {
   portalLabel: string;
   userName: string;
   roleLabel: string;
+  /** Current user id — powers the realtime notifications bell. */
+  userId: string;
+  /** Optional business logo URL; falls back to the Wicket wordmark when unset. */
+  logoUrl?: string | null;
   children: React.ReactNode;
 };
 
@@ -113,11 +119,22 @@ function NavLinks({
   );
 }
 
-function SidebarBrand({ portalLabel }: { portalLabel: string }) {
+function SidebarBrand({
+  portalLabel,
+  logoUrl,
+}: {
+  portalLabel: string;
+  logoUrl?: string | null;
+}) {
   return (
     <div className="flex h-16 items-center gap-2.5 px-6">
-      <div className="flex size-9 items-center justify-center rounded-xl bg-primary text-primary-foreground">
-        <Plane className="size-5 -rotate-45" />
+      <div className="flex size-9 items-center justify-center overflow-hidden rounded-xl bg-primary text-primary-foreground">
+        {logoUrl ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={logoUrl} alt="Logo" className="size-full object-cover" />
+        ) : (
+          <Plane className="size-5 -rotate-45" />
+        )}
       </div>
       <div className="leading-tight">
         <p className="font-heading text-base font-semibold text-white">Wicket</p>
@@ -142,6 +159,8 @@ export function PortalShell({
   portalLabel,
   userName,
   roleLabel,
+  userId,
+  logoUrl,
   children,
 }: PortalShellProps) {
   const pathname = usePathname();
@@ -151,7 +170,7 @@ export function PortalShell({
     <div className="flex min-h-dvh bg-background">
       {/* Desktop sidebar */}
       <aside className="hidden w-[260px] shrink-0 flex-col bg-sidebar text-sidebar-foreground md:flex">
-        <SidebarBrand portalLabel={portalLabel} />
+        <SidebarBrand portalLabel={portalLabel} logoUrl={logoUrl} />
         <NavLinks navItems={navItems} pathname={pathname} />
         <SidebarFooter />
       </aside>
@@ -175,7 +194,7 @@ export function PortalShell({
                 className="flex w-[280px] flex-col gap-0 bg-sidebar text-sidebar-foreground"
               >
                 <SheetTitle className="sr-only">Navigation</SheetTitle>
-                <SidebarBrand portalLabel={portalLabel} />
+                <SidebarBrand portalLabel={portalLabel} logoUrl={logoUrl} />
                 <NavLinks
                   navItems={navItems}
                   pathname={pathname}
@@ -202,7 +221,7 @@ export function PortalShell({
           </div>
 
           <div className="flex items-center gap-1">
-            <NotificationsBell />
+            <NotificationsBell userId={userId} />
             <DropdownMenu>
               <DropdownMenuTrigger className="flex items-center gap-3 rounded-full py-1 pl-1 pr-2 outline-none transition-colors hover:bg-muted focus-visible:ring-[3px] focus-visible:ring-brand/25">
                 <Avatar className="size-9">
