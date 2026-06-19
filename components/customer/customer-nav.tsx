@@ -124,8 +124,22 @@ export function CustomerNav({
         </div>
       </div>
 
-      {/* Mobile nav row */}
-      <NavLinks className="flex items-center gap-1 overflow-x-auto border-t border-border px-4 py-2 md:hidden" />
+      {/* Mobile nav row + pinned Sign out.
+          The avatar menu can be hard to find on a phone, so we surface a
+          plain form+button sign-out here (same reliable pattern the
+          admin/employee sidebar uses) pinned right so it never scrolls away. */}
+      <div className="flex items-center gap-2 border-t border-border px-3 py-2 md:hidden">
+        <NavLinks className="flex flex-1 items-center gap-1 overflow-x-auto" />
+        <form action={signOut} className="shrink-0">
+          <button
+            type="submit"
+            className="flex items-center gap-1.5 rounded-full px-3.5 py-2 text-sm font-medium text-destructive transition-colors hover:bg-destructive/10 active:bg-destructive/15"
+          >
+            <LogOut className="size-4" />
+            Sign out
+          </button>
+        </form>
+      </div>
     </header>
   );
 }
