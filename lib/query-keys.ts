@@ -25,6 +25,10 @@ export const NOTIFICATION_PREFS_KEY = ["notification-prefs"] as const;
 // Customer portal
 export const CUSTOMER_ORDERS_KEY = ["customer", "orders"] as const;
 export const CUSTOMER_THREAD_KEY = ["customer", "thread"] as const;
+export const CUSTOMER_SUPPORT_TICKETS_KEY = [
+  "customer",
+  "support-tickets",
+] as const;
 
 // Admin dev/mock tools
 export const ADMIN_TOOLS_EMPLOYEES_KEY = ["admin", "tools", "employees"] as const;

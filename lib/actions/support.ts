@@ -14,11 +14,18 @@ import type { SupportTicket, SupportTicketStatus } from "@/lib/db/types";
 type ActionResult = { ok: true } | { ok: false; error: string };
 
 const TICKET_COLUMNS =
-  "id, employee_id, subject, message, status, created_at, resolved_at";
+  "id, employee_id, customer_id, submitter_role, subject, message, status, created_at, resolved_at";
 
-export type SupportTicketWithEmployee = SupportTicket & {
-  employee: { full_name: string | null; email: string | null } | null;
+type SubmitterRef = { full_name: string | null; email: string | null } | null;
+
+/** Admin-queue shape: a ticket with both possible submitters embedded. */
+export type SupportTicketWithSubmitter = SupportTicket & {
+  employee: SubmitterRef;
+  customer: SubmitterRef;
 };
+
+/** @deprecated kept as an alias — admin queue now uses SupportTicketWithSubmitter. */
+export type SupportTicketWithEmployee = SupportTicketWithSubmitter;
 
 /** Employee raises an internal issue. */
 export async function createSupportTicket(input: {
@@ -59,9 +66,55 @@ export async function listMySupportTickets(): Promise<SupportTicket[]> {
   return data ?? [];
 }
 
-/** Admin queue: every ticket with the submitting employee's name. */
+/** A customer raises a support query → lands in the admin Support Queries queue. */
+export async function createCustomerSupportTicket(input: {
+  subject: string;
+  message: string;
+}): Promise<ActionResult> {
+  const { user, profile } = await getUserAndProfile();
+  if (!user) return { ok: false, error: "Unauthorized" };
+  // Customer portal only — keeps submitter_role honest.
+  if (profile?.role !== "customer") return { ok: false, error: "Unauthorized" };
+
+  const subject = input.subject.trim();
+  const message = input.message.trim();
+  if (!subject || !message) {
+    return { ok: false, error: "Subject and details are both required." };
+  }
+
+  const supabase = await createClient();
+  // RLS support_tickets_insert_customer: customer_id = auth.uid() + role 'customer'.
+  const { error } = await supabase.from("support_tickets").insert({
+    customer_id: user.id,
+    employee_id: null,
+    submitter_role: "customer",
+    subject,
+    message,
+  });
+
+  if (error) return { ok: false, error: error.message };
+  return { ok: true };
+}
+
+/** The signed-in customer's own tickets, newest first. */
+export async function listMyCustomerSupportTickets(): Promise<SupportTicket[]> {
+  const { user, profile } = await getUserAndProfile();
+  if (!user || profile?.role !== "customer") return [];
+
+  const supabase = await createClient();
+  const { data } = await supabase
+    .from("support_tickets")
+    .select(TICKET_COLUMNS)
+    .eq("customer_id", user.id)
+    .order("created_at", { ascending: false })
+    .returns<SupportTicket[]>();
+
+  return data ?? [];
+}
+
+/** Admin queue: every ticket with the submitting employee OR customer's name. */
 export async function listAllSupportTickets(): Promise<
-  SupportTicketWithEmployee[]
+  SupportTicketWithSubmitter[]
 > {
   const { profile } = await getUserAndProfile();
   if (profile?.role !== "admin") return [];
@@ -69,9 +122,11 @@ export async function listAllSupportTickets(): Promise<
   const supabase = await createClient();
   const { data } = await supabase
     .from("support_tickets")
-    .select(`${TICKET_COLUMNS}, employee:profiles!employee_id(full_name, email)`)
+    .select(
+      `${TICKET_COLUMNS}, employee:profiles!employee_id(full_name, email), customer:profiles!customer_id(full_name, email)`
+    )
     .order("created_at", { ascending: false })
-    .returns<SupportTicketWithEmployee[]>();
+    .returns<SupportTicketWithSubmitter[]>();
 
   return data ?? [];
 }

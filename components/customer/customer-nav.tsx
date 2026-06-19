@@ -21,6 +21,7 @@ const NAV = [
   { label: "Book a Flight", href: "/customer/book" },
   { label: "My Orders", href: "/customer/orders" },
   { label: "Messages", href: "/customer/messages" },
+  { label: "Support", href: "/customer/support" },
   { label: "Profile", href: "/customer/profile" },
 ];
 

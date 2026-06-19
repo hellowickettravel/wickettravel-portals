@@ -73,7 +73,7 @@ export default function AdminSupportPage() {
       <PageHeader
         eyebrow="Support"
         title="Support Queries"
-        subtitle="Issues raised by your team — triage and resolve."
+        subtitle="Issues raised by your team and customers — triage and resolve."
       />
 
       <div className="flex items-center justify-between gap-3">
@@ -116,8 +116,8 @@ export default function AdminSupportPage() {
               No support tickets
             </p>
             <p className="max-w-sm text-sm text-muted-foreground">
-              When an employee raises an issue from their Support page, it lands
-              here.
+              When an employee or customer raises a query from their Support
+              page, it lands here.
             </p>
           </div>
         ) : visible.length === 0 ? (
@@ -141,12 +141,23 @@ export default function AdminSupportPage() {
                       <StatusBadge tone={resolved ? "green" : "amber"}>
                         {resolved ? "Resolved" : "Open"}
                       </StatusBadge>
+                      <StatusBadge
+                        tone={t.submitter_role === "customer" ? "violet" : "slate"}
+                      >
+                        {t.submitter_role === "customer" ? "Customer" : "Employee"}
+                      </StatusBadge>
                     </div>
                     <p className="mt-1 whitespace-pre-wrap text-sm text-muted-foreground">
                       {t.message}
                     </p>
                     <div className="mt-2 flex items-center gap-2">
-                      <UserCell name={t.employee?.full_name || "Employee"} />
+                      <UserCell
+                        name={
+                          t.submitter_role === "customer"
+                            ? t.customer?.full_name || "Customer"
+                            : t.employee?.full_name || "Employee"
+                        }
+                      />
                       <span className="text-xs text-muted-foreground">
                         · {fmtRelative(t.created_at)}
                       </span>

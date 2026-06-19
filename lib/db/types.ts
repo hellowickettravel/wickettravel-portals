@@ -103,9 +103,14 @@ export type Notification = {
 
 export type SupportTicketStatus = "open" | "resolved";
 
+/** Who raised a support ticket (added in 0015). */
+export type SupportSubmitterRole = "employee" | "customer";
+
 export type SupportTicket = {
   id: string;
-  employee_id: string;
+  employee_id: string | null; // null for customer-submitted tickets (0015)
+  customer_id: string | null; // -> profiles.id of the customer (0015)
+  submitter_role: SupportSubmitterRole;
   subject: string;
   message: string;
   status: SupportTicketStatus;

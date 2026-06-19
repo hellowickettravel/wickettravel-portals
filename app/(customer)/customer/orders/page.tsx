@@ -1,8 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   Plane,
   ChevronDown,
@@ -16,6 +16,7 @@ import { SectionCard } from "@/components/admin/section-card";
 import { StatusBadge, type Tone } from "@/components/admin/status-badge";
 import { Button } from "@/components/ui/button";
 import { TableSkeleton } from "@/components/portal/skeletons";
+import { createClient } from "@/lib/supabase/client";
 import { listMyCustomerOrders } from "@/lib/actions/customer";
 import { CUSTOMER_ORDERS_KEY } from "@/lib/query-keys";
 import type { OrderStatus } from "@/lib/db/types";
@@ -53,11 +54,29 @@ function DetailRow({
 }
 
 export default function CustomerOrdersPage() {
+  const queryClient = useQueryClient();
+  const supabase = useMemo(() => createClient(), []);
   const { data: orders, isLoading } = useQuery({
     queryKey: CUSTOMER_ORDERS_KEY,
     queryFn: listMyCustomerOrders,
   });
   const [openId, setOpenId] = useState<string | null>(null);
+
+  // Realtime: a staff quote/price/status change refetches live (RLS scopes the
+  // refetch to the caller's own orders).
+  useEffect(() => {
+    const channel = supabase
+      .channel("customer-orders-list")
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "orders" },
+        () => queryClient.invalidateQueries({ queryKey: CUSTOMER_ORDERS_KEY })
+      )
+      .subscribe();
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [supabase, queryClient]);
 
   const rows = orders ?? [];
 
