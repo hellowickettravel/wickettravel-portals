@@ -96,7 +96,10 @@ export function ConversationInbox({
 }) {
   const isAdmin = scope === "admin";
   const readOnly = !isAdmin && isReadOnly(accessLevel);
-  const canCreateOrder = !isAdmin && !readOnly;
+  // Only FULL-access employees may create orders. chat_only has no orders access
+  // at all (and view_only is read-only) — both are blocked server-side AND by
+  // RLS, so don't surface the CTA to them.
+  const canCreateOrder = !isAdmin && accessLevel === "full";
 
   const queryClient = useQueryClient();
   const supabase = useMemo(() => createClient(), []);
