@@ -166,8 +166,9 @@ export default async function AnalyticsPage({
 
   const hasData = orders.length > 0;
 
-  // Revenue counts every order EXCEPT cancelled ones.
-  const revenueOrders = orders.filter((o) => o.status !== "cancelled");
+  // Revenue = EARNED revenue: closed (completed) sales only. Open orders are
+  // pipeline (not yet earned) and cancelled orders never earn — both excluded.
+  const closedOrders = orders.filter((o) => o.status === "closed");
 
   const months = lastSixMonths();
   const ordersOverTime = months.map((m) => ({
@@ -176,7 +177,7 @@ export default async function AnalyticsPage({
   }));
   const revenueByMonth = months.map((m) => ({
     label: m.label,
-    value: revenueOrders
+    value: closedOrders
       .filter((o) => monthKey(o.created_at) === m.key)
       .reduce((s, o) => s + (o.selling_price ?? 0), 0),
   }));
@@ -198,13 +199,13 @@ export default async function AnalyticsPage({
     .sort((a, b) => b.closed - a.closed)
     .slice(0, 5);
 
-  const totalRevenue = revenueOrders.reduce(
+  const totalRevenue = closedOrders.reduce(
     (s, o) => s + (o.selling_price ?? 0),
     0
   );
-  const closedCount = orders.filter((o) => o.status === "closed").length;
-  const avgOrderValue = revenueOrders.length
-    ? Math.round(totalRevenue / revenueOrders.length)
+  const closedCount = closedOrders.length;
+  const avgOrderValue = closedOrders.length
+    ? Math.round(totalRevenue / closedOrders.length)
     : 0;
   const closedRate = hasData
     ? Math.round((closedCount / orders.length) * 100)
@@ -238,8 +239,8 @@ export default async function AnalyticsPage({
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <StatCard label="Total orders" value={String(orders.length)} icon={ShoppingBag} />
-        <StatCard label="Revenue" value={gbp(totalRevenue)} icon={Wallet} />
-        <StatCard label="Avg order value" value={gbp(avgOrderValue)} icon={TrendingUp} />
+        <StatCard label="Revenue (closed)" value={gbp(totalRevenue)} icon={Wallet} />
+        <StatCard label="Avg closed order" value={gbp(avgOrderValue)} icon={TrendingUp} />
         <StatCard label="Closed rate" value={`${closedRate}%`} icon={CheckCircle2} />
       </div>
 
@@ -264,7 +265,7 @@ export default async function AnalyticsPage({
             <SectionCard title="Orders over time" description="Monthly order volume">
               <BarChart data={ordersOverTime} />
             </SectionCard>
-            <SectionCard title="Revenue by month" description="Gross revenue (GBP)">
+            <SectionCard title="Revenue by month" description="Closed revenue (GBP)">
               <BarChart
                 data={revenueByMonth}
                 color="var(--navy)"

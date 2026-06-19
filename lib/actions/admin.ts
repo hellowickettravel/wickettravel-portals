@@ -476,6 +476,131 @@ export async function updateEmployee(input: {
   }
 }
 
+/**
+ * Permanently delete an employee — their auth login AND profile row. Service
+ * role after an admin check. References are detached first so foreign keys never
+ * block the delete: orders they authored keep their history (created_by → null),
+ * messages they sent keep their content (sender_id → null), and their
+ * conversation assignments are removed. assigned_employee_id, notifications and
+ * notification_prefs clean themselves up via ON DELETE SET NULL / CASCADE.
+ */
+export async function deleteEmployee(id: string): Promise<ActionResult> {
+  const { user, profile } = await getUserAndProfile();
+  if (!user || profile?.role !== "admin") {
+    return { ok: false, error: "Unauthorized" };
+  }
+  if (id === user.id) {
+    return { ok: false, error: "You can't delete your own account." };
+  }
+
+  try {
+    const admin = createAdminClient();
+
+    const { error: ordersErr } = await admin
+      .from("orders")
+      .update({ created_by: null })
+      .eq("created_by", id);
+    if (ordersErr) return { ok: false, error: ordersErr.message };
+
+    const { error: msgErr } = await admin
+      .from("messages")
+      .update({ sender_id: null })
+      .eq("sender_id", id);
+    if (msgErr) return { ok: false, error: msgErr.message };
+
+    const { error: assignErr } = await admin
+      .from("assignments")
+      .delete()
+      .eq("employee_id", id);
+    if (assignErr) return { ok: false, error: assignErr.message };
+
+    // Drop the profile row, then the auth user.
+    const { error: profileErr } = await admin
+      .from("profiles")
+      .delete()
+      .eq("id", id);
+    if (profileErr) return { ok: false, error: profileErr.message };
+
+    const { error: authErr } = await admin.auth.admin.deleteUser(id);
+    if (authErr) return { ok: false, error: authErr.message };
+
+    return { ok: true };
+  } catch (e) {
+    return { ok: false, error: e instanceof Error ? e.message : "Delete failed." };
+  }
+}
+
+/**
+ * Permanently delete a customer and their chat history. Service role after an
+ * admin check. Their conversations (and the messages + assignments inside them)
+ * are removed; their orders are KEPT for revenue history with the customer link
+ * detached (customer_id → null). Children are cleared before parents so no
+ * foreign key blocks the delete.
+ */
+export async function deleteCustomer(id: string): Promise<ActionResult> {
+  try {
+    await requireAdmin();
+  } catch {
+    return { ok: false, error: "Unauthorized" };
+  }
+
+  try {
+    const admin = createAdminClient();
+
+    const { data: convs, error: convReadErr } = await admin
+      .from("conversations")
+      .select("id")
+      .eq("customer_id", id)
+      .returns<{ id: string }[]>();
+    if (convReadErr) return { ok: false, error: convReadErr.message };
+
+    const convIds = (convs ?? []).map((c) => c.id);
+    if (convIds.length > 0) {
+      const { error: msgErr } = await admin
+        .from("messages")
+        .delete()
+        .in("conversation_id", convIds);
+      if (msgErr) return { ok: false, error: msgErr.message };
+
+      const { error: assignErr } = await admin
+        .from("assignments")
+        .delete()
+        .in("conversation_id", convIds);
+      if (assignErr) return { ok: false, error: assignErr.message };
+
+      // Detach any orders tied to these chats before the chats disappear.
+      const { error: ordConvErr } = await admin
+        .from("orders")
+        .update({ conversation_id: null })
+        .in("conversation_id", convIds);
+      if (ordConvErr) return { ok: false, error: ordConvErr.message };
+
+      const { error: convDelErr } = await admin
+        .from("conversations")
+        .delete()
+        .eq("customer_id", id);
+      if (convDelErr) return { ok: false, error: convDelErr.message };
+    }
+
+    // Keep the customer's orders for revenue history — just unlink the customer.
+    const { error: ordersErr } = await admin
+      .from("orders")
+      .update({ customer_id: null })
+      .eq("customer_id", id);
+    if (ordersErr) return { ok: false, error: ordersErr.message };
+
+    const { error: custErr } = await admin
+      .from("customers")
+      .delete()
+      .eq("id", id);
+    if (custErr) return { ok: false, error: custErr.message };
+
+    return { ok: true };
+  } catch (e) {
+    return { ok: false, error: e instanceof Error ? e.message : "Delete failed." };
+  }
+}
+
 // ----- Admin inbox (full access — admin RLS sees every conversation) -----
 
 /**

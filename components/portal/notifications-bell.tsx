@@ -11,6 +11,7 @@ import {
   RefreshCw,
   CheckCheck,
 } from "lucide-react";
+import { toast } from "sonner";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -41,7 +42,13 @@ const ICON_BY_TYPE: Record<NotificationType, typeof Bell> = {
  * read on click + navigates, supports "mark all read", and subscribes to
  * realtime inserts so new ones appear live.
  */
-export function NotificationsBell({ userId }: { userId: string }) {
+export function NotificationsBell({
+  userId,
+  portal,
+}: {
+  userId: string;
+  portal: "admin" | "employee" | "customer";
+}) {
   const router = useRouter();
   const queryClient = useQueryClient();
   const supabase = useMemo(() => createClient(), []);
@@ -77,19 +84,52 @@ export function NotificationsBell({ userId }: { userId: string }) {
 
   const readMutation = useMutation({
     mutationFn: markNotificationRead,
+    onSuccess: (res) => {
+      if (!res.ok)
+        toast.error("Couldn't update notification", { description: res.error });
+    },
     onSettled: () =>
       queryClient.invalidateQueries({ queryKey: NOTIFICATIONS_KEY }),
   });
 
   const readAllMutation = useMutation({
     mutationFn: markAllNotificationsRead,
+    onSuccess: (res) => {
+      if (!res.ok) {
+        toast.error("Couldn't mark all as read", { description: res.error });
+        return;
+      }
+      toast.success("All notifications marked as read");
+    },
     onSettled: () =>
       queryClient.invalidateQueries({ queryKey: NOTIFICATIONS_KEY }),
   });
 
-  function openNotification(id: string, isRead: boolean, link: string | null) {
+  /** A guaranteed-real route per type, used when a stored link is missing/bad. */
+  function fallbackLink(type: NotificationType): string {
+    const base = portal === "customer" ? "/customer" : `/${portal}`;
+    switch (type) {
+      case "new_order":
+      case "status_change":
+        return `${base}/orders`;
+      case "new_message":
+      case "assignment":
+        return `${base}/messages`;
+      default:
+        return base;
+    }
+  }
+
+  function openNotification(
+    id: string,
+    isRead: boolean,
+    type: NotificationType,
+    link: string | null
+  ) {
     if (!isRead) readMutation.mutate(id);
-    if (link) router.push(link);
+    // Never navigate to an empty/relative link → would 404. Fall back by type.
+    const target = link && link.startsWith("/") ? link : fallbackLink(type);
+    router.push(target);
   }
 
   return (
@@ -138,7 +178,9 @@ export function NotificationsBell({ userId }: { userId: string }) {
                 <li key={n.id}>
                   <button
                     type="button"
-                    onClick={() => openNotification(n.id, n.is_read, n.link)}
+                    onClick={() =>
+                      openNotification(n.id, n.is_read, n.type, n.link)
+                    }
                     className={cn(
                       "flex w-full items-start gap-3 px-3.5 py-2.5 text-left transition-colors hover:bg-neutral-soft",
                       !n.is_read && "bg-chip/40"

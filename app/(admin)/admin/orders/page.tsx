@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
-import { Plus, Search, MoreHorizontal, Eye, Download } from "lucide-react";
+import { Plus, Search, MoreHorizontal, Eye, Download, ChevronRight } from "lucide-react";
 import { PageHeader } from "@/components/admin/page-header";
 import { SectionCard } from "@/components/admin/section-card";
 import { StatusBadge, type Tone } from "@/components/admin/status-badge";
@@ -62,10 +62,11 @@ export default function OrdersPage() {
 
   const totals = useMemo(() => {
     const open = all.filter((o) => o.status === "open").length;
-    // Revenue + commission exclude cancelled orders.
-    const live = all.filter((o) => o.status !== "cancelled");
-    const revenue = live.reduce((s, o) => s + (o.selling_price ?? 0), 0);
-    const commission = live.reduce((s, o) => s + (o.commission ?? 0), 0);
+    // Earned revenue + commission = CLOSED (completed) orders only. Open is
+    // pipeline (not yet earned); cancelled never earns.
+    const closed = all.filter((o) => o.status === "closed");
+    const revenue = closed.reduce((s, o) => s + (o.selling_price ?? 0), 0);
+    const commission = closed.reduce((s, o) => s + (o.commission ?? 0), 0);
     return { total: all.length, open, revenue, commission };
   }, [all]);
 
@@ -158,8 +159,8 @@ export default function OrdersPage() {
         {[
           { label: "Total orders", value: String(totals.total) },
           { label: "Open", value: String(totals.open) },
-          { label: "Revenue", value: gbp(totals.revenue) },
-          { label: "Commission", value: gbp(totals.commission) },
+          { label: "Revenue (closed)", value: gbp(totals.revenue) },
+          { label: "Commission (closed)", value: gbp(totals.commission) },
         ].map((t, i) => (
           <div
             key={t.label}
@@ -240,6 +241,12 @@ export default function OrdersPage() {
                     <MobileRecordCard
                       title={<span className="text-navy">#{o.id.slice(0, 8)}</span>}
                       subtitle={o.customer?.name ?? "—"}
+                      action={
+                        <span className="inline-flex items-center gap-0.5 text-xs font-medium text-brand">
+                          View
+                          <ChevronRight className="size-4" />
+                        </span>
+                      }
                       badge={
                         <StatusBadge tone={ORDER_TONE[o.status]}>
                           {titleCase(o.status)}

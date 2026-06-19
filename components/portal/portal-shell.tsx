@@ -146,6 +146,24 @@ function SidebarBrand({
   );
 }
 
+/** Pinned sign-out control for the bottom of the sidebar / mobile nav sheet. */
+function SidebarSignOut({ onNavigate }: { onNavigate?: () => void }) {
+  return (
+    <div className="border-t border-sidebar-foreground/10 px-3 py-3">
+      <form action={signOut}>
+        <button
+          type="submit"
+          onClick={onNavigate}
+          className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-sidebar-foreground/80 transition-colors hover:bg-sidebar-accent hover:text-white"
+        >
+          <LogOut className="size-[18px]" />
+          Sign out
+        </button>
+      </form>
+    </div>
+  );
+}
+
 function SidebarFooter() {
   return (
     <div className="px-6 py-4 text-[11px] text-sidebar-foreground/60">
@@ -165,6 +183,10 @@ export function PortalShell({
 }: PortalShellProps) {
   const pathname = usePathname();
   const [mobileOpen, setMobileOpen] = useState(false);
+  // Only admin + employee portals mount this shell; pick the one this is.
+  const portal: "admin" | "employee" = navItems[0]?.href.startsWith("/employee")
+    ? "employee"
+    : "admin";
 
   return (
     <div className="flex min-h-dvh bg-background">
@@ -172,6 +194,7 @@ export function PortalShell({
       <aside className="hidden w-[260px] shrink-0 flex-col bg-sidebar text-sidebar-foreground md:flex">
         <SidebarBrand portalLabel={portalLabel} logoUrl={logoUrl} />
         <NavLinks navItems={navItems} pathname={pathname} />
+        <SidebarSignOut />
         <SidebarFooter />
       </aside>
 
@@ -200,17 +223,7 @@ export function PortalShell({
                   pathname={pathname}
                   onNavigate={() => setMobileOpen(false)}
                 />
-                <div className="px-3 pb-4">
-                  <form action={signOut}>
-                    <button
-                      type="submit"
-                      className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-sidebar-foreground/80 transition-colors hover:bg-sidebar-accent hover:text-white"
-                    >
-                      <LogOut className="size-[18px]" />
-                      Sign out
-                    </button>
-                  </form>
-                </div>
+                <SidebarSignOut onNavigate={() => setMobileOpen(false)} />
                 <SidebarFooter />
               </SheetContent>
             </Sheet>
@@ -221,7 +234,7 @@ export function PortalShell({
           </div>
 
           <div className="flex items-center gap-1">
-            <NotificationsBell userId={userId} />
+            <NotificationsBell userId={userId} portal={portal} />
             <DropdownMenu>
               <DropdownMenuTrigger className="flex items-center gap-3 rounded-full py-1 pl-1 pr-2 outline-none transition-colors hover:bg-muted focus-visible:ring-[3px] focus-visible:ring-brand/25">
                 <Avatar className="size-9">

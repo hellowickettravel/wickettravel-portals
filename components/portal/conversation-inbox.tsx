@@ -12,6 +12,8 @@ import {
   Loader2,
   CheckCircle2,
   RotateCcw,
+  X,
+  FileText,
 } from "lucide-react";
 import { toast } from "sonner";
 import { Input } from "@/components/ui/input";
@@ -42,7 +44,11 @@ import {
   ADMIN_INBOX_KEY,
   adminMessagesKey,
 } from "@/lib/query-keys";
-import { uploadAttachment, ATTACHMENT_ACCEPT } from "@/lib/storage";
+import {
+  uploadAttachment,
+  validateAttachment,
+  ATTACHMENT_ACCEPT,
+} from "@/lib/storage";
 import type { InboxConversation } from "@/lib/db/conversations";
 import type { Message, ConversationStatus } from "@/lib/db/types";
 import { type AccessLevel, isReadOnly } from "@/lib/access";
@@ -106,6 +112,7 @@ export function ConversationInbox({
   const [draft, setDraft] = useState("");
   const [orderOpen, setOrderOpen] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [pendingFile, setPendingFile] = useState<File | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
 
@@ -226,6 +233,19 @@ export function ConversationInbox({
     }
   }
 
+  // Deep-link: a notification link like `…/messages?c=<id>` auto-opens that chat
+  // once the inbox has loaded. Runs once so the user can still navigate away.
+  const deepLinkedRef = useRef(false);
+  useEffect(() => {
+    if (deepLinkedRef.current || conversations.length === 0) return;
+    const target = new URLSearchParams(window.location.search).get("c");
+    if (target && conversations.some((c) => c.id === target)) {
+      deepLinkedRef.current = true;
+      openConversation(target);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [conversations]);
+
   useEffect(() => {
     const el = scrollRef.current;
     if (el) el.scrollTop = el.scrollHeight;
@@ -267,29 +287,60 @@ export function ConversationInbox({
     },
   });
 
-  function send(e: React.FormEvent<HTMLFormElement>) {
+  // Preview a pending image attachment before it's sent.
+  const pendingPreview = useMemo(
+    () =>
+      pendingFile && pendingFile.type.startsWith("image/")
+        ? URL.createObjectURL(pendingFile)
+        : null,
+    [pendingFile]
+  );
+  useEffect(() => {
+    return () => {
+      if (pendingPreview) URL.revokeObjectURL(pendingPreview);
+    };
+  }, [pendingPreview]);
+
+  async function send(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
+    if (!activeId || readOnly || uploading) return;
     const text = draft.trim();
-    if (!text || !activeId || readOnly) return;
+    if (!text && !pendingFile) return;
+
+    // Upload the pending attachment (if any) only now, on Send.
+    if (pendingFile) {
+      setUploading(true);
+      const result = await uploadAttachment(pendingFile, activeId);
+      setUploading(false);
+      if (!result.ok) {
+        toast.error("Upload failed", { description: result.error });
+        return;
+      }
+      sendMutation.mutate({
+        conversationId: activeId,
+        body: text,
+        mediaUrl: result.url,
+      });
+      setPendingFile(null);
+      setDraft("");
+      return;
+    }
+
     sendMutation.mutate({ conversationId: activeId, body: text });
     setDraft("");
   }
 
-  async function handleFile(e: React.ChangeEvent<HTMLInputElement>) {
+  // Pick a file → ATTACH it as a pending preview; don't send until Send.
+  function handleFile(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     e.target.value = ""; // allow re-selecting the same file
-    if (!file || !activeId || readOnly) return;
-    setUploading(true);
-    const result = await uploadAttachment(file, activeId);
-    if (!result.ok) {
-      setUploading(false);
-      toast.error("Upload failed", { description: result.error });
+    if (!file || readOnly) return;
+    const valid = validateAttachment(file);
+    if (!valid.ok) {
+      toast.error("Can't attach file", { description: valid.error });
       return;
     }
-    sendMutation.mutate(
-      { conversationId: activeId, body: "", mediaUrl: result.url },
-      { onSettled: () => setUploading(false) }
-    );
+    setPendingFile(file);
   }
 
   const thread = messages ?? [];
@@ -521,44 +572,74 @@ export function ConversationInbox({
                 Read-only access — you can view but not reply.
               </div>
             ) : (
-              <form onSubmit={send} className="flex items-center gap-2 border-t border-border bg-card px-3 py-3">
-                <input
-                  ref={fileRef}
-                  type="file"
-                  accept={ATTACHMENT_ACCEPT}
-                  className="hidden"
-                  onChange={handleFile}
-                />
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="icon"
-                  aria-label="Attach file"
-                  disabled={uploading}
-                  className="size-10 shrink-0 rounded-full text-muted-foreground"
-                  onClick={() => fileRef.current?.click()}
-                >
-                  {uploading ? (
-                    <Loader2 className="size-4 animate-spin" />
-                  ) : (
+              <form onSubmit={send} className="border-t border-border bg-card px-3 py-3">
+                {pendingFile ? (
+                  <div className="mb-2 flex items-center gap-2.5 rounded-xl border border-border bg-neutral-soft px-2.5 py-2">
+                    {pendingPreview ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img
+                        src={pendingPreview}
+                        alt={pendingFile.name}
+                        className="size-10 shrink-0 rounded-lg object-cover"
+                      />
+                    ) : (
+                      <div className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-chip text-brand-dark">
+                        <FileText className="size-5" />
+                      </div>
+                    )}
+                    <span className="min-w-0 flex-1 truncate text-sm text-foreground">
+                      {pendingFile.name}
+                    </span>
+                    <button
+                      type="button"
+                      aria-label="Remove attachment"
+                      onClick={() => setPendingFile(null)}
+                      disabled={uploading}
+                      className="inline-flex size-7 shrink-0 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-muted hover:text-foreground disabled:opacity-50"
+                    >
+                      <X className="size-4" />
+                    </button>
+                  </div>
+                ) : null}
+                <div className="flex items-center gap-2">
+                  <input
+                    ref={fileRef}
+                    type="file"
+                    accept={ATTACHMENT_ACCEPT}
+                    className="hidden"
+                    onChange={handleFile}
+                  />
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    aria-label="Attach file"
+                    disabled={uploading}
+                    className="size-10 shrink-0 rounded-full text-muted-foreground"
+                    onClick={() => fileRef.current?.click()}
+                  >
                     <Paperclip className="size-4" />
-                  )}
-                </Button>
-                <Input
-                  value={draft}
-                  onChange={(e) => setDraft(e.target.value)}
-                  placeholder="Type a message…"
-                  className="h-11 rounded-full bg-neutral-soft"
-                />
-                <Button
-                  type="submit"
-                  size="icon"
-                  aria-label="Send message"
-                  className="size-11 shrink-0 rounded-full"
-                  disabled={!draft.trim()}
-                >
-                  <Send className="size-4" />
-                </Button>
+                  </Button>
+                  <Input
+                    value={draft}
+                    onChange={(e) => setDraft(e.target.value)}
+                    placeholder={pendingFile ? "Add a caption…" : "Type a message…"}
+                    className="h-11 rounded-full bg-neutral-soft"
+                  />
+                  <Button
+                    type="submit"
+                    size="icon"
+                    aria-label="Send message"
+                    className="size-11 shrink-0 rounded-full"
+                    disabled={(!draft.trim() && !pendingFile) || uploading}
+                  >
+                    {uploading ? (
+                      <Loader2 className="size-4 animate-spin" />
+                    ) : (
+                      <Send className="size-4" />
+                    )}
+                  </Button>
+                </div>
               </form>
             )}
           </>

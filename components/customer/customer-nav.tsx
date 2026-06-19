@@ -83,7 +83,7 @@ export function CustomerNav({
 
         {/* Notifications + user menu */}
         <div className="flex items-center gap-1">
-          <NotificationsBell userId={userId} />
+          <NotificationsBell userId={userId} portal="customer" />
           <DropdownMenu>
           <DropdownMenuTrigger className="flex items-center gap-2.5 rounded-full py-1 pl-1 pr-2 outline-none transition-colors hover:bg-muted focus-visible:ring-[3px] focus-visible:ring-brand/25">
             <Avatar className="size-9">

@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { ArrowLeft, Plane, MessageSquare, User } from "lucide-react";
 import { getCustomerDetail } from "@/lib/actions/admin";
 import { SectionCard } from "@/components/admin/section-card";
+import { CustomerDangerZone } from "@/components/admin/customer-danger-zone";
 import { StatusBadge, type Tone } from "@/components/admin/status-badge";
 import type { OrderStatus, ConversationStatus } from "@/lib/db/types";
 import { gbp, fmtDate, fmtRelative, titleCase } from "@/lib/format";
@@ -126,6 +127,11 @@ export default async function AdminCustomerDetailPage({
           </ul>
         )}
       </SectionCard>
+
+      <CustomerDangerZone
+        customerId={customer.id}
+        customerName={customer.name || "this customer"}
+      />
     </div>
   );
 }

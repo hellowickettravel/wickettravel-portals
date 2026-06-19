@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
-import { Search, Contact, Download } from "lucide-react";
+import { Search, Contact, Download, Eye, ChevronRight } from "lucide-react";
 import { PageHeader } from "@/components/admin/page-header";
 import { SectionCard } from "@/components/admin/section-card";
 import { StatusBadge } from "@/components/admin/status-badge";
@@ -117,6 +117,12 @@ export default function AdminCustomersPage() {
                     <MobileRecordCard
                       title={<span className="text-navy">{c.name || "Unnamed"}</span>}
                       subtitle={c.wa_phone ?? "No phone"}
+                      action={
+                        <span className="inline-flex items-center gap-0.5 text-xs font-medium text-brand">
+                          View
+                          <ChevronRight className="size-4" />
+                        </span>
+                      }
                       badge={
                         <StatusBadge tone={c.profile_id ? "green" : "slate"}>
                           {c.profile_id ? "Account" : "Lead"}
@@ -143,7 +149,8 @@ export default function AdminCustomersPage() {
                     <TableHead>Account</TableHead>
                     <TableHead className="text-center">Orders</TableHead>
                     <TableHead className="text-center">Conversations</TableHead>
-                    <TableHead className="pr-6">Created</TableHead>
+                    <TableHead>Created</TableHead>
+                    <TableHead className="pr-6 text-right">Manage</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -176,15 +183,27 @@ export default function AdminCustomersPage() {
                       <TableCell className="text-center tabular-nums">
                         {c.conversationCount}
                       </TableCell>
-                      <TableCell className="pr-6 text-muted-foreground">
+                      <TableCell className="text-muted-foreground">
                         {fmtDate(c.created_at)}
+                      </TableCell>
+                      <TableCell
+                        className="pr-6 text-right"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        <Link
+                          href={`/admin/customers/${c.id}`}
+                          className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-card px-3 py-1.5 text-sm font-medium text-foreground transition-colors hover:border-brand hover:text-brand"
+                        >
+                          <Eye className="size-4" />
+                          View
+                        </Link>
                       </TableCell>
                     </TableRow>
                   ))}
                   {visible.length === 0 ? (
                     <TableRow>
                       <TableCell
-                        colSpan={6}
+                        colSpan={7}
                         className="py-10 text-center text-sm text-muted-foreground"
                       >
                         No customers match your search.

@@ -14,6 +14,7 @@ import {
   EyeOff,
   Loader2,
   Search,
+  Trash2,
 } from "lucide-react";
 import { toast } from "sonner";
 import { PageHeader } from "@/components/admin/page-header";
@@ -54,6 +55,7 @@ import {
   createEmployee,
   setEmployeeActive,
   updateEmployee,
+  deleteEmployee,
 } from "@/lib/actions/admin";
 import {
   ACCESS_LEVEL_LABELS,
@@ -91,8 +93,9 @@ export default function EmployeesPage() {
   const [accessLevel, setAccessLevel] = useState<AccessLevel>("full");
   const [showPassword, setShowPassword] = useState(false);
 
-  // Deactivate / edit targets
+  // Deactivate / delete / edit targets
   const [deactivating, setDeactivating] = useState<Profile | null>(null);
+  const [deleting, setDeleting] = useState<Profile | null>(null);
   const [editing, setEditing] = useState<Profile | null>(null);
   const [editName, setEditName] = useState("");
   const [editEmail, setEditEmail] = useState("");
@@ -162,6 +165,21 @@ export default function EmployeesPage() {
     onError: () => toast.error("Update failed", { description: "Please try again." }),
   });
 
+  const deleteMutation = useMutation({
+    mutationFn: (id: string) => deleteEmployee(id),
+    onSuccess: (res) => {
+      if (!res.ok) {
+        toast.error("Couldn't delete employee", { description: res.error });
+        return;
+      }
+      toast.success("Employee deleted");
+      setDeleting(null);
+      invalidate();
+    },
+    onError: () =>
+      toast.error("Couldn't delete employee", { description: "Please try again." }),
+  });
+
   function handleCreate(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     createMutation.mutate({
@@ -220,6 +238,14 @@ export default function EmployeesPage() {
             Activate
           </DropdownMenuItem>
         )}
+        <DropdownMenuItem
+          variant="destructive"
+          className="cursor-pointer"
+          onClick={() => setDeleting(emp)}
+        >
+          <Trash2 className="size-4" />
+          Delete
+        </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
   );
@@ -599,6 +625,21 @@ export default function EmployeesPage() {
           deactivating &&
           activeMutation.mutate({ id: deactivating.id, isActive: false })
         }
+      />
+
+      {/* Delete confirmation */}
+      <ConfirmDialog
+        open={deleting !== null}
+        onOpenChange={(o) => !o && setDeleting(null)}
+        title="Delete employee?"
+        description={
+          deleting
+            ? `This permanently removes ${deleting.full_name || "this employee"} and their login — this cannot be undone. Orders they created and messages they sent are kept (un-attributed); their conversation assignments are removed.`
+            : ""
+        }
+        confirmLabel="Delete permanently"
+        destructive
+        onConfirm={() => deleting && deleteMutation.mutate(deleting.id)}
       />
     </div>
   );

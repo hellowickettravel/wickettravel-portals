@@ -2,7 +2,15 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Plane, Send, Paperclip, Loader2, MessageCircle } from "lucide-react";
+import {
+  Plane,
+  Send,
+  Paperclip,
+  Loader2,
+  MessageCircle,
+  X,
+  FileText,
+} from "lucide-react";
 import { toast } from "sonner";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -10,7 +18,11 @@ import { MessageAttachment } from "@/components/portal/message-attachment";
 import { createClient } from "@/lib/supabase/client";
 import { getMyThread, sendCustomerMessage } from "@/lib/actions/customer";
 import { CUSTOMER_THREAD_KEY } from "@/lib/query-keys";
-import { uploadAttachment, ATTACHMENT_ACCEPT } from "@/lib/storage";
+import {
+  uploadAttachment,
+  validateAttachment,
+  ATTACHMENT_ACCEPT,
+} from "@/lib/storage";
 import type { Message } from "@/lib/db/types";
 import { cn } from "@/lib/utils";
 
@@ -26,6 +38,7 @@ export default function CustomerMessagesPage() {
   const supabase = useMemo(() => createClient(), []);
   const [draft, setDraft] = useState("");
   const [uploading, setUploading] = useState(false);
+  const [pendingFile, setPendingFile] = useState<File | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
 
@@ -97,29 +110,56 @@ export default function CustomerMessagesPage() {
       queryClient.invalidateQueries({ queryKey: CUSTOMER_THREAD_KEY }),
   });
 
-  function send(e: React.FormEvent<HTMLFormElement>) {
+  // Preview a pending image attachment before it's sent.
+  const pendingPreview = useMemo(
+    () =>
+      pendingFile && pendingFile.type.startsWith("image/")
+        ? URL.createObjectURL(pendingFile)
+        : null,
+    [pendingFile]
+  );
+  useEffect(() => {
+    return () => {
+      if (pendingPreview) URL.revokeObjectURL(pendingPreview);
+    };
+  }, [pendingPreview]);
+
+  async function send(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
+    if (!conversationId || uploading) return;
     const text = draft.trim();
-    if (!text || !conversationId) return;
+    if (!text && !pendingFile) return;
+
+    // Upload the pending attachment (if any) only now, on Send.
+    if (pendingFile) {
+      setUploading(true);
+      const result = await uploadAttachment(pendingFile, conversationId);
+      setUploading(false);
+      if (!result.ok) {
+        toast.error("Upload failed", { description: result.error });
+        return;
+      }
+      sendMutation.mutate({ conversationId, body: text, mediaUrl: result.url });
+      setPendingFile(null);
+      setDraft("");
+      return;
+    }
+
     sendMutation.mutate({ conversationId, body: text });
     setDraft("");
   }
 
-  async function handleFile(e: React.ChangeEvent<HTMLInputElement>) {
+  // Pick a file → ATTACH it as a pending preview; don't send until Send.
+  function handleFile(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     e.target.value = "";
-    if (!file || !conversationId) return;
-    setUploading(true);
-    const result = await uploadAttachment(file, conversationId);
-    if (!result.ok) {
-      setUploading(false);
-      toast.error("Upload failed", { description: result.error });
+    if (!file) return;
+    const valid = validateAttachment(file);
+    if (!valid.ok) {
+      toast.error("Can't attach file", { description: valid.error });
       return;
     }
-    sendMutation.mutate(
-      { conversationId, body: "", mediaUrl: result.url },
-      { onSettled: () => setUploading(false) }
-    );
+    setPendingFile(file);
   }
 
   return (
@@ -210,42 +250,82 @@ export default function CustomerMessagesPage() {
         {/* Input */}
         <form
           onSubmit={send}
-          className="flex items-center gap-2 border-t border-border bg-card px-4 py-3"
+          className="border-t border-border bg-card px-4 py-3"
         >
-          <input
-            ref={fileRef}
-            type="file"
-            accept={ATTACHMENT_ACCEPT}
-            className="hidden"
-            onChange={handleFile}
-          />
-          <Button
-            type="button"
-            variant="ghost"
-            size="icon"
-            aria-label="Attach file"
-            disabled={!conversation || uploading}
-            className="size-10 shrink-0 rounded-full text-muted-foreground"
-            onClick={() => fileRef.current?.click()}
-          >
-            {uploading ? <Loader2 className="size-4 animate-spin" /> : <Paperclip className="size-4" />}
-          </Button>
-          <Input
-            value={draft}
-            onChange={(e) => setDraft(e.target.value)}
-            placeholder={conversation ? "Type a message…" : "No conversation yet"}
-            disabled={!conversation}
-            className="h-11 rounded-full bg-neutral-soft"
-          />
-          <Button
-            type="submit"
-            size="icon"
-            aria-label="Send message"
-            className="size-11 shrink-0 rounded-full"
-            disabled={!draft.trim() || !conversation}
-          >
-            <Send className="size-4" />
-          </Button>
+          {pendingFile ? (
+            <div className="mb-2 flex items-center gap-2.5 rounded-xl border border-border bg-neutral-soft px-2.5 py-2">
+              {pendingPreview ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={pendingPreview}
+                  alt={pendingFile.name}
+                  className="size-10 shrink-0 rounded-lg object-cover"
+                />
+              ) : (
+                <div className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-chip text-brand-dark">
+                  <FileText className="size-5" />
+                </div>
+              )}
+              <span className="min-w-0 flex-1 truncate text-sm text-foreground">
+                {pendingFile.name}
+              </span>
+              <button
+                type="button"
+                aria-label="Remove attachment"
+                onClick={() => setPendingFile(null)}
+                disabled={uploading}
+                className="inline-flex size-7 shrink-0 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-muted hover:text-foreground disabled:opacity-50"
+              >
+                <X className="size-4" />
+              </button>
+            </div>
+          ) : null}
+          <div className="flex items-center gap-2">
+            <input
+              ref={fileRef}
+              type="file"
+              accept={ATTACHMENT_ACCEPT}
+              className="hidden"
+              onChange={handleFile}
+            />
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon"
+              aria-label="Attach file"
+              disabled={!conversation || uploading}
+              className="size-10 shrink-0 rounded-full text-muted-foreground"
+              onClick={() => fileRef.current?.click()}
+            >
+              <Paperclip className="size-4" />
+            </Button>
+            <Input
+              value={draft}
+              onChange={(e) => setDraft(e.target.value)}
+              placeholder={
+                conversation
+                  ? pendingFile
+                    ? "Add a caption…"
+                    : "Type a message…"
+                  : "No conversation yet"
+              }
+              disabled={!conversation}
+              className="h-11 rounded-full bg-neutral-soft"
+            />
+            <Button
+              type="submit"
+              size="icon"
+              aria-label="Send message"
+              className="size-11 shrink-0 rounded-full"
+              disabled={(!draft.trim() && !pendingFile) || !conversation || uploading}
+            >
+              {uploading ? (
+                <Loader2 className="size-4 animate-spin" />
+              ) : (
+                <Send className="size-4" />
+              )}
+            </Button>
+          </div>
         </form>
       </div>
 
