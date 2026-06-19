@@ -536,11 +536,15 @@ export async function deleteEmployee(id: string): Promise<ActionResult> {
 }
 
 /**
- * Permanently delete a customer and their chat history. Service role after an
- * admin check. Their conversations (and the messages + assignments inside them)
- * are removed; their orders are KEPT for revenue history with the customer link
- * detached (customer_id → null). Children are cleared before parents so no
- * foreign key blocks the delete.
+ * Permanently delete a customer — like deleting an employee, this is a FULL
+ * account removal. Service role after an admin check. Their conversations (and
+ * the messages + assignments inside them) are removed; their orders are KEPT for
+ * revenue history with the customer link detached (customer_id → null). If the
+ * customer has a portal login (profile_id set), their profile row AND auth user
+ * are deleted so they can no longer sign in — their session dies on its next
+ * request (getUser fails → the customer layout redirects to /login).
+ * WhatsApp-only customers (no profile_id) just lose their customer + chat data.
+ * Children are cleared before parents so no foreign key blocks the delete.
  */
 export async function deleteCustomer(id: string): Promise<ActionResult> {
   try {
@@ -551,6 +555,15 @@ export async function deleteCustomer(id: string): Promise<ActionResult> {
 
   try {
     const admin = createAdminClient();
+
+    // Grab the portal login (if any) before we remove the customer row.
+    const { data: customer, error: custReadErr } = await admin
+      .from("customers")
+      .select("profile_id")
+      .eq("id", id)
+      .maybeSingle<{ profile_id: string | null }>();
+    if (custReadErr) return { ok: false, error: custReadErr.message };
+    const profileId = customer?.profile_id ?? null;
 
     const { data: convs, error: convReadErr } = await admin
       .from("conversations")
@@ -599,6 +612,19 @@ export async function deleteCustomer(id: string): Promise<ActionResult> {
       .delete()
       .eq("id", id);
     if (custErr) return { ok: false, error: custErr.message };
+
+    // Full account removal: drop the profile row, then the auth login so they
+    // can never sign in again. Only portal customers have these.
+    if (profileId) {
+      const { error: profileErr } = await admin
+        .from("profiles")
+        .delete()
+        .eq("id", profileId);
+      if (profileErr) return { ok: false, error: profileErr.message };
+
+      const { error: authErr } = await admin.auth.admin.deleteUser(profileId);
+      if (authErr) return { ok: false, error: authErr.message };
+    }
 
     return { ok: true };
   } catch (e) {

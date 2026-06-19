@@ -256,8 +256,14 @@ export function ConversationInbox({
 
   // ----- Send reply (mock save + optimistic) -----
   const sendMutation = useMutation({
-    mutationFn: (vars: { conversationId: string; body: string; mediaUrl?: string | null }) =>
-      sendAction(vars),
+    // mediaUrl is the stored object PATH; displayUrl is a signed URL used only for
+    // the optimistic bubble (it isn't persisted — the refetch re-signs the path).
+    mutationFn: (vars: {
+      conversationId: string;
+      body: string;
+      mediaUrl?: string | null;
+      displayUrl?: string | null;
+    }) => sendAction(vars),
     onMutate: async (vars) => {
       const key = messagesKeyFor(vars.conversationId);
       await queryClient.cancelQueries({ queryKey: key });
@@ -267,7 +273,7 @@ export function ConversationInbox({
         conversation_id: vars.conversationId,
         direction: "outgoing",
         body: vars.body,
-        media_url: vars.mediaUrl ?? null,
+        media_url: vars.displayUrl ?? vars.mediaUrl ?? null,
         sender_id: currentUserId,
         created_at: new Date().toISOString(),
       };
@@ -322,7 +328,8 @@ export function ConversationInbox({
       sendMutation.mutate({
         conversationId: activeId,
         body: text,
-        mediaUrl: result.url,
+        mediaUrl: result.path,
+        displayUrl: result.url,
       });
       setPendingFile(null);
       setDraft("");

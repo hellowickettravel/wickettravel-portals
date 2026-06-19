@@ -40,6 +40,10 @@ async function ensureCustomer(): Promise<{
 }> {
   const { user, profile } = await getUserAndProfile();
   if (!user) throw new Error("Unauthorized");
+  // Role guard: these actions are the customer portal's only. Reject staff
+  // sessions so an employee/admin can't auto-provision a customers row for
+  // themselves (ensureCustomer) or otherwise drive the customer flow.
+  if (profile?.role !== "customer") throw new Error("Unauthorized");
 
   const existing = await getCustomerByProfileId(user.id);
   if (existing) return { userId: user.id, customer: existing };

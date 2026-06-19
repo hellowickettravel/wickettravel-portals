@@ -20,7 +20,7 @@ import {
   getMyNotificationPrefs,
   saveMyNotificationPrefs,
 } from "@/lib/actions/notifications";
-import { uploadAttachment } from "@/lib/storage";
+import { uploadBrandingLogo } from "@/lib/storage";
 import { ADMIN_SETTINGS_KEY } from "@/lib/query-keys";
 
 const PREFS_KEY = ["notification-prefs"] as const;
@@ -155,7 +155,7 @@ export default function SettingsPage() {
     e.target.value = "";
     if (!file) return;
     setUploadingLogo(true);
-    const uploaded = await uploadAttachment(file, "branding");
+    const uploaded = await uploadBrandingLogo(file);
     if (!uploaded.ok) {
       setUploadingLogo(false);
       toast.error("Upload failed", { description: uploaded.error });

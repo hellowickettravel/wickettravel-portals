@@ -78,8 +78,14 @@ export default function CustomerMessagesPage() {
   }, [messages]);
 
   const sendMutation = useMutation({
-    mutationFn: (vars: { conversationId: string; body: string; mediaUrl?: string | null }) =>
-      sendCustomerMessage(vars),
+    // mediaUrl is the stored object PATH; displayUrl is a signed URL used only for
+    // the optimistic bubble (it isn't persisted — the refetch re-signs the path).
+    mutationFn: (vars: {
+      conversationId: string;
+      body: string;
+      mediaUrl?: string | null;
+      displayUrl?: string | null;
+    }) => sendCustomerMessage(vars),
     onMutate: async (vars) => {
       await queryClient.cancelQueries({ queryKey: CUSTOMER_THREAD_KEY });
       const previous = queryClient.getQueryData<typeof data>(CUSTOMER_THREAD_KEY);
@@ -88,7 +94,7 @@ export default function CustomerMessagesPage() {
         conversation_id: vars.conversationId,
         direction: "incoming",
         body: vars.body,
-        media_url: vars.mediaUrl ?? null,
+        media_url: vars.displayUrl ?? vars.mediaUrl ?? null,
         sender_id: null,
         created_at: new Date().toISOString(),
       };
@@ -139,7 +145,12 @@ export default function CustomerMessagesPage() {
         toast.error("Upload failed", { description: result.error });
         return;
       }
-      sendMutation.mutate({ conversationId, body: text, mediaUrl: result.url });
+      sendMutation.mutate({
+        conversationId,
+        body: text,
+        mediaUrl: result.path,
+        displayUrl: result.url,
+      });
       setPendingFile(null);
       setDraft("");
       return;
