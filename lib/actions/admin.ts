@@ -41,7 +41,12 @@ const MESSAGE_COLUMNS =
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const MIN_PASSWORD = 8;
-const ACCESS_LEVELS: AccessLevel[] = ["full", "chat_only", "view_only"];
+const ACCESS_LEVELS: AccessLevel[] = [
+  "full",
+  "semi_admin",
+  "chat_only",
+  "view_only",
+];
 
 /** Throws if the caller isn't a signed-in admin. */
 async function requireAdmin(): Promise<void> {

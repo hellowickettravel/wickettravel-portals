@@ -59,6 +59,7 @@ import {
 } from "@/lib/actions/admin";
 import {
   ACCESS_LEVEL_LABELS,
+  ACCESS_LEVEL_DESCRIPTIONS,
   ACCESS_LEVELS,
   normalizeAccess,
   type AccessLevel,
@@ -68,6 +69,7 @@ import { fmtDate } from "@/lib/format";
 
 const ACCESS_TONE: Record<AccessLevel, Tone> = {
   full: "blue",
+  semi_admin: "amber",
   chat_only: "violet",
   view_only: "slate",
 };
@@ -460,9 +462,11 @@ export default function EmployeesPage() {
                 disabled={createMutation.isPending}
                 className="h-10 w-full rounded-[10px] border border-input bg-neutral-soft px-3 text-sm text-foreground outline-none transition-[color,box-shadow,border-color] duration-150 focus-visible:border-brand focus-visible:ring-[3px] focus-visible:ring-brand/25"
               >
-                <option value="full">Full — manage chats, orders &amp; settings</option>
-                <option value="chat_only">Chat-only — conversations only, no orders</option>
-                <option value="view_only">View-only — read-only, can&apos;t reply or edit</option>
+                {ACCESS_LEVELS.map((lvl) => (
+                  <option key={lvl} value={lvl}>
+                    {ACCESS_LEVEL_LABELS[lvl]} — {ACCESS_LEVEL_DESCRIPTIONS[lvl]}
+                  </option>
+                ))}
               </select>
             </div>
             <div className="space-y-2">

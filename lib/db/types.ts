@@ -8,7 +8,7 @@
  */
 
 export type UserRole = "admin" | "employee" | "customer";
-export type AccessLevel = "full" | "chat_only" | "view_only";
+export type AccessLevel = "full" | "chat_only" | "view_only" | "semi_admin";
 
 export type ConversationStatus = "open" | "closed";
 export type OrderStatus = "open" | "closed" | "cancelled";

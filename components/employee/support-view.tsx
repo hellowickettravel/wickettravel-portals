@@ -36,11 +36,15 @@ const FAQS = [
   },
   {
     q: "What do the access levels mean?",
-    a: "Full — manage chats, orders and settings. Chat-only — conversations only, with no access to Orders. View-only — read-only: you can see conversations and orders but can't reply or edit.",
+    a: "Full — manage chats and create orders. Semi-admin — everything Full can do plus order editing & status management (open/close/cancel/reopen). Chat-only — conversations only, with no access to Orders. View-only — read-only: you can see conversations and orders but can't reply or edit.",
+  },
+  {
+    q: "Why can't I edit an order or change its status?",
+    a: "Editing orders and changing their status (close/cancel/reopen) requires Semi-admin access. With Full access you can create and view orders but not edit them after the fact. Ask an admin to switch you to Semi-admin if you need it.",
   },
   {
     q: "I can't see the Orders tab — why?",
-    a: "Your access level is set to Chat-only. Ask an admin to change it to Full if you need to manage orders.",
+    a: "Your access level is set to Chat-only. Ask an admin to change it to Full or Semi-admin if you need to work with orders.",
   },
 ];
 

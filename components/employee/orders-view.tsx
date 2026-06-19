@@ -1,8 +1,10 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
-import { Plus, ShoppingBag } from "lucide-react";
+import { Plus, ShoppingBag, ChevronRight } from "lucide-react";
 import { PageHeader } from "@/components/admin/page-header";
 import { SectionCard } from "@/components/admin/section-card";
 import { StatusBadge, type Tone } from "@/components/admin/status-badge";
@@ -33,6 +35,7 @@ const ORDER_TONE: Record<OrderStatus, Tone> = {
 };
 
 export function EmployeeOrders({ accessLevel }: { accessLevel: AccessLevel }) {
+  const router = useRouter();
   const readOnly = isReadOnly(accessLevel);
   const [createOpen, setCreateOpen] = useState(false);
 
@@ -114,17 +117,24 @@ export function EmployeeOrders({ accessLevel }: { accessLevel: AccessLevel }) {
           </div>
         ) : (
           <>
-            {/* Mobile: stacked cards (no horizontal scroll) */}
+            {/* Mobile: stacked cards (no horizontal scroll). Whole card opens the
+                order detail; the chevron is the explicit "View" affordance. */}
             <div className="space-y-3 p-4 md:hidden">
               {rows.map((o) => (
-                <MobileRecordCard
+                <Link
                   key={o.id}
+                  href={`/employee/orders/${o.id}`}
+                  className="block transition-opacity active:opacity-70"
+                  aria-label={`View order for ${o.customer?.name ?? "customer"}`}
+                >
+                <MobileRecordCard
                   title={<span className="text-navy">{o.customer?.name ?? "—"}</span>}
                   badge={
                     <StatusBadge tone={ORDER_TONE[o.status]}>
                       {titleCase(o.status)}
                     </StatusBadge>
                   }
+                  action={<ChevronRight className="size-4 text-muted-foreground" />}
                   fields={[
                     {
                       label: "Route",
@@ -147,6 +157,7 @@ export function EmployeeOrders({ accessLevel }: { accessLevel: AccessLevel }) {
                     },
                   ]}
                 />
+                </Link>
               ))}
             </div>
 
@@ -161,12 +172,17 @@ export function EmployeeOrders({ accessLevel }: { accessLevel: AccessLevel }) {
                     <TableHead className="text-center">Pax</TableHead>
                     <TableHead className="text-right">Price</TableHead>
                     <TableHead className="text-right">Commission</TableHead>
-                    <TableHead className="pr-6">Status</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead className="pr-6 text-right">View</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {rows.map((o) => (
-                    <TableRow key={o.id}>
+                    <TableRow
+                      key={o.id}
+                      className="cursor-pointer"
+                      onClick={() => router.push(`/employee/orders/${o.id}`)}
+                    >
                       <TableCell className="pl-6 font-medium text-navy">
                         {o.customer?.name ?? "—"}
                       </TableCell>
@@ -185,10 +201,20 @@ export function EmployeeOrders({ accessLevel }: { accessLevel: AccessLevel }) {
                       <TableCell className="text-right tabular-nums text-emerald-600">
                         {o.commission != null ? gbp(o.commission) : "—"}
                       </TableCell>
-                      <TableCell className="pr-6">
+                      <TableCell>
                         <StatusBadge tone={ORDER_TONE[o.status]}>
                           {titleCase(o.status)}
                         </StatusBadge>
+                      </TableCell>
+                      <TableCell className="pr-6 text-right">
+                        <Link
+                          href={`/employee/orders/${o.id}`}
+                          onClick={(e) => e.stopPropagation()}
+                          className="inline-flex items-center gap-1 text-sm font-medium text-brand transition-colors hover:text-brand-dark"
+                        >
+                          View
+                          <ChevronRight className="size-3.5" />
+                        </Link>
                       </TableCell>
                     </TableRow>
                   ))}

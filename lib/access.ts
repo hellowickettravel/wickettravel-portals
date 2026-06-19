@@ -5,13 +5,19 @@
 // copy, and the Support FAQ all read from the matrix/descriptions below.
 //
 // Matrix:
-//   full       Dashboard · Messages (read+reply) · Orders (read+create+edit) · Support · Settings
+//   full       Dashboard · Messages (read+reply) · Orders (read+create)        · Support · Settings
+//   semi_admin Dashboard · Messages (read+reply) · Orders (read+create+EDIT+status) · Support · Settings
 //   chat_only  Dashboard · Messages (read+reply) · Support · Settings · NO Orders
 //   view_only  Dashboard · Messages (read-only)  · Orders (read-only)         · Support · Settings
 
-export type AccessLevel = "full" | "chat_only" | "view_only";
+export type AccessLevel = "full" | "chat_only" | "view_only" | "semi_admin";
 
-export const ACCESS_LEVELS: AccessLevel[] = ["full", "chat_only", "view_only"];
+export const ACCESS_LEVELS: AccessLevel[] = [
+  "full",
+  "semi_admin",
+  "chat_only",
+  "view_only",
+];
 
 /** Employee portal sections that access levels gate. */
 export type EmployeeSection =
@@ -27,11 +33,11 @@ export type EmployeeSection =
  * never drift apart.
  */
 export const SECTION_ACCESS: Record<EmployeeSection, AccessLevel[]> = {
-  dashboard: ["full", "chat_only", "view_only"],
-  messages: ["full", "chat_only", "view_only"],
-  orders: ["full", "view_only"], // chat_only has NO orders at all
-  support: ["full", "chat_only", "view_only"],
-  settings: ["full", "chat_only", "view_only"],
+  dashboard: ["full", "semi_admin", "chat_only", "view_only"],
+  messages: ["full", "semi_admin", "chat_only", "view_only"],
+  orders: ["full", "semi_admin", "view_only"], // chat_only has NO orders at all
+  support: ["full", "semi_admin", "chat_only", "view_only"],
+  settings: ["full", "semi_admin", "chat_only", "view_only"],
 };
 
 /** Can this access level open the given section? Used by nav + route guards. */
@@ -45,6 +51,7 @@ export function canAccessSection(
 /** Short human label for an access level (badges, dialogs). */
 export const ACCESS_LEVEL_LABELS: Record<AccessLevel, string> = {
   full: "Full",
+  semi_admin: "Semi-admin",
   chat_only: "Chat-only",
   view_only: "View-only",
 };
@@ -52,6 +59,7 @@ export const ACCESS_LEVEL_LABELS: Record<AccessLevel, string> = {
 /** One-line description of each level — used in the Add-Employee dialog + FAQ. */
 export const ACCESS_LEVEL_DESCRIPTIONS: Record<AccessLevel, string> = {
   full: "Manage everything — chats, orders and settings.",
+  semi_admin: "Full access plus order editing & status management.",
   chat_only: "Conversations only — no access to orders.",
   view_only: "Read-only — view chats and orders but can't reply or edit.",
 };
@@ -62,10 +70,15 @@ export const ACCESS_LEVEL_DESCRIPTIONS: Record<AccessLevel, string> = {
  * SECURITY: defaults to the LEAST privileged level ("view_only") when the value
  * is missing or unrecognised. An employee row with a null/unknown access_level
  * must never be granted elevated access. To grant more, set the employee's
- * profiles.access_level explicitly to 'chat_only' or 'full' in Supabase.
+ * profiles.access_level explicitly to 'chat_only' / 'full' / 'semi_admin'.
  */
 export function normalizeAccess(level: string | null | undefined): AccessLevel {
-  if (level === "chat_only" || level === "view_only" || level === "full") {
+  if (
+    level === "chat_only" ||
+    level === "view_only" ||
+    level === "full" ||
+    level === "semi_admin"
+  ) {
     return level;
   }
   return "view_only";
@@ -74,4 +87,14 @@ export function normalizeAccess(level: string | null | undefined): AccessLevel {
 /** view_only employees can read but not create/edit/send. */
 export function isReadOnly(level: AccessLevel): boolean {
   return level === "view_only";
+}
+
+/** Who can CREATE orders: full + semi_admin. */
+export function canCreateOrders(level: AccessLevel): boolean {
+  return level === "full" || level === "semi_admin";
+}
+
+/** Who can EDIT orders / change status: semi_admin only. */
+export function canEditOrders(level: AccessLevel): boolean {
+  return level === "semi_admin";
 }

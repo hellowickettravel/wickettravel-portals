@@ -51,7 +51,7 @@ import {
 } from "@/lib/storage";
 import type { InboxConversation } from "@/lib/db/conversations";
 import type { Message, ConversationStatus } from "@/lib/db/types";
-import { type AccessLevel, isReadOnly } from "@/lib/access";
+import { type AccessLevel, isReadOnly, canCreateOrders } from "@/lib/access";
 import { fmtRelative } from "@/lib/format";
 import { cn } from "@/lib/utils";
 
@@ -96,10 +96,10 @@ export function ConversationInbox({
 }) {
   const isAdmin = scope === "admin";
   const readOnly = !isAdmin && isReadOnly(accessLevel);
-  // Only FULL-access employees may create orders. chat_only has no orders access
-  // at all (and view_only is read-only) — both are blocked server-side AND by
-  // RLS, so don't surface the CTA to them.
-  const canCreateOrder = !isAdmin && accessLevel === "full";
+  // full + semi_admin may create orders. chat_only has no orders access and
+  // view_only is read-only — both are blocked server-side AND by RLS, so don't
+  // surface the CTA to them.
+  const canCreateOrder = !isAdmin && canCreateOrders(accessLevel);
 
   const queryClient = useQueryClient();
   const supabase = useMemo(() => createClient(), []);

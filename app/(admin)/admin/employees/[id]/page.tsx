@@ -17,6 +17,7 @@ import { gbp, fmtDate, titleCase } from "@/lib/format";
 
 const ACCESS_TONE: Record<AccessLevel, Tone> = {
   full: "blue",
+  semi_admin: "amber",
   chat_only: "violet",
   view_only: "slate",
 };

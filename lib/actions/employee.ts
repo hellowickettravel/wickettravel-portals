@@ -8,9 +8,10 @@ import { getMyVisibleOrders } from "@/lib/db/orders";
 import {
   normalizeAccess,
   isReadOnly,
-  canAccessSection,
+  canCreateOrders,
+  canEditOrders,
 } from "@/lib/access";
-import type { Message, OrderWithRelations } from "@/lib/db/types";
+import type { Message, OrderWithRelations, OrderStatus } from "@/lib/db/types";
 
 /**
  * Employee-scoped server actions. These run through the RLS-aware server client,
@@ -140,11 +141,8 @@ export async function createOrderFromChat(input: {
 }): Promise<ActionResult> {
   const { userId, profile } = await requireUser();
   const access = normalizeAccess(profile?.access_level);
-  if (isReadOnly(access)) {
-    return { ok: false, error: "Read-only access — you can't create orders." };
-  }
-  if (!canAccessSection("orders", access)) {
-    return { ok: false, error: "Your access level can't manage orders." };
+  if (!canCreateOrders(access)) {
+    return { ok: false, error: "Your access level can't create orders." };
   }
 
   const routeFrom = input.routeFrom.trim();
@@ -171,5 +169,95 @@ export async function createOrderFromChat(input: {
   });
 
   if (error) return { ok: false, error: error.message };
+  return { ok: true };
+}
+
+const ORDER_STATUSES: OrderStatus[] = ["open", "closed", "cancelled"];
+
+/**
+ * Edit an order's trip + pricing fields. SEMI_ADMIN only. RLS
+ * (orders_update_employee) independently enforces semi_admin + visibility
+ * (created_by me OR a conversation assigned to me); the empty-result check
+ * surfaces a clean error if the row isn't editable by this caller.
+ */
+export async function updateEmployeeOrder(input: {
+  id: string;
+  routeFrom: string;
+  routeTo: string;
+  travelDate: string | null;
+  returnDate: string | null;
+  passengers: number | null;
+  sellingPrice: number | null;
+  costPrice: number | null;
+  commission: number | null;
+  notes: string | null;
+}): Promise<ActionResult> {
+  const { profile } = await requireUser();
+  const access = normalizeAccess(profile?.access_level);
+  if (!canEditOrders(access)) {
+    return { ok: false, error: "Your access level can't edit orders." };
+  }
+
+  const routeFrom = input.routeFrom.trim();
+  const routeTo = input.routeTo.trim();
+  if (!routeFrom || !routeTo) {
+    return { ok: false, error: "Both From and To are required." };
+  }
+
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("orders")
+    .update({
+      route_from: routeFrom,
+      route_to: routeTo,
+      travel_date: input.travelDate,
+      return_date: input.returnDate,
+      passengers: input.passengers,
+      selling_price: input.sellingPrice,
+      cost_price: input.costPrice,
+      commission: input.commission,
+      notes: input.notes?.trim() || null,
+    })
+    .eq("id", input.id)
+    .select("id");
+
+  if (error) return { ok: false, error: error.message };
+  if (!data || data.length === 0) {
+    return { ok: false, error: "You can't edit this order." };
+  }
+  return { ok: true };
+}
+
+/**
+ * Change an order's status. SEMI_ADMIN only. Stamps closed_at on close and
+ * clears it on reopen/cancel — consistent with the admin action.
+ */
+export async function setEmployeeOrderStatus(input: {
+  id: string;
+  status: OrderStatus;
+}): Promise<ActionResult> {
+  const { profile } = await requireUser();
+  const access = normalizeAccess(profile?.access_level);
+  if (!canEditOrders(access)) {
+    return { ok: false, error: "Your access level can't change order status." };
+  }
+  if (!ORDER_STATUSES.includes(input.status)) {
+    return { ok: false, error: "Invalid status." };
+  }
+
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("orders")
+    .update({
+      status: input.status,
+      closed_at: input.status === "closed" ? new Date().toISOString() : null,
+    })
+    .eq("id", input.id)
+    .select("id");
+
+  if (error) return { ok: false, error: error.message };
+  if (!data || data.length === 0) {
+    return { ok: false, error: "You can't change this order." };
+  }
   return { ok: true };
 }
