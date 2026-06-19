@@ -15,6 +15,13 @@ export const adminMessagesKey = (conversationId: string) =>
 // Admin business settings
 export const ADMIN_SETTINGS_KEY = ["admin", "business-settings"] as const;
 
+// Support tickets
+export const MY_SUPPORT_TICKETS_KEY = ["employee", "support-tickets"] as const;
+export const ADMIN_SUPPORT_TICKETS_KEY = ["admin", "support-tickets"] as const;
+
+// Notification preferences (employee + admin settings)
+export const NOTIFICATION_PREFS_KEY = ["notification-prefs"] as const;
+
 // Customer portal
 export const CUSTOMER_ORDERS_KEY = ["customer", "orders"] as const;
 export const CUSTOMER_THREAD_KEY = ["customer", "thread"] as const;

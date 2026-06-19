@@ -10,6 +10,7 @@ const NAV: NavItem[] = [
   { label: "Orders", href: "/admin/orders", icon: "ShoppingBag" },
   { label: "Messages", href: "/admin/messages", icon: "MessageSquare" },
   { label: "Analytics", href: "/admin/analytics", icon: "BarChart3" },
+  { label: "Support", href: "/admin/support", icon: "LifeBuoy" },
   { label: "Settings", href: "/admin/settings", icon: "Settings" },
 ];
 

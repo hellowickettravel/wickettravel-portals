@@ -14,7 +14,7 @@ import type { Notification, NotificationPrefs } from "@/lib/db/types";
 type ActionResult = { ok: true } | { ok: false; error: string };
 
 const NOTIFICATION_COLUMNS =
-  "id, recipient_id, type, title, body, link, is_read, created_at";
+  "id, recipient_id, type, title, body, link, is_read, created_at, actor_id, actor_name";
 
 const NOTIFICATIONS_LIMIT = 20;
 

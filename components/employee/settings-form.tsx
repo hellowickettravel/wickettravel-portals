@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Lock, BellRing, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { PageHeader } from "@/components/admin/page-header";
@@ -11,11 +12,18 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { createClient } from "@/lib/supabase/client";
 import { updateMyName } from "@/lib/actions/account";
+import {
+  getMyNotificationPrefs,
+  saveMyNotificationPrefs,
+} from "@/lib/actions/notifications";
+import { NOTIFICATION_PREFS_KEY } from "@/lib/query-keys";
 
-const PREFS = [
-  { id: "n1", label: "New chat assigned", desc: "When a conversation is assigned to you.", on: true },
-  { id: "n2", label: "New customer message", desc: "When a customer replies in your chats.", on: true },
-  { id: "n3", label: "Order status changes", desc: "When one of your orders changes status.", on: false },
+type PrefKey = "new_message" | "new_order" | "status_change";
+
+const PREF_ITEMS: { key: PrefKey; label: string; desc: string }[] = [
+  { key: "new_message", label: "New customer messages", desc: "When a customer replies in one of your chats." },
+  { key: "new_order", label: "New order activity", desc: "When an order tied to you is created." },
+  { key: "status_change", label: "Order status changes", desc: "When one of your orders changes status." },
 ];
 
 function fieldLabel(text: string) {
@@ -33,12 +41,52 @@ export function SettingsForm({
   initialName: string;
   email: string;
 }) {
+  const queryClient = useQueryClient();
   const [name, setName] = useState(initialName);
   const [savingName, setSavingName] = useState(false);
 
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [savingPassword, setSavingPassword] = useState(false);
+
+  // Notification preferences — real backend (notification_prefs), gates which
+  // notification types create_notification actually delivers to this employee.
+  const { data: prefs, isLoading: prefsLoading } = useQuery({
+    queryKey: NOTIFICATION_PREFS_KEY,
+    queryFn: getMyNotificationPrefs,
+  });
+
+  const prefsMutation = useMutation({
+    mutationFn: saveMyNotificationPrefs,
+    onMutate: async (next) => {
+      await queryClient.cancelQueries({ queryKey: NOTIFICATION_PREFS_KEY });
+      const prev = queryClient.getQueryData(NOTIFICATION_PREFS_KEY);
+      queryClient.setQueryData(NOTIFICATION_PREFS_KEY, {
+        new_message: next.newMessage,
+        new_order: next.newOrder,
+        status_change: next.statusChange,
+        daily_summary: next.dailySummary,
+      });
+      return { prev };
+    },
+    onError: (_e, _v, ctx) => {
+      if (ctx?.prev) queryClient.setQueryData(NOTIFICATION_PREFS_KEY, ctx.prev);
+      toast.error("Couldn't save preference", { description: "Please try again." });
+    },
+    onSettled: () =>
+      queryClient.invalidateQueries({ queryKey: NOTIFICATION_PREFS_KEY }),
+  });
+
+  function togglePref(key: PrefKey) {
+    if (!prefs) return;
+    prefsMutation.mutate({
+      newMessage: key === "new_message" ? !prefs.new_message : prefs.new_message,
+      newOrder: key === "new_order" ? !prefs.new_order : prefs.new_order,
+      statusChange:
+        key === "status_change" ? !prefs.status_change : prefs.status_change,
+      dailySummary: prefs.daily_summary,
+    });
+  }
 
   async function saveName(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -168,14 +216,14 @@ export function SettingsForm({
         </form>
       </SectionCard>
 
-      {/* Notifications (UI only) */}
+      {/* Notifications (real — persisted to notification_prefs) */}
       <SectionCard
         title="Notification preferences"
-        description="Choose what you'd like to be alerted about. (Not yet persisted.)"
+        description="Choose what you'd like to be alerted about. Saved instantly."
       >
         <ul className="divide-y divide-border">
-          {PREFS.map((p) => (
-            <li key={p.id} className="flex items-center justify-between gap-4 py-3.5 first:pt-0 last:pb-0">
+          {PREF_ITEMS.map((p) => (
+            <li key={p.key} className="flex items-center justify-between gap-4 py-3.5 first:pt-0 last:pb-0">
               <div className="flex items-start gap-3">
                 <BellRing className="mt-0.5 size-4 shrink-0 text-brand" />
                 <div>
@@ -184,12 +232,9 @@ export function SettingsForm({
                 </div>
               </div>
               <Switch
-                defaultChecked={p.on}
-                onCheckedChange={() =>
-                  toast.info("Notification prefs", {
-                    description: "UI only — not saved yet.",
-                  })
-                }
+                checked={prefs ? prefs[p.key] : true}
+                disabled={prefsLoading || prefsMutation.isPending}
+                onCheckedChange={() => togglePref(p.key)}
               />
             </li>
           ))}

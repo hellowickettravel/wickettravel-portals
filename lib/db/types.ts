@@ -83,7 +83,8 @@ export type NotificationType =
   | "new_message"
   | "new_order"
   | "assignment"
-  | "status_change";
+  | "status_change"
+  | "support_ticket";
 
 export type Notification = {
   id: string;
@@ -94,6 +95,22 @@ export type Notification = {
   link: string | null;
   is_read: boolean;
   created_at: string;
+  /** Who performed the action; null for system/service-role events. */
+  actor_id: string | null;
+  /** Denormalised display name of the actor (staff full_name or customer name). */
+  actor_name: string | null;
+};
+
+export type SupportTicketStatus = "open" | "resolved";
+
+export type SupportTicket = {
+  id: string;
+  employee_id: string;
+  subject: string;
+  message: string;
+  status: SupportTicketStatus;
+  created_at: string;
+  resolved_at: string | null;
 };
 
 export type NotificationPrefs = {

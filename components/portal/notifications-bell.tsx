@@ -10,6 +10,7 @@ import {
   UserCheck,
   RefreshCw,
   CheckCheck,
+  LifeBuoy,
 } from "lucide-react";
 import { toast } from "sonner";
 import {
@@ -34,6 +35,7 @@ const ICON_BY_TYPE: Record<NotificationType, typeof Bell> = {
   new_order: ShoppingBag,
   assignment: UserCheck,
   status_change: RefreshCw,
+  support_ticket: LifeBuoy,
 };
 
 /**
@@ -115,6 +117,8 @@ export function NotificationsBell({
       case "new_message":
       case "assignment":
         return `${base}/messages`;
+      case "support_ticket":
+        return "/admin/support";
       default:
         return base;
     }
@@ -174,6 +178,15 @@ export function NotificationsBell({
           <ul className="max-h-96 overflow-y-auto py-1">
             {items.map((n) => {
               const Icon = ICON_BY_TYPE[n.type] ?? Bell;
+              // Prefix the action title with WHO did it: "You" when the viewer is
+              // the actor, otherwise their real name. Falls back to the bare title
+              // for older rows that have no actor.
+              const actorLabel = n.actor_id
+                ? n.actor_id === userId
+                  ? "You"
+                  : n.actor_name
+                : n.actor_name;
+              const titleLine = actorLabel ? `${actorLabel} ${n.title}` : n.title;
               return (
                 <li key={n.id}>
                   <button
@@ -192,7 +205,7 @@ export function NotificationsBell({
                     <div className="min-w-0 flex-1">
                       <div className="flex items-center justify-between gap-2">
                         <p className="truncate text-sm font-medium text-foreground">
-                          {n.title}
+                          {titleLine}
                         </p>
                         {!n.is_read ? (
                           <span className="size-2 shrink-0 rounded-full bg-primary" />
