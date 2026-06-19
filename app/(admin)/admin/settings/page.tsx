@@ -6,6 +6,7 @@ import { ImageUp, Loader2, Trash2, Lock } from "lucide-react";
 import { toast } from "sonner";
 import { PageHeader } from "@/components/admin/page-header";
 import { SectionCard } from "@/components/admin/section-card";
+import { ResetEverything } from "@/components/admin/reset-everything";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -343,6 +344,11 @@ export default function SettingsPage() {
           </Button>
         </div>
       </SectionCard>
+
+      {/* Danger zone — full portal wipe. Kept visually separate at the bottom. */}
+      <div className="pt-2">
+        <ResetEverything />
+      </div>
     </div>
   );
 }

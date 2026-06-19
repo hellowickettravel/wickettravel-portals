@@ -1,8 +1,10 @@
 "use server";
 
+import { createClient as createSupabaseJsClient } from "@supabase/supabase-js";
 import { getUserAndProfile } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { ATTACHMENT_BUCKET } from "@/lib/storage";
 import { getEmployees, getProfileById } from "@/lib/db/profiles";
 import {
   getOrders,
@@ -804,6 +806,213 @@ export async function saveBusinessSettings(input: {
 
   if (error) return { ok: false, error: error.message };
   return { ok: true };
+}
+
+// ----- Danger zone: full portal wipe -----
+
+/** A nil UUID — no real row carries it, so `.neq("id", …)` matches every row. */
+const NIL_UUID = "00000000-0000-0000-0000-000000000000";
+
+export type ResetSummary = {
+  deletedCounts: {
+    notifications: number;
+    supportTickets: number;
+    messages: number;
+    assignments: number;
+    orders: number;
+    conversations: number;
+    customers: number;
+    accounts: number; // profiles + auth users removed (excludes the acting admin)
+    attachments: number; // storage objects removed
+  };
+  errors: string[];
+};
+
+type ResetResult =
+  | { ok: true; summary: ResetSummary }
+  | { ok: false; error: string };
+
+/** Count every row in a table (head-only — no rows transferred). */
+async function countAll(
+  admin: ReturnType<typeof createAdminClient>,
+  table: string
+): Promise<number> {
+  const { count } = await admin
+    .from(table)
+    .select("id", { count: "exact", head: true });
+  return count ?? 0;
+}
+
+/**
+ * Recursively collect every object path in a storage bucket. Supabase's `list`
+ * is non-recursive and returns folders as entries with a null `id`, so we walk
+ * into each folder. Paginates each prefix in pages of 1000.
+ */
+async function listAllObjects(
+  admin: ReturnType<typeof createAdminClient>,
+  bucket: string,
+  prefix = ""
+): Promise<string[]> {
+  const paths: string[] = [];
+  let offset = 0;
+  const pageSize = 1000;
+
+  for (;;) {
+    const { data, error } = await admin.storage
+      .from(bucket)
+      .list(prefix, { limit: pageSize, offset });
+    if (error || !data || data.length === 0) break;
+
+    for (const item of data) {
+      const full = prefix ? `${prefix}/${item.name}` : item.name;
+      // Folders come back with a null id (and no file metadata) — recurse in.
+      if (item.id === null) {
+        paths.push(...(await listAllObjects(admin, bucket, full)));
+      } else {
+        paths.push(full);
+      }
+    }
+
+    if (data.length < pageSize) break;
+    offset += pageSize;
+  }
+
+  return paths;
+}
+
+/**
+ * DESTRUCTIVE, IRREVERSIBLE: wipe the portal back to a fresh state, keeping ONLY
+ * the acting admin's account + the business_settings (name/email/phone/commission
+ * /logo) and the branding bucket.
+ *
+ * Deletes ALL: notifications, support_tickets, messages, assignments, orders,
+ * conversations, customers — then every profile + auth user EXCEPT the acting
+ * admin (employees, customers, and other admins all go) — then empties the
+ * private "attachments" bucket. business_settings, the branding bucket, and the
+ * acting admin (account, profile, notification prefs) are left untouched, so the
+ * admin stays logged in and lands on an empty portal.
+ *
+ * Guards: requireAdmin (only a true role='admin' can call this — semi_admin and
+ * all other access levels are rejected by the role check) PLUS a server-side
+ * re-authentication of the acting admin's password before anything is deleted.
+ *
+ * Robustness: a single failed auth-user delete (or any per-step error) is
+ * collected into `errors` and the wipe continues, so we never leave a half state
+ * silently — the summary reports exactly what was removed and what failed.
+ */
+export async function resetEverything(password: string): Promise<ResetResult> {
+  const { user, profile } = await getUserAndProfile();
+  if (!user || profile?.role !== "admin") {
+    return { ok: false, error: "Unauthorized" };
+  }
+  if (!user.email) {
+    return { ok: false, error: "Your account has no email to verify against." };
+  }
+  if (!password) {
+    return { ok: false, error: "Password is required." };
+  }
+
+  // Re-authenticate the acting admin BEFORE touching anything. A throwaway
+  // anon client (no session persistence) verifies the password without
+  // disturbing the admin's real cookie session, so they stay logged in.
+  const verifier = createSupabaseJsClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    { auth: { autoRefreshToken: false, persistSession: false } }
+  );
+  const { error: signInErr } = await verifier.auth.signInWithPassword({
+    email: user.email,
+    password,
+  });
+  if (signInErr) {
+    return { ok: false, error: "Incorrect password. Reset aborted." };
+  }
+
+  const actingAdminId = user.id;
+  const admin = createAdminClient();
+  const errors: string[] = [];
+
+  const deletedCounts: ResetSummary["deletedCounts"] = {
+    notifications: 0,
+    supportTickets: 0,
+    messages: 0,
+    assignments: 0,
+    orders: 0,
+    conversations: 0,
+    customers: 0,
+    accounts: 0,
+    attachments: 0,
+  };
+
+  // 1) Delete data rows in FK-safe order (children before parents). Service-role
+  //    bypasses RLS but NOT foreign keys, so ordering matters.
+  const dataSteps: { key: keyof ResetSummary["deletedCounts"]; table: string }[] = [
+    { key: "notifications", table: "notifications" },
+    { key: "supportTickets", table: "support_tickets" },
+    { key: "messages", table: "messages" },
+    { key: "assignments", table: "assignments" },
+    { key: "orders", table: "orders" },
+    { key: "conversations", table: "conversations" },
+    { key: "customers", table: "customers" },
+  ];
+
+  for (const step of dataSteps) {
+    deletedCounts[step.key] = await countAll(admin, step.table);
+    const { error } = await admin.from(step.table).delete().neq("id", NIL_UUID);
+    if (error) errors.push(`${step.table}: ${error.message}`);
+  }
+
+  // 2) Remove every account except the acting admin: employees, portal
+  //    customers, AND other admins (profiles + auth users). We delete the
+  //    profile row first, then the auth user (mirrors deleteEmployee). A failed
+  //    auth-user delete is recorded but doesn't abort the rest.
+  const { data: otherProfiles, error: profilesErr } = await admin
+    .from("profiles")
+    .select("id")
+    .neq("id", actingAdminId)
+    .returns<{ id: string }[]>();
+  if (profilesErr) {
+    errors.push(`profiles (list): ${profilesErr.message}`);
+  }
+
+  const ids = (otherProfiles ?? []).map((p) => p.id);
+  if (ids.length > 0) {
+    const { error: profileDelErr } = await admin
+      .from("profiles")
+      .delete()
+      .in("id", ids);
+    if (profileDelErr) errors.push(`profiles (delete): ${profileDelErr.message}`);
+
+    for (const id of ids) {
+      const { error: authErr } = await admin.auth.admin.deleteUser(id);
+      if (authErr) {
+        errors.push(`auth user ${id}: ${authErr.message}`);
+      } else {
+        deletedCounts.accounts += 1;
+      }
+    }
+  }
+
+  // 3) Empty the private attachments bucket. Leave the branding bucket (logo)
+  //    completely untouched.
+  try {
+    const paths = await listAllObjects(admin, ATTACHMENT_BUCKET);
+    if (paths.length > 0) {
+      // remove() caps at ~1000 keys per call — chunk to be safe.
+      for (let i = 0; i < paths.length; i += 1000) {
+        const chunk = paths.slice(i, i + 1000);
+        const { error: rmErr } = await admin.storage
+          .from(ATTACHMENT_BUCKET)
+          .remove(chunk);
+        if (rmErr) errors.push(`storage: ${rmErr.message}`);
+        else deletedCounts.attachments += chunk.length;
+      }
+    }
+  } catch (e) {
+    errors.push(`storage: ${e instanceof Error ? e.message : "list/remove failed"}`);
+  }
+
+  return { ok: true, summary: { deletedCounts, errors } };
 }
 
 /** Save (or clear) the business logo URL after it's uploaded to Storage. */
