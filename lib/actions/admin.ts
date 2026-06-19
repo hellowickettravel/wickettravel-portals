@@ -354,6 +354,102 @@ export async function createEmployee(input: {
   return { ok: true };
 }
 
+/**
+ * Admin creates a customer portal account directly (service-role) — the mirror
+ * of createEmployee. Makes a confirmed auth user (immediate login, no email
+ * verification), forces the profile to role='customer', and links a customers
+ * row (profile_id → the new user). That link is REQUIRED for the customer
+ * portal RLS (owns_customer / owns_conversation) to resolve. The customer can
+ * then change their own name/password from their Settings.
+ */
+export async function createCustomer(input: {
+  fullName: string;
+  email: string;
+  password: string;
+  waPhone?: string | null;
+}): Promise<ActionResult> {
+  try {
+    await requireAdmin();
+  } catch {
+    return { ok: false, error: "Unauthorized" };
+  }
+
+  const fullName = input.fullName.trim();
+  const email = input.email.trim().toLowerCase();
+  const waPhone = input.waPhone?.trim() || null;
+
+  if (!fullName) return { ok: false, error: "Full name is required." };
+  if (!EMAIL_RE.test(email))
+    return { ok: false, error: "Enter a valid email address." };
+  if (input.password.length < MIN_PASSWORD)
+    return { ok: false, error: `Password must be at least ${MIN_PASSWORD} characters.` };
+  // Optional phone — accept digits, spaces and the usual + ( ) - separators.
+  if (waPhone && !/^[+\d][\d\s()-]{5,}$/.test(waPhone))
+    return { ok: false, error: "Enter a valid WhatsApp number." };
+
+  const admin = createAdminClient();
+
+  // 1) Create the auth user (confirmed so they can log in immediately).
+  const { data, error } = await admin.auth.admin.createUser({
+    email,
+    password: input.password,
+    email_confirm: true,
+    user_metadata: { full_name: fullName },
+  });
+
+  if (error || !data.user) {
+    const message = (error?.message ?? "").toLowerCase();
+    if (message.includes("already") || message.includes("registered") || message.includes("exists")) {
+      return { ok: false, error: "An account with this email already exists." };
+    }
+    return { ok: false, error: error?.message ?? "Could not create the account." };
+  }
+
+  const userId = data.user.id;
+
+  // 2) The signup trigger creates a profile row; force it to a customer.
+  //    upsert covers the case where the trigger is off.
+  const { error: profileError } = await admin.from("profiles").upsert(
+    {
+      id: userId,
+      role: "customer",
+      full_name: fullName,
+      email,
+      is_active: true,
+    },
+    { onConflict: "id" }
+  );
+
+  if (profileError) {
+    return { ok: false, error: profileError.message };
+  }
+
+  // 3) Link a customers row to the new account (REQUIRED for customer RLS).
+  //    No unique constraint on profile_id, so update-or-insert by hand to stay
+  //    idempotent if a row already exists for this account.
+  const { data: existing, error: lookupError } = await admin
+    .from("customers")
+    .select("id")
+    .eq("profile_id", userId)
+    .maybeSingle<{ id: string }>();
+  if (lookupError) return { ok: false, error: lookupError.message };
+
+  if (existing) {
+    const { error: updateError } = await admin
+      .from("customers")
+      .update({ name: fullName, wa_phone: waPhone })
+      .eq("id", existing.id);
+    if (updateError) return { ok: false, error: updateError.message };
+  } else {
+    const { error: insertError } = await admin
+      .from("customers")
+      .insert({ profile_id: userId, name: fullName, wa_phone: waPhone });
+    if (insertError) return { ok: false, error: insertError.message };
+  }
+
+  return { ok: true };
+}
+
 export async function setEmployeeActive(
   id: string,
   isActive: boolean
