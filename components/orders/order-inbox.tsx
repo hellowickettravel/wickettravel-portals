@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   Paperclip,
@@ -16,9 +17,12 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { SectionCard } from "@/components/admin/section-card";
 import { MessageAttachment } from "@/components/portal/message-attachment";
+import { ChatBackButton } from "@/components/portal/chat-back-button";
 import { createClient } from "@/lib/supabase/client";
 import { listOrderMessages, sendOrderMessage } from "@/lib/actions/orders";
 import { orderMessagesKey } from "@/lib/query-keys";
+import { ROLE_LABEL, senderLabelFlags } from "@/lib/chat/labels";
+import { type AccessLevel, isReadOnly } from "@/lib/access";
 import {
   uploadOrderAttachment,
   validateAttachment,
@@ -26,17 +30,6 @@ import {
 } from "@/lib/storage";
 import type { OrderMessage, OrderStatus, SenderRole } from "@/lib/db/types";
 import { cn } from "@/lib/utils";
-
-/**
- * Fixed UI labels for the message sender's role. (The "no repeat in a row" rule
- * and richer formatting land in Chunk 3 — the data is already keyed on
- * sender_role so adding that later is purely presentational.)
- */
-const ROLE_LABEL: Record<SenderRole, string> = {
-  admin: "Admin",
-  employee: "Support Team",
-  customer: "Customer",
-};
 
 function fmtClock(iso: string) {
   const d = new Date(iso);
@@ -60,19 +53,26 @@ export function OrderInbox({
   status,
   viewerRole,
   currentUserId,
+  accessLevel = "full",
 }: {
   orderId: string;
   status: OrderStatus;
   viewerRole: SenderRole;
   currentUserId: string;
+  /** Employee access level — used to mirror the server-side read-only gate. */
+  accessLevel?: AccessLevel;
 }) {
+  const router = useRouter();
   const queryClient = useQueryClient();
   const supabase = useMemo(() => createClient(), []);
   const messagesKey = useMemo(() => orderMessagesKey(orderId), [orderId]);
 
   const locked = status === "completed" || status === "cancelled";
-  // Customers can't send on a locked order; staff always can.
-  const canSend = viewerRole !== "customer" || !locked;
+  // An employee with view_only access can read but never send — the server (RLS)
+  // already rejects their writes, so we hide the composer for UI parity.
+  const readOnly = viewerRole === "employee" && isReadOnly(accessLevel);
+  // Customers can't send on a locked order; staff always can (unless read-only).
+  const canSend = (viewerRole !== "customer" || !locked) && !readOnly;
 
   const [draft, setDraft] = useState("");
   const [pendingFile, setPendingFile] = useState<File | null>(null);
@@ -209,14 +209,23 @@ export function OrderInbox({
     setDraft("");
   }
 
+  const labelFlags = senderLabelFlags(thread, (m) => m.sender_id ?? m.sender_role);
+
   return (
-    <SectionCard
-      title="Order chat"
-      description="Messages about this specific booking — visible to you and the Wicket team."
-      flush
-      className="overflow-hidden"
-    >
+    <SectionCard flush className="overflow-hidden">
       <div className="flex h-[440px] flex-col">
+        {/* Header — back to the orders list + thread title */}
+        <div className="flex items-center gap-2.5 border-b border-border bg-card px-3 py-3">
+          <ChatBackButton onClick={() => router.back()} label="Back to orders" />
+          <div className="leading-tight">
+            <p className="font-display text-sm font-semibold text-navy">Order chat</p>
+            <p className="text-xs text-muted-foreground">
+              Messages about this specific booking — visible to you and the Wicket
+              team.
+            </p>
+          </div>
+        </div>
+
         {/* Thread */}
         <div
           ref={scrollRef}
@@ -242,25 +251,30 @@ export function OrderInbox({
               </p>
             </div>
           ) : (
-            thread.map((m) => {
+            thread.map((m, i) => {
               const mine = m.sender_id === currentUserId;
+              const showLabel = labelFlags[i];
               return (
                 <div
                   key={m.id}
                   className={cn(
                     "flex animate-in fade-in slide-in-from-bottom-1 duration-200",
-                    mine ? "justify-end" : "justify-start"
+                    mine ? "justify-end" : "justify-start",
+                    // Tighten the gap for continued messages in the same run.
+                    !showLabel && "-mt-1.5"
                   )}
                 >
                   <div className="max-w-[80%] sm:max-w-[60%]">
-                    <span
-                      className={cn(
-                        "mb-1 block text-[11px] font-medium text-muted-foreground",
-                        mine ? "text-right" : "text-left"
-                      )}
-                    >
-                      {ROLE_LABEL[m.sender_role]}
-                    </span>
+                    {showLabel ? (
+                      <span
+                        className={cn(
+                          "mb-1 block text-[11px] font-medium text-muted-foreground",
+                          mine ? "text-right" : "text-left"
+                        )}
+                      >
+                        {ROLE_LABEL[m.sender_role]}
+                      </span>
+                    ) : null}
                     <div
                       className={cn(
                         "rounded-2xl px-3.5 py-2 text-sm shadow-sm",
@@ -363,8 +377,11 @@ export function OrderInbox({
         ) : (
           <div className="flex items-center justify-center gap-2 border-t border-border bg-muted/60 px-4 py-4 text-center text-sm text-muted-foreground">
             <Lock className="size-4 shrink-0" />
-            This order is {status === "completed" ? "completed" : "cancelled"} —
-            messaging is closed.
+            {readOnly
+              ? "Read-only access — you can view but not send."
+              : `This order is ${
+                  status === "completed" ? "completed" : "cancelled"
+                } — messaging is closed.`}
           </div>
         )}
       </div>

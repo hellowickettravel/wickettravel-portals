@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   Plane,
@@ -15,6 +16,8 @@ import { toast } from "sonner";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { MessageAttachment } from "@/components/portal/message-attachment";
+import { ChatBackButton } from "@/components/portal/chat-back-button";
+import { ROLE_LABEL, senderLabelFlags } from "@/lib/chat/labels";
 import { createClient } from "@/lib/supabase/client";
 import { getMyThread, sendCustomerMessage } from "@/lib/actions/customer";
 import { CUSTOMER_THREAD_KEY } from "@/lib/query-keys";
@@ -34,6 +37,7 @@ function fmtClock(iso: string) {
 }
 
 export default function CustomerMessagesPage() {
+  const router = useRouter();
   const queryClient = useQueryClient();
   const supabase = useMemo(() => createClient(), []);
   const [draft, setDraft] = useState("");
@@ -173,6 +177,10 @@ export default function CustomerMessagesPage() {
     setPendingFile(file);
   }
 
+  // Fixed role labels, shown once per consecutive run (no-repeat-in-a-row). The
+  // customer's own messages are stored 'incoming'; the team's replies 'outgoing'.
+  const labelFlags = senderLabelFlags(messages, (m) => m.direction);
+
   return (
     <div className="space-y-7 animate-in fade-in slide-in-from-bottom-2 duration-500 ease-out">
       <div>
@@ -186,7 +194,8 @@ export default function CustomerMessagesPage() {
 
       <div className="flex h-[calc(100dvh-16rem)] min-h-[420px] flex-col overflow-hidden rounded-2xl border border-border bg-card shadow-card">
         {/* Chat header */}
-        <div className="flex items-center gap-3 border-b border-border px-5 py-3.5">
+        <div className="flex items-center gap-3 border-b border-border px-4 py-3.5 sm:px-5">
+          <ChatBackButton onClick={() => router.back()} label="Go back" />
           <div className="relative">
             <div className="flex size-10 items-center justify-center rounded-full bg-primary text-primary-foreground">
               <Plane className="size-5 -rotate-45" />
@@ -227,30 +236,51 @@ export default function CustomerMessagesPage() {
               No messages yet — say hello.
             </div>
           ) : (
-            messages.map((m) => {
+            messages.map((m, i) => {
               // Customer's own messages are stored as 'incoming' (inbound to the
               // business); in THIS portal they're "mine" → right/orange.
               const mine = m.direction === "incoming";
+              const showLabel = labelFlags[i];
               return (
-                <div key={m.id} className={cn("flex", mine ? "justify-end" : "justify-start")}>
-                  <div
-                    className={cn(
-                      "max-w-[78%] rounded-2xl px-3.5 py-2 text-sm shadow-sm sm:max-w-[65%]",
-                      mine
-                        ? "rounded-br-md bg-primary text-primary-foreground"
-                        : "rounded-bl-md border border-border bg-white text-foreground"
-                    )}
-                  >
-                    {m.media_url ? <MessageAttachment url={m.media_url} mine={mine} /> : null}
-                    {m.body ? <p className="leading-relaxed">{m.body}</p> : null}
-                    <span
+                <div
+                  key={m.id}
+                  className={cn(
+                    "flex",
+                    mine ? "justify-end" : "justify-start",
+                    // Tighten the gap for continued messages in the same run.
+                    !showLabel && "-mt-1.5"
+                  )}
+                >
+                  <div className="max-w-[78%] sm:max-w-[65%]">
+                    {showLabel ? (
+                      <span
+                        className={cn(
+                          "mb-1 block text-[11px] font-medium text-muted-foreground",
+                          mine ? "text-right" : "text-left"
+                        )}
+                      >
+                        {mine ? ROLE_LABEL.customer : ROLE_LABEL.employee}
+                      </span>
+                    ) : null}
+                    <div
                       className={cn(
-                        "mt-1 block text-right text-[10px]",
-                        mine ? "text-white/70" : "text-muted-foreground"
+                        "rounded-2xl px-3.5 py-2 text-sm shadow-sm",
+                        mine
+                          ? "rounded-br-md bg-primary text-primary-foreground"
+                          : "rounded-bl-md border border-border bg-white text-foreground"
                       )}
                     >
-                      {fmtClock(m.created_at)}
-                    </span>
+                      {m.media_url ? <MessageAttachment url={m.media_url} mine={mine} /> : null}
+                      {m.body ? <p className="leading-relaxed">{m.body}</p> : null}
+                      <span
+                        className={cn(
+                          "mt-1 block text-right text-[10px]",
+                          mine ? "text-white/70" : "text-muted-foreground"
+                        )}
+                      >
+                        {fmtClock(m.created_at)}
+                      </span>
+                    </div>
                   </div>
                 </div>
               );

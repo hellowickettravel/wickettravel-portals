@@ -40,6 +40,7 @@ import {
   setEmployeeOrderStatus,
 } from "@/lib/actions/employee";
 import type { OrderWithRelations, OrderStatus } from "@/lib/db/types";
+import type { AccessLevel } from "@/lib/access";
 import type { SignedOrderAttachment } from "@/lib/db/order-messages";
 import { gbp, fmtDate, titleCase } from "@/lib/format";
 
@@ -94,11 +95,13 @@ export function EmployeeOrderDetail({
   canEdit,
   attachments,
   currentUserId,
+  accessLevel,
 }: {
   order: OrderWithRelations;
   canEdit: boolean;
   attachments: SignedOrderAttachment[];
   currentUserId: string;
+  accessLevel: AccessLevel;
 }) {
   const router = useRouter();
 
@@ -344,6 +347,7 @@ export function EmployeeOrderDetail({
         status={order.status}
         viewerRole="employee"
         currentUserId={currentUserId}
+        accessLevel={accessLevel}
       />
 
       {/* Edit dialog (semi_admin only — never mounted otherwise) */}

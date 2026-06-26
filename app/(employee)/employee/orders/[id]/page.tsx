@@ -35,6 +35,7 @@ export default async function EmployeeOrderDetailPage({
       canEdit={canEditOrders(access)}
       attachments={attachments}
       currentUserId={user?.id ?? ""}
+      accessLevel={access}
     />
   );
 }

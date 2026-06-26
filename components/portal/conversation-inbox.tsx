@@ -15,7 +15,6 @@ import {
   RotateCcw,
   X,
   FileText,
-  ArrowLeft,
 } from "lucide-react";
 import { toast } from "sonner";
 import { Input } from "@/components/ui/input";
@@ -24,6 +23,8 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { StatusBadge, type Tone } from "@/components/admin/status-badge";
 import { ConversationListSkeleton } from "@/components/portal/skeletons";
 import { MessageAttachment } from "@/components/portal/message-attachment";
+import { ChatBackButton } from "@/components/portal/chat-back-button";
+import { ROLE_LABEL, senderLabelFlags } from "@/lib/chat/labels";
 import { createClient } from "@/lib/supabase/client";
 import {
   listMyInbox,
@@ -354,6 +355,11 @@ export function ConversationInbox({
   }
 
   const thread = messages ?? [];
+  // Group consecutive messages from the same side so the fixed role label shows
+  // only once per run (no-repeat-in-a-row). Incoming = the customer; outgoing =
+  // this staff viewer (Admin for the admin scope, Support Team for an employee).
+  const labelFlags = senderLabelFlags(thread, (m) => m.direction);
+  const outgoingLabel = isAdmin ? ROLE_LABEL.admin : ROLE_LABEL.employee;
 
   return (
     <div className="flex h-[calc(100dvh-9.5rem)] min-h-[460px] overflow-hidden rounded-2xl border border-border bg-card shadow-card">
@@ -452,14 +458,10 @@ export function ConversationInbox({
           <>
             <div className="flex items-center justify-between gap-3 border-b border-border px-4 py-3">
               <div className="flex items-center gap-3">
-                <button
-                  type="button"
+                <ChatBackButton
                   onClick={() => setActiveId(undefined)}
-                  aria-label="Back to conversations"
-                  className="-ml-1 inline-flex size-9 shrink-0 items-center justify-center rounded-lg text-brand outline-none transition-colors hover:bg-neutral-soft focus-visible:ring-2 focus-visible:ring-primary/40 md:hidden"
-                >
-                  <ArrowLeft className="size-5" />
-                </button>
+                  label="Back to conversations"
+                />
                 <Avatar className="size-9">
                   <AvatarFallback className="bg-chip text-xs font-semibold text-brand-dark">
                     {initialsOf(active.customer?.name || active.customer?.wa_phone || "?")}
@@ -552,28 +554,49 @@ export function ConversationInbox({
                   No messages yet — say hello.
                 </div>
               ) : (
-                thread.map((m) => {
+                thread.map((m, i) => {
                   const mine = m.direction === "outgoing";
+                  const showLabel = labelFlags[i];
                   return (
-                    <div key={m.id} className={cn("flex", mine ? "justify-end" : "justify-start")}>
-                      <div
-                        className={cn(
-                          "max-w-[80%] rounded-2xl px-3.5 py-2 text-sm shadow-sm sm:max-w-[60%]",
-                          mine
-                            ? "rounded-br-md bg-primary text-primary-foreground"
-                            : "rounded-bl-md border border-border bg-white text-foreground"
-                        )}
-                      >
-                        {m.media_url ? <MessageAttachment url={m.media_url} mine={mine} /> : null}
-                        {m.body ? <p className="leading-relaxed">{m.body}</p> : null}
-                        <span
+                    <div
+                      key={m.id}
+                      className={cn(
+                        "flex",
+                        mine ? "justify-end" : "justify-start",
+                        // Tighten the gap for continued messages in the same run.
+                        !showLabel && "-mt-1.5"
+                      )}
+                    >
+                      <div className="max-w-[80%] sm:max-w-[60%]">
+                        {showLabel ? (
+                          <span
+                            className={cn(
+                              "mb-1 block text-[11px] font-medium text-muted-foreground",
+                              mine ? "text-right" : "text-left"
+                            )}
+                          >
+                            {mine ? outgoingLabel : ROLE_LABEL.customer}
+                          </span>
+                        ) : null}
+                        <div
                           className={cn(
-                            "mt-1 block text-right text-[10px]",
-                            mine ? "text-white/70" : "text-muted-foreground"
+                            "rounded-2xl px-3.5 py-2 text-sm shadow-sm",
+                            mine
+                              ? "rounded-br-md bg-primary text-primary-foreground"
+                              : "rounded-bl-md border border-border bg-white text-foreground"
                           )}
                         >
-                          {fmtClock(m.created_at)}
-                        </span>
+                          {m.media_url ? <MessageAttachment url={m.media_url} mine={mine} /> : null}
+                          {m.body ? <p className="leading-relaxed">{m.body}</p> : null}
+                          <span
+                            className={cn(
+                              "mt-1 block text-right text-[10px]",
+                              mine ? "text-white/70" : "text-muted-foreground"
+                            )}
+                          >
+                            {fmtClock(m.created_at)}
+                          </span>
+                        </div>
                       </div>
                     </div>
                   );
