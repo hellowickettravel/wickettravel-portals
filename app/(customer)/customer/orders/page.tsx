@@ -24,14 +24,16 @@ import { gbp, fmtDate } from "@/lib/format";
 import { cn } from "@/lib/utils";
 
 const ORDER_TONE: Record<OrderStatus, Tone> = {
-  open: "amber",
-  closed: "green",
+  new: "blue",
+  in_progress: "amber",
+  completed: "green",
   cancelled: "red",
 };
 
 const STATUS_LABEL: Record<OrderStatus, string> = {
-  open: "In progress",
-  closed: "Completed",
+  new: "Received",
+  in_progress: "In progress",
+  completed: "Completed",
   cancelled: "Cancelled",
 };
 

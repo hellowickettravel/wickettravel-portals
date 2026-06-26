@@ -218,8 +218,8 @@ export default function CustomerMessagesPage() {
                 No conversation yet
               </p>
               <p className="max-w-xs text-xs text-muted-foreground">
-                Your chat with the team will appear here. Request a quote and
-                we&apos;ll be in touch — your real conversations happen on WhatsApp.
+                Your chat with the team will appear here. Request a quote or send
+                a message and we&apos;ll be in touch right here in the portal.
               </p>
             </div>
           ) : messages.length === 0 ? (
@@ -341,7 +341,7 @@ export default function CustomerMessagesPage() {
       </div>
 
       <p className="text-center text-xs text-muted-foreground">
-        This is a portal mirror of your WhatsApp chat — your real conversations stay on WhatsApp.
+        Messages are delivered live to our team — we&apos;ll reply right here in your portal.
       </p>
     </div>
   );

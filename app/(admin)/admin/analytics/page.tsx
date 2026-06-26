@@ -112,7 +112,7 @@ function TopEmployees({ data }: { data: { name: string; closed: number }[] }) {
         <li key={e.name} className="space-y-1.5">
           <div className="flex items-center justify-between text-sm">
             <span className="font-medium text-foreground">{e.name}</span>
-            <span className="text-muted-foreground">{e.closed} closed</span>
+            <span className="text-muted-foreground">{e.closed} completed</span>
           </div>
           <div className="h-2 w-full overflow-hidden rounded-full bg-muted">
             <div
@@ -166,9 +166,10 @@ export default async function AnalyticsPage({
 
   const hasData = orders.length > 0;
 
-  // Revenue = EARNED revenue: closed (completed) sales only. Open orders are
-  // pipeline (not yet earned) and cancelled orders never earn — both excluded.
-  const closedOrders = orders.filter((o) => o.status === "closed");
+  // Revenue = EARNED revenue: completed sales only. Active orders (new /
+  // in_progress) are pipeline (not yet earned) and cancelled orders never
+  // earn — both excluded.
+  const closedOrders = orders.filter((o) => o.status === "completed");
 
   const months = lastSixMonths();
   const ordersOverTime = months.map((m) => ({
@@ -183,14 +184,15 @@ export default async function AnalyticsPage({
   }));
 
   const statusData = [
-    { label: "Open", value: orders.filter((o) => o.status === "open").length, color: "#1E3A5F" },
-    { label: "Closed", value: orders.filter((o) => o.status === "closed").length, color: "#10B981" },
+    { label: "New", value: orders.filter((o) => o.status === "new").length, color: "#1E3A5F" },
+    { label: "In progress", value: orders.filter((o) => o.status === "in_progress").length, color: "#F97316" },
+    { label: "Completed", value: orders.filter((o) => o.status === "completed").length, color: "#10B981" },
     { label: "Cancelled", value: orders.filter((o) => o.status === "cancelled").length, color: "#F43F5E" },
   ];
 
   const closedByEmployee = new Map<string, number>();
   for (const o of orders) {
-    if (o.status !== "closed") continue;
+    if (o.status !== "completed") continue;
     const name = o.created_by_profile?.full_name ?? "Unassigned";
     closedByEmployee.set(name, (closedByEmployee.get(name) ?? 0) + 1);
   }
@@ -239,9 +241,9 @@ export default async function AnalyticsPage({
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <StatCard label="Total orders" value={String(orders.length)} icon={ShoppingBag} />
-        <StatCard label="Revenue (closed)" value={gbp(totalRevenue)} icon={Wallet} />
-        <StatCard label="Avg closed order" value={gbp(avgOrderValue)} icon={TrendingUp} />
-        <StatCard label="Closed rate" value={`${closedRate}%`} icon={CheckCircle2} />
+        <StatCard label="Revenue (completed)" value={gbp(totalRevenue)} icon={Wallet} />
+        <StatCard label="Avg completed order" value={gbp(avgOrderValue)} icon={TrendingUp} />
+        <StatCard label="Completion rate" value={`${closedRate}%`} icon={CheckCircle2} />
       </div>
 
       {!hasData ? (
@@ -265,7 +267,7 @@ export default async function AnalyticsPage({
             <SectionCard title="Orders over time" description="Monthly order volume">
               <BarChart data={ordersOverTime} />
             </SectionCard>
-            <SectionCard title="Revenue by month" description="Closed revenue (GBP)">
+            <SectionCard title="Revenue by month" description="Completed revenue (GBP)">
               <BarChart
                 data={revenueByMonth}
                 color="var(--navy)"
@@ -278,10 +280,10 @@ export default async function AnalyticsPage({
             <SectionCard title="Orders by status">
               <Donut data={statusData} />
             </SectionCard>
-            <SectionCard title="Top employees" description="By closed orders">
+            <SectionCard title="Top employees" description="By completed orders">
               {topEmployees.length === 0 ? (
                 <p className="py-6 text-center text-sm text-muted-foreground">
-                  No closed orders yet.
+                  No completed orders yet.
                 </p>
               ) : (
                 <TopEmployees data={topEmployees} />

@@ -59,10 +59,9 @@ export async function listMyOrders(): Promise<OrderWithRelations[]> {
 // ----- Writes -----
 
 /**
- * MOCK SEND. Persists an outgoing reply to our DB only — nothing is sent to
- * Meta yet. When the WhatsApp Cloud API is wired (Batch 6) the real send call
- * — POST https://graph.facebook.com/v20.0/{PHONE_NUMBER_ID}/messages — goes at
- * the marked spot below, before/around this insert.
+ * Send an outgoing reply into a conversation. Messaging is fully internal:
+ * the row is persisted and Supabase Realtime delivers it live to the customer
+ * (and any other participant) in their portal — no external service involved.
  */
 export async function sendMessage(input: {
   conversationId: string;
@@ -81,12 +80,6 @@ export async function sendMessage(input: {
   }
 
   const supabase = await createClient();
-
-  // ────────────────────────────────────────────────────────────────────────
-  // 🔌 REAL WHATSAPP CLOUD API CALL GOES HERE (Batch 6).
-  // For now this is a MOCK send: we only write the row to our own DB and rely on
-  // Supabase Realtime to reflect it. No outbound request leaves the building.
-  // ────────────────────────────────────────────────────────────────────────
 
   const { data, error } = await supabase
     .from("messages")
@@ -164,7 +157,7 @@ export async function createOrderFromChat(input: {
     cost_price: input.costPrice,
     commission: input.commission,
     notes: input.notes?.trim() || null,
-    status: "open",
+    status: "new",
     created_by: userId,
   });
 
@@ -172,7 +165,7 @@ export async function createOrderFromChat(input: {
   return { ok: true };
 }
 
-const ORDER_STATUSES: OrderStatus[] = ["open", "closed", "cancelled"];
+const ORDER_STATUSES: OrderStatus[] = ["new", "in_progress", "completed", "cancelled"];
 
 /**
  * Edit an order's trip + pricing fields. SEMI_ADMIN only. RLS
@@ -229,8 +222,8 @@ export async function updateEmployeeOrder(input: {
 }
 
 /**
- * Change an order's status. SEMI_ADMIN only. Stamps closed_at on close and
- * clears it on reopen/cancel — consistent with the admin action.
+ * Change an order's status. SEMI_ADMIN only. Stamps closed_at on completion and
+ * clears it otherwise — consistent with the admin action.
  */
 export async function setEmployeeOrderStatus(input: {
   id: string;
@@ -250,7 +243,7 @@ export async function setEmployeeOrderStatus(input: {
     .from("orders")
     .update({
       status: input.status,
-      closed_at: input.status === "closed" ? new Date().toISOString() : null,
+      closed_at: input.status === "completed" ? new Date().toISOString() : null,
     })
     .eq("id", input.id)
     .select("id");

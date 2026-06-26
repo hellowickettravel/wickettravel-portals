@@ -23,8 +23,9 @@ const ADMIN_CUSTOMERS_KEY = ["admin", "customers"] as const;
 const ADMIN_ORDERS_KEY = ["admin", "orders"] as const;
 
 const STATUSES: { value: OrderStatus; label: string }[] = [
-  { value: "open", label: "Open" },
-  { value: "closed", label: "Closed" },
+  { value: "new", label: "New" },
+  { value: "in_progress", label: "In progress" },
+  { value: "completed", label: "Completed" },
   { value: "cancelled", label: "Cancelled" },
 ];
 
@@ -76,7 +77,7 @@ export function AdminCreateOrderDialog({
   const [costPrice, setCostPrice] = useState("");
   const [commission, setCommission] = useState("");
   const [notes, setNotes] = useState("");
-  const [status, setStatus] = useState<OrderStatus>("open");
+  const [status, setStatus] = useState<OrderStatus>("new");
 
   function reset() {
     setCustomerId("");
@@ -89,7 +90,7 @@ export function AdminCreateOrderDialog({
     setCostPrice("");
     setCommission("");
     setNotes("");
-    setStatus("open");
+    setStatus("new");
   }
 
   const mutation = useMutation({

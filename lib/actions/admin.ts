@@ -189,7 +189,7 @@ export async function createOrder(input: {
   return { ok: true };
 }
 
-const ORDER_STATUSES: OrderStatus[] = ["open", "closed", "cancelled"];
+const ORDER_STATUSES: OrderStatus[] = ["new", "in_progress", "completed", "cancelled"];
 
 /**
  * Edit an existing order's trip + pricing fields. Admin-only; the write goes
@@ -240,8 +240,8 @@ export async function updateOrder(input: {
 }
 
 /**
- * Change an order's status. Stamps closed_at when moving to 'closed' and clears
- * it on reopen/cancel, so analytics can time closed orders accurately.
+ * Change an order's status. Stamps closed_at when moving to 'completed' and
+ * clears it otherwise, so analytics can time completed orders accurately.
  */
 export async function setOrderStatus(input: {
   id: string;
@@ -262,7 +262,7 @@ export async function setOrderStatus(input: {
     .from("orders")
     .update({
       status: input.status,
-      closed_at: input.status === "closed" ? new Date().toISOString() : null,
+      closed_at: input.status === "completed" ? new Date().toISOString() : null,
     })
     .eq("id", input.id);
 
@@ -385,7 +385,7 @@ export async function createCustomer(input: {
     return { ok: false, error: `Password must be at least ${MIN_PASSWORD} characters.` };
   // Optional phone — accept digits, spaces and the usual + ( ) - separators.
   if (waPhone && !/^[+\d][\d\s()-]{5,}$/.test(waPhone))
-    return { ok: false, error: "Enter a valid WhatsApp number." };
+    return { ok: false, error: "Enter a valid phone number." };
 
   const admin = createAdminClient();
 
@@ -641,7 +641,7 @@ export async function deleteEmployee(id: string): Promise<ActionResult> {
  * customer has a portal login (profile_id set), their profile row AND auth user
  * are deleted so they can no longer sign in — their session dies on its next
  * request (getUser fails → the customer layout redirects to /login).
- * WhatsApp-only customers (no profile_id) just lose their customer + chat data.
+ * Customers without a portal login (no profile_id) just lose their customer + chat data.
  * Children are cleared before parents so no foreign key blocks the delete.
  */
 export async function deleteCustomer(id: string): Promise<ActionResult> {
@@ -816,9 +816,9 @@ export async function listAdminMessages(
 }
 
 /**
- * MOCK SEND (admin). Persists an outgoing reply to our DB only — the real
- * WhatsApp Cloud API call lands here in Batch 6. Admins can reply in ANY
- * conversation; messages_admin_all permits the insert.
+ * Send an outgoing reply as admin. Messaging is fully internal — the row is
+ * persisted and Supabase Realtime delivers it live to the customer's portal.
+ * Admins can reply in ANY conversation; messages_admin_all permits the insert.
  */
 export async function adminSendMessage(input: {
   conversationId: string;
@@ -835,7 +835,6 @@ export async function adminSendMessage(input: {
 
   const supabase = await createClient();
 
-  // 🔌 REAL WHATSAPP CLOUD API CALL GOES HERE (Batch 6) — mock save for now.
   const { data, error } = await supabase
     .from("messages")
     .insert({

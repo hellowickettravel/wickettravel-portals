@@ -159,7 +159,7 @@ export function CustomerProfileForm({
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="phone">{fieldLabel("WhatsApp phone (read-only)")}</Label>
+              <Label htmlFor="phone">{fieldLabel("Phone (read-only)")}</Label>
               <Input
                 id="phone"
                 value={phone || "—"}

@@ -20,14 +20,16 @@ import type { OrderStatus } from "@/lib/db/types";
 import { gbp, fmtDate } from "@/lib/format";
 
 const ORDER_TONE: Record<OrderStatus, Tone> = {
-  open: "amber",
-  closed: "green",
+  new: "blue",
+  in_progress: "amber",
+  completed: "green",
   cancelled: "red",
 };
 
 const STATUS_LABEL: Record<OrderStatus, string> = {
-  open: "In progress",
-  closed: "Completed",
+  new: "Received",
+  in_progress: "In progress",
+  completed: "Completed",
   cancelled: "Cancelled",
 };
 
@@ -61,8 +63,10 @@ export function CustomerDashboard({ firstName }: { firstName: string }) {
     };
   }, [supabase, queryClient]);
 
-  const active = rows.filter((o) => o.status === "open").length;
-  const completed = rows.filter((o) => o.status === "closed").length;
+  const active = rows.filter(
+    (o) => o.status === "new" || o.status === "in_progress"
+  ).length;
+  const completed = rows.filter((o) => o.status === "completed").length;
   const cancelled = rows.filter((o) => o.status === "cancelled").length;
   const recent = rows.slice(0, 3);
 
@@ -162,7 +166,7 @@ export function CustomerDashboard({ firstName }: { firstName: string }) {
       {/* Help footer */}
       <div className="flex items-center justify-between rounded-2xl border border-border bg-neutral-soft px-5 py-4">
         <p className="text-sm text-muted-foreground">
-          Prefer WhatsApp? You can also chat with our team directly.
+          Have a question? Chat with our team directly in the portal.
         </p>
         <Link
           href="/customer/messages"

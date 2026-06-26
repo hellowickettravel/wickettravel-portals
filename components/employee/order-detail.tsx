@@ -38,8 +38,9 @@ import type { OrderWithRelations, OrderStatus } from "@/lib/db/types";
 import { gbp, fmtDate, titleCase } from "@/lib/format";
 
 const ORDER_TONE: Record<OrderStatus, Tone> = {
-  open: "blue",
-  closed: "green",
+  new: "blue",
+  in_progress: "amber",
+  completed: "green",
   cancelled: "red",
 };
 
@@ -127,11 +128,13 @@ export function EmployeeOrderDetail({
       return;
     }
     toast.success(
-      status === "closed"
-        ? "Order closed"
+      status === "completed"
+        ? "Order completed"
         : status === "cancelled"
           ? "Order cancelled"
-          : "Order reopened"
+          : status === "in_progress"
+            ? "Order reopened"
+            : "Order status updated"
     );
     router.refresh();
   }
@@ -205,11 +208,11 @@ export function EmployeeOrderDetail({
               Edit
             </Button>
 
-            {order.status === "open" ? (
+            {order.status !== "completed" && order.status !== "cancelled" ? (
               <>
                 <Button
                   size="sm"
-                  onClick={() => changeStatus("closed")}
+                  onClick={() => changeStatus("completed")}
                   disabled={busy === "status"}
                 >
                   {busy === "status" ? (
@@ -217,7 +220,7 @@ export function EmployeeOrderDetail({
                   ) : (
                     <CheckCircle2 className="size-4" />
                   )}
-                  Mark as closed
+                  Mark as completed
                 </Button>
                 <Button
                   variant="outline"
@@ -233,7 +236,7 @@ export function EmployeeOrderDetail({
             ) : (
               <Button
                 size="sm"
-                onClick={() => changeStatus("open")}
+                onClick={() => changeStatus("in_progress")}
                 disabled={busy === "status"}
               >
                 {busy === "status" ? (
@@ -296,7 +299,7 @@ export function EmployeeOrderDetail({
         <SectionCard title="Customer">
           <div className="divide-y divide-border">
             <DataRow label="Name" value={order.customer?.name ?? "—"} />
-            <DataRow label="WhatsApp" value={order.customer?.wa_phone ?? "—"} />
+            <DataRow label="Phone" value={order.customer?.wa_phone ?? "—"} />
             <DataRow
               label="Conversation"
               value={
@@ -322,7 +325,7 @@ export function EmployeeOrderDetail({
             <DataRow label="Created by" value={createdByLabel} />
             <DataRow label="Created" value={fmtDate(order.created_at)} />
             <DataRow
-              label="Closed"
+              label="Completed"
               value={order.closed_at ? fmtDate(order.closed_at) : "—"}
             />
           </div>

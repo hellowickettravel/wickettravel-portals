@@ -29,8 +29,9 @@ import { gbp, fmtDate, titleCase } from "@/lib/format";
 import { cn } from "@/lib/utils";
 
 const ORDER_TONE: Record<OrderStatus, Tone> = {
-  open: "blue",
-  closed: "green",
+  new: "blue",
+  in_progress: "amber",
+  completed: "green",
   cancelled: "red",
 };
 
@@ -52,7 +53,9 @@ export function EmployeeOrders({ accessLevel }: { accessLevel: AccessLevel }) {
   });
 
   const rows = orders ?? [];
-  const myOpen = rows.filter((o) => o.status === "open").length;
+  const myOpen = rows.filter(
+    (o) => o.status === "new" || o.status === "in_progress"
+  ).length;
   const myCommission = rows.reduce((s, o) => s + (o.commission ?? 0), 0);
 
   return (

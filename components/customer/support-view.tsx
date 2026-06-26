@@ -35,7 +35,7 @@ const FAQS = [
   },
   {
     q: "How do I talk to the team?",
-    a: "Use “Messages” to chat with us in the portal, or continue the conversation on WhatsApp. We typically reply within minutes during working hours.",
+    a: "Use “Messages” to chat with us right here in the portal. We typically reply within minutes during working hours.",
   },
   {
     q: "How do I pay for a booking?",
@@ -143,7 +143,7 @@ export function CustomerSupport() {
             </div>
             <p className="text-sm text-muted-foreground">
               Raise a query below and it goes straight to the Wicket team. You can
-              also reach us any time on WhatsApp.
+              also message us any time from your portal.
             </p>
             <Button
               variant="outline"

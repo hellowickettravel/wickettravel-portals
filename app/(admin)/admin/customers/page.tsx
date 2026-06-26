@@ -102,7 +102,7 @@ export default function AdminCustomersPage() {
   function exportCsv() {
     downloadCsv(
       "customers.csv",
-      ["Name", "WhatsApp", "Has account", "Orders", "Conversations", "Created"],
+      ["Name", "Phone", "Has account", "Orders", "Conversations", "Created"],
       all.map((c) => [
         c.name ?? "",
         c.wa_phone ?? "",
@@ -211,7 +211,7 @@ export default function AdminCustomersPage() {
                 <TableHeader>
                   <TableRow>
                     <TableHead className="pl-6">Name</TableHead>
-                    <TableHead>WhatsApp</TableHead>
+                    <TableHead>Phone</TableHead>
                     <TableHead>Account</TableHead>
                     <TableHead className="text-center">Orders</TableHead>
                     <TableHead className="text-center">Conversations</TableHead>
@@ -333,7 +333,7 @@ export default function AdminCustomersPage() {
             </div>
             <div className="space-y-2">
               <Label htmlFor="cust-phone" className="font-label text-xs font-medium uppercase tracking-wider text-slate-600">
-                WhatsApp number <span className="font-normal normal-case tracking-normal text-muted-foreground">(optional)</span>
+                Phone number <span className="font-normal normal-case tracking-normal text-muted-foreground">(optional)</span>
               </Label>
               <Input
                 id="cust-phone"

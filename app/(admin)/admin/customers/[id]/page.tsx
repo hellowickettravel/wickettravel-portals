@@ -9,8 +9,9 @@ import type { OrderStatus, ConversationStatus } from "@/lib/db/types";
 import { gbp, fmtDate, fmtRelative, titleCase } from "@/lib/format";
 
 const ORDER_TONE: Record<OrderStatus, Tone> = {
-  open: "blue",
-  closed: "green",
+  new: "blue",
+  in_progress: "amber",
+  completed: "green",
   cancelled: "red",
 };
 const CONVO_TONE: Record<ConversationStatus, Tone> = {
@@ -54,7 +55,7 @@ export default async function AdminCustomerDetailPage({
             </StatusBadge>
           </div>
           <p className="text-sm text-muted-foreground">
-            {customer.wa_phone ?? "No WhatsApp number"} · joined {fmtDate(customer.created_at)}
+            {customer.wa_phone ?? "No phone number"} · joined {fmtDate(customer.created_at)}
           </p>
         </div>
       </div>

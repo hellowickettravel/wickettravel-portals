@@ -79,7 +79,7 @@ function fmtClock(iso: string) {
 type Scope = "admin" | "employee";
 
 /**
- * Shared WhatsApp-style inbox used by BOTH the employee and admin portals.
+ * Shared two-pane chat inbox used by BOTH the employee and admin portals.
  * `scope` selects the data-access actions, channel, and capabilities:
  *   - employee: assignment-scoped, respects access level (view_only = read-only),
  *               unread tracking, "create order from chat"

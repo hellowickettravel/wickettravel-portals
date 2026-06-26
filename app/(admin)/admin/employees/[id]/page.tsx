@@ -22,8 +22,9 @@ const ACCESS_TONE: Record<AccessLevel, Tone> = {
   view_only: "slate",
 };
 const ORDER_TONE: Record<OrderStatus, Tone> = {
-  open: "blue",
-  closed: "green",
+  new: "blue",
+  in_progress: "amber",
+  completed: "green",
   cancelled: "red",
 };
 

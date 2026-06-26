@@ -25,8 +25,9 @@ import type { OrderStatus } from "@/lib/db/types";
 import { fmtRelative, titleCase } from "@/lib/format";
 
 const ORDER_TONE: Record<OrderStatus, Tone> = {
-  open: "blue",
-  closed: "green",
+  new: "blue",
+  in_progress: "amber",
+  completed: "green",
   cancelled: "red",
 };
 
@@ -45,14 +46,16 @@ export default async function EmployeeDashboardPage() {
 
   const assignedChats = inbox.length;
   const unread = inbox.reduce((s, c) => s + c.unreadCount, 0);
-  const openOrders = orders.filter((o) => o.status === "open").length;
+  const openOrders = orders.filter(
+    (o) => o.status === "new" || o.status === "in_progress"
+  ).length;
 
-  // "Closed this week": closed orders created in the last 7 days. The schema has
-  // no closed_at timestamp, so creation date is the best available proxy.
+  // "Completed this week": completed orders created in the last 7 days, using
+  // creation date as a simple proxy for the activity window.
   const now = Date.now();
   const closedThisWeek = orders.filter(
     (o) =>
-      o.status === "closed" &&
+      o.status === "completed" &&
       now - new Date(o.created_at).getTime() <= WEEK_MS
   ).length;
 

@@ -26,8 +26,9 @@ import {
 import { gbp, fmtDate, fmtRelative, titleCase } from "@/lib/format";
 
 const ORDER_TONE: Record<OrderStatus, Tone> = {
-  open: "blue",
-  closed: "green",
+  new: "blue",
+  in_progress: "amber",
+  completed: "green",
   cancelled: "red",
 };
 
@@ -56,11 +57,13 @@ export default async function AdminDashboardPage() {
     getRecentActivity(8),
   ]);
 
-  const openOrders = orders.filter((o) => o.status === "open").length;
-  // Commission realised this month = closed orders whose closed_at falls in the
-  // current month (not creation date), so the figure tracks when revenue lands.
+  const openOrders = orders.filter(
+    (o) => o.status === "new" || o.status === "in_progress"
+  ).length;
+  // Commission realised this month = completed orders whose closed_at falls in
+  // the current month (not creation date), so the figure tracks when revenue lands.
   const commissionThisMonth = orders
-    .filter((o) => o.status === "closed" && o.closed_at != null && isThisMonth(o.closed_at))
+    .filter((o) => o.status === "completed" && o.closed_at != null && isThisMonth(o.closed_at))
     .reduce((sum, o) => sum + (o.commission ?? 0), 0);
 
   const recentOrders = orders.slice(0, 5);

@@ -1,5 +1,9 @@
 import { createClient } from "@/lib/supabase/server";
-import { ATTACHMENT_BUCKET, SIGNED_URL_TTL } from "@/lib/storage";
+import {
+  ATTACHMENT_BUCKET,
+  ORDER_ATTACHMENT_BUCKET,
+  SIGNED_URL_TTL,
+} from "@/lib/storage";
 
 /**
  * Server-side signing for PRIVATE attachment reads. messages.media_url stores an
@@ -16,10 +20,15 @@ import { ATTACHMENT_BUCKET, SIGNED_URL_TTL } from "@/lib/storage";
  *   - any other absolute URL (e.g. an external/branding link) → null (leave alone)
  */
 export function toAttachmentPath(value: string): string | null {
+  return toBucketPath(value, "attachments");
+}
+
+/** Bucket-agnostic version of {@link toAttachmentPath} (e.g. 'order-attachments'). */
+export function toBucketPath(value: string, bucket: string): string | null {
   if (!/^https?:\/\//i.test(value)) return value; // already a storage path
-  const marker = `/attachments/`;
+  const marker = `/${bucket}/`;
   const idx = value.indexOf(marker);
-  if (idx === -1) return null; // not an attachments-bucket URL
+  if (idx === -1) return null; // not a URL for this bucket
   let path = value.slice(idx + marker.length).split("?")[0];
   try {
     path = decodeURIComponent(path);
@@ -31,18 +40,19 @@ export function toAttachmentPath(value: string): string | null {
 
 /**
  * Replace each row's media_url with a fresh signed URL. Rows with no attachment,
- * or whose URL can't be resolved to an attachments path, are passed through
+ * or whose URL can't be resolved to a path in `bucket`, are passed through
  * unchanged. Batched into a single createSignedUrls call.
  */
-export async function withSignedMedia<T extends { media_url: string | null }>(
-  rows: T[]
+export async function withSignedMediaFrom<T extends { media_url: string | null }>(
+  rows: T[],
+  bucket: string
 ): Promise<T[]> {
   // Map each distinct media_url → its object path (skip nulls / unresolvable).
   const urlToPath = new Map<string, string>();
   for (const row of rows) {
     const url = row.media_url;
     if (!url || urlToPath.has(url)) continue;
-    const path = toAttachmentPath(url);
+    const path = toBucketPath(url, bucket);
     if (path) urlToPath.set(url, path);
   }
   if (urlToPath.size === 0) return rows;
@@ -50,7 +60,7 @@ export async function withSignedMedia<T extends { media_url: string | null }>(
   const paths = Array.from(new Set(urlToPath.values()));
   const supabase = await createClient();
   const { data } = await supabase.storage
-    .from(ATTACHMENT_BUCKET)
+    .from(bucket)
     .createSignedUrls(paths, SIGNED_URL_TTL);
 
   const pathToSigned = new Map<string, string>();
@@ -64,4 +74,18 @@ export async function withSignedMedia<T extends { media_url: string | null }>(
     const signed = path ? pathToSigned.get(path) : undefined;
     return signed ? { ...row, media_url: signed } : row;
   });
+}
+
+/** Sign conversation-message attachments (the 'attachments' bucket). */
+export async function withSignedMedia<T extends { media_url: string | null }>(
+  rows: T[]
+): Promise<T[]> {
+  return withSignedMediaFrom(rows, ATTACHMENT_BUCKET);
+}
+
+/** Sign per-order inbox attachments (the 'order-attachments' bucket). */
+export async function withSignedOrderMedia<T extends { media_url: string | null }>(
+  rows: T[]
+): Promise<T[]> {
+  return withSignedMediaFrom(rows, ORDER_ATTACHMENT_BUCKET);
 }

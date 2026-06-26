@@ -28,7 +28,7 @@ import { cn } from "@/lib/utils";
 const FAQS = [
   {
     q: "How do I reply to a customer?",
-    a: "Open Messages, pick a conversation from the left, type in the message bar and hit send. Replies sync to the customer's WhatsApp once the integration is live.",
+    a: "Open Messages, pick a conversation from the left, type in the message bar and hit send. Your reply is delivered live to the customer in their portal.",
   },
   {
     q: "How do I create an order from a chat?",

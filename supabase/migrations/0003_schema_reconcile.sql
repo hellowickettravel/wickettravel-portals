@@ -7,15 +7,15 @@
 -- when already nullable), so it's safe to run once.
 -- ============================================================================
 
--- customers: link a portal account to a customer record. Nullable — WhatsApp-
--- created customers won't have one; portal-signup customers will.
+-- customers: link a portal account to a customer record. Nullable — leads
+-- created without a portal login won't have one; portal-signup customers will.
 alter table public.customers
   add column if not exists profile_id uuid references auth.users(id) on delete set null;
 
 create index if not exists customers_profile_id_idx
   on public.customers(profile_id);
 
--- Portal signups may not have a WhatsApp number yet — allow wa_phone to be null.
+-- Portal signups may not have a phone number yet — allow wa_phone to be null.
 alter table public.customers
   alter column wa_phone drop not null;
 

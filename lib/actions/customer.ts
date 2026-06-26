@@ -62,10 +62,10 @@ async function ensureCustomer(): Promise<{
 
 /**
  * The customer's conversation id, creating one if they have none yet. A portal
- * customer starts with no conversation (only inbound WhatsApp / the dev tools
- * created them before), so without this their Messages tab had nothing to write
- * into. Service-role insert, keyed to a customer row we've already confirmed the
- * caller owns — admins/employees then see it through normal RLS.
+ * customer may start with no conversation, so without this their Messages tab
+ * would have nothing to write into. Service-role insert, keyed to a customer row
+ * we've already confirmed the caller owns — admins/employees then see it through
+ * normal RLS, and Supabase Realtime keeps every participant live.
  */
 async function ensureConversation(customerId: string): Promise<string> {
   const admin = createAdminClient();
@@ -138,7 +138,7 @@ export async function createQuoteRequest(input: {
     return_date: input.returnDate,
     passengers: input.passengers,
     notes: input.notes?.trim() || null,
-    status: "open",
+    status: "new",
     created_by: null,
   });
 
@@ -146,7 +146,7 @@ export async function createQuoteRequest(input: {
   return { ok: true };
 }
 
-// ----- Messages (portal mirror of the WhatsApp chat) -----
+// ----- Messages (internal realtime chat with the team) -----
 
 export type CustomerThread = {
   conversation: ConversationWithCustomer | null;
@@ -180,7 +180,8 @@ export async function getMyThread(): Promise<CustomerThread> {
 /**
  * Customer sends a message into their own conversation. From the business's
  * perspective this is INBOUND, so direction='incoming' with no sender_id —
- * matches the messages_insert_customer policy. MOCK: saved to DB only.
+ * matches the messages_insert_customer policy. Saved to the DB; Supabase
+ * Realtime delivers it live to the assigned employee + admins.
  */
 export async function sendCustomerMessage(input: {
   conversationId?: string;

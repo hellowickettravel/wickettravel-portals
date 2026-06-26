@@ -46,7 +46,7 @@ begin
 
   if NEW.direction = 'incoming' then
     -- Customer → business: notify ADMINS + the conversation's assigned employee.
-    v_actor_id := auth.uid(); -- the customer (null if via service role / webhook)
+    v_actor_id := auth.uid(); -- the customer (null if via the service role)
     select cu.name into v_actor_name
       from public.conversations c
       join public.customers cu on cu.id = c.customer_id
@@ -104,7 +104,7 @@ declare
   v_route text;
   v_status_label text;
 begin
-  -- Who owns this order? (null for WhatsApp-only leads → nothing to deliver.)
+  -- Who owns this order? (null for leads with no portal login → nothing to deliver.)
   if NEW.customer_id is null then
     return NEW;
   end if;

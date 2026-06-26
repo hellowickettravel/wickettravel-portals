@@ -103,7 +103,7 @@ begin
   end if;
 
   v_preview := left(coalesce(NEW.body, ''), 80);
-  v_actor_id := auth.uid(); -- the customer (null if sent via service role / webhook)
+  v_actor_id := auth.uid(); -- the customer (null if sent via the service role)
   select cu.name into v_actor_name
     from public.conversations c
     join public.customers cu on cu.id = c.customer_id

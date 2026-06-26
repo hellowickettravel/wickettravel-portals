@@ -19,6 +19,8 @@ import { createClient } from "@/lib/supabase/client";
 
 export const ATTACHMENT_BUCKET = "attachments";
 export const BRANDING_BUCKET = "branding";
+/** Private bucket for per-order inbox + pre-order note attachments (0016). */
+export const ORDER_ATTACHMENT_BUCKET = "order-attachments";
 export const MAX_ATTACHMENT_BYTES = 10 * 1024 * 1024; // 10MB
 export const ALLOWED_ATTACHMENT_TYPES = [
   "image/png",
@@ -84,6 +86,36 @@ export async function uploadAttachment(
   // path, and reads are re-signed server-side on every fetch.
   const { data: signed } = await supabase.storage
     .from(ATTACHMENT_BUCKET)
+    .createSignedUrl(key, SIGNED_URL_TTL);
+
+  return { ok: true, path: key, url: signed?.signedUrl ?? "", name: file.name };
+}
+
+/**
+ * Upload an attachment for an order's inbox (or its pre-order note) into the
+ * PRIVATE 'order-attachments' bucket. Returns the stored PATH (save it on
+ * order_messages.media_url / order_attachments.storage_path) plus a short-lived
+ * signed `url` for optimistic display. The storage insert policy only permits a
+ * path under `order/<orderId>/…` for an order the caller can access.
+ */
+export async function uploadOrderAttachment(
+  file: File,
+  orderId: string
+): Promise<AttachmentUploadResult> {
+  const valid = validateAttachment(file);
+  if (!valid.ok) return valid;
+
+  const supabase = createClient();
+  const key = objectKey(`order/${orderId}`, file.name);
+
+  const { error } = await supabase.storage
+    .from(ORDER_ATTACHMENT_BUCKET)
+    .upload(key, file, { contentType: file.type, upsert: false });
+
+  if (error) return { ok: false, error: error.message };
+
+  const { data: signed } = await supabase.storage
+    .from(ORDER_ATTACHMENT_BUCKET)
     .createSignedUrl(key, SIGNED_URL_TTL);
 
   return { ok: true, path: key, url: signed?.signedUrl ?? "", name: file.name };

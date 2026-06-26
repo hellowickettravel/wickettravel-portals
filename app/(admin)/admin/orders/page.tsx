@@ -36,19 +36,26 @@ import { cn } from "@/lib/utils";
 const PAGE_SIZE = 15;
 
 const ORDER_TONE: Record<OrderStatus, Tone> = {
-  open: "blue",
-  closed: "green",
+  new: "blue",
+  in_progress: "amber",
+  completed: "green",
   cancelled: "red",
 };
 
-const TABS = ["All", "Open", "Closed", "Cancelled"] as const;
-type Tab = (typeof TABS)[number];
+const TABS: { label: string; value: "all" | OrderStatus }[] = [
+  { label: "All", value: "all" },
+  { label: "New", value: "new" },
+  { label: "In progress", value: "in_progress" },
+  { label: "Completed", value: "completed" },
+  { label: "Cancelled", value: "cancelled" },
+];
+type Tab = (typeof TABS)[number]["value"];
 
 const ORDERS_KEY = ["admin", "orders"] as const;
 
 export default function OrdersPage() {
   const router = useRouter();
-  const [tab, setTab] = useState<Tab>("All");
+  const [tab, setTab] = useState<Tab>("all");
   const [query, setQuery] = useState("");
   const [createOpen, setCreateOpen] = useState(false);
 
@@ -61,20 +68,21 @@ export default function OrdersPage() {
   const [limit, setLimit] = useState(PAGE_SIZE);
 
   const totals = useMemo(() => {
-    const open = all.filter((o) => o.status === "open").length;
-    // Earned revenue + commission = CLOSED (completed) orders only. Open is
-    // pipeline (not yet earned); cancelled never earns.
-    const closed = all.filter((o) => o.status === "closed");
-    const revenue = closed.reduce((s, o) => s + (o.selling_price ?? 0), 0);
-    const commission = closed.reduce((s, o) => s + (o.commission ?? 0), 0);
-    return { total: all.length, open, revenue, commission };
+    const active = all.filter(
+      (o) => o.status === "new" || o.status === "in_progress"
+    ).length;
+    // Earned revenue + commission = COMPLETED orders only. Active is pipeline
+    // (not yet earned); cancelled never earns.
+    const completed = all.filter((o) => o.status === "completed");
+    const revenue = completed.reduce((s, o) => s + (o.selling_price ?? 0), 0);
+    const commission = completed.reduce((s, o) => s + (o.commission ?? 0), 0);
+    return { total: all.length, active, revenue, commission };
   }, [all]);
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
     return all.filter((o) => {
-      const matchesTab =
-        tab === "All" ? true : o.status === (tab.toLowerCase() as OrderStatus);
+      const matchesTab = tab === "all" ? true : o.status === tab;
       const matchesQuery =
         !q ||
         [
@@ -158,9 +166,9 @@ export default function OrdersPage() {
       <div className="grid grid-cols-2 gap-4 rounded-2xl border border-border bg-card p-1 shadow-card sm:grid-cols-4">
         {[
           { label: "Total orders", value: String(totals.total) },
-          { label: "Open", value: String(totals.open) },
-          { label: "Revenue (closed)", value: gbp(totals.revenue) },
-          { label: "Commission (closed)", value: gbp(totals.commission) },
+          { label: "Active", value: String(totals.active) },
+          { label: "Revenue (completed)", value: gbp(totals.revenue) },
+          { label: "Commission (completed)", value: gbp(totals.commission) },
         ].map((t, i) => (
           <div
             key={t.label}
@@ -181,16 +189,16 @@ export default function OrdersPage() {
         <div className="inline-flex items-center gap-1 rounded-xl bg-muted p-1">
           {TABS.map((t) => (
             <button
-              key={t}
-              onClick={() => setTab(t)}
+              key={t.value}
+              onClick={() => setTab(t.value)}
               className={cn(
                 "rounded-lg px-3.5 py-1.5 text-sm font-medium transition-colors",
-                tab === t
+                tab === t.value
                   ? "bg-primary text-primary-foreground shadow-sm"
                   : "text-muted-foreground hover:text-foreground"
               )}
             >
-              {t}
+              {t.label}
             </button>
           ))}
         </div>

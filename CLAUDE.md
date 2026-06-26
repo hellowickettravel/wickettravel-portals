@@ -1,7 +1,7 @@
 # Wicket Travel Portal — Claude Code Context
 
 ## What this is
-A custom "WhatsApp Shared Team Inbox + Orders CRM + Admin panel" for a UK-based flight-ticket reselling business. Customers stay on normal WhatsApp; the business is managed via 3 web portals. WhatsApp Cloud API integration comes LAST — for now use a MOCK messaging layer.
+A custom "Shared Team Inbox + Orders CRM + Admin panel" for a UK-based flight-ticket reselling business. All three roles — admin, employee and customer — log in to web portals and message each other in real time. Messaging runs entirely on **internal Supabase Realtime** between the logged-in roles (no WhatsApp, no external API, no mock layer).
 
 ## Stack (locked)
 - Next.js (App Router) + TypeScript
@@ -21,12 +21,12 @@ A custom "WhatsApp Shared Team Inbox + Orders CRM + Admin panel" for a UK-based 
 ## Roles
 - admin: full control (employees, access levels, all orders/chats, analytics)
 - employee: only assigned conversations/orders. Sections: Orders, Messages, Dashboard, Support, Settings.
-- customer: stays on WhatsApp; optional order form later. No portal login for now.
+- customer: logs in to their own portal — places/tracks orders and chats with the team in real time. Cannot message on an order once it's completed/cancelled (enforced server-side via RLS).
 
 ## Three portals
 - /admin — admin panel
-- /employee — employee portal (the heart: WhatsApp-style 2-pane chat inbox, create order from chat)
-- /customer — optional order form (secondary)
+- /employee — employee portal (the heart: 2-pane chat inbox, create order from chat)
+- /customer — customer portal: place/track orders, chat with the team in real time
 
 ## Design system (Navy + Orange — matches the public homepage)
 - Brand / primary = NAVY: #1E3A5F, primary-dark #152C49, primary-light #2C5282
@@ -41,16 +41,21 @@ A custom "WhatsApp Shared Team Inbox + Orders CRM + Admin panel" for a UK-based 
 - Rounded 14–16px cards, soft shadows, modern SaaS look
 - Portal shell: ~260px navy sidebar, active nav = solid ORANGE pill, content max ~1152px
 
-## Build order (BUILD FIRST, API LAST)
-1. Auth + login + role-based redirect (IN PROGRESS)
-2. Employee portal: chat inbox UI + MOCK send + "simulate incoming message" button
-3. Orders + Dashboard
-4. Admin panel: employees, access levels, analytics
-5. Customer order form (optional)
-6. LAST: swap mock for real WhatsApp Cloud API (webhook receive + send)
+## Messaging (internal realtime)
+- All messaging is internal: admin ⇄ employee ⇄ customer, over Supabase Realtime between logged-in roles. No WhatsApp, no external messaging API, no mock/simulate layer.
+- Sender role is labelled in the UI as **Admin**, **Support Team** (employee), or **Customer**.
+- Orders carry a human order number (e.g. `#7343490`) and a lifecycle status: `new → in_progress → completed / cancelled`. Customers cannot send messages on a completed/cancelled order — enforced server-side via RLS, not just the UI.
+- Realtime is enabled (publication `supabase_realtime`) on conversations, messages, orders, order_messages and order_attachments. RLS scopes every stream: admin sees everything, employee sees only assigned orders/conversations, customer sees only their own.
+
+## Build order
+1. Auth + login + role-based redirect — DONE
+2. Employee portal: chat inbox UI + internal realtime send — DONE
+3. Orders + Dashboard — DONE
+4. Admin panel: employees, access levels, analytics — DONE
+5. Customer portal: orders + realtime chat — DONE
+6. Foundation: orders/order-messages/attachments schema, realtime + RLS — DONE
 
 ## Rules
 - One feature at a time. Keep code clean and typed.
 - Use the locked palette + fonts everywhere.
 - Never expose SUPABASE_SERVICE_ROLE_KEY to the client.
-- Don't start WhatsApp API work until explicitly told.
