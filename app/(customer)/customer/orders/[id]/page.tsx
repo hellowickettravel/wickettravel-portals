@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArrowLeft, Plane, MessageSquare, Ticket } from "lucide-react";
+import { getUserAndProfile } from "@/lib/auth";
 import { getOrderById } from "@/lib/db/orders";
 import { getPreOrderAttachments } from "@/lib/db/order-messages";
 import { SectionCard } from "@/components/admin/section-card";
@@ -9,8 +10,8 @@ import { Button } from "@/components/ui/button";
 import {
   FlightDetailsCard,
   PreOrderNoteCard,
-  OrderInboxPlaceholder,
 } from "@/components/orders/order-record";
+import { OrderInbox } from "@/components/orders/order-inbox";
 import type { OrderStatus } from "@/lib/db/types";
 import { gbp, fmtDate } from "@/lib/format";
 
@@ -40,7 +41,10 @@ export default async function CustomerOrderDetailPage({
   const order = await getOrderById(id);
   if (!order) notFound();
 
-  const attachments = await getPreOrderAttachments(id);
+  const [attachments, { user }] = await Promise.all([
+    getPreOrderAttachments(id),
+    getUserAndProfile(),
+  ]);
 
   return (
     <div className="space-y-5 animate-in fade-in slide-in-from-bottom-2 duration-500 ease-out">
@@ -121,7 +125,14 @@ export default async function CustomerOrderDetailPage({
         </div>
       </div>
 
-      <OrderInboxPlaceholder />
+      {user ? (
+        <OrderInbox
+          orderId={order.id}
+          status={order.status}
+          viewerRole="customer"
+          currentUserId={user.id}
+        />
+      ) : null}
     </div>
   );
 }

@@ -11,7 +11,7 @@ export default async function EmployeeOrderDetailPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const { profile } = await getUserAndProfile();
+  const { user, profile } = await getUserAndProfile();
   const access = normalizeAccess(profile?.access_level);
 
   // Route-level guard: chat_only has NO orders access at all.
@@ -34,6 +34,7 @@ export default async function EmployeeOrderDetailPage({
       order={order}
       canEdit={canEditOrders(access)}
       attachments={attachments}
+      currentUserId={user?.id ?? ""}
     />
   );
 }

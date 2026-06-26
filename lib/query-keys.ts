@@ -12,6 +12,10 @@ export const ADMIN_INBOX_KEY = ["admin", "inbox"] as const;
 export const adminMessagesKey = (conversationId: string) =>
   ["admin", "messages", conversationId] as const;
 
+// Per-order dedicated inbox (shared by admin / employee / customer order views)
+export const orderMessagesKey = (orderId: string) =>
+  ["order", "messages", orderId] as const;
+
 // Admin business settings
 export const ADMIN_SETTINGS_KEY = ["admin", "business-settings"] as const;
 

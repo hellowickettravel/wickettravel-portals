@@ -8,7 +8,6 @@ import {
   Route,
   FileText,
   Paperclip,
-  MessagesSquare,
   Baby,
 } from "lucide-react";
 import { SectionCard } from "@/components/admin/section-card";
@@ -198,29 +197,6 @@ export function PreOrderNoteCard({
           ) : null}
         </div>
       )}
-    </SectionCard>
-  );
-}
-
-/**
- * Placeholder for the per-order dedicated inbox (Chunk 2). The data layer
- * (order_messages, RLS, realtime) already exists; the live UI lands next.
- */
-export function OrderInboxPlaceholder() {
-  return (
-    <SectionCard title="Order chat">
-      <div className="flex flex-col items-center gap-2 rounded-xl border border-dashed border-border bg-neutral-soft/60 px-6 py-10 text-center">
-        <div className="flex size-11 items-center justify-center rounded-2xl bg-chip text-brand-dark">
-          <MessagesSquare className="size-5" />
-        </div>
-        <p className="font-display text-sm font-semibold text-foreground">
-          A dedicated chat for this order is coming soon
-        </p>
-        <p className="max-w-sm text-sm text-muted-foreground">
-          You&apos;ll be able to message about this specific booking right here.
-          For now, use the main Messages thread to talk to the team.
-        </p>
-      </div>
     </SectionCard>
   );
 }

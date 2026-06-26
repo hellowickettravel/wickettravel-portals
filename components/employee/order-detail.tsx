@@ -33,8 +33,8 @@ import { Textarea } from "@/components/ui/textarea";
 import {
   FlightDetailsCard,
   PreOrderNoteCard,
-  OrderInboxPlaceholder,
 } from "@/components/orders/order-record";
+import { OrderInbox } from "@/components/orders/order-inbox";
 import {
   updateEmployeeOrder,
   setEmployeeOrderStatus,
@@ -93,10 +93,12 @@ export function EmployeeOrderDetail({
   order,
   canEdit,
   attachments,
+  currentUserId,
 }: {
   order: OrderWithRelations;
   canEdit: boolean;
   attachments: SignedOrderAttachment[];
+  currentUserId: string;
 }) {
   const router = useRouter();
 
@@ -337,7 +339,12 @@ export function EmployeeOrderDetail({
         </SectionCard>
       ) : null}
 
-      <OrderInboxPlaceholder />
+      <OrderInbox
+        orderId={order.id}
+        status={order.status}
+        viewerRole="employee"
+        currentUserId={currentUserId}
+      />
 
       {/* Edit dialog (semi_admin only — never mounted otherwise) */}
       {canEdit ? (

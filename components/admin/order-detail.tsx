@@ -32,8 +32,8 @@ import { Textarea } from "@/components/ui/textarea";
 import {
   FlightDetailsCard,
   PreOrderNoteCard,
-  OrderInboxPlaceholder,
 } from "@/components/orders/order-record";
+import { OrderInbox } from "@/components/orders/order-inbox";
 import { updateOrder, setOrderStatus, assignOrder } from "@/lib/actions/admin";
 import type { OrderWithRelations, OrderStatus, Profile } from "@/lib/db/types";
 import type { SignedOrderAttachment } from "@/lib/db/order-messages";
@@ -83,10 +83,12 @@ export function OrderDetail({
   order,
   employees,
   attachments,
+  currentUserId,
 }: {
   order: OrderWithRelations;
   employees: Profile[];
   attachments: SignedOrderAttachment[];
+  currentUserId: string;
 }) {
   const router = useRouter();
 
@@ -380,7 +382,12 @@ export function OrderDetail({
         </SectionCard>
       ) : null}
 
-      <OrderInboxPlaceholder />
+      <OrderInbox
+        orderId={order.id}
+        status={order.status}
+        viewerRole="admin"
+        currentUserId={currentUserId}
+      />
 
       {/* Edit dialog */}
       <Dialog open={editOpen} onOpenChange={(o) => busy !== "edit" && setEditOpen(o)}>
