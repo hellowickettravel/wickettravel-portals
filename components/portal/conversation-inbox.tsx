@@ -14,6 +14,7 @@ import {
   RotateCcw,
   X,
   FileText,
+  ArrowLeft,
 } from "lucide-react";
 import { toast } from "sonner";
 import { Input } from "@/components/ui/input";
@@ -409,8 +410,10 @@ export function ConversationInbox({
                     type="button"
                     onClick={() => openConversation(c.id)}
                     className={cn(
-                      "flex w-full items-center gap-3 border-b border-border/70 px-4 py-3 text-left transition-colors",
-                      isActive ? "bg-chip/60" : "hover:bg-neutral-soft"
+                      "flex w-full items-center gap-3 border-b border-l-2 border-border/70 px-4 py-3 text-left outline-none transition-colors focus-visible:bg-neutral-soft focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-primary/40",
+                      isActive
+                        ? "border-l-primary bg-chip/70"
+                        : "border-l-transparent hover:bg-neutral-soft"
                     )}
                   >
                     <Avatar className="size-10">
@@ -454,9 +457,9 @@ export function ConversationInbox({
                   type="button"
                   onClick={() => setActiveId(undefined)}
                   aria-label="Back to conversations"
-                  className="text-sm text-brand md:hidden"
+                  className="-ml-1 inline-flex size-9 shrink-0 items-center justify-center rounded-lg text-brand outline-none transition-colors hover:bg-neutral-soft focus-visible:ring-2 focus-visible:ring-primary/40 md:hidden"
                 >
-                  ←
+                  <ArrowLeft className="size-5" />
                 </button>
                 <Avatar className="size-9">
                   <AvatarFallback className="bg-chip text-xs font-semibold text-brand-dark">
@@ -488,7 +491,7 @@ export function ConversationInbox({
                           employeeId: e.target.value || null,
                         })
                       }
-                      className="h-9 max-w-[10rem] rounded-[10px] border border-input bg-neutral-soft px-2.5 text-sm text-foreground outline-none transition-colors focus-visible:border-brand focus-visible:ring-[3px] focus-visible:ring-brand/25 disabled:opacity-50"
+                      className="h-9 max-w-[10rem] rounded-[10px] border border-input bg-neutral-soft px-2.5 text-sm text-foreground outline-none transition-colors focus-visible:border-primary focus-visible:ring-[3px] focus-visible:ring-primary/30 disabled:opacity-50"
                     >
                       <option value="">Unassigned</option>
                       {activeEmployees.map((emp) => (

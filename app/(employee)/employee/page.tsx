@@ -60,7 +60,7 @@ export default async function EmployeeDashboardPage() {
   const recentOrders = orders.slice(0, 5);
 
   return (
-    <div className="space-y-7">
+    <div className="space-y-7 animate-in fade-in slide-in-from-bottom-2 duration-500 ease-out">
       <div>
         <h1 className="font-display text-xl font-semibold tracking-tight text-navy sm:text-2xl">
           Welcome back, {firstName} 👋

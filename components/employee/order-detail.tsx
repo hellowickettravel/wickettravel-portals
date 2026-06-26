@@ -166,7 +166,7 @@ export function EmployeeOrderDetail({
   }
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-5 animate-in fade-in slide-in-from-bottom-2 duration-500 ease-out">
       <Link
         href="/employee/orders"
         className="inline-flex items-center gap-1.5 text-sm font-medium text-brand transition-colors hover:text-brand-dark"

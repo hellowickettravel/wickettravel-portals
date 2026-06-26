@@ -7,7 +7,7 @@ export default async function EmployeeMessagesPage() {
   const access = normalizeAccess(profile?.access_level);
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-5 animate-in fade-in slide-in-from-bottom-2 duration-500 ease-out">
       <div>
         <h1 className="font-display text-xl font-semibold tracking-tight text-navy sm:text-2xl">
           Messages

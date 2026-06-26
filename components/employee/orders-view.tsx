@@ -56,7 +56,7 @@ export function EmployeeOrders({ accessLevel }: { accessLevel: AccessLevel }) {
   const myCommission = rows.reduce((s, o) => s + (o.commission ?? 0), 0);
 
   return (
-    <div className="space-y-7">
+    <div className="space-y-7 animate-in fade-in slide-in-from-bottom-2 duration-500 ease-out">
       <PageHeader
         eyebrow="My work"
         title="My Orders"

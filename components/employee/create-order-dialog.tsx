@@ -150,7 +150,7 @@ export function CreateOrderDialog({
                 value={convId}
                 onChange={(e) => setConvId(e.target.value)}
                 disabled={mutation.isPending || conversations.length === 0}
-                className="h-10 w-full rounded-[10px] border border-input bg-neutral-soft px-3 text-sm text-foreground outline-none transition-[color,box-shadow,border-color] duration-150 focus-visible:border-brand focus-visible:ring-[3px] focus-visible:ring-brand/25"
+                className="h-10 w-full rounded-[10px] border border-input bg-neutral-soft px-3 text-sm text-foreground outline-none transition-[color,box-shadow,border-color] duration-150 focus-visible:border-primary focus-visible:ring-[3px] focus-visible:ring-primary/30"
               >
                 {conversations.length === 0 ? (
                   <option value="">No assigned conversations</option>

@@ -126,7 +126,7 @@ export function SettingsForm({
   }
 
   return (
-    <div className="space-y-7">
+    <div className="space-y-7 animate-in fade-in slide-in-from-bottom-2 duration-500 ease-out">
       <PageHeader
         eyebrow="Account"
         title="Settings"
