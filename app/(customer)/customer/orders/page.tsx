@@ -190,6 +190,13 @@ export default function CustomerOrdersPage() {
                     ) : null}
                     <div className="mt-5 flex flex-wrap gap-2">
                       <Button
+                        render={<Link href={`/customer/orders/${o.id}`} />}
+                        size="sm"
+                      >
+                        View details
+                        <ArrowRight className="size-4" />
+                      </Button>
+                      <Button
                         render={<Link href="/customer/messages" />}
                         variant="outline"
                         size="sm"

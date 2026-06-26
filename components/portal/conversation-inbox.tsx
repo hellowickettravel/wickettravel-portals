@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
+import Link from "next/link";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   Paperclip,
@@ -23,7 +24,6 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { StatusBadge, type Tone } from "@/components/admin/status-badge";
 import { ConversationListSkeleton } from "@/components/portal/skeletons";
 import { MessageAttachment } from "@/components/portal/message-attachment";
-import { CreateOrderDialog } from "@/components/employee/create-order-dialog";
 import { createClient } from "@/lib/supabase/client";
 import {
   listMyInbox,
@@ -114,7 +114,6 @@ export function ConversationInbox({
   const [activeId, setActiveId] = useState<string | undefined>(undefined);
   const [search, setSearch] = useState("");
   const [draft, setDraft] = useState("");
-  const [orderOpen, setOrderOpen] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [pendingFile, setPendingFile] = useState<File | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
@@ -526,7 +525,11 @@ export function ConversationInbox({
                   </>
                 ) : null}
                 {canCreateOrder ? (
-                  <Button variant="outline" size="sm" onClick={() => setOrderOpen(true)}>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    render={<Link href={`/employee/orders/new?c=${active.id}`} />}
+                  >
                     <FilePlus2 className="size-4" />
                     <span className="hidden sm:inline">Create order</span>
                   </Button>
@@ -663,14 +666,6 @@ export function ConversationInbox({
         )}
       </section>
 
-      {canCreateOrder && active ? (
-        <CreateOrderDialog
-          open={orderOpen}
-          onOpenChange={setOrderOpen}
-          conversations={conversations}
-          presetConversationId={active.id}
-        />
-      ) : null}
     </div>
   );
 }

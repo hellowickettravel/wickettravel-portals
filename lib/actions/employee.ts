@@ -12,6 +12,7 @@ import {
   canEditOrders,
 } from "@/lib/access";
 import type { Message, OrderWithRelations, OrderStatus } from "@/lib/db/types";
+import { normalizeOrderInput, type OrderFormInput } from "@/lib/orders/form";
 
 /**
  * Employee-scoped server actions. These run through the RLS-aware server client,
@@ -116,53 +117,37 @@ export async function markConversationRead(
 }
 
 /**
- * Create an order from a chat. Linked to the conversation + its customer, with
- * created_by = me. Blocked for view_only (read-only) and chat_only (no orders).
+ * Create a full order from a chat (the shared Chunk 1 create-order form). Linked
+ * to the conversation + its customer, with created_by = me. Blocked for view_only
+ * (read-only) and chat_only (no orders). Returns the new order id so the UI can
+ * route to its detail view.
  */
-export async function createOrderFromChat(input: {
-  conversationId: string;
-  customerId: string;
-  routeFrom: string;
-  routeTo: string;
-  travelDate: string | null;
-  returnDate: string | null;
-  passengers: number | null;
-  sellingPrice: number | null;
-  costPrice: number | null;
-  commission: number | null;
-  notes: string | null;
-}): Promise<ActionResult> {
+export async function createOrderFromChat(
+  input: OrderFormInput & { conversationId: string; customerId: string }
+): Promise<ActionResult<{ orderId: string }>> {
   const { userId, profile } = await requireUser();
   const access = normalizeAccess(profile?.access_level);
   if (!canCreateOrders(access)) {
     return { ok: false, error: "Your access level can't create orders." };
   }
 
-  const routeFrom = input.routeFrom.trim();
-  const routeTo = input.routeTo.trim();
-  if (!routeFrom || !routeTo) {
-    return { ok: false, error: "Both From and To are required." };
-  }
+  const normalized = normalizeOrderInput(input);
+  if (!normalized.ok) return normalized;
 
   const supabase = await createClient();
-  const { error } = await supabase.from("orders").insert({
-    conversation_id: input.conversationId,
-    customer_id: input.customerId,
-    route_from: routeFrom,
-    route_to: routeTo,
-    travel_date: input.travelDate,
-    return_date: input.returnDate,
-    passengers: input.passengers,
-    selling_price: input.sellingPrice,
-    cost_price: input.costPrice,
-    commission: input.commission,
-    notes: input.notes?.trim() || null,
-    status: "new",
-    created_by: userId,
-  });
+  const { data, error } = await supabase
+    .from("orders")
+    .insert({
+      ...normalized.fields,
+      conversation_id: input.conversationId,
+      customer_id: input.customerId,
+      created_by: userId,
+    })
+    .select("id")
+    .single<{ id: string }>();
 
   if (error) return { ok: false, error: error.message };
-  return { ok: true };
+  return { ok: true, data: { orderId: data.id } };
 }
 
 const ORDER_STATUSES: OrderStatus[] = ["new", "in_progress", "completed", "cancelled"];

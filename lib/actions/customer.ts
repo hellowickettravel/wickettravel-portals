@@ -12,6 +12,7 @@ import type {
   ConversationWithCustomer,
   Customer,
 } from "@/lib/db/types";
+import { normalizeOrderInput, type OrderFormInput } from "@/lib/orders/form";
 
 /**
  * Customer-portal server actions. The signed-in user is linked to a customers
@@ -97,53 +98,43 @@ export async function listMyCustomerOrders(): Promise<Order[]> {
 }
 
 /**
- * Book-a-Flight = create a quote-request order for the signed-in customer.
- * Customers have no orders-insert RLS policy, so this inserts via the
+ * Place a full order for the signed-in customer (the shared Chunk 1 create-order
+ * form). Customers have no orders-insert RLS policy, so this inserts via the
  * SERVICE-ROLE client AFTER verifying (above) that the session user owns the
- * customer row. created_by stays null (customer-created, not staff).
+ * customer row. created_by stays null (customer-created, not staff). The order is
+ * tied to the customer's conversation so the assigned employee sees it in
+ * context. Returns the new order id so the UI can route to its detail view.
  */
-export async function createQuoteRequest(input: {
-  routeFrom: string;
-  routeTo: string;
-  travelDate: string | null;
-  returnDate: string | null;
-  passengers: number | null;
-  notes: string | null;
-}): Promise<ActionResult> {
+export async function createCustomerOrder(
+  input: OrderFormInput
+): Promise<ActionResult<{ orderId: string }>> {
   let customerId: string;
   let conversationId: string;
   try {
     const ctx = await ensureCustomer();
     customerId = ctx.customer.id;
-    // Tie the quote to the customer's conversation so the assigned employee sees
-    // it in context (and so a conversation_id NOT NULL constraint can't bite).
     conversationId = await ensureConversation(customerId);
   } catch (e) {
     return { ok: false, error: e instanceof Error ? e.message : "Unauthorized" };
   }
 
-  const routeFrom = input.routeFrom.trim();
-  const routeTo = input.routeTo.trim();
-  if (!routeFrom || !routeTo) {
-    return { ok: false, error: "Please tell us where you're flying from and to." };
-  }
+  const normalized = normalizeOrderInput(input);
+  if (!normalized.ok) return normalized;
 
   const admin = createAdminClient();
-  const { error } = await admin.from("orders").insert({
-    customer_id: customerId,
-    conversation_id: conversationId,
-    route_from: routeFrom,
-    route_to: routeTo,
-    travel_date: input.travelDate,
-    return_date: input.returnDate,
-    passengers: input.passengers,
-    notes: input.notes?.trim() || null,
-    status: "new",
-    created_by: null,
-  });
+  const { data, error } = await admin
+    .from("orders")
+    .insert({
+      ...normalized.fields,
+      customer_id: customerId,
+      conversation_id: conversationId,
+      created_by: null,
+    })
+    .select("id")
+    .single<{ id: string }>();
 
   if (error) return { ok: false, error: error.message };
-  return { ok: true };
+  return { ok: true, data: { orderId: data.id } };
 }
 
 // ----- Messages (internal realtime chat with the team) -----

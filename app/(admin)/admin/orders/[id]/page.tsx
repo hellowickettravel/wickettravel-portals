@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 import { getOrderById } from "@/lib/db/orders";
+import { getPreOrderAttachments } from "@/lib/db/order-messages";
 import { getEmployees } from "@/lib/db/profiles";
 import { OrderDetail } from "@/components/admin/order-detail";
 
@@ -10,12 +11,15 @@ export default async function AdminOrderDetailPage({
 }) {
   const { id } = await params;
 
-  const [order, employees] = await Promise.all([
+  const [order, employees, attachments] = await Promise.all([
     getOrderById(id),
     getEmployees(),
+    getPreOrderAttachments(id),
   ]);
 
   if (!order) notFound();
 
-  return <OrderDetail order={order} employees={employees} />;
+  return (
+    <OrderDetail order={order} employees={employees} attachments={attachments} />
+  );
 }

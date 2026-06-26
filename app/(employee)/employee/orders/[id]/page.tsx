@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { getUserAndProfile } from "@/lib/auth";
 import { normalizeAccess, canAccessSection, canEditOrders } from "@/lib/access";
 import { getOrderById } from "@/lib/db/orders";
+import { getPreOrderAttachments } from "@/lib/db/order-messages";
 import { EmployeeOrderDetail } from "@/components/employee/order-detail";
 
 export default async function EmployeeOrderDetailPage({
@@ -25,6 +26,14 @@ export default async function EmployeeOrderDetailPage({
     redirect("/employee/orders");
   }
 
+  const attachments = await getPreOrderAttachments(id);
+
   // Edit/status controls only for semi_admin; everyone else sees it read-only.
-  return <EmployeeOrderDetail order={order} canEdit={canEditOrders(access)} />;
+  return (
+    <EmployeeOrderDetail
+      order={order}
+      canEdit={canEditOrders(access)}
+      attachments={attachments}
+    />
+  );
 }

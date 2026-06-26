@@ -26,7 +26,6 @@ import {
 } from "@/components/ui/table";
 import { TableSkeleton } from "@/components/portal/skeletons";
 import { MobileRecordCard } from "@/components/portal/mobile-record-card";
-import { AdminCreateOrderDialog } from "@/components/admin/create-order-dialog";
 import { listOrders } from "@/lib/actions/admin";
 import type { OrderStatus } from "@/lib/db/types";
 import { gbp, fmtDate, titleCase } from "@/lib/format";
@@ -57,7 +56,6 @@ export default function OrdersPage() {
   const router = useRouter();
   const [tab, setTab] = useState<Tab>("all");
   const [query, setQuery] = useState("");
-  const [createOpen, setCreateOpen] = useState(false);
 
   const { data: orders, isLoading, isError } = useQuery({
     queryKey: ORDERS_KEY,
@@ -125,7 +123,7 @@ export default function OrdersPage() {
         "Assigned",
       ],
       filtered.map((o) => [
-        o.id.slice(0, 8),
+        o.order_number,
         o.customer?.name ?? "",
         o.route_from ?? "",
         o.route_to ?? "",
@@ -152,15 +150,13 @@ export default function OrdersPage() {
               <Download className="size-4" />
               Export CSV
             </Button>
-            <Button onClick={() => setCreateOpen(true)}>
+            <Button render={<Link href="/admin/orders/new" />}>
               <Plus className="size-4" />
               New Order
             </Button>
           </>
         }
       />
-
-      <AdminCreateOrderDialog open={createOpen} onOpenChange={setCreateOpen} />
 
       {/* Totals strip */}
       <div className="grid grid-cols-2 gap-4 rounded-2xl border border-border bg-card p-1 shadow-card sm:grid-cols-4">
@@ -247,7 +243,7 @@ export default function OrdersPage() {
                 visible.map((o) => (
                   <Link key={o.id} href={`/admin/orders/${o.id}`} className="block">
                     <MobileRecordCard
-                      title={<span className="text-navy">#{o.id.slice(0, 8)}</span>}
+                      title={<span className="text-navy">{o.order_number}</span>}
                       subtitle={o.customer?.name ?? "—"}
                       action={
                         <span className="inline-flex items-center gap-0.5 text-xs font-medium text-brand">
@@ -323,7 +319,7 @@ export default function OrdersPage() {
                       className="hover:text-brand"
                       onClick={(e) => e.stopPropagation()}
                     >
-                      #{o.id.slice(0, 8)}
+                      {o.order_number}
                     </Link>
                   </TableCell>
                   <TableCell>{o.customer?.name ?? "—"}</TableCell>

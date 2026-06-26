@@ -1,6 +1,5 @@
 "use client";
 
-import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
@@ -19,10 +18,8 @@ import {
 } from "@/components/ui/table";
 import { TableSkeleton } from "@/components/portal/skeletons";
 import { MobileRecordCard } from "@/components/portal/mobile-record-card";
-import { CreateOrderDialog } from "@/components/employee/create-order-dialog";
 import { listMyOrders } from "@/lib/actions/employee";
-import { listMyInbox } from "@/lib/actions/employee";
-import { MY_ORDERS_KEY, MY_INBOX_KEY } from "@/lib/query-keys";
+import { MY_ORDERS_KEY } from "@/lib/query-keys";
 import type { OrderStatus } from "@/lib/db/types";
 import { type AccessLevel, isReadOnly } from "@/lib/access";
 import { gbp, fmtDate, titleCase } from "@/lib/format";
@@ -38,18 +35,10 @@ const ORDER_TONE: Record<OrderStatus, Tone> = {
 export function EmployeeOrders({ accessLevel }: { accessLevel: AccessLevel }) {
   const router = useRouter();
   const readOnly = isReadOnly(accessLevel);
-  const [createOpen, setCreateOpen] = useState(false);
 
   const { data: orders, isLoading, isError } = useQuery({
     queryKey: MY_ORDERS_KEY,
     queryFn: listMyOrders,
-  });
-
-  // Conversations the employee can file an order against (the picker source).
-  const { data: inbox } = useQuery({
-    queryKey: MY_INBOX_KEY,
-    queryFn: listMyInbox,
-    enabled: !readOnly,
   });
 
   const rows = orders ?? [];
@@ -66,7 +55,7 @@ export function EmployeeOrders({ accessLevel }: { accessLevel: AccessLevel }) {
         subtitle="Bookings you created or tied to your chats."
         actions={
           readOnly ? undefined : (
-            <Button onClick={() => setCreateOpen(true)}>
+            <Button render={<Link href="/employee/orders/new" />}>
               <Plus className="size-4" />
               New Order
             </Button>
@@ -112,7 +101,7 @@ export function EmployeeOrders({ accessLevel }: { accessLevel: AccessLevel }) {
               order”, or use New Order to pick one.
             </p>
             {!readOnly ? (
-              <Button className="mt-2" onClick={() => setCreateOpen(true)}>
+              <Button className="mt-2" render={<Link href="/employee/orders/new" />}>
                 <Plus className="size-4" />
                 New Order
               </Button>
@@ -232,13 +221,7 @@ export function EmployeeOrders({ accessLevel }: { accessLevel: AccessLevel }) {
         <p className="text-center text-xs text-muted-foreground">
           You have read-only access — viewing is allowed, editing is disabled.
         </p>
-      ) : (
-        <CreateOrderDialog
-          open={createOpen}
-          onOpenChange={setCreateOpen}
-          conversations={inbox ?? []}
-        />
-      )}
+      ) : null}
     </div>
   );
 }

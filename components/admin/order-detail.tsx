@@ -29,8 +29,14 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import {
+  FlightDetailsCard,
+  PreOrderNoteCard,
+  OrderInboxPlaceholder,
+} from "@/components/orders/order-record";
 import { updateOrder, setOrderStatus, assignOrder } from "@/lib/actions/admin";
 import type { OrderWithRelations, OrderStatus, Profile } from "@/lib/db/types";
+import type { SignedOrderAttachment } from "@/lib/db/order-messages";
 import { gbp, fmtDate, titleCase } from "@/lib/format";
 
 const ORDER_TONE: Record<OrderStatus, Tone> = {
@@ -76,9 +82,11 @@ function DataRow({
 export function OrderDetail({
   order,
   employees,
+  attachments,
 }: {
   order: OrderWithRelations;
   employees: Profile[];
+  attachments: SignedOrderAttachment[];
 }) {
   const router = useRouter();
 
@@ -194,7 +202,7 @@ export function OrderDetail({
           <div className="leading-tight">
             <div className="flex items-center gap-2">
               <p className="font-display text-lg font-semibold text-navy">
-                Order #{order.id.slice(0, 8)}
+                Order {order.order_number}
               </p>
               <StatusBadge tone={ORDER_TONE[order.status]}>
                 {titleCase(order.status)}
@@ -256,21 +264,8 @@ export function OrderDetail({
       </div>
 
       <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
-        {/* Trip details */}
-        <SectionCard title="Trip details">
-          <div className="divide-y divide-border">
-            <DataRow
-              label="Route"
-              value={`${order.route_from ?? "—"} → ${order.route_to ?? "—"}`}
-            />
-            <DataRow label="Travel date" value={fmtDate(order.travel_date)} />
-            <DataRow
-              label="Return date"
-              value={order.return_date ? fmtDate(order.return_date) : "—"}
-            />
-            <DataRow label="Passengers" value={order.passengers ?? "—"} />
-          </div>
-        </SectionCard>
+        {/* Flight details (full Chunk 1 record) */}
+        <FlightDetailsCard order={order} />
 
         {/* Pricing */}
         <SectionCard title="Pricing">
@@ -375,13 +370,17 @@ export function OrderDetail({
         </SectionCard>
       </div>
 
+      <PreOrderNoteCard note={order.customer_note} attachments={attachments} />
+
       {order.notes ? (
-        <SectionCard title="Notes">
+        <SectionCard title="Internal notes">
           <p className="whitespace-pre-wrap text-sm text-muted-foreground">
             {order.notes}
           </p>
         </SectionCard>
       ) : null}
+
+      <OrderInboxPlaceholder />
 
       {/* Edit dialog */}
       <Dialog open={editOpen} onOpenChange={(o) => busy !== "edit" && setEditOpen(o)}>
