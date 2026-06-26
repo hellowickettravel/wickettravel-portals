@@ -45,9 +45,9 @@ function NavLinks({ className }: { className?: string }) {
             key={item.href}
             href={item.href}
             className={cn(
-              "rounded-full px-4 py-2 text-sm font-medium whitespace-nowrap transition-colors",
+              "rounded-full px-4 py-2 text-sm font-medium whitespace-nowrap transition-colors outline-none focus-visible:ring-2 focus-visible:ring-primary/40 focus-visible:ring-offset-1 focus-visible:ring-offset-white",
               active
-                ? "bg-chip text-brand-dark"
+                ? "bg-primary text-primary-foreground shadow-sm shadow-orange/30"
                 : "text-muted-foreground hover:bg-muted hover:text-foreground"
             )}
           >
@@ -86,7 +86,7 @@ export function CustomerNav({
         <div className="flex items-center gap-1">
           <NotificationsBell userId={userId} portal="customer" />
           <DropdownMenu>
-          <DropdownMenuTrigger className="flex items-center gap-2.5 rounded-full py-1 pl-1 pr-2 outline-none transition-colors hover:bg-muted focus-visible:ring-[3px] focus-visible:ring-brand/25">
+          <DropdownMenuTrigger className="flex items-center gap-2.5 rounded-full py-1 pl-1 pr-2 outline-none transition-colors hover:bg-muted focus-visible:ring-[3px] focus-visible:ring-primary/30">
             <Avatar className="size-9">
               <AvatarFallback className="bg-chip text-sm font-semibold text-brand-dark">
                 {initialsOf(userName)}

@@ -174,7 +174,7 @@ export default function CustomerMessagesPage() {
   }
 
   return (
-    <div className="space-y-7">
+    <div className="space-y-7 animate-in fade-in slide-in-from-bottom-2 duration-500 ease-out">
       <div>
         <h1 className="font-display text-xl font-semibold tracking-tight text-navy sm:text-2xl">
           Messages
@@ -229,7 +229,7 @@ export default function CustomerMessagesPage() {
           ) : (
             messages.map((m) => {
               // Customer's own messages are stored as 'incoming' (inbound to the
-              // business); in THIS portal they're "mine" → right/blue.
+              // business); in THIS portal they're "mine" → right/orange.
               const mine = m.direction === "incoming";
               return (
                 <div key={m.id} className={cn("flex", mine ? "justify-end" : "justify-start")}>

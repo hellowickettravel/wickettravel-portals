@@ -67,7 +67,7 @@ export function CustomerDashboard({ firstName }: { firstName: string }) {
   const recent = rows.slice(0, 3);
 
   return (
-    <div className="space-y-7">
+    <div className="space-y-7 animate-in fade-in slide-in-from-bottom-2 duration-500 ease-out">
       <div>
         <h1 className="font-display text-xl font-semibold tracking-tight text-navy sm:text-2xl">
           Welcome back, {firstName} 👋
@@ -97,7 +97,7 @@ export function CustomerDashboard({ firstName }: { firstName: string }) {
           </div>
           <Link
             href="/customer/book"
-            className="inline-flex h-11 items-center gap-2 rounded-[10px] bg-white px-5 text-sm font-semibold text-brand-dark shadow-sm transition-transform hover:scale-[1.02]"
+            className="inline-flex h-11 items-center gap-2 rounded-[10px] bg-white px-5 text-sm font-semibold text-brand-dark shadow-sm outline-none transition-all hover:-translate-y-px hover:shadow-md focus-visible:ring-2 focus-visible:ring-white/70 focus-visible:ring-offset-2 focus-visible:ring-offset-navy"
           >
             Book a New Flight
             <ArrowRight className="size-4" />

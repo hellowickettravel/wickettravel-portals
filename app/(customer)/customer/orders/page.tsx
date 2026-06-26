@@ -81,7 +81,7 @@ export default function CustomerOrdersPage() {
   const rows = orders ?? [];
 
   return (
-    <div className="space-y-7">
+    <div className="space-y-7 animate-in fade-in slide-in-from-bottom-2 duration-500 ease-out">
       <PageHeader
         eyebrow="Bookings"
         title="My Orders"
@@ -122,7 +122,7 @@ export default function CustomerOrdersPage() {
                 <button
                   type="button"
                   onClick={() => setOpenId(open ? null : o.id)}
-                  className="flex w-full items-center gap-4 px-5 py-4 text-left transition-colors hover:bg-neutral-soft"
+                  className="flex w-full items-center gap-4 px-5 py-4 text-left outline-none transition-colors hover:bg-neutral-soft focus-visible:bg-neutral-soft focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-primary/40"
                 >
                   <div className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-chip text-brand-dark">
                     <Plane className="size-5 -rotate-45" />

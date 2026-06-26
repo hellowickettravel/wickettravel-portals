@@ -49,7 +49,7 @@ function Stepper({
       <button
         type="button"
         onClick={() => onChange(Math.max(min, value - 1))}
-        className="flex size-9 items-center justify-center rounded-lg border border-border bg-white text-foreground transition-colors hover:bg-muted disabled:opacity-40"
+        className="flex size-9 items-center justify-center rounded-lg border border-border bg-white text-foreground outline-none transition-colors hover:bg-muted focus-visible:ring-2 focus-visible:ring-primary/40 disabled:opacity-40"
         disabled={value <= min}
       >
         <Minus className="size-4" />
@@ -60,7 +60,7 @@ function Stepper({
       <button
         type="button"
         onClick={() => onChange(value + 1)}
-        className="flex size-9 items-center justify-center rounded-lg border border-border bg-white text-foreground transition-colors hover:bg-muted"
+        className="flex size-9 items-center justify-center rounded-lg border border-border bg-white text-foreground outline-none transition-colors hover:bg-muted focus-visible:ring-2 focus-visible:ring-primary/40"
       >
         <Plus className="size-4" />
       </button>
@@ -129,7 +129,7 @@ export default function BookFlightPage() {
   }
 
   return (
-    <div className="space-y-7">
+    <div className="space-y-7 animate-in fade-in slide-in-from-bottom-2 duration-500 ease-out">
       <PageHeader
         eyebrow="New booking"
         title="Book a Flight"
@@ -148,7 +148,7 @@ export default function BookFlightPage() {
                   type="button"
                   onClick={() => setTripType(t)}
                   className={cn(
-                    "rounded-lg px-4 py-1.5 text-sm font-medium transition-colors",
+                    "rounded-lg px-4 py-1.5 text-sm font-medium outline-none transition-colors focus-visible:ring-2 focus-visible:ring-primary/40",
                     tripType === t
                       ? "bg-primary text-primary-foreground shadow-sm"
                       : "text-muted-foreground hover:text-foreground"
@@ -206,7 +206,7 @@ export default function BookFlightPage() {
                       type="button"
                       onClick={() => setCabin(c)}
                       className={cn(
-                        "rounded-lg px-4 py-1.5 text-sm font-medium transition-colors",
+                        "rounded-lg px-4 py-1.5 text-sm font-medium outline-none transition-colors focus-visible:ring-2 focus-visible:ring-primary/40",
                         cabin === c
                           ? "bg-primary text-primary-foreground shadow-sm"
                           : "text-muted-foreground hover:text-foreground"

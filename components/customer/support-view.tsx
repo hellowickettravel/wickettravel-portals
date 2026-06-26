@@ -91,7 +91,7 @@ export function CustomerSupport() {
   }
 
   return (
-    <div className="space-y-7">
+    <div className="space-y-7 animate-in fade-in slide-in-from-bottom-2 duration-500 ease-out">
       <PageHeader
         eyebrow="Help"
         title="Support"
@@ -113,7 +113,7 @@ export function CustomerSupport() {
                     <button
                       type="button"
                       onClick={() => setOpen(isOpen ? null : i)}
-                      className="flex w-full items-center justify-between gap-4 py-4 text-left"
+                      className="flex w-full items-center justify-between gap-4 rounded-lg py-4 text-left outline-none transition-colors hover:text-brand focus-visible:ring-2 focus-visible:ring-primary/40"
                     >
                       <span className="text-sm font-medium text-foreground">{f.q}</span>
                       <ChevronDown
