@@ -40,6 +40,9 @@ export async function updateSession(request: NextRequest) {
   if (!user && isProtected) {
     const url = request.nextUrl.clone();
     url.pathname = "/login";
+    // Remember where they were headed (e.g. a shared booking link) so login can
+    // send them straight there afterwards instead of the default dashboard.
+    url.search = `?redirect=${encodeURIComponent(path + request.nextUrl.search)}`;
     return NextResponse.redirect(url);
   }
 

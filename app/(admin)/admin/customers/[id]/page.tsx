@@ -6,7 +6,7 @@ import { SectionCard } from "@/components/admin/section-card";
 import { CustomerDangerZone } from "@/components/admin/customer-danger-zone";
 import { StatusBadge, type Tone } from "@/components/admin/status-badge";
 import type { OrderStatus, ConversationStatus } from "@/lib/db/types";
-import { gbp, fmtDate, fmtRelative, titleCase } from "@/lib/format";
+import { fmtDate, fmtRelative, titleCase } from "@/lib/format";
 
 const ORDER_TONE: Record<OrderStatus, Tone> = {
   new: "blue",
@@ -60,7 +60,7 @@ export default async function AdminCustomerDetailPage({
         </div>
       </div>
 
-      {/* Orders */}
+      {/* Orders — full record, each opens the same order-detail view + inbox */}
       <SectionCard title={`Orders (${orders.length})`} flush>
         {orders.length === 0 ? (
           <p className="px-6 py-8 text-center text-sm text-muted-foreground">
@@ -74,18 +74,25 @@ export default async function AdminCustomerDetailPage({
                   href={`/admin/orders/${o.id}`}
                   className="flex items-center gap-4 px-5 py-3.5 transition-colors hover:bg-neutral-soft"
                 >
-                  <Plane className="size-4 -rotate-45 text-brand" />
+                  <div className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-chip text-brand-dark">
+                    <Plane className="size-4 -rotate-45" />
+                  </div>
                   <div className="min-w-0 flex-1">
-                    <p className="truncate text-sm font-medium text-foreground">
+                    <p className="truncate font-display text-sm font-semibold text-navy">
+                      {o.order_number}
+                    </p>
+                    <p className="truncate text-xs text-muted-foreground">
                       {o.route_from ?? "—"} → {o.route_to ?? "—"}
                     </p>
-                    <p className="text-xs text-muted-foreground">
-                      #{o.id.slice(0, 8)} · {fmtDate(o.travel_date)}
+                  </div>
+                  <div className="hidden text-right text-xs leading-relaxed text-muted-foreground sm:block">
+                    <p>Created {fmtDate(o.created_at)}</p>
+                    <p>
+                      {o.closed_at
+                        ? `Completed ${fmtDate(o.closed_at)}`
+                        : "Not completed"}
                     </p>
                   </div>
-                  <span className="hidden text-sm font-medium text-foreground sm:block">
-                    {o.selling_price != null ? gbp(o.selling_price) : "—"}
-                  </span>
                   <StatusBadge tone={ORDER_TONE[o.status]}>
                     {titleCase(o.status)}
                   </StatusBadge>

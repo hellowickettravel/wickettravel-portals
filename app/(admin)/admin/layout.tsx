@@ -8,6 +8,7 @@ const NAV: NavItem[] = [
   { label: "Employees", href: "/admin/employees", icon: "Users" },
   { label: "Customers", href: "/admin/customers", icon: "Contact" },
   { label: "Orders", href: "/admin/orders", icon: "ShoppingBag" },
+  { label: "Transactions", href: "/admin/transactions", icon: "Receipt" },
   { label: "Messages", href: "/admin/messages", icon: "MessageSquare" },
   { label: "Analytics", href: "/admin/analytics", icon: "BarChart3" },
   { label: "Support", href: "/admin/support", icon: "LifeBuoy" },

@@ -80,6 +80,8 @@ export async function listCustomers(): Promise<Customer[]> {
 export type CustomerWithStats = Customer & {
   orderCount: number;
   conversationCount: number;
+  /** Distinct order statuses this customer has — powers the status filter. */
+  orderStatuses: OrderStatus[];
 };
 
 /** Customers enriched with their order + conversation counts for the list page. */
@@ -90,7 +92,10 @@ export async function listCustomersWithStats(): Promise<CustomerWithStats[]> {
 
   const supabase = await createClient();
   const [{ data: orders }, { data: convs }] = await Promise.all([
-    supabase.from("orders").select("customer_id").returns<{ customer_id: string | null }[]>(),
+    supabase
+      .from("orders")
+      .select("customer_id, status")
+      .returns<{ customer_id: string | null; status: OrderStatus }[]>(),
     supabase
       .from("conversations")
       .select("customer_id")
@@ -98,8 +103,13 @@ export async function listCustomersWithStats(): Promise<CustomerWithStats[]> {
   ]);
 
   const orderCounts = new Map<string, number>();
+  const statusesByCustomer = new Map<string, Set<OrderStatus>>();
   for (const o of orders ?? []) {
-    if (o.customer_id) orderCounts.set(o.customer_id, (orderCounts.get(o.customer_id) ?? 0) + 1);
+    if (!o.customer_id) continue;
+    orderCounts.set(o.customer_id, (orderCounts.get(o.customer_id) ?? 0) + 1);
+    const set = statusesByCustomer.get(o.customer_id) ?? new Set<OrderStatus>();
+    set.add(o.status);
+    statusesByCustomer.set(o.customer_id, set);
   }
   const convCounts = new Map<string, number>();
   for (const c of convs ?? []) {
@@ -110,6 +120,7 @@ export async function listCustomersWithStats(): Promise<CustomerWithStats[]> {
     ...c,
     orderCount: orderCounts.get(c.id) ?? 0,
     conversationCount: convCounts.get(c.id) ?? 0,
+    orderStatuses: Array.from(statusesByCustomer.get(c.id) ?? []),
   }));
 }
 

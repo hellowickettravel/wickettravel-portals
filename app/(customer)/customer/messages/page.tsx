@@ -16,6 +16,7 @@ import { toast } from "sonner";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { MessageAttachment } from "@/components/portal/message-attachment";
+import { MessageText } from "@/components/portal/message-text";
 import { ChatBackButton } from "@/components/portal/chat-back-button";
 import { ROLE_LABEL, senderLabelFlags } from "@/lib/chat/labels";
 import { createClient } from "@/lib/supabase/client";
@@ -271,7 +272,7 @@ export default function CustomerMessagesPage() {
                       )}
                     >
                       {m.media_url ? <MessageAttachment url={m.media_url} mine={mine} /> : null}
-                      {m.body ? <p className="leading-relaxed">{m.body}</p> : null}
+                      {m.body ? <MessageText text={m.body} mine={mine} /> : null}
                       <span
                         className={cn(
                           "mt-1 block text-right text-[10px]",

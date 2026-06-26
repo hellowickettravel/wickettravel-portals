@@ -4,6 +4,7 @@ import { ArrowLeft } from "lucide-react";
 import { getConversationById } from "@/lib/db/conversations";
 import { getMessages } from "@/lib/db/messages";
 import { StatusBadge, type Tone } from "@/components/admin/status-badge";
+import { MessageText } from "@/components/portal/message-text";
 import { ROLE_LABEL, senderLabelFlags } from "@/lib/chat/labels";
 import type { ConversationStatus } from "@/lib/db/types";
 import { fmtRelative, titleCase } from "@/lib/format";
@@ -92,7 +93,7 @@ export default async function AdminConversationPage({
                           : "rounded-bl-md border border-border bg-white text-foreground"
                       )}
                     >
-                      <p className="leading-relaxed">{m.body}</p>
+                      <MessageText text={m.body} mine={outgoing} />
                       <span
                         className={cn(
                           "mt-1 block text-right text-[10px]",

@@ -17,7 +17,9 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { SectionCard } from "@/components/admin/section-card";
 import { MessageAttachment } from "@/components/portal/message-attachment";
+import { MessageText } from "@/components/portal/message-text";
 import { ChatBackButton } from "@/components/portal/chat-back-button";
+import { SendOrderLinkButton } from "@/components/portal/send-order-link-button";
 import { createClient } from "@/lib/supabase/client";
 import { listOrderMessages, sendOrderMessage } from "@/lib/actions/orders";
 import { orderMessagesKey } from "@/lib/query-keys";
@@ -73,6 +75,8 @@ export function OrderInbox({
   const readOnly = viewerRole === "employee" && isReadOnly(accessLevel);
   // Customers can't send on a locked order; staff always can (unless read-only).
   const canSend = (viewerRole !== "customer" || !locked) && !readOnly;
+  // Only the team shares the customer-facing booking link.
+  const isStaff = viewerRole !== "customer";
 
   const [draft, setDraft] = useState("");
   const [pendingFile, setPendingFile] = useState<File | null>(null);
@@ -286,7 +290,7 @@ export function OrderInbox({
                       {m.media_url ? (
                         <MessageAttachment url={m.media_url} mine={mine} />
                       ) : null}
-                      {m.body ? <p className="leading-relaxed">{m.body}</p> : null}
+                      {m.body ? <MessageText text={m.body} mine={mine} /> : null}
                       <span
                         className={cn(
                           "mt-1 block text-right text-[10px]",
@@ -353,6 +357,12 @@ export function OrderInbox({
               >
                 <Paperclip className="size-4" />
               </Button>
+              {isStaff ? (
+                <SendOrderLinkButton
+                  disabled={uploading}
+                  onSend={(body) => sendMutation.mutate({ orderId, body })}
+                />
+              ) : null}
               <Input
                 value={draft}
                 onChange={(e) => setDraft(e.target.value)}

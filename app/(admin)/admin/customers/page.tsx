@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -41,11 +41,21 @@ import { TableSkeleton } from "@/components/portal/skeletons";
 import { MobileRecordCard } from "@/components/portal/mobile-record-card";
 import { listCustomersWithStats, createCustomer } from "@/lib/actions/admin";
 import { useListControls } from "@/lib/hooks/use-list-controls";
+import type { OrderStatus } from "@/lib/db/types";
 import { downloadCsv } from "@/lib/csv";
 import { fmtDate } from "@/lib/format";
+import { cn } from "@/lib/utils";
 
 const CUSTOMERS_KEY = ["admin", "customers", "list"] as const;
 const PAGE_SIZE = 12;
+
+const STATUS_TABS: { label: string; value: "all" | OrderStatus }[] = [
+  { label: "All", value: "all" },
+  { label: "New", value: "new" },
+  { label: "In progress", value: "in_progress" },
+  { label: "Completed", value: "completed" },
+  { label: "Cancelled", value: "cancelled" },
+];
 
 export default function AdminCustomersPage() {
   const router = useRouter();
@@ -62,6 +72,7 @@ export default function AdminCustomersPage() {
   const [password, setPassword] = useState("");
   const [waPhone, setWaPhone] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  const [statusTab, setStatusTab] = useState<"all" | OrderStatus>("all");
 
   const createMutation = useMutation({
     mutationFn: createCustomer,
@@ -91,8 +102,17 @@ export default function AdminCustomersPage() {
   }
 
   const all = data ?? [];
+  // Filter by order status first (customers with a matching order), then let the
+  // shared controls handle name/phone search + paging over the narrowed set.
+  const statusFiltered = useMemo(
+    () =>
+      statusTab === "all"
+        ? all
+        : all.filter((c) => c.orderStatuses.includes(statusTab)),
+    [all, statusTab]
+  );
   const { query, setQuery, visible, total, hasMore, loadMore } = useListControls(
-    all,
+    statusFiltered,
     PAGE_SIZE,
     (c, q) =>
       (c.name ?? "").toLowerCase().includes(q) ||
@@ -134,14 +154,32 @@ export default function AdminCustomersPage() {
         }
       />
 
-      <div className="relative sm:w-80">
-        <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-        <Input
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-          placeholder="Search by name or phone…"
-          className="h-10 rounded-[10px] bg-card pl-9"
-        />
+      <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+        <div className="flex items-center gap-1 overflow-x-auto rounded-xl bg-muted p-1">
+          {STATUS_TABS.map((t) => (
+            <button
+              key={t.value}
+              onClick={() => setStatusTab(t.value)}
+              className={cn(
+                "shrink-0 rounded-lg px-3.5 py-1.5 text-sm font-medium transition-colors",
+                statusTab === t.value
+                  ? "bg-primary text-primary-foreground shadow-sm"
+                  : "text-muted-foreground hover:text-foreground"
+              )}
+            >
+              {t.label}
+            </button>
+          ))}
+        </div>
+        <div className="relative lg:w-80">
+          <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+          <Input
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder="Search by name or phone…"
+            className="h-10 rounded-[10px] bg-card pl-9"
+          />
+        </div>
       </div>
 
       <SectionCard flush>

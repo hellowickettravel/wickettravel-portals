@@ -122,13 +122,22 @@ export default function LoginPage() {
     const role = profile?.role;
 
     if (role === "admin" || role === "employee" || role === "customer") {
-      // Full navigation so the server picks up the fresh session cookie.
+      // Honour a safe ?redirect= target (e.g. a shared booking link) so the user
+      // lands where they were headed; otherwise their role dashboard. Only same-
+      // origin relative paths are allowed; the destination's own layout guards
+      // the role. Full navigation so the server picks up the fresh session.
+      const redirect = new URLSearchParams(window.location.search).get("redirect");
+      const safeRedirect =
+        redirect && redirect.startsWith("/") && !redirect.startsWith("//")
+          ? redirect
+          : null;
       window.location.assign(
-        role === "admin"
-          ? "/admin"
-          : role === "employee"
-            ? "/employee"
-            : "/customer"
+        safeRedirect ??
+          (role === "admin"
+            ? "/admin"
+            : role === "employee"
+              ? "/employee"
+              : "/customer")
       );
       return;
     }
