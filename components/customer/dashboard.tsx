@@ -84,7 +84,7 @@ export function CustomerDashboard({ firstName }: { firstName: string }) {
       </div>
 
       {/* CTA */}
-      <div className="relative overflow-hidden rounded-2xl bg-[linear-gradient(120deg,#1e3a5f_0%,#0a4a76_55%,#0066a1_100%)] p-7 shadow-card md:p-8">
+      <div className="relative overflow-hidden rounded-2xl bg-[linear-gradient(120deg,#1e3a5f_0%,#152c49_55%,#2c5282_100%)] p-7 shadow-card md:p-8">
         <div className="bg-dot-grid pointer-events-none absolute inset-0 opacity-40 [mask-image:radial-gradient(120%_120%_at_20%_0%,black,transparent_75%)]" />
         <div className="relative z-10 flex flex-col items-start justify-between gap-5 md:flex-row md:items-center">
           <div className="max-w-md">

@@ -106,7 +106,7 @@ function NavLinks({
             className={cn(
               "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors",
               active
-                ? "bg-primary text-primary-foreground shadow-sm"
+                ? "bg-primary text-primary-foreground shadow-sm shadow-orange/30"
                 : "text-sidebar-foreground/80 hover:bg-sidebar-accent hover:text-white"
             )}
           >
@@ -207,7 +207,7 @@ export function PortalShell({
             <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
               <SheetTrigger
                 aria-label="Open navigation menu"
-                className="inline-flex size-9 items-center justify-center rounded-lg text-muted-foreground outline-none transition-colors hover:bg-muted hover:text-foreground focus-visible:ring-[3px] focus-visible:ring-brand/25 md:hidden"
+                className="inline-flex size-9 items-center justify-center rounded-lg text-muted-foreground outline-none transition-colors hover:bg-muted hover:text-foreground focus-visible:ring-[3px] focus-visible:ring-primary/30 md:hidden"
               >
                 <Menu className="size-5" />
               </SheetTrigger>
@@ -236,7 +236,7 @@ export function PortalShell({
           <div className="flex items-center gap-1">
             <NotificationsBell userId={userId} portal={portal} />
             <DropdownMenu>
-              <DropdownMenuTrigger className="flex items-center gap-3 rounded-full py-1 pl-1 pr-2 outline-none transition-colors hover:bg-muted focus-visible:ring-[3px] focus-visible:ring-brand/25">
+              <DropdownMenuTrigger className="flex items-center gap-3 rounded-full py-1 pl-1 pr-2 outline-none transition-colors hover:bg-muted focus-visible:ring-[3px] focus-visible:ring-primary/30">
                 <Avatar className="size-9">
                   <AvatarFallback className="bg-chip text-sm font-semibold text-brand-dark">
                     {initialsOf(userName)}

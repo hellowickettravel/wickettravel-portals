@@ -116,7 +116,7 @@ function TopEmployees({ data }: { data: { name: string; closed: number }[] }) {
           </div>
           <div className="h-2 w-full overflow-hidden rounded-full bg-muted">
             <div
-              className="h-full rounded-full bg-brand"
+              className="h-full rounded-full bg-primary"
               style={{ width: `${(e.closed / max) * 100}%` }}
             />
           </div>
@@ -183,7 +183,7 @@ export default async function AnalyticsPage({
   }));
 
   const statusData = [
-    { label: "Open", value: orders.filter((o) => o.status === "open").length, color: "#0088CC" },
+    { label: "Open", value: orders.filter((o) => o.status === "open").length, color: "#1E3A5F" },
     { label: "Closed", value: orders.filter((o) => o.status === "closed").length, color: "#10B981" },
     { label: "Cancelled", value: orders.filter((o) => o.status === "cancelled").length, color: "#F43F5E" },
   ];

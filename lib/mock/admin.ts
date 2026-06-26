@@ -114,7 +114,7 @@ export const ORDERS_BY_STATUS: {
   tone: "blue" | "amber" | "green" | "red";
   color: string;
 }[] = [
-  { label: "Open", value: 42, tone: "blue", color: "#0088CC" },
+  { label: "Open", value: 42, tone: "blue", color: "#1E3A5F" },
   { label: "In Progress", value: 23, tone: "amber", color: "#F59E0B" },
   { label: "Closed", value: 78, tone: "green", color: "#10B981" },
   { label: "Cancelled", value: 9, tone: "red", color: "#F43F5E" },

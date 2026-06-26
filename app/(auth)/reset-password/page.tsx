@@ -142,7 +142,7 @@ export default function ResetPasswordPage() {
               </p>
               <Link
                 href="/login"
-                className="mt-7 inline-flex h-11 w-full items-center justify-center rounded-[10px] bg-brand text-sm font-medium text-white shadow-sm transition-all duration-150 hover:bg-brand-dark hover:shadow-md hover:shadow-brand/20 hover:-translate-y-px"
+                className="mt-7 inline-flex h-11 w-full items-center justify-center rounded-[10px] bg-primary text-sm font-semibold text-white shadow-sm shadow-orange/25 transition-all duration-150 hover:bg-orange-dark hover:shadow-md hover:shadow-orange/30 hover:-translate-y-px"
               >
                 Back to sign in
               </Link>
@@ -207,7 +207,7 @@ export default function ResetPasswordPage() {
                 <Button
                   type="submit"
                   disabled={loading}
-                  className="h-11 w-full rounded-[10px] bg-brand text-sm font-medium text-white shadow-sm transition-all duration-150 hover:bg-brand-dark hover:shadow-md hover:shadow-brand/20 hover:-translate-y-px"
+                  className="h-11 w-full rounded-[10px] bg-primary text-sm font-semibold text-white shadow-sm shadow-orange/25 transition-all duration-150 hover:bg-orange-dark hover:shadow-md hover:shadow-orange/30 hover:-translate-y-px"
                 >
                   {loading ? (
                     <>

@@ -170,7 +170,7 @@ export default function LoginPage() {
 
       {/* ===================== RIGHT / FORM PANEL ===================== */}
       <section className="relative flex items-center justify-center bg-white px-6 py-12 sm:px-10">
-        <div className="w-full max-w-sm">
+        <div className="w-full max-w-sm animate-in fade-in slide-in-from-bottom-2 duration-500 ease-out">
           {/* Mobile brand (left panel hidden on small screens) */}
           <div className="mb-10 flex items-center gap-2.5 lg:hidden">
             <div className="flex size-9 items-center justify-center rounded-xl bg-primary text-primary-foreground">
@@ -244,7 +244,7 @@ export default function LoginPage() {
             <Button
               type="submit"
               disabled={loading}
-              className="h-11 w-full rounded-[10px] bg-brand text-sm font-medium text-white shadow-sm transition-all duration-150 hover:bg-brand-dark hover:shadow-md hover:shadow-brand/20 hover:-translate-y-px"
+              className="h-11 w-full rounded-[10px] bg-primary text-sm font-semibold text-white shadow-sm shadow-orange/25 transition-all duration-150 hover:bg-orange-dark hover:shadow-md hover:shadow-orange/30 hover:-translate-y-px"
             >
               {loading ? (
                 <>

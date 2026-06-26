@@ -298,14 +298,19 @@ export default function SettingsPage() {
             </div>
           </div>
           <div className="space-y-2">
-            {fieldLabel("Primary colour")}
+            {fieldLabel("Brand colours")}
             <div className="flex items-center gap-3 rounded-xl border border-border bg-neutral-soft p-3">
-              <div className="size-12 rounded-xl bg-brand shadow-sm ring-1 ring-black/5" />
+              <div className="flex items-center gap-2">
+                <div className="size-12 rounded-xl bg-navy shadow-sm ring-1 ring-black/5" />
+                <div className="size-12 rounded-xl bg-orange shadow-sm ring-1 ring-black/5" />
+              </div>
               <div>
-                <p className="font-display text-sm font-semibold text-foreground">#0088CC</p>
+                <p className="font-display text-sm font-semibold text-foreground">
+                  #1E3A5F · #F97316
+                </p>
                 <p className="flex items-center gap-1 text-xs text-muted-foreground">
                   <Lock className="size-3" />
-                  Wicket Blue · locked by the design system
+                  Wicket Navy &amp; Orange · locked by the design system
                 </p>
               </div>
             </div>

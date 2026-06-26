@@ -8,18 +8,26 @@
   --color-background: var(--background);
   --color-foreground: var(--foreground);
 
-  /* Fonts (next/font exposes these CSS vars on <body>) */
-  --font-sans: var(--font-inter);
-  --font-heading: var(--font-outfit);
-  --font-outfit: var(--font-outfit);
-  --font-inter: var(--font-inter);
-  --font-montserrat: var(--font-montserrat);
+  /* Fonts — Plus Jakarta Sans everywhere (next/font exposes the var on <body>).
+     The legacy --font-outfit / --font-inter / --font-montserrat aliases all
+     resolve to Jakarta so any leftover references keep rendering on-brand. */
+  --font-sans: var(--font-jakarta);
+  --font-heading: var(--font-jakarta);
+  --font-jakarta: var(--font-jakarta);
+  --font-outfit: var(--font-jakarta);
+  --font-inter: var(--font-jakarta);
+  --font-montserrat: var(--font-jakarta);
   --font-mono: var(--font-geist-mono);
 
-  /* Brand tokens (usable as bg-brand, text-navy, etc.) */
+  /* Brand tokens (usable as bg-brand, text-navy, text-orange, etc.) */
   --color-brand: var(--brand);
   --color-brand-dark: var(--brand-dark);
   --color-navy: var(--navy);
+  --color-navy-dark: var(--navy-dark);
+  --color-navy-light: var(--navy-light);
+  --color-orange: var(--orange);
+  --color-orange-dark: var(--orange-dark);
+  --color-orange-light: var(--orange-light);
   --color-chip: var(--chip);
   --color-surface: var(--surface);
   --color-neutral-soft: var(--neutral);
@@ -63,27 +71,40 @@
 }
 
 /* =========================================================
-   LIGHT THEME ONLY — Wicket LOCKED Blue palette.
+   LIGHT THEME ONLY — Wicket Navy + Orange palette
+   (matches the public homepage).
+   - NAVY  = brand surface (sidebar, headers, headings, accent TEXT)
+   - ORANGE = action / accent (buttons, active pill, focus rings, key fills)
    No dark mode: there is intentionally no .dark / no
    prefers-color-scheme override below.
    ========================================================= */
 :root {
   color-scheme: light;
 
-  /* Brand */
-  --brand: #0088cc;
-  --brand-dark: #0066a1;
+  /* Brand — NAVY (primary). `brand` aliases navy so accent text/links/borders
+     keep strong contrast on light backgrounds (WCAG AA). */
   --navy: #1e3a5f;
-  --chip: #e1f0f9;
+  --navy-dark: #152c49;
+  --navy-light: #2c5282;
+  --brand: #1e3a5f;
+  --brand-dark: #152c49;
+
+  /* Accent — ORANGE (CTAs, active states, focus emphasis). Use on filled
+     surfaces / graphical accents only, never as small text on a light bg. */
+  --orange: #f97316;
+  --orange-dark: #ea580c;
+  --orange-light: #fb923c;
+
+  --chip: #e8eef5;
   --surface: #ffffff;
-  --neutral: #f8fbfe;
+  --neutral: #f1f5f9;
   --outline: #dde7ef;
-  --bg: #edf2f7;
+  --bg: #f8fafc;
 
   --radius: 0.75rem; /* cards land ~14-16px via rounded-xl */
 
   /* shadcn tokens → our values */
-  --background: #edf2f7;
+  --background: #f8fafc;
   --foreground: #0f172a;
 
   --card: #ffffff;
@@ -91,39 +112,40 @@
   --popover: #ffffff;
   --popover-foreground: #0f172a;
 
-  --primary: #0088cc;
+  /* primary = ORANGE → default buttons, active nav pill, badges, logo chips */
+  --primary: #f97316;
   --primary-foreground: #ffffff;
 
-  --secondary: #e1f0f9;
-  --secondary-foreground: #0066a1;
+  --secondary: #e8eef5;
+  --secondary-foreground: #1e3a5f;
 
-  --muted: #f8fbfe;
-  --muted-foreground: #64748b;
+  --muted: #f1f5f9;
+  --muted-foreground: #5b6b80;
 
-  --accent: #e1f0f9;
-  --accent-foreground: #0066a1;
+  --accent: #e8eef5;
+  --accent-foreground: #1e3a5f;
 
   --destructive: #dc2626;
 
   --border: #dde7ef;
-  --input: #cdd9e5;
-  --ring: #0088cc;
+  --input: #cbd5e1;
+  --ring: #f97316; /* orange focus rings */
 
-  --chart-1: #0088cc;
-  --chart-2: #0066a1;
-  --chart-3: #1e3a5f;
-  --chart-4: #38bdf8;
-  --chart-5: #7dd3fc;
+  --chart-1: #1e3a5f; /* navy */
+  --chart-2: #f97316; /* orange */
+  --chart-3: #2c5282; /* navy-light */
+  --chart-4: #fb923c; /* orange-light */
+  --chart-5: #94a3b8; /* slate */
 
-  /* Dark navy sidebar for the portal shells (light app, dark rail) */
+  /* Navy sidebar for the portal shells (light app, navy rail) */
   --sidebar: #1e3a5f;
-  --sidebar-foreground: #cfe0f0;
-  --sidebar-primary: #0088cc;
+  --sidebar-foreground: #c7d6e6;
+  --sidebar-primary: #f97316; /* active pill = orange */
   --sidebar-primary-foreground: #ffffff;
-  --sidebar-accent: #2a4a73;
+  --sidebar-accent: #2c5282; /* hover row */
   --sidebar-accent-foreground: #ffffff;
-  --sidebar-border: #2a4a73;
-  --sidebar-ring: #0088cc;
+  --sidebar-border: #2c5282;
+  --sidebar-ring: #f97316;
 }
 
 @layer base {
@@ -135,7 +157,7 @@
   }
   body {
     @apply bg-background text-foreground;
-    font-family: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+    font-family: var(--font-jakarta), ui-sans-serif, system-ui, sans-serif;
     /* Safety net: the page itself must never scroll sideways on mobile —
        only opted-in elements (overflow-x-auto regions) scroll. `clip` keeps
        position: sticky working, unlike `hidden`. */
@@ -145,23 +167,38 @@
   h2,
   h3,
   h4 {
-    font-family: var(--font-outfit), ui-sans-serif, system-ui, sans-serif;
+    font-family: var(--font-jakarta), ui-sans-serif, system-ui, sans-serif;
+    letter-spacing: -0.01em;
   }
 }
 
-/* Headings / labels helpers */
+/* Heading / label helpers — all Plus Jakarta Sans; hierarchy via weight. */
 @utility font-display {
-  font-family: var(--font-outfit), ui-sans-serif, system-ui, sans-serif;
+  font-family: var(--font-jakarta), ui-sans-serif, system-ui, sans-serif;
+  letter-spacing: -0.01em;
 }
 @utility font-label {
-  font-family: var(--font-montserrat), ui-sans-serif, system-ui, sans-serif;
+  font-family: var(--font-jakarta), ui-sans-serif, system-ui, sans-serif;
 }
 
 /* Soft SaaS card shadow */
 @utility shadow-card {
   box-shadow:
-    0 1px 2px 0 rgb(30 58 95 / 0.04),
-    0 4px 16px -2px rgb(30 58 95 / 0.08);
+    0 1px 2px 0 rgb(30 58 95 / 0.05),
+    0 6px 18px -4px rgb(30 58 95 / 0.10);
+}
+
+/* Accessibility: honour reduced-motion — neutralise entrance animations,
+   transitions and transforms for users who ask for less movement. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
 }
 
 /* Faint dot-grid texture (used on the login hero panel) */

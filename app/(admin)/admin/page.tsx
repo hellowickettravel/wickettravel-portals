@@ -66,7 +66,7 @@ export default async function AdminDashboardPage() {
   const recentOrders = orders.slice(0, 5);
 
   return (
-    <div className="space-y-7">
+    <div className="space-y-7 animate-in fade-in slide-in-from-bottom-2 duration-500 ease-out">
       <PageHeader
         eyebrow="Overview"
         title="Admin Dashboard"

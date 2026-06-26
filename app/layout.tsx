@@ -1,23 +1,13 @@
 import type { Metadata } from "next";
-import { Outfit, Inter, Montserrat } from "next/font/google";
+import { Plus_Jakarta_Sans } from "next/font/google";
 import { Toaster } from "@/components/ui/sonner";
 import { Providers } from "./providers";
 import "./globals.css";
 
-const outfit = Outfit({
-  variable: "--font-outfit",
-  subsets: ["latin"],
-  display: "swap",
-});
-
-const inter = Inter({
-  variable: "--font-inter",
-  subsets: ["latin"],
-  display: "swap",
-});
-
-const montserrat = Montserrat({
-  variable: "--font-montserrat",
+// Single brand typeface — Plus Jakarta Sans (variable, full weight axis).
+// Headings, body and labels all use it; hierarchy comes from font weights.
+const jakarta = Plus_Jakarta_Sans({
+  variable: "--font-jakarta",
   subsets: ["latin"],
   display: "swap",
 });
@@ -35,7 +25,7 @@ export default function RootLayout({
   return (
     <html lang="en" className="h-full">
       <body
-        className={`${outfit.variable} ${inter.variable} ${montserrat.variable} min-h-full font-sans antialiased`}
+        className={`${jakarta.variable} min-h-full font-sans antialiased`}
       >
         <Providers>{children}</Providers>
         <Toaster richColors position="top-right" />

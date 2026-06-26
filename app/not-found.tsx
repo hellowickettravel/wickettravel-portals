@@ -26,7 +26,7 @@ export default function NotFound() {
 
       <Link
         href="/"
-        className="mt-8 inline-flex h-11 items-center gap-2 rounded-[10px] bg-brand px-5 text-sm font-medium text-white shadow-sm transition-all duration-150 hover:bg-brand-dark hover:shadow-md hover:shadow-brand/20 hover:-translate-y-px"
+        className="mt-8 inline-flex h-11 items-center gap-2 rounded-[10px] bg-primary px-5 text-sm font-semibold text-white shadow-sm shadow-orange/25 transition-all duration-150 hover:bg-orange-dark hover:shadow-md hover:shadow-orange/30 hover:-translate-y-px"
       >
         <ArrowLeft className="size-4" />
         Back to home

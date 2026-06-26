@@ -28,14 +28,18 @@ A custom "WhatsApp Shared Team Inbox + Orders CRM + Admin panel" for a UK-based 
 - /employee — employee portal (the heart: WhatsApp-style 2-pane chat inbox, create order from chat)
 - /customer — optional order form (secondary)
 
-## Design system (LOCKED — Client's Blue palette)
-- Primary #0088CC, primary-dark #0066A1, navy #1E3A5F
-- Bg #EDF2F7 (soft gray), surface #fff, neutral #F8FBFE
-- Chip #E1F0F9, outline #DDE7EF
-- Fonts: Outfit (headings), Inter (body), Montserrat (labels)
+## Design system (Navy + Orange — matches the public homepage)
+- Brand / primary = NAVY: #1E3A5F, primary-dark #152C49, primary-light #2C5282
+- Action / accent = ORANGE: #F97316, accent-dark #EA580C, accent-light #FB923C
+- Bg #F8FAFC, surface #FFFFFF, neutral #F1F5F9
+- Chip #E8EEF5, outline #DDE7EF
+- Status badges: keep semantic green/amber/red/blue (blue tone = navy family), harmonized with the theme; bg+text pairs with a 5px dot
+- FONT: Plus Jakarta Sans everywhere (headings + body + labels), loaded via next/font; hierarchy comes from weights
+- Design language: navy is the brand surface (sidebar, headers, headings, primary surfaces); orange is the prominent action color (primary buttons, active nav pill, key highlights, CTAs, important badges, focus rings). Both clearly present, premium modern-SaaS look.
+- Contrast rule: orange is for FILLED surfaces / graphical accents (white text ON orange, dots, rings, active pills) — never for small text on a light bg (fails WCAG AA). Accent TEXT uses the navy `brand` token.
+- Token source of truth: CSS variables in `app/globals.css` (`:root`) surfaced via `@theme inline`. Consume tokens (`bg-primary`, `text-navy`, `text-brand`, `bg-chip`, `bg-sidebar`, `text-orange`, etc.) — never hardcode hex.
 - Rounded 14–16px cards, soft shadows, modern SaaS look
-- Portal shell: ~260px dark sidebar, active nav = solid primary pill, content max ~1152px
-- Status badges with bg+text pairs and a 5px dot
+- Portal shell: ~260px navy sidebar, active nav = solid ORANGE pill, content max ~1152px
 
 ## Build order (BUILD FIRST, API LAST)
 1. Auth + login + role-based redirect (IN PROGRESS)
