@@ -62,7 +62,7 @@ export default function OrdersPage() {
     queryFn: listOrders,
   });
 
-  const all = orders ?? [];
+  const all = useMemo(() => orders ?? [], [orders]);
   const [limit, setLimit] = useState(PAGE_SIZE);
 
   const totals = useMemo(() => {
@@ -100,6 +100,7 @@ export default function OrdersPage() {
 
   // Reset paging whenever the filters change.
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setLimit(PAGE_SIZE);
   }, [tab, query]);
 

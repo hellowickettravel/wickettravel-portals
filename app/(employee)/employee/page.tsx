@@ -52,6 +52,8 @@ export default async function EmployeeDashboardPage() {
 
   // "Completed this week": completed orders created in the last 7 days, using
   // creation date as a simple proxy for the activity window.
+  // Server Component render: reading the request time once is intentional.
+  // eslint-disable-next-line react-hooks/purity
   const now = Date.now();
   const closedThisWeek = orders.filter(
     (o) =>

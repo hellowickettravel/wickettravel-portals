@@ -159,7 +159,9 @@ export default async function AnalyticsPage({
     range.days == null
       ? allOrders
       : allOrders.filter((o) => {
+          // Server Component render: request-time read is intentional here.
           const ageDays =
+            // eslint-disable-next-line react-hooks/purity
             (Date.now() - new Date(o.created_at).getTime()) / 86_400_000;
           return ageDays <= range.days!;
         });

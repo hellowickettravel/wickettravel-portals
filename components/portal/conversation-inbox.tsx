@@ -247,6 +247,8 @@ export function ConversationInbox({
     const target = new URLSearchParams(window.location.search).get("c");
     if (target && conversations.some((c) => c.id === target)) {
       deepLinkedRef.current = true;
+      // One-time sync from the URL deep-link into local selection state.
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       openConversation(target);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps

@@ -63,8 +63,11 @@ export default function SettingsPage() {
   const [dailySummary, setDailySummary] = useState(false);
   const [statusChange, setStatusChange] = useState(true);
 
+  // Hydrate the editable form once the saved settings load (and re-sync if
+  // another admin changes them live).
   useEffect(() => {
     if (settings) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setName(settings.business_name ?? "");
       setEmail(settings.business_email ?? "");
       setPhone(settings.business_phone ?? "");
@@ -75,8 +78,10 @@ export default function SettingsPage() {
     }
   }, [settings]);
 
+  // Hydrate notification toggles from the saved prefs once they load.
   useEffect(() => {
     if (prefs) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setNewOrder(prefs.new_order);
       setNewMessage(prefs.new_message);
       setDailySummary(prefs.daily_summary);

@@ -73,7 +73,7 @@ export default function TransactionsPage() {
     queryFn: listEmployees,
   });
 
-  const all = orders ?? [];
+  const all = useMemo(() => orders ?? [], [orders]);
   const employeeOptions = useMemo(
     () => (employees ?? []).filter((e) => e.is_active),
     [employees]
@@ -101,6 +101,7 @@ export default function TransactionsPage() {
 
   // Reset paging whenever the filters change.
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setLimit(PAGE_SIZE);
   }, [tab, employeeId, from, to, query]);
 

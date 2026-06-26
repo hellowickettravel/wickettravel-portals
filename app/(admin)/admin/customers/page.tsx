@@ -101,7 +101,7 @@ export default function AdminCustomersPage() {
     createMutation.mutate({ fullName, email, password, waPhone: waPhone || null });
   }
 
-  const all = data ?? [];
+  const all = useMemo(() => data ?? [], [data]);
   // Filter by order status first (customers with a matching order), then let the
   // shared controls handle name/phone search + paging over the narrowed set.
   const statusFiltered = useMemo(
