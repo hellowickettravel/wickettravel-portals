@@ -307,34 +307,54 @@ export function OrderForm({
     if (!input) return;
 
     setBusy(true);
-    const created = await placeOrder(input);
-    if (!created.ok) {
+    // Wrap the whole flow so a thrown server action / network error can never
+    // leave the submit button stuck on "Creating order…" — busy is always reset
+    // on any failure path (success navigates away, so it stays disabled there).
+    let orderId: string;
+    try {
+      const created = await placeOrder(input);
+      if (!created.ok) {
+        setBusy(false);
+        toast.error("Couldn't create the order", { description: created.error });
+        return;
+      }
+      orderId = created.orderId;
+    } catch (err) {
       setBusy(false);
-      toast.error("Couldn't create the order", { description: created.error });
+      toast.error("Couldn't create the order", {
+        description:
+          err instanceof Error ? err.message : "Something went wrong. Please try again.",
+      });
       return;
     }
 
-    const orderId = created.orderId;
-
     // Upload the pre-order note's attachments now that the order (and its
     // access-scoped storage path) exists, then record their reference rows.
+    // A failure here must not strand the button: the order already exists, so we
+    // warn and still route to it rather than leaving the customer stuck.
     if (files.length > 0) {
-      const recorded: RecordedAttachment[] = [];
-      for (const file of files) {
-        const up = await uploadOrderAttachment(file, orderId);
-        if (up.ok) {
-          recorded.push({
-            path: up.path,
-            name: file.name,
-            mime: file.type || null,
-            size: file.size,
+      try {
+        const recorded: RecordedAttachment[] = [];
+        for (const file of files) {
+          const up = await uploadOrderAttachment(file, orderId);
+          if (up.ok) {
+            recorded.push({
+              path: up.path,
+              name: file.name,
+              mime: file.type || null,
+              size: file.size,
+            });
+          }
+        }
+        if (recorded.length > 0) {
+          await recordOrderAttachments({ orderId, attachments: recorded });
+        }
+        if (recorded.length < files.length) {
+          toast.warning("Some attachments didn't upload", {
+            description: "Your order was still created — you can re-share files in its chat.",
           });
         }
-      }
-      if (recorded.length > 0) {
-        await recordOrderAttachments({ orderId, attachments: recorded });
-      }
-      if (recorded.length < files.length) {
+      } catch {
         toast.warning("Some attachments didn't upload", {
           description: "Your order was still created — you can re-share files in its chat.",
         });
