@@ -17,16 +17,34 @@ export const metadata: Metadata = {
   description: "Shared team inbox, orders CRM and admin panel for Wicket.",
 };
 
+// Warm the TLS connection to Supabase before the first data/auth call. Every
+// portal fetches from here immediately on load, so preconnecting shaves the
+// DNS+TLS handshake off that first request (better LCP/TTFB). Anonymous CORS
+// matches how supabase-js issues requests (apikey header, no cookies).
+function supabasePreconnect() {
+  try {
+    const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    return url ? new URL(url).origin : null;
+  } catch {
+    return null;
+  }
+}
+
 export default function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const supabaseOrigin = supabasePreconnect();
   return (
     <html lang="en" className="h-full">
       <body
         className={`${jakarta.variable} min-h-full font-sans antialiased`}
       >
+        {/* Hoisted to <head> by React 19 — warms the Supabase TLS connection. */}
+        {supabaseOrigin ? (
+          <link rel="preconnect" href={supabaseOrigin} crossOrigin="anonymous" />
+        ) : null}
         <Providers>{children}</Providers>
         <Toaster richColors position="top-right" />
       </body>

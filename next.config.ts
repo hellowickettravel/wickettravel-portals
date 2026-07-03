@@ -66,6 +66,14 @@ const securityHeaders = [
 ];
 
 const nextConfig: NextConfig = {
+  // Don't advertise the framework — trims a header off every response.
+  poweredByHeader: false,
+  // Barrel-import optimization: pull ONLY the icons/components actually used
+  // out of these packages instead of their full index, so unused exports never
+  // reach a client bundle. Behaviour is identical — purely a payload trim.
+  experimental: {
+    optimizePackageImports: ["lucide-react", "@base-ui/react", "sonner"],
+  },
   async headers() {
     return [{ source: "/:path*", headers: securityHeaders }];
   },

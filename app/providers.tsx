@@ -1,11 +1,23 @@
 "use client";
 
 import { useState } from "react";
+import dynamic from "next/dynamic";
 import {
   QueryClient,
   QueryClientProvider,
 } from "@tanstack/react-query";
-import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
+
+// Dev-only: lazy-load the devtools so the package is never pulled into the
+// production bundle. In prod this resolves to a no-op component and the import
+// is never evaluated, so it fully tree-shakes out.
+const ReactQueryDevtools =
+  process.env.NODE_ENV === "development"
+    ? dynamic(() =>
+        import("@tanstack/react-query-devtools").then(
+          (m) => m.ReactQueryDevtools
+        )
+      )
+    : () => null;
 
 /**
  * Client-side data provider. One QueryClient per browser session, created lazily
