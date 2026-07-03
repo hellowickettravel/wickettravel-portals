@@ -31,11 +31,15 @@ export async function updateSession(request: NextRequest) {
   } = await supabase.auth.getUser();
 
   // Agar user logged-in NAHI hai aur protected route pe hai → login pe bhej do
+  // Exception: /customer/book is the one PUBLIC customer page — the booking
+  // wizard is viewable/fillable signed out; placing the order routes through
+  // sign-in itself (see app/(book)/layout.tsx).
   const path = request.nextUrl.pathname;
   const isProtected =
-    path.startsWith("/admin") ||
-    path.startsWith("/employee") ||
-    path.startsWith("/customer");
+    (path.startsWith("/admin") ||
+      path.startsWith("/employee") ||
+      path.startsWith("/customer")) &&
+    path !== "/customer/book";
 
   if (!user && isProtected) {
     const url = request.nextUrl.clone();

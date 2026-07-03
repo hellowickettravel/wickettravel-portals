@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { Plane, Loader2, MailCheck } from "lucide-react";
 import { toast } from "sonner";
@@ -24,6 +24,18 @@ export default function SignupPage() {
   const [confirm, setConfirm] = useState("");
   const [loading, setLoading] = useState(false);
   const [sentTo, setSentTo] = useState<string | null>(null);
+  // A guest who started the booking wizard arrives with ?redirect= — keep it
+  // through the sign-in links so they land back on their filled wizard.
+  const [redirectParam, setRedirectParam] = useState<string | null>(null);
+
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- one-time read of the URL (external system), client-only
+    setRedirectParam(new URLSearchParams(window.location.search).get("redirect"));
+  }, []);
+
+  const loginHref = redirectParam
+    ? `/login?redirect=${encodeURIComponent(redirectParam)}`
+    : "/login";
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -142,7 +154,7 @@ export default function SignupPage() {
                 Click it to activate your account, then sign in.
               </p>
               <Link
-                href="/login"
+                href={loginHref}
                 className="mt-7 inline-flex h-11 w-full items-center justify-center rounded-[10px] bg-primary text-sm font-semibold text-white shadow-sm shadow-orange/25 transition-all duration-150 hover:bg-orange-dark hover:shadow-md hover:shadow-orange/30 hover:-translate-y-px"
               >
                 Go to sign in
@@ -268,7 +280,7 @@ export default function SignupPage() {
               <p className="mt-6 text-center text-sm text-slate-500">
                 Already have an account?{" "}
                 <Link
-                  href="/login"
+                  href={loginHref}
                   className="font-medium text-brand transition-colors hover:text-brand-dark"
                 >
                   Sign in

@@ -41,6 +41,69 @@ export const CABIN_CLASSES: { value: CabinClass; label: string }[] = [
 /** The age at and above which a passenger counts as an adult, not a child. */
 export const ADULT_AGE = 18;
 
+/**
+ * Preferred-airline choices offered in the booking wizard. "Any airline" is the
+ * default and means no preference (nothing is recorded on the order note).
+ */
+export const ANY_AIRLINE = "Any airline";
+export const AIRLINES = [
+  ANY_AIRLINE,
+  "British Airways",
+  "Virgin Atlantic",
+  "Air India",
+  "Emirates",
+  "Qatar Airways",
+  "Gulf Air",
+  "Etihad",
+  "Lufthansa",
+] as const;
+
+/** Optional in-flight meal preference (wizard Step 3 extra). */
+export const MEAL_PREFERENCES = [
+  "No preference",
+  "Vegetarian",
+  "Vegan",
+  "Halal",
+  "Kosher",
+  "Gluten-free",
+  "Diabetic",
+] as const;
+
+/**
+ * Fold the wizard's preference extras (airline, meal, phone, free-text note)
+ * into the single persisted customer_note so no schema change is needed —
+ * staff read the whole thing in the existing "Pre-order note" card.
+ */
+export function composeCustomerNote(parts: {
+  gateNote: string;
+  airline: string;
+  mealPreference: string;
+  specialAssistance: string;
+  contactPhone: string;
+  extraNote: string;
+}): string | null {
+  const lines: string[] = [];
+  if (parts.airline && parts.airline !== ANY_AIRLINE) {
+    lines.push(`Preferred airline: ${parts.airline}`);
+  }
+  if (parts.mealPreference && parts.mealPreference !== MEAL_PREFERENCES[0]) {
+    lines.push(`Meal preference: ${parts.mealPreference}`);
+  }
+  if (parts.specialAssistance.trim()) {
+    lines.push(`Special assistance: ${parts.specialAssistance.trim()}`);
+  }
+  if (parts.contactPhone.trim()) {
+    lines.push(`Contact phone: ${parts.contactPhone.trim()}`);
+  }
+  if (parts.extraNote.trim()) {
+    lines.push(`Additional notes: ${parts.extraNote.trim()}`);
+  }
+  const gate = parts.gateNote.trim();
+  const extras = lines.join("\n");
+  const combined = [gate, extras].filter(Boolean).join("\n\n");
+  return combined || null;
+}
+
 const CABIN_LABEL = new Map(CABIN_CLASSES.map((c) => [c.value, c.label]));
 const TRIP_LABEL = new Map(TRIP_TYPES.map((t) => [t.value, t.label]));
 

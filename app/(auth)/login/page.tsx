@@ -19,11 +19,16 @@ export default function LoginPage() {
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [sendingReset, setSendingReset] = useState(false);
+  // Carried into the Sign up link so a guest mid-booking who creates an
+  // account still lands back on their filled wizard afterwards.
+  const [redirectParam, setRedirectParam] = useState<string | null>(null);
 
   // Surface redirect errors handed back by the auth callback (e.g. an OAuth
   // user with no portal role), then clean them out of the URL.
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- one-time read of the URL (external system), client-only
+    setRedirectParam(params.get("redirect"));
     const err = params.get("error");
     if (err === "no_access") {
       toast.error("No portal access", {
@@ -38,7 +43,15 @@ export default function LoginPage() {
         description: "We couldn't complete that link. Please try again.",
       });
     }
-    if (err) window.history.replaceState({}, "", "/login");
+    if (err) {
+      // Clean the error out of the URL but keep a ?redirect= target alive.
+      const keep = params.get("redirect");
+      window.history.replaceState(
+        {},
+        "",
+        keep ? `/login?redirect=${encodeURIComponent(keep)}` : "/login"
+      );
+    }
   }, []);
 
   async function resendVerification(targetEmail: string) {
@@ -275,7 +288,11 @@ export default function LoginPage() {
           <p className="mt-6 text-center text-sm text-slate-500">
             Don&apos;t have an account?{" "}
             <Link
-              href="/signup"
+              href={
+                redirectParam
+                  ? `/signup?redirect=${encodeURIComponent(redirectParam)}`
+                  : "/signup"
+              }
               className="font-medium text-brand transition-colors hover:text-brand-dark"
             >
               Sign up
