@@ -2,6 +2,7 @@
 
 import { getUserAndProfile } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
+import { LIMITS, sanitizeLine } from "@/lib/security/limits";
 
 /** Self-service account actions available to any signed-in role. */
 
@@ -15,7 +16,7 @@ export async function updateMyName(fullName: string): Promise<ActionResult> {
   const { user } = await getUserAndProfile();
   if (!user) return { ok: false, error: "Unauthorized" };
 
-  const name = fullName.trim();
+  const name = sanitizeLine(fullName, LIMITS.FULL_NAME);
   if (!name) return { ok: false, error: "Name can't be empty." };
 
   const supabase = await createClient();

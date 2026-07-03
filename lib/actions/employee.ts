@@ -13,6 +13,8 @@ import {
 } from "@/lib/access";
 import type { Message, OrderWithRelations, OrderStatus } from "@/lib/db/types";
 import { normalizeOrderInput, type OrderFormInput } from "@/lib/orders/form";
+import { LIMITS, sanitizeText } from "@/lib/security/limits";
+import { tooManyRecentRows } from "@/lib/security/rate-limit";
 
 /**
  * Employee-scoped server actions. These run through the RLS-aware server client,
@@ -75,9 +77,22 @@ export async function sendMessage(input: {
     return { ok: false, error: "Read-only access — you can't send messages." };
   }
 
-  const body = input.body.trim();
+  const body = sanitizeText(input.body, LIMITS.MESSAGE_BODY).trim();
   if (!body && !input.mediaUrl) {
     return { ok: false, error: "Message is empty." };
+  }
+
+  // Per-sender flood guard.
+  if (
+    await tooManyRecentRows({
+      table: "messages",
+      column: "sender_id",
+      value: userId,
+      windowSec: 10,
+      max: 15,
+    })
+  ) {
+    return { ok: false, error: "You're sending messages too quickly — please slow down." };
   }
 
   const supabase = await createClient();

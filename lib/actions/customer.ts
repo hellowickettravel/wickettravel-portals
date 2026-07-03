@@ -13,6 +13,8 @@ import type {
   Customer,
 } from "@/lib/db/types";
 import { normalizeOrderInput, type OrderFormInput } from "@/lib/orders/form";
+import { LIMITS, sanitizeText } from "@/lib/security/limits";
+import { tooManyRecentRows } from "@/lib/security/rate-limit";
 
 /**
  * Customer-portal server actions. The signed-in user is linked to a customers
@@ -121,6 +123,23 @@ export async function createCustomerOrder(
   const normalized = normalizeOrderInput(input);
   if (!normalized.ok) return normalized;
 
+  // Abuse guard: cap how many orders a customer can place in a short window
+  // (also swallows accidental double-submits). Fail-open if the check errors.
+  if (
+    await tooManyRecentRows({
+      table: "orders",
+      column: "customer_id",
+      value: customerId,
+      windowSec: 60,
+      max: 5,
+    })
+  ) {
+    return {
+      ok: false,
+      error: "You've placed several orders just now — please wait a moment before adding another.",
+    };
+  }
+
   const admin = createAdminClient();
   const { data, error } = await admin
     .from("orders")
@@ -189,8 +208,21 @@ export async function sendCustomerMessage(input: {
     return { ok: false, error: e instanceof Error ? e.message : "Unauthorized" };
   }
 
-  const body = input.body.trim();
+  const body = sanitizeText(input.body, LIMITS.MESSAGE_BODY).trim();
   if (!body && !input.mediaUrl) return { ok: false, error: "Message is empty." };
+
+  // Per-conversation flood guard (a customer only writes into their own convo).
+  if (
+    await tooManyRecentRows({
+      table: "messages",
+      column: "conversation_id",
+      value: conversationId,
+      windowSec: 10,
+      max: 10,
+    })
+  ) {
+    return { ok: false, error: "You're sending messages too quickly — please slow down." };
+  }
 
   const supabase = await createClient();
   const { data, error } = await supabase

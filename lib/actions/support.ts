@@ -3,6 +3,7 @@
 import { getUserAndProfile } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { LIMITS, sanitizeLine, sanitizeText } from "@/lib/security/limits";
 import type { SupportTicket, SupportTicketStatus } from "@/lib/db/types";
 
 /**
@@ -35,8 +36,8 @@ export async function createSupportTicket(input: {
   const { user } = await getUserAndProfile();
   if (!user) return { ok: false, error: "Unauthorized" };
 
-  const subject = input.subject.trim();
-  const message = input.message.trim();
+  const subject = sanitizeLine(input.subject, LIMITS.SUPPORT_SUBJECT);
+  const message = sanitizeText(input.message, LIMITS.SUPPORT_BODY).trim();
   if (!subject || !message) {
     return { ok: false, error: "Subject and details are both required." };
   }
@@ -76,8 +77,8 @@ export async function createCustomerSupportTicket(input: {
   // Customer portal only — keeps submitter_role honest.
   if (profile?.role !== "customer") return { ok: false, error: "Unauthorized" };
 
-  const subject = input.subject.trim();
-  const message = input.message.trim();
+  const subject = sanitizeLine(input.subject, LIMITS.SUPPORT_SUBJECT);
+  const message = sanitizeText(input.message, LIMITS.SUPPORT_BODY).trim();
   if (!subject || !message) {
     return { ok: false, error: "Subject and details are both required." };
   }

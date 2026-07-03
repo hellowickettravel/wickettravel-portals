@@ -5,16 +5,18 @@ import Link from "next/link";
 import { Plane, Loader2, MailCheck } from "lucide-react";
 import { toast } from "sonner";
 import { createClient } from "@/lib/supabase/client";
+import { guardSignup, recordSignup } from "@/lib/actions/auth-guard";
+import { checkPassword } from "@/lib/security/password";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { PasswordInput } from "@/components/portal/password-input";
+import { PasswordStrength } from "@/components/auth/password-strength";
 import { AuthAside } from "@/components/auth/auth-aside";
 import { GoogleButton } from "@/components/auth/google-button";
 import { OrDivider } from "@/components/auth/or-divider";
 import { AuthFooter } from "@/components/auth/auth-footer";
 
-const MIN_PASSWORD = 8;
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 export default function SignupPage() {
@@ -54,9 +56,10 @@ export default function SignupPage() {
       toast.error("Enter a valid email address");
       return;
     }
-    if (password.length < MIN_PASSWORD) {
-      toast.error("Password too short", {
-        description: `Use at least ${MIN_PASSWORD} characters.`,
+    const pw = checkPassword(password);
+    if (!pw.ok) {
+      toast.error("Choose a stronger password", {
+        description: pw.firstError ?? "Meet all the password requirements.",
       });
       return;
     }
@@ -66,6 +69,18 @@ export default function SignupPage() {
     }
 
     setLoading(true);
+
+    // Server-side flood gate (per-IP bot-signup throttle) before we hit auth.
+    const gate = await guardSignup(cleanEmail);
+    if (!gate.ok) {
+      setLoading(false);
+      toast.error("Too many attempts", {
+        description: "Please wait a little while and try again.",
+      });
+      return;
+    }
+    void recordSignup(cleanEmail);
+
     const supabase = createClient();
 
     const { data, error } = await supabase.auth.signUp({
@@ -85,23 +100,26 @@ export default function SignupPage() {
     if (error) {
       setLoading(false);
       const msg = error.message.toLowerCase();
+      // ENUMERATION PROTECTION: never reveal that an email is already registered.
+      // For a "already exists" style error we show the SAME neutral
+      // check-your-email screen a fresh signup gets — an attacker can't tell the
+      // two apart. Only genuinely unexpected errors surface a generic failure.
       if (msg.includes("already") || msg.includes("registered")) {
-        toast.error("An account with this email already exists.", {
-          description: "Try signing in instead.",
-        });
-      } else {
-        toast.error("Sign up failed", { description: error.message });
+        setSentTo(cleanEmail);
+        return;
       }
+      toast.error("Sign up failed", {
+        description: "We couldn't complete sign up. Please try again.",
+      });
       return;
     }
 
     // Supabase returns a user with an EMPTY identities array when the email is
-    // already registered (enumeration protection). Treat that as a duplicate.
+    // already registered (enumeration protection). Show the SAME neutral
+    // confirmation screen — do NOT reveal the duplicate — and skip provisioning.
     if (!data.user || (data.user.identities?.length ?? 0) === 0) {
       setLoading(false);
-      toast.error("An account with this email already exists.", {
-        description: "Try signing in instead.",
-      });
+      setSentTo(cleanEmail);
       return;
     }
 
@@ -252,6 +270,7 @@ export default function SignupPage() {
                     disabled={loading}
                     className="h-11 rounded-[10px] bg-neutral-soft"
                   />
+                  <PasswordStrength password={password} />
                 </div>
 
                 <div className="space-y-2">

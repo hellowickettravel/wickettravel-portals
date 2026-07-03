@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { roleDashboardPath } from "@/lib/auth";
+import { safeInternalPath } from "@/lib/security/redirect";
 
 /** Resolve the public origin, honouring Vercel's forwarding headers. */
 function publicOrigin(request: Request): string {
@@ -22,9 +23,7 @@ export async function GET(request: Request) {
 
   // Where to land after auth (e.g. back on a half-filled booking wizard).
   // Same-origin relative paths only; the destination's layout guards the role.
-  const next = searchParams.get("next");
-  const safeNext =
-    next && next.startsWith("/") && !next.startsWith("//") ? next : null;
+  const safeNext = safeInternalPath(searchParams.get("next"));
 
   if (!code) {
     return NextResponse.redirect(`${origin}/login`);

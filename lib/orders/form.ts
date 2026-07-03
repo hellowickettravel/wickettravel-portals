@@ -1,4 +1,5 @@
 import type { TripType, CabinClass } from "@/lib/db/types";
+import { LIMITS, sanitizeText, sanitizeLine } from "@/lib/security/limits";
 
 /**
  * Shared shape for the create-order flow (Chunk 1). One reusable form
@@ -151,16 +152,18 @@ const CABIN_SET: CabinClass[] = ["economy", "premium_economy", "business", "firs
 export function normalizeOrderInput(
   input: OrderFormInput
 ): { ok: true; fields: OrderInsertFields } | { ok: false; error: string } {
-  const routeFrom = input.routeFrom.trim();
-  const routeTo = input.routeTo.trim();
+  // Cap + strip control chars server-side — the client caps too, but the server
+  // is the gate against oversized / malformed payloads.
+  const routeFrom = sanitizeLine(input.routeFrom, LIMITS.ROUTE_FIELD);
+  const routeTo = sanitizeLine(input.routeTo, LIMITS.ROUTE_FIELD);
   if (!routeFrom || !routeTo) {
     return { ok: false, error: "Please tell us where you're flying from and to." };
   }
 
   const passengerNames = input.passengerNames
-    .map((n) => n.trim())
+    .map((n) => sanitizeLine(n, LIMITS.PASSENGER_NAME))
     .filter(Boolean)
-    .slice(0, 20);
+    .slice(0, LIMITS.MAX_PASSENGERS);
   if (passengerNames.length === 0) {
     return { ok: false, error: "Add at least one passenger name." };
   }
@@ -215,7 +218,7 @@ export function normalizeOrderInput(
       extra_luggage_kg: extraLuggageKg,
       passenger_names: passengerNames,
       passengers: adults + children,
-      customer_note: input.customerNote?.trim() || null,
+      customer_note: sanitizeText(input.customerNote ?? "", LIMITS.ORDER_NOTE).trim() || null,
       status: "new",
     },
   };

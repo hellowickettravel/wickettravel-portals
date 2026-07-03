@@ -5,6 +5,8 @@ import Link from "next/link";
 import { Plane, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { createClient } from "@/lib/supabase/client";
+import { guardLogin, recordLogin } from "@/lib/actions/auth-guard";
+import { safeInternalPath } from "@/lib/security/redirect";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -71,14 +73,29 @@ export default function LoginPage() {
     e.preventDefault();
     setLoading(true);
 
+    const cleanEmail = email.trim();
+
+    // Server-side brute-force gate BEFORE we touch auth. Generic message so a
+    // locked state never reveals whether an email is registered.
+    const gate = await guardLogin(cleanEmail);
+    if (!gate.ok) {
+      setLoading(false);
+      toast.error("Too many attempts", {
+        description: "Please wait a few minutes and try again.",
+      });
+      return;
+    }
+
     const supabase = createClient();
 
     const { data, error } = await supabase.auth.signInWithPassword({
-      email: email.trim(),
+      email: cleanEmail,
       password,
     });
 
     if (error || !data.user) {
+      // Log the failure so the sliding-window limiter can lock repeated abuse.
+      void recordLogin(cleanEmail, false);
       setLoading(false);
       const code = error?.code ?? "";
       const msg = (error?.message ?? "").toLowerCase();
@@ -103,6 +120,9 @@ export default function LoginPage() {
       }
       return;
     }
+
+    // Successful auth — clears this email/IP toward the sliding-window limit.
+    void recordLogin(cleanEmail, true);
 
     // Read the role to decide where to land. maybeSingle() returns null (no
     // error) when the row is genuinely absent, and an error only on a real
@@ -140,10 +160,7 @@ export default function LoginPage() {
       // origin relative paths are allowed; the destination's own layout guards
       // the role. Full navigation so the server picks up the fresh session.
       const redirect = new URLSearchParams(window.location.search).get("redirect");
-      const safeRedirect =
-        redirect && redirect.startsWith("/") && !redirect.startsWith("//")
-          ? redirect
-          : null;
+      const safeRedirect = safeInternalPath(redirect);
       window.location.assign(
         safeRedirect ??
           (role === "admin"

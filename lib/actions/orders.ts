@@ -3,6 +3,8 @@
 import { getUserAndProfile } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { getOrderMessages } from "@/lib/db/order-messages";
+import { LIMITS, sanitizeText } from "@/lib/security/limits";
+import { tooManyRecentRows } from "@/lib/security/rate-limit";
 import type { OrderMessage, SenderRole } from "@/lib/db/types";
 
 /**
@@ -95,10 +97,23 @@ export async function sendOrderMessage(input: {
     return { ok: false, error: "Your account can't send messages here." };
   }
 
-  const body = input.body.trim();
+  const body = sanitizeText(input.body, LIMITS.MESSAGE_BODY).trim();
   const attachment = input.attachment ?? null;
   if (!body && !attachment) {
     return { ok: false, error: "Message is empty." };
+  }
+
+  // Per-sender flood guard across all order inboxes they participate in.
+  if (
+    await tooManyRecentRows({
+      table: "order_messages",
+      column: "sender_id",
+      value: user.id,
+      windowSec: 10,
+      max: 10,
+    })
+  ) {
+    return { ok: false, error: "You're sending messages too quickly — please slow down." };
   }
 
   const supabase = await createClient();

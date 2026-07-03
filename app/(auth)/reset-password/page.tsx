@@ -8,10 +8,10 @@ import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { PasswordInput } from "@/components/portal/password-input";
+import { PasswordStrength } from "@/components/auth/password-strength";
 import { AuthAside } from "@/components/auth/auth-aside";
 import { AuthFooter } from "@/components/auth/auth-footer";
-
-const MIN_PASSWORD = 8;
+import { checkPassword, MIN_PASSWORD_LENGTH } from "@/lib/security/password";
 
 type RecoveryStatus = "verifying" | "ready" | "invalid";
 
@@ -72,9 +72,10 @@ export default function ResetPasswordPage() {
 
     if (status !== "ready") return;
 
-    if (password.length < MIN_PASSWORD) {
-      toast.error("Password too short", {
-        description: `Use at least ${MIN_PASSWORD} characters.`,
+    const pw = checkPassword(password);
+    if (!pw.ok) {
+      toast.error("Choose a stronger password", {
+        description: pw.firstError ?? "Meet all the password requirements.",
       });
       return;
     }
@@ -177,10 +178,11 @@ export default function ResetPasswordPage() {
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     required
-                    minLength={MIN_PASSWORD}
+                    minLength={MIN_PASSWORD_LENGTH}
                     disabled={loading}
                     className="h-11 rounded-[10px] bg-neutral-soft"
                   />
+                  <PasswordStrength password={password} />
                 </div>
 
                 <div className="space-y-2">
@@ -197,7 +199,7 @@ export default function ResetPasswordPage() {
                     value={confirm}
                     onChange={(e) => setConfirm(e.target.value)}
                     required
-                    minLength={MIN_PASSWORD}
+                    minLength={MIN_PASSWORD_LENGTH}
                     disabled={loading}
                     className="h-11 rounded-[10px] bg-neutral-soft"
                   />
