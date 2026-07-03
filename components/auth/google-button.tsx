@@ -17,9 +17,16 @@ export function GoogleButton({
   async function handleGoogle() {
     setLoading(true);
     const supabase = createClient();
+    // Keep the pending destination (e.g. a half-filled booking wizard) alive
+    // through the OAuth round-trip — the callback honours a safe ?next=.
+    const redirect = new URLSearchParams(window.location.search).get("redirect");
+    const next =
+      redirect && redirect.startsWith("/") && !redirect.startsWith("//")
+        ? `?next=${encodeURIComponent(redirect)}`
+        : "";
     const { error } = await supabase.auth.signInWithOAuth({
       provider: "google",
-      options: { redirectTo: `${window.location.origin}/auth/callback` },
+      options: { redirectTo: `${window.location.origin}/auth/callback${next}` },
     });
 
     // On success the browser is redirected to Google, so we only land here on error.

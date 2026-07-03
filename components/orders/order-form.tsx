@@ -437,45 +437,50 @@ export function OrderForm({
   }, []);
   /* eslint-enable react-hooks/set-state-in-effect */
 
+  function saveDraftNow() {
+    try {
+      const draft: Draft = {
+        savedAt: Date.now(),
+        step,
+        routeFrom,
+        routeTo,
+        depart,
+        ret,
+        tripType,
+        cabin,
+        adults,
+        children,
+        childAges,
+        airline,
+        gateChoice,
+        note,
+        acknowledged,
+        fileCount: files.length,
+        pax,
+        phone,
+        meal,
+        assistance,
+        wheelchair,
+        extraLuggage,
+        extraLuggageKg,
+        extraNote,
+      };
+      localStorage.setItem(DRAFT_KEY, JSON.stringify(draft));
+    } catch {
+      // storage full/unavailable — the wizard still works, just without resume
+    }
+  }
+
   // Auto-save the draft (debounced) so a guest can sign in / sign up — or a
   // customer can navigate away — without losing what they've typed.
   useEffect(() => {
     if (role !== "customer" || busy) return;
     const t = setTimeout(() => {
       if (!hydratedRef.current) return;
-      try {
-        const draft: Draft = {
-          savedAt: Date.now(),
-          step,
-          routeFrom,
-          routeTo,
-          depart,
-          ret,
-          tripType,
-          cabin,
-          adults,
-          children,
-          childAges,
-          airline,
-          gateChoice,
-          note,
-          acknowledged,
-          fileCount: files.length,
-          pax,
-          phone,
-          meal,
-          assistance,
-          wheelchair,
-          extraLuggage,
-          extraLuggageKg,
-          extraNote,
-        };
-        localStorage.setItem(DRAFT_KEY, JSON.stringify(draft));
-      } catch {
-        // storage full/unavailable — the wizard still works, just without resume
-      }
+      saveDraftNow();
     }, 350);
     return () => clearTimeout(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- saveDraftNow reads the same fields listed below
   }, [
     role,
     busy,
@@ -746,11 +751,14 @@ export function OrderForm({
     if (!input) return;
 
     // Logged-out visitor: the wizard is fillable, but placing the order needs an
-    // account. The draft is already auto-saved; route through sign-in and the
-    // restore effect brings them straight back to this review step.
+    // account. Flush the draft NOW (the debounced auto-save may not have fired
+    // for the last keystroke), then route through SIGN-UP (most guests are new
+    // customers — existing ones are one click from sign-in); the restore effect
+    // brings them straight back to this review step.
     if (isGuest) {
+      saveDraftNow();
       const redirect = encodeURIComponent(`${BOOK_PATH}?resume=1`);
-      router.push(`/login?redirect=${redirect}`);
+      router.push(`/signup?redirect=${redirect}`);
       return;
     }
 
@@ -1716,7 +1724,7 @@ export function OrderForm({
                 <div className="mt-4 flex items-start gap-2.5 rounded-[10px] border border-outline bg-chip/60 px-3.5 py-3 text-sm text-brand-dark">
                   <LogIn className="mt-0.5 size-4 shrink-0" />
                   <span>
-                    You&apos;ll sign in or create a free account to place this
+                    You&apos;ll create a free account (or sign in) to place this
                     order — everything you&apos;ve entered here is kept for you.
                   </span>
                 </div>
@@ -1764,7 +1772,7 @@ export function OrderForm({
               ) : isGuest ? (
                 <>
                   <LogIn className="size-4" />
-                  Sign in & Place Order
+                  Sign up & Place Order
                 </>
               ) : (
                 <>

@@ -213,6 +213,16 @@ export default function LoginPage() {
             Sign in to manage chats and orders.
           </p>
 
+          {redirectParam?.startsWith("/customer/book") ? (
+            <div className="mt-5 flex items-start gap-2.5 rounded-[10px] border border-outline bg-chip/60 px-3.5 py-3 text-sm text-brand-dark">
+              <Plane className="mt-0.5 size-4 shrink-0 -rotate-45" />
+              <span>
+                Your booking details are saved. Sign in and we&apos;ll take you
+                straight back to place the order.
+              </span>
+            </div>
+          ) : null}
+
           <form onSubmit={handleSubmit} className="mt-8 space-y-5">
             <div className="space-y-2">
               <Label

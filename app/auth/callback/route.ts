@@ -20,6 +20,12 @@ export async function GET(request: Request) {
   const code = searchParams.get("code");
   const origin = publicOrigin(request);
 
+  // Where to land after auth (e.g. back on a half-filled booking wizard).
+  // Same-origin relative paths only; the destination's layout guards the role.
+  const next = searchParams.get("next");
+  const safeNext =
+    next && next.startsWith("/") && !next.startsWith("//") ? next : null;
+
   if (!code) {
     return NextResponse.redirect(`${origin}/login`);
   }
@@ -90,6 +96,9 @@ export async function GET(request: Request) {
     }
   }
 
-  const dest = roleDashboardPath(role) ?? "/login?error=no_access";
+  // A valid portal user resumes where they were headed (?next=), otherwise
+  // their dashboard. No-access users never get the next hop.
+  const dashboard = roleDashboardPath(role);
+  const dest = dashboard ? (safeNext ?? dashboard) : "/login?error=no_access";
   return NextResponse.redirect(`${origin}${dest}`);
 }

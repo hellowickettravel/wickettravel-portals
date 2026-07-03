@@ -48,6 +48,13 @@ const CABIN_SET = new Set<string>([
   "business",
   "first",
 ]);
+// The public homepage widget sends friendlier spellings — map them onto the
+// canonical CabinClass values instead of silently dropping the param.
+const CABIN_ALIASES: Record<string, string> = {
+  premium: "premium_economy",
+  "premium-economy": "premium_economy",
+  premiumeconomy: "premium_economy",
+};
 
 function str(v: string | string[] | undefined, max = 80): string | undefined {
   const raw = Array.isArray(v) ? v[0] : v;
@@ -72,7 +79,8 @@ export function parseBookPrefill(
   sp: Record<string, string | string[] | undefined>
 ): BookPrefill {
   const tripType = str(sp.tripType, 20);
-  const cabin = str(sp.cabin, 20);
+  const cabinRaw = str(sp.cabin, 20)?.toLowerCase();
+  const cabin = cabinRaw ? (CABIN_ALIASES[cabinRaw] ?? cabinRaw) : undefined;
   const depart = str(sp.depart, 10);
   const ret = str(sp.return, 10);
   const airline = str(sp.airline, 40);

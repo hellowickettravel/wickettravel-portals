@@ -37,6 +37,9 @@ export default function SignupPage() {
     ? `/login?redirect=${encodeURIComponent(redirectParam)}`
     : "/login";
 
+  // Guest arrived mid-booking — reassure them their wizard entries are safe.
+  const resumingBooking = redirectParam?.startsWith("/customer/book") ?? false;
+
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
 
@@ -70,7 +73,12 @@ export default function SignupPage() {
       password,
       options: {
         data: { full_name: name },
-        emailRedirectTo: `${window.location.origin}/auth/callback`,
+        // Carry the pending destination (e.g. the half-filled booking wizard)
+        // through the verification email so the customer resumes it after
+        // clicking the link, instead of landing on the bare dashboard.
+        emailRedirectTo: `${window.location.origin}/auth/callback${
+          redirectParam ? `?next=${encodeURIComponent(redirectParam)}` : ""
+        }`,
       },
     });
 
@@ -175,6 +183,16 @@ export default function SignupPage() {
               <p className="mt-2 text-sm text-slate-500">
                 Book and track your flights with Wicket.
               </p>
+
+              {resumingBooking ? (
+                <div className="mt-5 flex items-start gap-2.5 rounded-[10px] border border-outline bg-chip/60 px-3.5 py-3 text-sm text-brand-dark">
+                  <Plane className="mt-0.5 size-4 shrink-0 -rotate-45" />
+                  <span>
+                    Your booking details are saved. Create your free account
+                    and we&apos;ll take you straight back to place the order.
+                  </span>
+                </div>
+              ) : null}
 
               <form onSubmit={handleSubmit} className="mt-8 space-y-5">
                 <div className="space-y-2">
