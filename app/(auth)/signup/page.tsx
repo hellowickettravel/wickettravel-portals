@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { Plane, Loader2, MailCheck } from "lucide-react";
+import { BrandLogo } from "@/components/brand/brand-logo";
 import { toast } from "sonner";
 import { createClient } from "@/lib/supabase/client";
 import { guardSignup, recordSignup } from "@/lib/actions/auth-guard";
@@ -149,20 +150,15 @@ export default function SignupPage() {
     <main className="grid min-h-dvh lg:grid-cols-[1.2fr_1fr]">
       <AuthAside
         headline="Book and track every flight in one place."
-        supporting="Create your Wicket account to manage bookings and chat with our team — all from one simple dashboard."
+        supporting="Create your Wicket Travel account to manage bookings and chat with our team — all from one simple dashboard."
       />
 
       {/* ===================== RIGHT / FORM PANEL ===================== */}
       <section className="relative flex items-center justify-center bg-white px-6 py-12 sm:px-10">
         <div className="w-full max-w-sm animate-in fade-in slide-in-from-bottom-2 duration-500 ease-out">
           {/* Mobile brand */}
-          <div className="mb-10 flex items-center gap-2.5 lg:hidden">
-            <div className="flex size-9 items-center justify-center rounded-xl bg-primary text-primary-foreground">
-              <Plane className="size-5 -rotate-45" />
-            </div>
-            <span className="font-display text-lg font-semibold tracking-tight text-navy">
-              Wicket
-            </span>
+          <div className="mb-10 lg:hidden">
+            <BrandLogo className="h-8 w-auto" priority />
           </div>
 
           {sentTo ? (
@@ -199,7 +195,7 @@ export default function SignupPage() {
                 Create your account
               </h2>
               <p className="mt-2 text-sm text-slate-500">
-                Book and track your flights with Wicket.
+                Book and track your flights with Wicket Travel.
               </p>
 
               {resumingBooking ? (

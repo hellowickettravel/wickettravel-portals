@@ -224,8 +224,8 @@ export function OrderInbox({
           <div className="leading-tight">
             <p className="font-display text-sm font-semibold text-navy">Order chat</p>
             <p className="text-xs text-muted-foreground">
-              Messages about this specific booking — visible to you and the Wicket
-              team.
+              Messages about this specific booking — visible to you and the
+              Wicket Travel team.
             </p>
           </div>
         </div>

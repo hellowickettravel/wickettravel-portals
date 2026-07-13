@@ -1,6 +1,6 @@
 import Link from "next/link";
-import { Plane } from "lucide-react";
 import { BOOK_PATH } from "@/lib/orders/book-link";
+import { BrandLogo } from "@/components/brand/brand-logo";
 
 /**
  * Minimal shell for the one public customer page (/customer/book) when nobody
@@ -15,13 +15,8 @@ export function GuestBookShell({ children }: { children: React.ReactNode }) {
     <div className="min-h-dvh bg-background">
       <header className="sticky top-0 z-30 border-b border-outline bg-sidebar text-sidebar-foreground">
         <div className="mx-auto flex h-16 max-w-3xl items-center justify-between px-4 sm:px-6">
-          <span className="flex items-center gap-2.5">
-            <span className="flex size-9 items-center justify-center rounded-xl bg-primary text-primary-foreground shadow-sm shadow-orange/30">
-              <Plane className="size-5 -rotate-45" />
-            </span>
-            <span className="font-display text-lg font-semibold tracking-tight text-white">
-              Wicket
-            </span>
+          <span className="flex items-center">
+            <BrandLogo variant="white" className="h-7 w-auto" priority />
           </span>
           <nav className="flex items-center gap-2">
             <Link

@@ -24,6 +24,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { NotificationsBell } from "@/components/portal/notifications-bell";
+import { BrandLogo } from "@/components/brand/brand-logo";
 
 type NavItem = {
   label: string;
@@ -75,16 +76,11 @@ function DesktopSidebar({ pathname }: { pathname: string }) {
   return (
     <aside className="sticky top-0 hidden h-dvh w-[264px] shrink-0 flex-col bg-sidebar text-sidebar-foreground md:flex">
       {/* Brand */}
-      <Link href="/customer" className="flex h-16 items-center gap-2.5 px-6">
-        <div className="flex size-9 items-center justify-center rounded-xl bg-primary text-primary-foreground shadow-sm shadow-orange/30">
-          <Plane className="size-5 -rotate-45" />
-        </div>
-        <div className="leading-tight">
-          <p className="font-heading text-base font-semibold text-white">Wicket</p>
-          <p className="text-[11px] font-medium text-sidebar-foreground/70">
-            Travel Portal
-          </p>
-        </div>
+      <Link href="/customer" className="flex h-16 flex-col justify-center px-6">
+        <BrandLogo variant="white" className="h-7 w-auto" priority />
+        <p className="mt-1 text-[11px] font-medium text-sidebar-foreground/70">
+          Travel Portal
+        </p>
       </Link>
 
       <nav className="flex-1 space-y-1 px-3 py-4">
@@ -207,13 +203,8 @@ export function CustomerShell({
         {/* Top bar */}
         <header className="sticky top-0 z-30 flex h-16 items-center justify-between gap-4 border-b border-border bg-white/85 px-5 backdrop-blur md:px-8">
           {/* Mobile brand (sidebar is hidden below md) */}
-          <Link href="/customer" className="flex items-center gap-2.5 md:hidden">
-            <div className="flex size-9 items-center justify-center rounded-xl bg-primary text-primary-foreground">
-              <Plane className="size-5 -rotate-45" />
-            </div>
-            <span className="font-display text-lg font-semibold tracking-tight text-navy">
-              Wicket
-            </span>
+          <Link href="/customer" className="flex items-center md:hidden">
+            <BrandLogo className="h-7 w-auto" priority />
           </Link>
           {/* Desktop spacer keeps the account cluster right-aligned */}
           <div className="hidden md:block" />

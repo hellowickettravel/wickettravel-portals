@@ -2,7 +2,8 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { Plane, Loader2, ShieldAlert } from "lucide-react";
+import { Loader2, ShieldAlert } from "lucide-react";
+import { BrandLogo } from "@/components/brand/brand-logo";
 import { toast } from "sonner";
 import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -106,18 +107,13 @@ export default function ResetPasswordPage() {
     <main className="grid min-h-dvh lg:grid-cols-[1.2fr_1fr]">
       <AuthAside
         headline="Reset your password securely."
-        supporting="Choose a new password to get back into your Wicket workspace."
+        supporting="Choose a new password to get back into your Wicket Travel workspace."
       />
 
       <section className="relative flex items-center justify-center bg-white px-6 py-12 sm:px-10">
         <div className="w-full max-w-sm">
-          <div className="mb-10 flex items-center gap-2.5 lg:hidden">
-            <div className="flex size-9 items-center justify-center rounded-xl bg-primary text-primary-foreground">
-              <Plane className="size-5 -rotate-45" />
-            </div>
-            <span className="font-display text-lg font-semibold tracking-tight text-navy">
-              Wicket
-            </span>
+          <div className="mb-10 lg:hidden">
+            <BrandLogo className="h-8 w-auto" priority />
           </div>
 
           {status === "verifying" ? (

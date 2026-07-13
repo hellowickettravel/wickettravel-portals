@@ -139,7 +139,7 @@ export default function AdminCustomersPage() {
       <PageHeader
         eyebrow="People"
         title="Customers"
-        subtitle="Everyone who's booked or messaged Wicket."
+        subtitle="Everyone who's booked or messaged Wicket Travel."
         actions={
           <div className="flex flex-wrap gap-2">
             <Button variant="outline" onClick={exportCsv} disabled={all.length === 0}>

@@ -13,8 +13,8 @@ const jakarta = Plus_Jakarta_Sans({
 });
 
 export const metadata: Metadata = {
-  title: "Wicket — Travel Portal",
-  description: "Shared team inbox, orders CRM and admin panel for Wicket.",
+  title: "Wicket Travel — Portal",
+  description: "Shared team inbox, orders CRM and admin panel for Wicket Travel.",
 };
 
 // Warm the TLS connection to Supabase before the first data/auth call. Every

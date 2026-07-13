@@ -2,7 +2,8 @@
 
 import { useEffect } from "react";
 import Link from "next/link";
-import { Plane, RotateCcw } from "lucide-react";
+import { RotateCcw } from "lucide-react";
+import { BrandLogo } from "@/components/brand/brand-logo";
 
 export default function Error({
   error,
@@ -18,14 +19,7 @@ export default function Error({
 
   return (
     <main className="flex min-h-dvh flex-col items-center justify-center bg-background px-6 text-center">
-      <div className="flex items-center gap-2.5">
-        <div className="flex size-10 items-center justify-center rounded-xl bg-primary text-primary-foreground">
-          <Plane className="size-5 -rotate-45" />
-        </div>
-        <span className="font-display text-xl font-semibold tracking-tight text-navy">
-          Wicket
-        </span>
-      </div>
+      <BrandLogo className="h-9 w-auto" />
 
       <p className="mt-10 font-label text-xs font-semibold uppercase tracking-[0.18em] text-brand">
         Something went wrong

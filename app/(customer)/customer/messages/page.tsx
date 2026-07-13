@@ -189,7 +189,7 @@ export default function CustomerMessagesPage() {
           Messages
         </h1>
         <p className="mt-1 text-sm text-muted-foreground">
-          Chat with the Wicket team about your trips.
+          Chat with the Wicket Travel team about your trips.
         </p>
       </div>
 
@@ -204,7 +204,7 @@ export default function CustomerMessagesPage() {
             <span className="absolute -bottom-0.5 -right-0.5 size-3 rounded-full border-2 border-card bg-emerald-500" />
           </div>
           <div className="leading-tight">
-            <p className="font-display text-sm font-semibold text-navy">Wicket Team</p>
+            <p className="font-display text-sm font-semibold text-navy">Wicket Travel Team</p>
             <p className="text-xs text-emerald-600">Typically replies in minutes</p>
           </div>
         </div>

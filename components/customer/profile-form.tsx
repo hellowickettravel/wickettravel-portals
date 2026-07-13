@@ -26,7 +26,7 @@ type PrefKey = "new_order" | "status_change" | "new_message";
 const PREF_ITEMS: { key: PrefKey; label: string; desc: string }[] = [
   { key: "new_order", label: "Quotes & prices", desc: "When the team adds a quote or price to your order." },
   { key: "status_change", label: "Order status updates", desc: "When your order is confirmed, completed or cancelled." },
-  { key: "new_message", label: "Messages from the team", desc: "When the Wicket team replies in your chat." },
+  { key: "new_message", label: "Messages from the team", desc: "When the Wicket Travel team replies in your chat." },
 ];
 
 function fieldLabel(text: string) {

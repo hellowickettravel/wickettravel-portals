@@ -1,5 +1,5 @@
 /**
- * Hand-written TypeScript types for the Wicket database tables.
+ * Hand-written TypeScript types for the Wicket Travel database tables.
  *
  * These match the REAL live Supabase schema exactly (reconciled in
  * supabase/migrations/0003_schema_reconcile.sql, which adds customers.profile_id,

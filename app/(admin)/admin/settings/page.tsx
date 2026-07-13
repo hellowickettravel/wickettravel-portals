@@ -246,7 +246,7 @@ export default function SettingsPage() {
       </form>
 
       {/* Branding */}
-      <SectionCard title="Branding" description="Your logo. The brand colour is fixed by the Wicket design system.">
+      <SectionCard title="Branding" description="Your logo. The brand colour is fixed by the Wicket Travel design system.">
         <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
           <div className="space-y-2">
             {fieldLabel("Logo")}
@@ -315,7 +315,7 @@ export default function SettingsPage() {
                 </p>
                 <p className="flex items-center gap-1 text-xs text-muted-foreground">
                   <Lock className="size-3" />
-                  Wicket Navy &amp; Orange · locked by the design system
+                  Wicket Travel Navy &amp; Orange · locked by the design system
                 </p>
               </div>
             </div>

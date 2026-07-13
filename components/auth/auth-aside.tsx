@@ -1,10 +1,5 @@
-import { Plane } from "lucide-react";
-
-const STATS = [
-  { value: "3", label: "Portals" },
-  { value: "1", label: "Shared Inbox" },
-  { value: "24/7", label: "Coverage" },
-];
+import { ShieldCheck } from "lucide-react";
+import { BrandLogo } from "@/components/brand/brand-logo";
 
 type AuthAsideProps = {
   headline?: string;
@@ -27,13 +22,8 @@ export function AuthAside({
       <div className="pointer-events-none absolute -bottom-32 -left-20 size-[360px] rounded-full bg-[radial-gradient(circle,rgba(44,82,130,0.55),transparent_70%)] blur-2xl" />
 
       {/* Brand lockup */}
-      <div className="relative z-10 flex items-center gap-3">
-        <div className="flex size-10 items-center justify-center rounded-xl bg-orange text-white shadow-sm shadow-orange/30 ring-1 ring-inset ring-white/15">
-          <Plane className="size-5 -rotate-45" />
-        </div>
-        <span className="font-display text-xl font-semibold tracking-tight text-white">
-          Wicket
-        </span>
+      <div className="relative z-10">
+        <BrandLogo variant="white" className="h-9 w-auto" priority />
       </div>
 
       {/* Centered messaging */}
@@ -49,21 +39,16 @@ export function AuthAside({
         </p>
       </div>
 
-      {/* Bottom mini-stats */}
-      <div className="relative z-10 flex items-center gap-8">
-        {STATS.map((stat, i) => (
-          <div key={stat.label} className="flex items-center gap-8">
-            {i > 0 && <div className="h-9 w-px bg-white/15" />}
-            <div>
-              <p className="font-display text-2xl font-semibold text-white">
-                {stat.value}
-              </p>
-              <p className="font-label mt-0.5 text-[11px] font-medium uppercase tracking-wider text-white/75">
-                {stat.label}
-              </p>
-            </div>
-          </div>
-        ))}
+      {/* Bottom trust line */}
+      <div className="relative z-10 flex max-w-md items-center gap-3">
+        <div className="flex size-9 shrink-0 items-center justify-center rounded-full bg-white/10 ring-1 ring-inset ring-white/15">
+          <ShieldCheck className="size-4 text-orange-light" />
+        </div>
+        <p className="text-[13px] leading-snug text-white/70">
+          <span className="font-medium text-white/90">Secure sign-in.</span>{" "}
+          Your bookings and conversations are encrypted and visible only to you
+          and our team.
+        </p>
       </div>
     </section>
   );

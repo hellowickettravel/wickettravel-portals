@@ -4,7 +4,6 @@ import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
-  Plane,
   LogOut,
   Menu,
   LayoutDashboard,
@@ -37,6 +36,7 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet";
 import { NotificationsBell } from "@/components/portal/notifications-bell";
+import { BrandLogo } from "@/components/brand/brand-logo";
 
 /**
  * Icon registry. Layouts (Server Components) pass icon NAMES as strings so we
@@ -75,7 +75,7 @@ type PortalShellProps = {
   roleLabel: string;
   /** Current user id — powers the realtime notifications bell. */
   userId: string;
-  /** Optional business logo URL; falls back to the Wicket wordmark when unset. */
+  /** Optional business logo URL; falls back to the Wicket Travel wordmark when unset. */
   logoUrl?: string | null;
   children: React.ReactNode;
 };
@@ -145,21 +145,30 @@ function SidebarBrand({
   logoUrl?: string | null;
 }) {
   return (
-    <div className="flex h-16 items-center gap-2.5 px-6">
-      <div className="flex size-9 items-center justify-center overflow-hidden rounded-xl bg-primary text-primary-foreground">
-        {logoUrl ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img src={logoUrl} alt="Logo" className="size-full object-cover" />
-        ) : (
-          <Plane className="size-5 -rotate-45" />
-        )}
-      </div>
-      <div className="leading-tight">
-        <p className="font-heading text-base font-semibold text-white">Wicket</p>
-        <p className="text-[11px] font-medium text-sidebar-foreground/70">
-          {portalLabel}
-        </p>
-      </div>
+    <div className="flex h-16 items-center px-6">
+      {logoUrl ? (
+        <div className="flex items-center gap-2.5">
+          <div className="flex size-9 items-center justify-center overflow-hidden rounded-xl bg-primary text-primary-foreground">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={logoUrl} alt="Logo" className="size-full object-cover" />
+          </div>
+          <div className="leading-tight">
+            <p className="font-heading text-base font-semibold text-white">
+              Wicket Travel
+            </p>
+            <p className="text-[11px] font-medium text-sidebar-foreground/70">
+              {portalLabel}
+            </p>
+          </div>
+        </div>
+      ) : (
+        <div>
+          <BrandLogo variant="white" className="h-7 w-auto" priority />
+          <p className="mt-1 text-[11px] font-medium text-sidebar-foreground/70">
+            {portalLabel}
+          </p>
+        </div>
+      )}
     </div>
   );
 }
@@ -246,9 +255,7 @@ export function PortalShell({
               </SheetContent>
             </Sheet>
 
-            <span className="font-heading text-sm font-semibold text-navy md:hidden">
-              Wicket
-            </span>
+            <BrandLogo className="h-6 w-auto md:hidden" />
           </div>
 
           <div className="flex items-center gap-1">

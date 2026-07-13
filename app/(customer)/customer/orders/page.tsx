@@ -87,7 +87,7 @@ export default function CustomerOrdersPage() {
       <PageHeader
         eyebrow="Bookings"
         title="My Orders"
-        subtitle="Every quote and booking you've made with Wicket."
+        subtitle="Every quote and booking you've made with Wicket Travel."
       />
 
       {isLoading ? (

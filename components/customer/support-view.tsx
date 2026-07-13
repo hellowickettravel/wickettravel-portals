@@ -142,7 +142,7 @@ export function CustomerSupport() {
               <LifeBuoy className="size-5" />
             </div>
             <p className="text-sm text-muted-foreground">
-              Raise a query below and it goes straight to the Wicket team. You can
+              Raise a query below and it goes straight to the Wicket Travel team. You can
               also message us any time from your portal.
             </p>
             <Button
@@ -159,7 +159,7 @@ export function CustomerSupport() {
       {/* Raise a query */}
       <SectionCard
         title="Contact support"
-        description="Send us a question and we'll get back to you — it lands with the Wicket team."
+        description="Send us a question and we'll get back to you — it lands with the Wicket Travel team."
       >
         <form onSubmit={submitQuery} className="space-y-4">
           <div className="space-y-2">
