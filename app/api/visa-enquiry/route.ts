@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server";
-import { createHash } from "crypto";
+import { createHash, timingSafeEqual } from "crypto";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { clientIpFrom } from "@/lib/security/rate-limit";
+import type { SupabaseClient } from "@supabase/supabase-js";
 import type { PreferredContactMethod, VisaDocument } from "@/lib/visa";
 import { PREFERRED_CONTACT_METHODS } from "@/lib/visa";
 
@@ -22,11 +23,26 @@ import { PREFERRED_CONTACT_METHODS } from "@/lib/visa";
  *   - CORS: only the homepage origin (+ localhost for testing) is allowed.
  *   - Writes use the service-role client AFTER validation; the table's RLS
  *     keeps anon read access impossible, so nothing ever leaks back out.
- *   - Rate limit: max submissions per IP per hour, keyed on a SHA-256 of the
+ *   - Rate limit: per REAL client IP (see below), keyed on a SHA-256 of the
  *     IP stored on the row (never the raw address). Fail-open like the rest
  *     of lib/security so an infra hiccup can't kill real applications.
+ *     Failed-validation attempts never insert a row, so retrying after a 4xx
+ *     never counts against the limit — only accepted submissions do.
  *   - Files go to the PRIVATE 'visa-documents' bucket under enquiry/<id>/…;
  *     the bucket has no anonymous policies, so this route is the only door in.
+ *
+ * Real client IP behind the homepage relay:
+ *   The homepage submits through its own server-side API route, so the
+ *   connecting IP here is the relay server's — useless for rate limiting
+ *   (every visitor would share one bucket). Vercel also OVERWRITES incoming
+ *   x-forwarded-for with the connecting IP, so the relay cannot pass the
+ *   visitor's address through standard headers alone. Instead the relay sends:
+ *     x-wicket-relay-secret: <VISA_RELAY_SECRET>   (proves it's OUR relay)
+ *     x-wicket-client-ip:    <the visitor's IP as the relay saw it>
+ *   Only when the secret matches (timing-safe) do we honour the forwarded IP
+ *   (x-wicket-client-ip first, then the first x-forwarded-for hop / x-real-ip
+ *   in case a trusted-proxy setup preserves them). Any other caller — however
+ *   it spoofs headers — is bucketed by its own connecting IP.
  */
 
 const ALLOWED_ORIGINS = new Set([
@@ -41,8 +57,19 @@ const MAX_FILE_BYTES = 10 * 1024 * 1024; // 10MB — matches the bucket limit
 const ALLOWED_FILE_TYPES = new Set(["application/pdf", "image/jpeg", "image/png"]);
 const ALLOWED_FILE_EXT = /\.(pdf|jpe?g|png)$/i;
 
-const RATE_WINDOW_SEC = 60 * 60; // 1 hour
-const RATE_MAX_PER_IP = 5; // submissions per IP in the window
+// Rate limiting — two sliding windows per real client IP, counted over ACCEPTED
+// submissions only (validation failures never insert a row, so a genuine user
+// retrying after a 422 is never penalised). Thresholds are deliberately
+// generous: a family submitting several applications in one sitting stays well
+// inside them, while a spam flood hits the burst window immediately.
+const RATE_WINDOWS = [
+  { windowSec: 15 * 60, max: 8, label: "15 minutes" }, // burst
+  { windowSec: 24 * 60 * 60, max: 25, label: "24 hours" }, // sustained
+] as const;
+
+// Headers the trusted homepage relay sends (see the security-model note above).
+const RELAY_SECRET_HEADER = "x-wicket-relay-secret";
+const RELAY_CLIENT_IP_HEADER = "x-wicket-client-ip";
 
 function corsHeaders(origin: string | null): Record<string, string> {
   const headers: Record<string, string> = { Vary: "Origin" };
@@ -189,6 +216,76 @@ function validFile(file: File): boolean {
   );
 }
 
+// ----- Client IP + rate limiting ---------------------------------------------
+
+/** Constant-time secret comparison; hashing first equalises lengths. */
+function secretMatches(presented: string, expected: string): boolean {
+  const a = createHash("sha256").update(presented).digest();
+  const b = createHash("sha256").update(expected).digest();
+  return timingSafeEqual(a, b);
+}
+
+const IPV4_RE = /^(\d{1,3})(\.\d{1,3}){3}$/;
+const IPV6_RE = /^[0-9a-fA-F:]{2,45}$/;
+
+function looksLikeIp(value: string): boolean {
+  return IPV4_RE.test(value) || (value.includes(":") && IPV6_RE.test(value));
+}
+
+/**
+ * The REAL end-user IP for rate limiting. A forwarded client IP is honoured
+ * only when the request proves it came from our homepage relay via the shared
+ * secret; everything else falls back to the connecting IP.
+ */
+function resolveClientIp(headers: Headers): string | null {
+  const expected = process.env.VISA_RELAY_SECRET;
+  const presented = headers.get(RELAY_SECRET_HEADER);
+  if (expected && presented && secretMatches(presented, expected)) {
+    const candidates = [
+      headers.get(RELAY_CLIENT_IP_HEADER),
+      headers.get("x-forwarded-for")?.split(",")[0], // ORIGINAL client = first hop
+      headers.get("x-real-ip"),
+    ];
+    for (const candidate of candidates) {
+      const ip = candidate?.trim().slice(0, 100);
+      if (ip && looksLikeIp(ip)) return ip;
+    }
+  }
+  return clientIpFrom(headers);
+}
+
+/**
+ * Sliding-window check over the enquiry rows themselves. Returns 0 when the
+ * request is allowed, otherwise the number of seconds until the oldest counted
+ * submission leaves the tripped window. Fail-open on any error.
+ */
+async function rateLimitRetryAfter(
+  admin: SupabaseClient,
+  ipHash: string
+): Promise<number> {
+  for (const { windowSec, max } of RATE_WINDOWS) {
+    try {
+      const since = new Date(Date.now() - windowSec * 1000).toISOString();
+      const { data, error } = await admin
+        .from("visa_enquiries")
+        .select("created_at")
+        .eq("ip_hash", ipHash)
+        .gte("created_at", since)
+        .order("created_at", { ascending: true })
+        .limit(max);
+      if (error || !data) continue; // fail-open
+      if (data.length >= max) {
+        const oldest = new Date(data[0]!.created_at as string).getTime();
+        const retry = Math.ceil((oldest + windowSec * 1000 - Date.now()) / 1000);
+        return Math.max(retry, 60);
+      }
+    } catch {
+      /* fail-open */
+    }
+  }
+  return 0;
+}
+
 // ----- Handler ---------------------------------------------------------------
 
 export async function POST(request: Request) {
@@ -249,31 +346,37 @@ export async function POST(request: Request) {
 
   const admin = createAdminClient();
 
-  // Rate limit: cap submissions per IP per hour. Fail-open on any error so an
-  // infra hiccup never blocks a genuine application.
-  const ip = clientIpFrom(request.headers);
+  // Rate limit on the REAL client IP (resolved through the trusted relay).
+  // Runs after validation on purpose: a 422 retry never counts. Fail-open on
+  // any error so an infra hiccup never blocks a genuine application.
+  const ip = resolveClientIp(request.headers);
   const ipHash = ip
     ? createHash("sha256").update(ip).digest("hex")
     : null;
   if (ipHash) {
-    try {
-      const since = new Date(Date.now() - RATE_WINDOW_SEC * 1000).toISOString();
-      const { count, error } = await admin
-        .from("visa_enquiries")
-        .select("id", { count: "exact", head: true })
-        .eq("ip_hash", ipHash)
-        .gte("created_at", since);
-      if (!error && count !== null && count >= RATE_MAX_PER_IP) {
-        return json(
-          {
-            ok: false,
-            error: "Too many submissions. Please try again later.",
+    const retryAfterSeconds = await rateLimitRetryAfter(admin, ipHash);
+    if (retryAfterSeconds > 0) {
+      const minutes = Math.ceil(retryAfterSeconds / 60);
+      return NextResponse.json(
+        {
+          ok: false,
+          error: "rate_limited",
+          message: `You've reached the submission limit. Please try again in about ${
+            minutes >= 60
+              ? `${Math.ceil(minutes / 60)} hour${minutes >= 120 ? "s" : ""}`
+              : `${minutes} minute${minutes === 1 ? "" : "s"}`
+          }.`,
+          retryAfterSeconds,
+        },
+        {
+          status: 429,
+          headers: {
+            ...headers,
+            "Retry-After": String(retryAfterSeconds),
+            "Access-Control-Expose-Headers": "Retry-After",
           },
-          429
-        );
-      }
-    } catch {
-      /* fail-open */
+        }
+      );
     }
   }
 
