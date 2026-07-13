@@ -16,6 +16,7 @@ import {
   BarChart3,
   Settings,
   LifeBuoy,
+  Stamp,
   type LucideIcon,
 } from "lucide-react";
 import { signOut } from "@/lib/actions/auth";
@@ -52,6 +53,7 @@ const ICONS = {
   BarChart3,
   Settings,
   LifeBuoy,
+  Stamp,
 } satisfies Record<string, LucideIcon>;
 
 export type IconName = keyof typeof ICONS;
@@ -62,6 +64,8 @@ export type NavItem = {
   icon: IconName;
   /** Only active on an exact path match (used for the dashboard index). */
   exact?: boolean;
+  /** Optional count pill (e.g. new visa enquiries); hidden when 0/undefined. */
+  badge?: number;
 };
 
 type PortalShellProps = {
@@ -114,6 +118,18 @@ function NavLinks({
           >
             <Icon className="size-[18px]" />
             {item.label}
+            {item.badge ? (
+              <span
+                className={cn(
+                  "ml-auto inline-flex min-w-5 items-center justify-center rounded-full px-1.5 py-0.5 text-[11px] font-semibold tabular-nums leading-none",
+                  active
+                    ? "bg-white/25 text-white"
+                    : "bg-primary text-primary-foreground"
+                )}
+              >
+                {item.badge > 99 ? "99+" : item.badge}
+              </span>
+            ) : null}
           </Link>
         );
       })}

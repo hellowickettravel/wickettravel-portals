@@ -1,19 +1,28 @@
 import { redirect } from "next/navigation";
 import { getUserAndProfile, roleDashboardPath, isDeactivated } from "@/lib/auth";
 import { getBrandLogoUrl } from "@/lib/db/branding";
+import { countNewVisaEnquiries } from "@/lib/actions/visa";
 import { PortalShell, type NavItem } from "@/components/portal/portal-shell";
 
-const NAV: NavItem[] = [
-  { label: "Dashboard", href: "/admin", icon: "LayoutDashboard", exact: true },
-  { label: "Employees", href: "/admin/employees", icon: "Users" },
-  { label: "Customers", href: "/admin/customers", icon: "Contact" },
-  { label: "Orders", href: "/admin/orders", icon: "ShoppingBag" },
-  { label: "Transactions", href: "/admin/transactions", icon: "Receipt" },
-  { label: "Messages", href: "/admin/messages", icon: "MessageSquare" },
-  { label: "Analytics", href: "/admin/analytics", icon: "BarChart3" },
-  { label: "Support", href: "/admin/support", icon: "LifeBuoy" },
-  { label: "Settings", href: "/admin/settings", icon: "Settings" },
-];
+function buildNav(newVisaCount: number): NavItem[] {
+  return [
+    { label: "Dashboard", href: "/admin", icon: "LayoutDashboard", exact: true },
+    { label: "Employees", href: "/admin/employees", icon: "Users" },
+    { label: "Customers", href: "/admin/customers", icon: "Contact" },
+    { label: "Orders", href: "/admin/orders", icon: "ShoppingBag" },
+    { label: "Transactions", href: "/admin/transactions", icon: "Receipt" },
+    { label: "Messages", href: "/admin/messages", icon: "MessageSquare" },
+    {
+      label: "Visa Queries",
+      href: "/admin/visa-queries",
+      icon: "Stamp",
+      badge: newVisaCount,
+    },
+    { label: "Analytics", href: "/admin/analytics", icon: "BarChart3" },
+    { label: "Support", href: "/admin/support", icon: "LifeBuoy" },
+    { label: "Settings", href: "/admin/settings", icon: "Settings" },
+  ];
+}
 
 export default async function AdminLayout({
   children,
@@ -35,11 +44,14 @@ export default async function AdminLayout({
   }
 
   const userName = profile?.full_name?.trim() || user.email || "Admin";
-  const logoUrl = await getBrandLogoUrl();
+  const [logoUrl, newVisaCount] = await Promise.all([
+    getBrandLogoUrl(),
+    countNewVisaEnquiries(),
+  ]);
 
   return (
     <PortalShell
-      navItems={NAV}
+      navItems={buildNav(newVisaCount)}
       portalLabel="Admin Panel"
       userName={userName}
       roleLabel="Administrator"
