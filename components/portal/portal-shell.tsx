@@ -16,6 +16,7 @@ import {
   Settings,
   LifeBuoy,
   Stamp,
+  HeartHandshake,
   type LucideIcon,
 } from "lucide-react";
 import { signOut } from "@/lib/actions/auth";
@@ -54,6 +55,7 @@ const ICONS = {
   Settings,
   LifeBuoy,
   Stamp,
+  HeartHandshake,
 } satisfies Record<string, LucideIcon>;
 
 export type IconName = keyof typeof ICONS;

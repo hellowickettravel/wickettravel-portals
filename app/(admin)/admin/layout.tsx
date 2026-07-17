@@ -2,9 +2,10 @@ import { redirect } from "next/navigation";
 import { getUserAndProfile, roleDashboardPath, isDeactivated } from "@/lib/auth";
 import { getBrandLogoUrl } from "@/lib/db/branding";
 import { countNewVisaEnquiries } from "@/lib/actions/visa";
+import { countNewParentTickets } from "@/lib/actions/parents-tickets";
 import { PortalShell, type NavItem } from "@/components/portal/portal-shell";
 
-function buildNav(newVisaCount: number): NavItem[] {
+function buildNav(newVisaCount: number, newParentTicketCount: number): NavItem[] {
   return [
     { label: "Dashboard", href: "/admin", icon: "LayoutDashboard", exact: true },
     { label: "Employees", href: "/admin/employees", icon: "Users" },
@@ -17,6 +18,12 @@ function buildNav(newVisaCount: number): NavItem[] {
       href: "/admin/visa-queries",
       icon: "Stamp",
       badge: newVisaCount,
+    },
+    {
+      label: "Parents Tickets",
+      href: "/admin/parents-tickets",
+      icon: "HeartHandshake",
+      badge: newParentTicketCount,
     },
     { label: "Analytics", href: "/admin/analytics", icon: "BarChart3" },
     { label: "Support", href: "/admin/support", icon: "LifeBuoy" },
@@ -44,14 +51,15 @@ export default async function AdminLayout({
   }
 
   const userName = profile?.full_name?.trim() || user.email || "Admin";
-  const [logoUrl, newVisaCount] = await Promise.all([
+  const [logoUrl, newVisaCount, newParentTicketCount] = await Promise.all([
     getBrandLogoUrl(),
     countNewVisaEnquiries(),
+    countNewParentTickets(),
   ]);
 
   return (
     <PortalShell
-      navItems={buildNav(newVisaCount)}
+      navItems={buildNav(newVisaCount, newParentTicketCount)}
       portalLabel="Admin Panel"
       userName={userName}
       roleLabel="Administrator"
