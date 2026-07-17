@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { LIMITS, sanitizeLine } from "@/lib/security/limits";
 
 /**
  * Finalizes a public sign-up by forcing the new profile's role to "customer".
@@ -21,10 +22,14 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Invalid body" }, { status: 400 });
   }
 
-  const { userId, fullName } = body;
-  if (!userId) {
+  const { userId } = body;
+  if (!userId || typeof userId !== "string") {
     return NextResponse.json({ error: "Missing userId" }, { status: 400 });
   }
+  // Cap length + strip control characters before it lands on profiles/customers.
+  // The value only ever renders as escaped React text, but we never trust raw
+  // client input on a public-reachable write path.
+  const fullName = body.fullName ? sanitizeLine(body.fullName, LIMITS.FULL_NAME) || null : null;
 
   // Path A: an active session that matches the user (confirmation disabled).
   const supabase = await createClient();
