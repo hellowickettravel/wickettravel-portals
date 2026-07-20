@@ -88,9 +88,29 @@ export type ParentTicketEnquiry = {
   // Management
   status: ParentTicketStatus;
   admin_notes: ParentTicketNote[];
+  /** Submitter opted in to public display on the form (set once at intake). */
+  consent_public: boolean;
+  /** Admin approved this entry for the public board. Requires consent_public. */
+  is_public: boolean;
   created_at: string;
   updated_at: string;
 };
+
+/**
+ * Mask a submitter's name for public display: first name + last initial, e.g.
+ * "Rajesh Kumar" → "Rajesh K.". Single-word names are returned as-is (there is
+ * no surname to drop), and anything unusable falls back to "Traveller".
+ *
+ * This is the ONLY form of a person's name that ever leaves the portal — see
+ * app/api/parent-ticket/public/route.ts.
+ */
+export function maskDisplayName(fullName: string | null): string {
+  const parts = (fullName ?? "").trim().split(/\s+/).filter(Boolean);
+  if (parts.length === 0) return "Traveller";
+  const first = parts[0]!;
+  if (parts.length === 1) return first;
+  return `${first} ${parts[parts.length - 1]![0]!.toUpperCase()}.`;
+}
 
 /** Slim row for the admin list view. */
 export type ParentTicketListItem = Pick<
@@ -105,5 +125,7 @@ export type ParentTicketListItem = Pick<
   | "to_location"
   | "travel_date"
   | "status"
+  | "consent_public"
+  | "is_public"
   | "created_at"
 >;

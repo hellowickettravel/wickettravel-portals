@@ -196,9 +196,16 @@ export default function AdminParentsTicketsPage() {
                         </span>
                       }
                       badge={
-                        <StatusBadge tone={PARENT_TICKET_STATUS_TONE[e.status]}>
-                          {PARENT_TICKET_STATUS_LABELS[e.status]}
-                        </StatusBadge>
+                        <div className="flex flex-wrap items-center justify-end gap-1.5">
+                          <StatusBadge
+                            tone={PARENT_TICKET_STATUS_TONE[e.status]}
+                          >
+                            {PARENT_TICKET_STATUS_LABELS[e.status]}
+                          </StatusBadge>
+                          {e.is_public ? (
+                            <StatusBadge tone="green">On website</StatusBadge>
+                          ) : null}
+                        </div>
                       }
                       fields={[
                         {
@@ -277,9 +284,16 @@ export default function AdminParentsTicketsPage() {
                         {fmtDate(e.created_at)}
                       </TableCell>
                       <TableCell>
-                        <StatusBadge tone={PARENT_TICKET_STATUS_TONE[e.status]}>
-                          {PARENT_TICKET_STATUS_LABELS[e.status]}
-                        </StatusBadge>
+                        <div className="flex flex-wrap items-center gap-1.5">
+                          <StatusBadge
+                            tone={PARENT_TICKET_STATUS_TONE[e.status]}
+                          >
+                            {PARENT_TICKET_STATUS_LABELS[e.status]}
+                          </StatusBadge>
+                          {e.is_public ? (
+                            <StatusBadge tone="green">On website</StatusBadge>
+                          ) : null}
+                        </div>
                       </TableCell>
                       <TableCell
                         className="pr-6 text-right"

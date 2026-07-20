@@ -32,7 +32,7 @@ async function requireAdmin(): Promise<void> {
 }
 
 const LIST_COLUMNS =
-  "id, reference_number, enquiry_type, full_name, email, phone, from_location, to_location, travel_date, status, created_at";
+  "id, reference_number, enquiry_type, full_name, email, phone, from_location, to_location, travel_date, status, consent_public, is_public, created_at";
 
 /** Every lead, newest first (admin list view). */
 export async function listParentTickets(): Promise<ParentTicketListItem[]> {
@@ -75,6 +75,46 @@ export async function setParentTicketStatus(input: {
   const { error } = await supabase
     .from("parent_ticket_enquiries")
     .update({ status: input.status })
+    .eq("id", input.id);
+  if (error) return { ok: false, error: error.message };
+  return { ok: true };
+}
+
+/**
+ * Publish / unpublish a lead on the public homepage board.
+ *
+ * Publishing requires the submitter's own opt-in (consent_public), which is
+ * captured at intake and can never be set from the admin side. We re-read the
+ * flag here rather than trusting the client, and the DB check constraint from
+ * APPLY_PARENTS_PUBLIC.sql backstops both. Unpublishing is always allowed.
+ */
+export async function setParentTicketPublic(input: {
+  id: string;
+  isPublic: boolean;
+}): Promise<ActionResult> {
+  await requireAdmin();
+  const supabase = await createClient();
+
+  if (input.isPublic) {
+    const { data: lead, error: readError } = await supabase
+      .from("parent_ticket_enquiries")
+      .select("consent_public")
+      .eq("id", input.id)
+      .maybeSingle<{ consent_public: boolean }>();
+    if (readError || !lead) {
+      return { ok: false, error: readError?.message ?? "Lead not found." };
+    }
+    if (!lead.consent_public) {
+      return {
+        ok: false,
+        error: "This person didn't consent to public display.",
+      };
+    }
+  }
+
+  const { error } = await supabase
+    .from("parent_ticket_enquiries")
+    .update({ is_public: input.isPublic })
     .eq("id", input.id);
   if (error) return { ok: false, error: error.message };
   return { ok: true };

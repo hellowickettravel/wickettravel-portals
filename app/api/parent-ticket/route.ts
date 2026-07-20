@@ -172,6 +172,13 @@ function validatePayload(raw: unknown): ValidationResult {
   row.from_location = fromLocation;
   row.to_location = toLocation;
 
+  // Public-display opt-in. Recorded at intake and never editable from the
+  // admin side — an admin can only publish an entry that carries consent here
+  // (see setParentTicketPublic + the DB check constraint). Anything other than
+  // an explicit true means no consent.
+  row.consent_public =
+    input.consent_public === true || input.consent_public === "true";
+
   // Shared optional fields.
   row.travel_date = cleanDate(input.travel_date);
   for (const [field, maxLen] of Object.entries(SHARED_OPTIONAL_TEXT)) {

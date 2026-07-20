@@ -19,8 +19,10 @@ import { StatusBadge } from "@/components/admin/status-badge";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { Switch } from "@/components/ui/switch";
 import {
   setParentTicketStatus,
+  setParentTicketPublic,
   addParentTicketNote,
 } from "@/lib/actions/parents-tickets";
 import {
@@ -29,6 +31,7 @@ import {
   PARENT_TICKET_STATUS_TONE,
   PARENT_TICKET_TYPE_LABELS,
   PARENT_TICKET_TYPE_TONE,
+  maskDisplayName,
   type ParentTicketEnquiry,
   type ParentTicketNote,
   type ParentTicketStatus,
@@ -86,6 +89,10 @@ export function ParentTicketDetail({
   );
   const [noteDraft, setNoteDraft] = useState("");
   const [noteBusy, setNoteBusy] = useState(false);
+  const [isPublic, setIsPublic] = useState(enquiry.is_public);
+  const [publicBusy, setPublicBusy] = useState(false);
+
+  const canPublish = enquiry.consent_public;
 
   const isTraveller = enquiry.enquiry_type === "traveller";
 
@@ -108,6 +115,22 @@ export function ParentTicketDetail({
       return;
     }
     toast.success(`Marked as ${PARENT_TICKET_STATUS_LABELS[next]}`);
+    router.refresh();
+  }
+
+  async function togglePublic(next: boolean) {
+    if (!canPublish && next) return;
+    const prev = isPublic;
+    setIsPublic(next);
+    setPublicBusy(true);
+    const res = await setParentTicketPublic({ id: enquiry.id, isPublic: next });
+    setPublicBusy(false);
+    if (!res.ok) {
+      setIsPublic(prev);
+      toast.error("Couldn't update visibility", { description: res.error });
+      return;
+    }
+    toast.success(next ? "Now showing on the website" : "Hidden from the website");
     router.refresh();
   }
 
@@ -164,6 +187,9 @@ export function ParentTicketDetail({
               <StatusBadge tone={PARENT_TICKET_STATUS_TONE[status]}>
                 {PARENT_TICKET_STATUS_LABELS[status]}
               </StatusBadge>
+              {isPublic ? (
+                <StatusBadge tone="green">On website</StatusBadge>
+              ) : null}
             </div>
             <p className="text-sm text-muted-foreground">
               {enquiry.full_name} · Submitted {fmtDate(enquiry.created_at)}
@@ -229,6 +255,49 @@ export function ParentTicketDetail({
               </Button>
             ))}
           </div>
+        </div>
+      </SectionCard>
+
+      {/* Public visibility */}
+      <SectionCard
+        title="Website visibility"
+        description="Nothing is shown publicly until you turn this on."
+      >
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <div className="min-w-0 space-y-1">
+            <label
+              htmlFor="show-on-website"
+              className={cn(
+                "block text-sm font-medium",
+                canPublish ? "text-foreground" : "text-muted-foreground"
+              )}
+            >
+              Show on website
+            </label>
+            {canPublish ? (
+              <p className="text-sm text-muted-foreground">
+                The public board shows only{" "}
+                <span className="font-medium text-foreground">
+                  {maskDisplayName(enquiry.full_name)}
+                </span>
+                , the route, date, airline, languages and what help is
+                offered/needed — never contact details.
+              </p>
+            ) : (
+              <p className="text-sm text-muted-foreground">
+                Unavailable — this person didn’t agree to public display when
+                they submitted the form.
+              </p>
+            )}
+          </div>
+          <Switch
+            id="show-on-website"
+            checked={isPublic}
+            disabled={!canPublish || publicBusy}
+            onCheckedChange={togglePublic}
+            aria-label="Show this entry on the website"
+            className="shrink-0"
+          />
         </div>
       </SectionCard>
 
