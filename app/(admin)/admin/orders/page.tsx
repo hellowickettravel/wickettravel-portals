@@ -75,8 +75,8 @@ export default function OrdersPage() {
     refetchInterval: 60_000,
   });
 
-  // Realtime: new/updated orders refresh the list instantly. The server already
-  // returns rows newest-first, so a new order lands at the top automatically.
+  // Realtime: new/updated orders refresh the list instantly. Rows are re-sorted
+  // by travel date below, so ordering stays correct as new orders arrive.
   // Admin RLS scopes the stream to every order.
   useEffect(() => {
     const channel = supabase
@@ -92,7 +92,24 @@ export default function OrdersPage() {
     };
   }, [supabase, queryClient]);
 
-  const all = useMemo(() => orders ?? [], [orders]);
+  // Sort by travel date, soonest first — the order flying next sits at the top
+  // so the team always sees the most time-critical bookings first. Orders with
+  // no travel date sink to the bottom; newest-created breaks any tie.
+  const all = useMemo(() => {
+    const rows = orders ?? [];
+    return [...rows].sort((a, b) => {
+      const at = a.travel_date;
+      const bt = b.travel_date;
+      if (at && bt) {
+        if (at !== bt) return at < bt ? -1 : 1;
+      } else if (at) {
+        return -1;
+      } else if (bt) {
+        return 1;
+      }
+      return (b.created_at ?? "").localeCompare(a.created_at ?? "");
+    });
+  }, [orders]);
   const [limit, setLimit] = useState(PAGE_SIZE);
 
   const totals = useMemo(() => {

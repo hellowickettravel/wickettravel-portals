@@ -2,13 +2,14 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { LifeBuoy, CheckCircle2, RotateCcw, Loader2 } from "lucide-react";
+import { LifeBuoy, CheckCircle2, RotateCcw, Loader2, Search } from "lucide-react";
 import { toast } from "sonner";
 import { PageHeader } from "@/components/admin/page-header";
 import { SectionCard } from "@/components/admin/section-card";
 import { StatusBadge } from "@/components/admin/status-badge";
 import { UserCell } from "@/components/admin/user-cell";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { TableSkeleton } from "@/components/portal/skeletons";
 import {
   listAllSupportTickets,
@@ -22,16 +23,28 @@ import { cn } from "@/lib/utils";
 const TABS = ["All", "Open", "Resolved"] as const;
 type Tab = (typeof TABS)[number];
 
+const SUBMITTERS = [
+  { label: "Everyone", value: "all" },
+  { label: "Customers", value: "customer" },
+  { label: "Team", value: "employee" },
+] as const;
+type Submitter = (typeof SUBMITTERS)[number]["value"];
+
+const selectClass =
+  "h-10 rounded-[10px] border border-input bg-card px-3 text-sm text-foreground outline-none transition-colors focus-visible:border-brand focus-visible:ring-[3px] focus-visible:ring-brand/25";
+
 export default function AdminSupportPage() {
   const queryClient = useQueryClient();
   const supabase = useMemo(() => createClient(), []);
   const [tab, setTab] = useState<Tab>("All");
+  const [submitter, setSubmitter] = useState<Submitter>("all");
+  const [query, setQuery] = useState("");
 
   const { data, isLoading, isError } = useQuery({
     queryKey: ADMIN_SUPPORT_TICKETS_KEY,
     queryFn: listAllSupportTickets,
   });
-  const tickets = data ?? [];
+  const tickets = useMemo(() => data ?? [], [data]);
 
   // Realtime: new/updated tickets refresh the queue live.
   useEffect(() => {
@@ -64,8 +77,44 @@ export default function AdminSupportPage() {
   });
 
   const openCount = tickets.filter((t) => t.status === "open").length;
-  const visible = tickets.filter((t) =>
-    tab === "All" ? true : t.status === tab.toLowerCase()
+
+  // Name shown/searched for a ticket depends on who raised it.
+  const submitterName = (t: (typeof tickets)[number]) =>
+    t.submitter_role === "customer"
+      ? t.customer?.full_name || "Customer"
+      : t.employee?.full_name || "Employee";
+
+  // Live counts per status tab (respecting the submitter + search filters, so
+  // the numbers always match what a tab would actually show).
+  const preTab = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    return tickets.filter((t) => {
+      const matchesSubmitter =
+        submitter === "all" ? true : t.submitter_role === submitter;
+      const matchesQuery =
+        !q ||
+        [t.subject, t.message, submitterName(t)]
+          .join(" ")
+          .toLowerCase()
+          .includes(q);
+      return matchesSubmitter && matchesQuery;
+    });
+    // submitterName is a stable pure helper; tickets/submitter/query drive this.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [tickets, submitter, query]);
+
+  const tabCounts: Record<Tab, number> = {
+    All: preTab.length,
+    Open: preTab.filter((t) => t.status === "open").length,
+    Resolved: preTab.filter((t) => t.status === "resolved").length,
+  };
+
+  const visible = useMemo(
+    () =>
+      preTab.filter((t) =>
+        tab === "All" ? true : t.status === tab.toLowerCase()
+      ),
+    [preTab, tab]
   );
 
   return (
@@ -76,26 +125,61 @@ export default function AdminSupportPage() {
         subtitle="Issues raised by your team and customers — triage and resolve."
       />
 
-      <div className="flex items-center justify-between gap-3">
+      <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
         <div className="inline-flex items-center gap-1 rounded-xl bg-muted p-1">
           {TABS.map((t) => (
             <button
               key={t}
               onClick={() => setTab(t)}
               className={cn(
-                "rounded-lg px-3.5 py-1.5 text-sm font-medium transition-colors",
+                "inline-flex items-center gap-1.5 rounded-lg px-3.5 py-1.5 text-sm font-medium transition-colors",
                 tab === t
                   ? "bg-primary text-primary-foreground shadow-sm"
                   : "text-muted-foreground hover:text-foreground"
               )}
             >
               {t}
+              <span
+                className={cn(
+                  "rounded-full px-1.5 py-0.5 text-[11px] font-semibold tabular-nums",
+                  tab === t
+                    ? "bg-primary-foreground/20 text-primary-foreground"
+                    : "bg-card text-muted-foreground"
+                )}
+              >
+                {tabCounts[t]}
+              </span>
             </button>
           ))}
         </div>
-        <p className="text-sm text-muted-foreground">
-          <span className="font-semibold text-foreground">{openCount}</span> open
-        </p>
+
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+          <p className="order-last text-sm text-muted-foreground sm:order-first">
+            <span className="font-semibold text-foreground">{openCount}</span> open
+          </p>
+          <select
+            aria-label="Filter by who raised the ticket"
+            value={submitter}
+            onChange={(e) => setSubmitter(e.target.value as Submitter)}
+            className={cn(selectClass, "w-full sm:w-40")}
+          >
+            {SUBMITTERS.map((s) => (
+              <option key={s.value} value={s.value}>
+                {s.label}
+              </option>
+            ))}
+          </select>
+          <div className="relative sm:w-72">
+            <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+            <Input
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              aria-label="Search support tickets by subject, message or name"
+              placeholder="Search subject, message or name…"
+              className="h-10 rounded-[10px] bg-card pl-9"
+            />
+          </div>
+        </div>
       </div>
 
       <SectionCard flush>
@@ -122,7 +206,7 @@ export default function AdminSupportPage() {
           </div>
         ) : visible.length === 0 ? (
           <p className="px-6 py-10 text-center text-sm text-muted-foreground">
-            No {tab.toLowerCase()} tickets.
+            No tickets match your filters.
           </p>
         ) : (
           <ul className="divide-y divide-border">
