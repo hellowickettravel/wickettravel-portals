@@ -146,7 +146,8 @@ export type NotificationType =
   | "new_order"
   | "assignment"
   | "status_change"
-  | "support_ticket";
+  | "support_ticket"
+  | "parent_ticket";
 
 export type Notification = {
   id: string;

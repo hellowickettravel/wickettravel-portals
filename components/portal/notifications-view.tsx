@@ -10,6 +10,7 @@ import {
   UserCheck,
   RefreshCw,
   LifeBuoy,
+  HeartHandshake,
   Star,
   CheckCheck,
   Inbox,
@@ -35,6 +36,7 @@ const ICON_BY_TYPE: Record<NotificationType, typeof Bell> = {
   assignment: UserCheck,
   status_change: RefreshCw,
   support_ticket: LifeBuoy,
+  parent_ticket: HeartHandshake,
 };
 
 type Portal = "admin" | "employee" | "customer";
@@ -147,6 +149,8 @@ export function NotificationsView({
         return `${base}/messages`;
       case "support_ticket":
         return portal === "customer" ? "/customer/support" : "/admin/support";
+      case "parent_ticket":
+        return "/admin/parents-tickets";
       default:
         return base;
     }

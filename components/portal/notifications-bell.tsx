@@ -12,6 +12,7 @@ import {
   RefreshCw,
   CheckCheck,
   LifeBuoy,
+  HeartHandshake,
   ArrowRight,
 } from "lucide-react";
 import { toast } from "sonner";
@@ -38,6 +39,7 @@ const ICON_BY_TYPE: Record<NotificationType, typeof Bell> = {
   assignment: UserCheck,
   status_change: RefreshCw,
   support_ticket: LifeBuoy,
+  parent_ticket: HeartHandshake,
 };
 
 /**
@@ -123,6 +125,8 @@ export function NotificationsBell({
         return `${base}/messages`;
       case "support_ticket":
         return portal === "customer" ? "/customer/support" : "/admin/support";
+      case "parent_ticket":
+        return "/admin/parents-tickets";
       default:
         return base;
     }
