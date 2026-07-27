@@ -3,8 +3,17 @@
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useQuery } from "@tanstack/react-query";
-import { Plus, Search, MoreHorizontal, Eye, Download, ChevronRight } from "lucide-react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import {
+  Plus,
+  Search,
+  MoreHorizontal,
+  Eye,
+  Download,
+  ChevronRight,
+  ClipboardList,
+} from "lucide-react";
+import { createClient } from "@/lib/supabase/client";
 import { PageHeader } from "@/components/admin/page-header";
 import { SectionCard } from "@/components/admin/section-card";
 import { StatusBadge, type Tone } from "@/components/admin/status-badge";
@@ -54,13 +63,34 @@ const ORDERS_KEY = ["admin", "orders"] as const;
 
 export default function OrdersPage() {
   const router = useRouter();
+  const queryClient = useQueryClient();
+  const supabase = useMemo(() => createClient(), []);
   const [tab, setTab] = useState<Tab>("all");
   const [query, setQuery] = useState("");
 
   const { data: orders, isLoading, isError } = useQuery({
     queryKey: ORDERS_KEY,
     queryFn: listOrders,
+    // Safety net so the list is never more than a minute stale if realtime drops.
+    refetchInterval: 60_000,
   });
+
+  // Realtime: new/updated orders refresh the list instantly. The server already
+  // returns rows newest-first, so a new order lands at the top automatically.
+  // Admin RLS scopes the stream to every order.
+  useEffect(() => {
+    const channel = supabase
+      .channel("admin-orders-list")
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "orders" },
+        () => queryClient.invalidateQueries({ queryKey: ORDERS_KEY })
+      )
+      .subscribe();
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [supabase, queryClient]);
 
   const all = useMemo(() => orders ?? [], [orders]);
   const [limit, setLimit] = useState(PAGE_SIZE);
@@ -297,6 +327,7 @@ export default function OrdersPage() {
                     <TableHead className="pl-6">Order</TableHead>
                     <TableHead>Customer</TableHead>
                     <TableHead>Route</TableHead>
+                    <TableHead>Requested Data</TableHead>
                     <TableHead>Travel date</TableHead>
                     <TableHead className="text-center">Pax</TableHead>
                     <TableHead className="text-right">Price</TableHead>
@@ -326,6 +357,16 @@ export default function OrdersPage() {
                   <TableCell>{o.customer?.name ?? "—"}</TableCell>
                   <TableCell className="font-medium text-muted-foreground">
                     {o.route_from ?? "—"} → {o.route_to ?? "—"}
+                  </TableCell>
+                  <TableCell onClick={(e) => e.stopPropagation()}>
+                    <Link
+                      href={`/admin/orders/${o.id}`}
+                      className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-card px-2.5 py-1.5 text-xs font-medium text-foreground transition-colors hover:border-brand hover:text-brand"
+                      title="View the details the customer submitted with this order"
+                    >
+                      <ClipboardList className="size-3.5" />
+                      Requested data
+                    </Link>
                   </TableCell>
                   <TableCell className="text-muted-foreground">
                     {fmtDate(o.travel_date)}
@@ -376,7 +417,7 @@ export default function OrdersPage() {
                   {filtered.length === 0 ? (
                     <TableRow>
                       <TableCell
-                        colSpan={11}
+                        colSpan={12}
                         className="py-10 text-center text-sm text-muted-foreground"
                       >
                         No orders match your filters.

@@ -101,7 +101,16 @@ export default function AdminCustomersPage() {
     createMutation.mutate({ fullName, email, password, waPhone: waPhone || null });
   }
 
-  const all = useMemo(() => data ?? [], [data]);
+  // Newest customers first (the server sorts alphabetically for the order
+  // picker; this list wants latest-at-top). Sort a copy so we don't mutate cache.
+  const all = useMemo(
+    () =>
+      [...(data ?? [])].sort(
+        (a, b) =>
+          new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+      ),
+    [data]
+  );
   // Filter by order status first (customers with a matching order), then let the
   // shared controls handle name/phone search + paging over the narrowed set.
   const statusFiltered = useMemo(

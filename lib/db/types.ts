@@ -69,6 +69,8 @@ export type Message = {
   body: string;
   media_url: string | null;
   sender_id: string | null; // profile id for outgoing; null for incoming
+  /** The message this one replies to (same conversation); null = not a reply. */
+  reply_to_id: string | null;
   created_at: string;
 };
 
@@ -117,6 +119,8 @@ export type OrderMessage = {
   sender_role: SenderRole;
   body: string | null;
   media_url: string | null; // storage path in 'order-attachments', signed for display
+  /** The order message this one replies to; null = not a reply. */
+  reply_to_id: string | null;
   created_at: string;
 };
 
@@ -152,6 +156,8 @@ export type Notification = {
   body: string | null;
   link: string | null;
   is_read: boolean;
+  /** The viewer starred this notification (per-recipient, 0019). */
+  is_starred: boolean;
   created_at: string;
   /** Who performed the action; null for system/service-role events. */
   actor_id: string | null;

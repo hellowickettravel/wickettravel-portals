@@ -1,9 +1,10 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { createClient } from "@/lib/supabase/client";
 import { Search, HeartHandshake, Eye, ChevronRight, ArrowRight } from "lucide-react";
 import { PageHeader } from "@/components/admin/page-header";
 import { SectionCard } from "@/components/admin/section-card";
@@ -62,10 +63,32 @@ function Route({ from, to }: { from: string; to: string }) {
 
 export default function AdminParentsTicketsPage() {
   const router = useRouter();
+  const queryClient = useQueryClient();
+  const supabase = useMemo(() => createClient(), []);
   const { data, isLoading, isError } = useQuery({
     queryKey: TICKETS_KEY,
     queryFn: listParentTickets,
+    // Realtime is the primary live path; this is a safety net so the board is
+    // never more than a minute stale even if the socket drops.
+    refetchInterval: 60_000,
   });
+
+  // Realtime: any insert/update/delete on the leads table refreshes the board
+  // instantly (admin RLS scopes the stream to all rows). Enabled in migration
+  // 0019 (publication + replica identity).
+  useEffect(() => {
+    const channel = supabase
+      .channel("admin-parent-tickets")
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "parent_ticket_enquiries" },
+        () => queryClient.invalidateQueries({ queryKey: TICKETS_KEY })
+      )
+      .subscribe();
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [supabase, queryClient]);
 
   const [statusTab, setStatusTab] = useState<"all" | ParentTicketStatus>("all");
   const [typeFilter, setTypeFilter] = useState<"all" | ParentTicketType>("all");

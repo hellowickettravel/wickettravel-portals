@@ -40,7 +40,7 @@ type ActionResult = { ok: true } | { ok: false; error: string };
 type DataResult<T> = { ok: true; data: T } | { ok: false; error: string };
 
 const MESSAGE_COLUMNS =
-  "id, conversation_id, direction, body, media_url, sender_id, created_at";
+  "id, conversation_id, direction, body, media_url, sender_id, reply_to_id, created_at";
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const MIN_PASSWORD = 8;
@@ -819,6 +819,7 @@ export async function adminSendMessage(input: {
   conversationId: string;
   body: string;
   mediaUrl?: string | null;
+  replyToId?: string | null;
 }): Promise<DataResult<Message>> {
   const { user, profile } = await getUserAndProfile();
   if (!user || profile?.role !== "admin") {
@@ -838,6 +839,7 @@ export async function adminSendMessage(input: {
       body: body || "",
       media_url: input.mediaUrl ?? null,
       sender_id: user.id,
+      reply_to_id: input.replyToId ?? null,
     })
     .select(MESSAGE_COLUMNS)
     .single<Message>();

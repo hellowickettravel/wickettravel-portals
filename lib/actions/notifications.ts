@@ -14,9 +14,12 @@ import type { Notification, NotificationPrefs } from "@/lib/db/types";
 type ActionResult = { ok: true } | { ok: false; error: string };
 
 const NOTIFICATION_COLUMNS =
-  "id, recipient_id, type, title, body, link, is_read, created_at, actor_id, actor_name";
+  "id, recipient_id, type, title, body, link, is_read, is_starred, created_at, actor_id, actor_name";
 
 const NOTIFICATIONS_LIMIT = 20;
+// The dedicated Notifications page shows the full recent history (still RLS-scoped
+// to the caller), not just the bell's short preview list.
+const NOTIFICATIONS_PAGE_LIMIT = 200;
 
 export type NotificationFeed = {
   items: Notification[];
@@ -44,6 +47,47 @@ export async function listMyNotifications(): Promise<NotificationFeed> {
   ]);
 
   return { items: items ?? [], unreadCount: count ?? 0 };
+}
+
+/** Full recent notification history for the dedicated Notifications page. */
+export async function listAllMyNotifications(): Promise<NotificationFeed> {
+  const { user } = await getUserAndProfile();
+  if (!user) return { items: [], unreadCount: 0 };
+
+  const supabase = await createClient();
+
+  const [{ data: items }, { count }] = await Promise.all([
+    supabase
+      .from("notifications")
+      .select(NOTIFICATION_COLUMNS)
+      .order("created_at", { ascending: false })
+      .limit(NOTIFICATIONS_PAGE_LIMIT)
+      .returns<Notification[]>(),
+    supabase
+      .from("notifications")
+      .select("id", { count: "exact", head: true })
+      .eq("is_read", false),
+  ]);
+
+  return { items: items ?? [], unreadCount: count ?? 0 };
+}
+
+/** Star / unstar one of my notifications (RLS scopes the update to my rows). */
+export async function setNotificationStarred(input: {
+  id: string;
+  starred: boolean;
+}): Promise<ActionResult> {
+  const { user } = await getUserAndProfile();
+  if (!user) return { ok: false, error: "Unauthorized" };
+
+  const supabase = await createClient();
+  const { error } = await supabase
+    .from("notifications")
+    .update({ is_starred: input.starred })
+    .eq("id", input.id);
+
+  if (error) return { ok: false, error: error.message };
+  return { ok: true };
 }
 
 export async function markNotificationRead(id: string): Promise<ActionResult> {

@@ -20,6 +20,12 @@ import { MessageAttachment } from "@/components/portal/message-attachment";
 import { MessageText } from "@/components/portal/message-text";
 import { ChatBackButton } from "@/components/portal/chat-back-button";
 import { SendOrderLinkButton } from "@/components/portal/send-order-link-button";
+import {
+  MessageReplyButton,
+  QuotedMessage,
+  ReplyComposerBar,
+  type QuotedRef,
+} from "@/components/portal/chat-reply";
 import { createClient } from "@/lib/supabase/client";
 import { listOrderMessages, sendOrderMessage } from "@/lib/actions/orders";
 import { orderMessagesKey } from "@/lib/query-keys";
@@ -81,6 +87,7 @@ export function OrderInbox({
   const [draft, setDraft] = useState("");
   const [pendingFile, setPendingFile] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
+  const [replyingTo, setReplyingTo] = useState<OrderMessage | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
 
@@ -89,6 +96,28 @@ export function OrderInbox({
     queryFn: () => listOrderMessages(orderId),
   });
   const thread = useMemo(() => messages ?? [], [messages]);
+
+  // id → message, so a reply can resolve its quoted preview from the loaded thread.
+  const byId = useMemo(() => {
+    const map = new Map<string, OrderMessage>();
+    for (const m of thread) map.set(m.id, m);
+    return map;
+  }, [thread]);
+
+  const quotedRefOf = (m: OrderMessage): QuotedRef => ({
+    label: ROLE_LABEL[m.sender_role],
+    body: m.body,
+    hasAttachment: !!m.media_url,
+  });
+
+  function jumpToMessage(id: string) {
+    const el = document.getElementById(`omsg-${id}`);
+    if (el) {
+      el.scrollIntoView({ behavior: "smooth", block: "center" });
+      el.classList.add("ring-2", "ring-brand/50");
+      setTimeout(() => el.classList.remove("ring-2", "ring-brand/50"), 1200);
+    }
+  }
 
   // Realtime: any new message/attachment on THIS order refetches. RLS already
   // scopes the stream to participants, so we just listen for this order_id.
@@ -130,6 +159,7 @@ export function OrderInbox({
         body: vars.body.trim() || null,
         // displayUrl (signed) for the optimistic bubble only; the refetch re-signs.
         media_url: vars.attachment?.path ?? null,
+        reply_to_id: vars.replyToId ?? null,
         created_at: new Date().toISOString(),
       };
       queryClient.setQueryData<OrderMessage[]>(messagesKey, (old) => [
@@ -184,6 +214,8 @@ export function OrderInbox({
     const text = draft.trim();
     if (!text && !pendingFile) return;
 
+    const replyToId = replyingTo?.id ?? null;
+
     // Upload the pending attachment (if any) only now, on Send. The order path is
     // access-scoped, so the upload itself is gated to order participants.
     if (pendingFile) {
@@ -197,6 +229,7 @@ export function OrderInbox({
       sendMutation.mutate({
         orderId,
         body: text,
+        replyToId,
         attachment: {
           path: result.path,
           name: result.name,
@@ -206,11 +239,13 @@ export function OrderInbox({
       });
       setPendingFile(null);
       setDraft("");
+      setReplyingTo(null);
       return;
     }
 
-    sendMutation.mutate({ orderId, body: text });
+    sendMutation.mutate({ orderId, body: text, replyToId });
     setDraft("");
+    setReplyingTo(null);
   }
 
   const labelFlags = senderLabelFlags(thread, (m) => m.sender_id ?? m.sender_role);
@@ -258,47 +293,67 @@ export function OrderInbox({
             thread.map((m, i) => {
               const mine = m.sender_id === currentUserId;
               const showLabel = labelFlags[i];
+              const quoted = m.reply_to_id ? byId.get(m.reply_to_id) : undefined;
+              const isOptimistic = m.id.startsWith("optimistic-");
               return (
                 <div
                   key={m.id}
                   className={cn(
-                    "flex animate-in fade-in slide-in-from-bottom-1 duration-200",
+                    "group flex animate-in fade-in slide-in-from-bottom-1 duration-200",
                     mine ? "justify-end" : "justify-start",
                     // Tighten the gap for continued messages in the same run.
                     !showLabel && "-mt-1.5"
                   )}
                 >
-                  <div className="max-w-[80%] sm:max-w-[60%]">
-                    {showLabel ? (
-                      <span
-                        className={cn(
-                          "mb-1 block text-[11px] font-medium text-muted-foreground",
-                          mine ? "text-right" : "text-left"
-                        )}
-                      >
-                        {ROLE_LABEL[m.sender_role]}
-                      </span>
+                  <div
+                    className={cn(
+                      "flex max-w-[80%] items-center gap-1.5 sm:max-w-[60%]",
+                      mine ? "flex-row" : "flex-row-reverse"
+                    )}
+                  >
+                    {canSend && !isOptimistic ? (
+                      <MessageReplyButton onClick={() => setReplyingTo(m)} />
                     ) : null}
-                    <div
-                      className={cn(
-                        "rounded-2xl px-3.5 py-2 text-sm shadow-sm",
-                        mine
-                          ? "rounded-br-md bg-primary text-primary-foreground"
-                          : "rounded-bl-md border border-border bg-white text-foreground"
-                      )}
-                    >
-                      {m.media_url ? (
-                        <MessageAttachment url={m.media_url} mine={mine} />
+                    <div className="min-w-0">
+                      {showLabel ? (
+                        <span
+                          className={cn(
+                            "mb-1 block text-[11px] font-medium text-muted-foreground",
+                            mine ? "text-right" : "text-left"
+                          )}
+                        >
+                          {ROLE_LABEL[m.sender_role]}
+                        </span>
                       ) : null}
-                      {m.body ? <MessageText text={m.body} mine={mine} /> : null}
-                      <span
+                      <div
+                        id={`omsg-${m.id}`}
                         className={cn(
-                          "mt-1 block text-right text-[10px]",
-                          mine ? "text-white/70" : "text-muted-foreground"
+                          "rounded-2xl px-3.5 py-2 text-sm shadow-sm transition-shadow",
+                          mine
+                            ? "rounded-br-md bg-primary text-primary-foreground"
+                            : "rounded-bl-md border border-border bg-white text-foreground"
                         )}
                       >
-                        {fmtClock(m.created_at)}
-                      </span>
+                        {quoted ? (
+                          <QuotedMessage
+                            quoted={quotedRefOf(quoted)}
+                            mine={mine}
+                            onJump={() => jumpToMessage(quoted.id)}
+                          />
+                        ) : null}
+                        {m.media_url ? (
+                          <MessageAttachment url={m.media_url} mine={mine} />
+                        ) : null}
+                        {m.body ? <MessageText text={m.body} mine={mine} /> : null}
+                        <span
+                          className={cn(
+                            "mt-1 block text-right text-[10px]",
+                            mine ? "text-white/70" : "text-muted-foreground"
+                          )}
+                        >
+                          {fmtClock(m.created_at)}
+                        </span>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -310,6 +365,12 @@ export function OrderInbox({
         {/* Composer / locked notice */}
         {canSend ? (
           <form onSubmit={send} className="border-t border-border bg-card px-3 py-3">
+            {replyingTo ? (
+              <ReplyComposerBar
+                quoted={quotedRefOf(replyingTo)}
+                onCancel={() => setReplyingTo(null)}
+              />
+            ) : null}
             {pendingFile ? (
               <div className="mb-2 flex items-center gap-2.5 rounded-xl border border-border bg-neutral-soft px-2.5 py-2">
                 {pendingPreview ? (

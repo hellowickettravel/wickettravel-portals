@@ -88,6 +88,7 @@ export async function sendOrderMessage(input: {
   orderId: string;
   body: string;
   attachment?: RecordedAttachment | null;
+  replyToId?: string | null;
 }): Promise<SendResult> {
   const { user, profile } = await getUserAndProfile();
   if (!user) return { ok: false, error: "Unauthorized" };
@@ -126,8 +127,9 @@ export async function sendOrderMessage(input: {
       sender_role: role,
       body: body || null,
       media_url: attachment?.path ?? null,
+      reply_to_id: input.replyToId ?? null,
     })
-    .select("id, order_id, sender_id, sender_role, body, media_url, created_at")
+    .select("id, order_id, sender_id, sender_role, body, media_url, reply_to_id, created_at")
     .single<OrderMessage>();
 
   // RLS rejects a locked-order customer send (and any non-participant) here.

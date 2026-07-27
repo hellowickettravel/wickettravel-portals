@@ -27,7 +27,7 @@ type ActionResult<T = undefined> =
   | { ok: false; error: string };
 
 const MESSAGE_COLUMNS =
-  "id, conversation_id, direction, body, media_url, sender_id, created_at";
+  "id, conversation_id, direction, body, media_url, sender_id, reply_to_id, created_at";
 const CUSTOMER_COLUMNS = "id, profile_id, wa_phone, name, created_at";
 
 /**
@@ -197,6 +197,7 @@ export async function sendCustomerMessage(input: {
   conversationId?: string;
   body: string;
   mediaUrl?: string | null;
+  replyToId?: string | null;
 }): Promise<ActionResult<Message>> {
   let conversationId: string;
   try {
@@ -233,6 +234,7 @@ export async function sendCustomerMessage(input: {
       body: body || "",
       media_url: input.mediaUrl ?? null,
       sender_id: null,
+      reply_to_id: input.replyToId ?? null,
     })
     .select(MESSAGE_COLUMNS)
     .single<Message>();

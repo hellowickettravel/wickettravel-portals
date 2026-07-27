@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
@@ -11,6 +12,7 @@ import {
   RefreshCw,
   CheckCheck,
   LifeBuoy,
+  ArrowRight,
 } from "lucide-react";
 import { toast } from "sonner";
 import {
@@ -54,6 +56,8 @@ export function NotificationsBell({
   const router = useRouter();
   const queryClient = useQueryClient();
   const supabase = useMemo(() => createClient(), []);
+  const notificationsHref =
+    portal === "customer" ? "/customer/notifications" : `/${portal}/notifications`;
 
   const { data } = useQuery({
     queryKey: NOTIFICATIONS_KEY,
@@ -118,7 +122,7 @@ export function NotificationsBell({
       case "assignment":
         return `${base}/messages`;
       case "support_ticket":
-        return "/admin/support";
+        return portal === "customer" ? "/customer/support" : "/admin/support";
       default:
         return base;
     }
@@ -226,6 +230,14 @@ export function NotificationsBell({
             })}
           </ul>
         )}
+
+        <Link
+          href={notificationsHref}
+          className="flex items-center justify-center gap-1.5 border-t border-border px-3.5 py-2.5 text-sm font-medium text-brand outline-none transition-colors hover:bg-neutral-soft focus-visible:bg-neutral-soft"
+        >
+          View all notifications
+          <ArrowRight className="size-3.5" />
+        </Link>
       </DropdownMenuContent>
     </DropdownMenu>
   );

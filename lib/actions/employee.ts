@@ -31,7 +31,7 @@ type ActionResult<T = undefined> =
   | { ok: false; error: string };
 
 const MESSAGE_COLUMNS =
-  "id, conversation_id, direction, body, media_url, sender_id, created_at";
+  "id, conversation_id, direction, body, media_url, sender_id, reply_to_id, created_at";
 
 async function requireUser() {
   const { user, profile } = await getUserAndProfile();
@@ -70,6 +70,7 @@ export async function sendMessage(input: {
   conversationId: string;
   body: string;
   mediaUrl?: string | null;
+  replyToId?: string | null;
 }): Promise<ActionResult<Message>> {
   const { userId, profile } = await requireUser();
   const access = normalizeAccess(profile?.access_level);
@@ -105,6 +106,7 @@ export async function sendMessage(input: {
       body: body || "",
       media_url: input.mediaUrl ?? null,
       sender_id: userId,
+      reply_to_id: input.replyToId ?? null,
     })
     .select(MESSAGE_COLUMNS)
     .single<Message>();

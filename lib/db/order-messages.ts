@@ -14,7 +14,7 @@ export type SignedOrderAttachment = OrderAttachment & { url: string };
  */
 
 const ORDER_MESSAGE_COLUMNS =
-  "id, order_id, sender_id, sender_role, body, media_url, created_at";
+  "id, order_id, sender_id, sender_role, body, media_url, reply_to_id, created_at";
 
 const ORDER_ATTACHMENT_COLUMNS =
   "id, order_id, message_id, uploaded_by, uploader_role, storage_path, file_name, mime_type, size_bytes, created_at";

@@ -26,6 +26,12 @@ import { MessageAttachment } from "@/components/portal/message-attachment";
 import { MessageText } from "@/components/portal/message-text";
 import { ChatBackButton } from "@/components/portal/chat-back-button";
 import { SendOrderLinkButton } from "@/components/portal/send-order-link-button";
+import {
+  MessageReplyButton,
+  QuotedMessage,
+  ReplyComposerBar,
+  type QuotedRef,
+} from "@/components/portal/chat-reply";
 import { ROLE_LABEL, senderLabelFlags } from "@/lib/chat/labels";
 import { createClient } from "@/lib/supabase/client";
 import {
@@ -119,6 +125,7 @@ export function ConversationInbox({
   const [draft, setDraft] = useState("");
   const [uploading, setUploading] = useState(false);
   const [pendingFile, setPendingFile] = useState<File | null>(null);
+  const [replyingTo, setReplyingTo] = useState<Message | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
 
@@ -232,6 +239,7 @@ export function ConversationInbox({
 
   function openConversation(id: string) {
     setActiveId(id);
+    setReplyingTo(null);
     if (!isAdmin) {
       markConversationRead(id).then(() =>
         queryClient.invalidateQueries({ queryKey: inboxKey })
@@ -268,6 +276,7 @@ export function ConversationInbox({
       body: string;
       mediaUrl?: string | null;
       displayUrl?: string | null;
+      replyToId?: string | null;
     }) => sendAction(vars),
     onMutate: async (vars) => {
       const key = messagesKeyFor(vars.conversationId);
@@ -280,6 +289,7 @@ export function ConversationInbox({
         body: vars.body,
         media_url: vars.displayUrl ?? vars.mediaUrl ?? null,
         sender_id: currentUserId,
+        reply_to_id: vars.replyToId ?? null,
         created_at: new Date().toISOString(),
       };
       queryClient.setQueryData<Message[]>(key, (old) => [...(old ?? []), optimistic]);
@@ -321,6 +331,8 @@ export function ConversationInbox({
     const text = draft.trim();
     if (!text && !pendingFile) return;
 
+    const replyToId = replyingTo?.id ?? null;
+
     // Upload the pending attachment (if any) only now, on Send.
     if (pendingFile) {
       setUploading(true);
@@ -335,14 +347,17 @@ export function ConversationInbox({
         body: text,
         mediaUrl: result.path,
         displayUrl: result.url,
+        replyToId,
       });
       setPendingFile(null);
       setDraft("");
+      setReplyingTo(null);
       return;
     }
 
-    sendMutation.mutate({ conversationId: activeId, body: text });
+    sendMutation.mutate({ conversationId: activeId, body: text, replyToId });
     setDraft("");
+    setReplyingTo(null);
   }
 
   // Pick a file → ATTACH it as a pending preview; don't send until Send.
@@ -358,12 +373,34 @@ export function ConversationInbox({
     setPendingFile(file);
   }
 
-  const thread = messages ?? [];
+  const thread = useMemo(() => messages ?? [], [messages]);
   // Group consecutive messages from the same side so the fixed role label shows
   // only once per run (no-repeat-in-a-row). Incoming = the customer; outgoing =
   // this staff viewer (Admin for the admin scope, Support Team for an employee).
   const labelFlags = senderLabelFlags(thread, (m) => m.direction);
   const outgoingLabel = isAdmin ? ROLE_LABEL.admin : ROLE_LABEL.employee;
+
+  // id → message, so a reply resolves its quoted preview from the loaded thread.
+  const byId = useMemo(() => {
+    const map = new Map<string, Message>();
+    for (const m of thread) map.set(m.id, m);
+    return map;
+  }, [thread]);
+
+  const quotedRefOf = (m: Message): QuotedRef => ({
+    label: m.direction === "outgoing" ? outgoingLabel : ROLE_LABEL.customer,
+    body: m.body,
+    hasAttachment: !!m.media_url,
+  });
+
+  function jumpToMessage(id: string) {
+    const el = document.getElementById(`cmsg-${id}`);
+    if (el) {
+      el.scrollIntoView({ behavior: "smooth", block: "center" });
+      el.classList.add("ring-2", "ring-brand/50");
+      setTimeout(() => el.classList.remove("ring-2", "ring-brand/50"), 1200);
+    }
+  }
 
   return (
     <div className="flex h-[calc(100dvh-9.5rem)] min-h-[460px] overflow-hidden rounded-2xl border border-border bg-card shadow-card">
@@ -463,7 +500,10 @@ export function ConversationInbox({
             <div className="flex items-center justify-between gap-3 border-b border-border px-4 py-3">
               <div className="flex items-center gap-3">
                 <ChatBackButton
-                  onClick={() => setActiveId(undefined)}
+                  onClick={() => {
+                    setActiveId(undefined);
+                    setReplyingTo(null);
+                  }}
                   label="Back to conversations"
                 />
                 <Avatar className="size-9">
@@ -561,45 +601,65 @@ export function ConversationInbox({
                 thread.map((m, i) => {
                   const mine = m.direction === "outgoing";
                   const showLabel = labelFlags[i];
+                  const quoted = m.reply_to_id ? byId.get(m.reply_to_id) : undefined;
+                  const isOptimistic = m.id.startsWith("optimistic-");
                   return (
                     <div
                       key={m.id}
                       className={cn(
-                        "flex",
+                        "group flex",
                         mine ? "justify-end" : "justify-start",
                         // Tighten the gap for continued messages in the same run.
                         !showLabel && "-mt-1.5"
                       )}
                     >
-                      <div className="max-w-[80%] sm:max-w-[60%]">
-                        {showLabel ? (
-                          <span
-                            className={cn(
-                              "mb-1 block text-[11px] font-medium text-muted-foreground",
-                              mine ? "text-right" : "text-left"
-                            )}
-                          >
-                            {mine ? outgoingLabel : ROLE_LABEL.customer}
-                          </span>
+                      <div
+                        className={cn(
+                          "flex max-w-[80%] items-center gap-1.5 sm:max-w-[60%]",
+                          mine ? "flex-row" : "flex-row-reverse"
+                        )}
+                      >
+                        {!readOnly && !isOptimistic ? (
+                          <MessageReplyButton onClick={() => setReplyingTo(m)} />
                         ) : null}
-                        <div
-                          className={cn(
-                            "rounded-2xl px-3.5 py-2 text-sm shadow-sm",
-                            mine
-                              ? "rounded-br-md bg-primary text-primary-foreground"
-                              : "rounded-bl-md border border-border bg-white text-foreground"
-                          )}
-                        >
-                          {m.media_url ? <MessageAttachment url={m.media_url} mine={mine} /> : null}
-                          {m.body ? <MessageText text={m.body} mine={mine} /> : null}
-                          <span
+                        <div className="min-w-0">
+                          {showLabel ? (
+                            <span
+                              className={cn(
+                                "mb-1 block text-[11px] font-medium text-muted-foreground",
+                                mine ? "text-right" : "text-left"
+                              )}
+                            >
+                              {mine ? outgoingLabel : ROLE_LABEL.customer}
+                            </span>
+                          ) : null}
+                          <div
+                            id={`cmsg-${m.id}`}
                             className={cn(
-                              "mt-1 block text-right text-[10px]",
-                              mine ? "text-white/70" : "text-muted-foreground"
+                              "rounded-2xl px-3.5 py-2 text-sm shadow-sm transition-shadow",
+                              mine
+                                ? "rounded-br-md bg-primary text-primary-foreground"
+                                : "rounded-bl-md border border-border bg-white text-foreground"
                             )}
                           >
-                            {fmtClock(m.created_at)}
-                          </span>
+                            {quoted ? (
+                              <QuotedMessage
+                                quoted={quotedRefOf(quoted)}
+                                mine={mine}
+                                onJump={() => jumpToMessage(quoted.id)}
+                              />
+                            ) : null}
+                            {m.media_url ? <MessageAttachment url={m.media_url} mine={mine} /> : null}
+                            {m.body ? <MessageText text={m.body} mine={mine} /> : null}
+                            <span
+                              className={cn(
+                                "mt-1 block text-right text-[10px]",
+                                mine ? "text-white/70" : "text-muted-foreground"
+                              )}
+                            >
+                              {fmtClock(m.created_at)}
+                            </span>
+                          </div>
                         </div>
                       </div>
                     </div>
@@ -616,6 +676,12 @@ export function ConversationInbox({
               </div>
             ) : (
               <form onSubmit={send} className="border-t border-border bg-card px-3 py-3">
+                {replyingTo ? (
+                  <ReplyComposerBar
+                    quoted={quotedRefOf(replyingTo)}
+                    onCancel={() => setReplyingTo(null)}
+                  />
+                ) : null}
                 {pendingFile ? (
                   <div className="mb-2 flex items-center gap-2.5 rounded-xl border border-border bg-neutral-soft px-2.5 py-2">
                     {pendingPreview ? (
