@@ -26,6 +26,15 @@ function supabaseOrigin(): string {
 function contentSecurityPolicy(): string {
   const supabase = supabaseOrigin();
   const supabaseWs = supabase.replace(/^https:/, "wss:");
+  // Dev only: React + Turbopack use eval() for HMR, source maps and callstack
+  // reconstruction, which a CSP without 'unsafe-eval' blocks (throws the
+  // "eval() is not supported in this environment" console error). This is
+  // gated to development so the PRODUCTION CSP stays strict — React never uses
+  // eval() in production builds.
+  const scriptSrc =
+    process.env.NODE_ENV === "production"
+      ? "script-src 'self' 'unsafe-inline'"
+      : "script-src 'self' 'unsafe-inline' 'unsafe-eval'";
   return [
     "default-src 'self'",
     "base-uri 'self'",
@@ -33,7 +42,7 @@ function contentSecurityPolicy(): string {
     "frame-ancestors 'none'",
     "form-action 'self'",
     // Next.js injects an inline hydration bootstrap; Supabase JS is bundled.
-    "script-src 'self' 'unsafe-inline'",
+    scriptSrc,
     // Tailwind + component libraries emit inline styles.
     "style-src 'self' 'unsafe-inline'",
     "font-src 'self' data:",
