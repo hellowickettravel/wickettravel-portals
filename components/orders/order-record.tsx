@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import {
   Plane,
   Calendar,
@@ -10,13 +11,27 @@ import {
   Paperclip,
   Baby,
 } from "lucide-react";
-import { SectionCard } from "@/components/admin/section-card";
+
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { IconChip } from "@/components/ui/icon-chip";
 import type { Order } from "@/lib/db/types";
 import type { SignedOrderAttachment } from "@/lib/db/order-messages";
 import { cabinLabel, tripTypeLabel } from "@/lib/orders/form";
-import { fmtDate } from "@/lib/format";
+import { fmtDate, routeLabel } from "@/lib/format";
 import { cn } from "@/lib/utils";
 
+/**
+ * One line of an order record: a faint icon and label on the left, the fact on
+ * the right in heading colour. Used by the admin, employee and customer views
+ * of the same order, so they can't drift apart.
+ */
 function DetailRow({
   icon: Icon,
   label,
@@ -24,15 +39,17 @@ function DetailRow({
 }: {
   icon: typeof Plane;
   label: string;
-  value: React.ReactNode;
+  value: ReactNode;
 }) {
   return (
     <div className="flex items-start justify-between gap-4 py-2.5">
-      <span className="flex items-center gap-2 text-sm text-muted-foreground">
-        <Icon className="size-4 text-slate-400" />
+      <span className="flex items-center gap-2 text-[14.5px] text-tx-muted">
+        <Icon className="size-4 shrink-0 text-tx-faint" />
         {label}
       </span>
-      <span className="text-right text-sm font-medium text-foreground">{value}</span>
+      <span className="text-right text-[14.5px] font-semibold text-tx-head">
+        {value}
+      </span>
     </div>
   );
 }
@@ -48,66 +65,66 @@ export function FlightDetailsCard({ order }: { order: Order }) {
   }${childPart}`;
 
   return (
-    <SectionCard title="Flight details">
-      <div className="divide-y divide-border">
-        <DetailRow
-          icon={Route}
-          label="Route"
-          value={`${order.route_from ?? "—"} → ${order.route_to ?? "—"}`}
-        />
-        <DetailRow icon={Plane} label="Trip type" value={tripTypeLabel(order.trip_type)} />
-        <DetailRow icon={Armchair} label="Cabin class" value={cabinLabel(order.cabin_class)} />
-        <DetailRow icon={Calendar} label="Departure" value={fmtDate(order.travel_date)} />
-        <DetailRow
-          icon={Calendar}
-          label="Return"
-          value={order.return_date ? fmtDate(order.return_date) : "—"}
-        />
-        <DetailRow icon={Users} label="Passengers" value={passengerSummary} />
-        {order.children > 0 && order.child_ages.length > 0 ? (
+    <Card size="sm">
+      <CardHeader>
+        <CardTitle>Flight details</CardTitle>
+      </CardHeader>
+      <CardContent>
+        <div className="divide-y divide-line-faint">
           <DetailRow
-            icon={Baby}
-            label="Children's ages"
-            value={order.child_ages.join(", ")}
+            icon={Route}
+            label="Route"
+            value={routeLabel(order.route_from, order.route_to)}
           />
-        ) : null}
-        <DetailRow
-          icon={Accessibility}
-          label="Wheelchair"
-          value={order.wheelchair ? "Requested" : "Not needed"}
-        />
-        <DetailRow
-          icon={Luggage}
-          label="Extra luggage"
-          value={
-            order.extra_luggage
-              ? order.extra_luggage_kg
-                ? `Yes · ${order.extra_luggage_kg} kg`
-                : "Yes"
-              : "No"
-          }
-        />
-      </div>
-
-      {order.passenger_names.length > 0 ? (
-        <div className="mt-4 border-t border-border pt-4">
-          <p className="text-xs font-medium uppercase tracking-wider text-slate-600">
-            Passenger names
-          </p>
-          <div className="mt-2.5 flex flex-wrap gap-2">
-            {order.passenger_names.map((name, i) => (
-              <span
-                key={`${name}-${i}`}
-                className="inline-flex items-center gap-1.5 rounded-full bg-sky-tint px-3 py-1 text-sm font-medium text-ocean-deep"
-              >
-                <Users className="size-3.5" />
-                {name}
-              </span>
-            ))}
-          </div>
+          <DetailRow icon={Plane} label="Trip type" value={tripTypeLabel(order.trip_type)} />
+          <DetailRow icon={Armchair} label="Cabin class" value={cabinLabel(order.cabin_class)} />
+          <DetailRow icon={Calendar} label="Departure" value={fmtDate(order.travel_date)} />
+          <DetailRow
+            icon={Calendar}
+            label="Return"
+            value={order.return_date ? fmtDate(order.return_date) : "—"}
+          />
+          <DetailRow icon={Users} label="Passengers" value={passengerSummary} />
+          {order.children > 0 && order.child_ages.length > 0 ? (
+            <DetailRow
+              icon={Baby}
+              label="Children's ages"
+              value={<span className="tabular">{order.child_ages.join(", ")}</span>}
+            />
+          ) : null}
+          <DetailRow
+            icon={Accessibility}
+            label="Wheelchair"
+            value={order.wheelchair ? "Requested" : "Not needed"}
+          />
+          <DetailRow
+            icon={Luggage}
+            label="Extra luggage"
+            value={
+              order.extra_luggage
+                ? order.extra_luggage_kg
+                  ? `Yes · ${order.extra_luggage_kg} kg`
+                  : "Yes"
+                : "No"
+            }
+          />
         </div>
-      ) : null}
-    </SectionCard>
+
+        {order.passenger_names.length > 0 ? (
+          <div className="mt-5 border-t border-line-faint pt-4">
+            <p className="font-micro text-tx-faint">Passenger names</p>
+            <div className="mt-2.5 flex flex-wrap gap-2">
+              {order.passenger_names.map((name, i) => (
+                <Badge key={`${name}-${i}`} variant="sky">
+                  <Users />
+                  {name}
+                </Badge>
+              ))}
+            </div>
+          </div>
+        ) : null}
+      </CardContent>
+    </Card>
   );
 }
 
@@ -120,6 +137,9 @@ function isImage(att: SignedOrderAttachment): boolean {
  * The customer's pre-order note + any files they shared in the gate. Always
  * rendered so staff can see whether the customer engaged the gate; shows an
  * empty hint when nothing was provided.
+ *
+ * The note sits on coral tint — it is the customer's own words, quoted, and
+ * the system reserves that surface for exactly this kind of aside.
  */
 export function PreOrderNoteCard({
   note,
@@ -131,72 +151,82 @@ export function PreOrderNoteCard({
   const hasContent = !!note || attachments.length > 0;
 
   return (
-    <SectionCard
-      title="Pre-order note"
-      description="What the customer shared before placing the order."
-    >
-      {!hasContent ? (
-        <p className="text-sm text-muted-foreground">
-          No specific flights or files were shared — the customer asked us to find
-          the best options.
-        </p>
-      ) : (
-        <div className="space-y-4">
-          {note ? (
-            <div className="flex gap-3">
-              <FileText className="mt-0.5 size-4 shrink-0 text-ocean" />
-              <p className="whitespace-pre-wrap text-sm leading-relaxed text-foreground">
-                {note}
-              </p>
-            </div>
-          ) : null}
-
-          {attachments.length > 0 ? (
-            <div className="space-y-2">
-              <p className="flex items-center gap-1.5 text-xs font-medium uppercase tracking-wider text-slate-600">
-                <Paperclip className="size-3.5" />
-                {attachments.length} attachment{attachments.length !== 1 ? "s" : ""}
-              </p>
-              <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
-                {attachments.map((att) =>
-                  isImage(att) && att.url ? (
-                    <a
-                      key={att.id}
-                      href={att.url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="group block overflow-hidden rounded-xl border border-border bg-sunk"
-                    >
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img
-                        src={att.url}
-                        alt={att.file_name ?? "attachment"}
-                        className="h-28 w-full object-cover transition-transform group-hover:scale-105"
-                      />
-                    </a>
-                  ) : (
-                    <a
-                      key={att.id}
-                      href={att.url || undefined}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className={cn(
-                        "flex items-center gap-2.5 rounded-xl border border-border bg-sunk px-3 py-2.5 text-sm transition-colors hover:bg-muted",
-                        !att.url && "pointer-events-none opacity-60"
-                      )}
-                    >
-                      <FileText className="size-5 shrink-0 text-ocean" />
-                      <span className="min-w-0 flex-1 truncate text-foreground">
-                        {att.file_name ?? "attachment"}
-                      </span>
-                    </a>
-                  )
-                )}
+    <Card size="sm">
+      <CardHeader>
+        <CardTitle>Pre-order note</CardTitle>
+        <CardDescription>
+          What the customer shared before placing the order.
+        </CardDescription>
+      </CardHeader>
+      <CardContent>
+        {!hasContent ? (
+          <p className="text-[14.5px] leading-[1.6] text-tx-muted">
+            No specific flights or files were shared — the customer asked us to find
+            the best options.
+          </p>
+        ) : (
+          <div className="space-y-5">
+            {note ? (
+              <div className="flex gap-3 rounded-surface border border-coral-line bg-coral-tint p-4">
+                <FileText className="mt-0.5 size-[18px] shrink-0 text-coral-deep" />
+                <p className="whitespace-pre-wrap text-[14.5px] leading-[1.6] text-tx-body">
+                  {note}
+                </p>
               </div>
-            </div>
-          ) : null}
-        </div>
-      )}
-    </SectionCard>
+            ) : null}
+
+            {attachments.length > 0 ? (
+              <div className="space-y-2.5">
+                <p className="flex items-center gap-1.5 font-micro text-tx-faint">
+                  <Paperclip className="size-3.5" />
+                  {attachments.length} attachment{attachments.length !== 1 ? "s" : ""}
+                </p>
+                <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+                  {attachments.map((att) =>
+                    isImage(att) && att.url ? (
+                      <a
+                        key={att.id}
+                        href={att.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="group block overflow-hidden rounded-chip border border-line bg-sunk outline-none transition-shadow duration-150 ease-brand hover:shadow-lift focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-coral-deep"
+                      >
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img
+                          src={att.url}
+                          alt={att.file_name ?? "attachment"}
+                          className="h-28 w-full object-cover"
+                        />
+                      </a>
+                    ) : (
+                      <a
+                        key={att.id}
+                        href={att.url || undefined}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className={cn(
+                          "flex items-center gap-2.5 rounded-chip border border-line bg-sunk px-3 py-2.5 text-[14.5px] outline-none transition-colors duration-150 ease-brand hover:border-line-hover hover:bg-surface focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-coral-deep",
+                          !att.url && "pointer-events-none opacity-60"
+                        )}
+                      >
+                        <IconChip
+                          tone="ocean"
+                          className="size-8 rounded-chip [&_svg]:size-4"
+                        >
+                          <FileText />
+                        </IconChip>
+                        <span className="min-w-0 flex-1 truncate text-tx-body">
+                          {att.file_name ?? "attachment"}
+                        </span>
+                      </a>
+                    )
+                  )}
+                </div>
+              </div>
+            ) : null}
+          </div>
+        )}
+      </CardContent>
+    </Card>
   );
 }

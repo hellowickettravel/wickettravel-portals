@@ -41,6 +41,33 @@ export function fmtRelative(iso: string | null | undefined): string {
   return fmtDate(iso);
 }
 
+/**
+ * Pull the airport code out of a route field for the fare stub.
+ *
+ * The order form captures free text — "London (LHR)" is what we ask for, but
+ * "LHR", "London Heathrow" and "london" all arrive too. A parenthesised
+ * three-letter code wins; failing that a short entry is already a code; and
+ * anything longer is returned as-is, because guessing a code from a city name
+ * would put a fact on screen that nobody entered.
+ */
+export function routeCode(value: string | null | undefined): string {
+  if (!value) return "—";
+  const trimmed = value.trim();
+  const parenthesised = trimmed.match(/\(([A-Za-z]{3})\)/);
+  if (parenthesised) return parenthesised[1].toUpperCase();
+  if (trimmed.length <= 4) return trimmed.toUpperCase();
+  return trimmed;
+}
+
+/** "London (LHR) → Dubai (DXB)", or an em dash when neither end is set. */
+export function routeLabel(
+  from: string | null | undefined,
+  to: string | null | undefined
+): string {
+  if (!from && !to) return "—";
+  return `${from ?? "—"} → ${to ?? "—"}`;
+}
+
 /** Capitalize the first letter of each word (for lowercase enum display). */
 export function titleCase(value: string): string {
   return value

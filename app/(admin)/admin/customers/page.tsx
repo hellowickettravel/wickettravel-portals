@@ -1,26 +1,14 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import {
-  Search,
-  Contact,
-  Download,
-  Eye,
-  EyeOff,
-  ChevronRight,
-  UserPlus,
-  Loader2,
-} from "lucide-react";
+import { Contact, Download, UserPlus, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { PageHeader } from "@/components/admin/page-header";
-import { SectionCard } from "@/components/admin/section-card";
 import { StatusBadge } from "@/components/admin/status-badge";
 import { Button } from "@/components/ui/button";
+import { Field, FieldGroup } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import {
   Dialog,
   DialogContent,
@@ -30,21 +18,19 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import { TableSkeleton } from "@/components/portal/skeletons";
-import { MobileRecordCard } from "@/components/portal/mobile-record-card";
+  FilterBar,
+  FilterBarSpacer,
+  FilterChips,
+  FilterSearch,
+} from "@/components/portal/filter-bar";
+import { DataTable, type DataColumn } from "@/components/portal/data-table";
+import { LoadMoreFooter } from "@/components/portal/pagination";
+import { PasswordInput } from "@/components/portal/password-input";
 import { listCustomersWithStats, createCustomer } from "@/lib/actions/admin";
 import { useListControls } from "@/lib/hooks/use-list-controls";
 import type { OrderStatus } from "@/lib/db/types";
 import { downloadCsv } from "@/lib/csv";
-import { fmtDate } from "@/lib/format";
-import { cn } from "@/lib/utils";
+import { fmtDate, num } from "@/lib/format";
 
 const CUSTOMERS_KEY = ["admin", "customers", "list"] as const;
 const PAGE_SIZE = 12;
@@ -58,7 +44,6 @@ const STATUS_TABS: { label: string; value: "all" | OrderStatus }[] = [
 ];
 
 export default function AdminCustomersPage() {
-  const router = useRouter();
   const queryClient = useQueryClient();
   const { data, isLoading, isError } = useQuery({
     queryKey: CUSTOMERS_KEY,
@@ -71,7 +56,6 @@ export default function AdminCustomersPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [waPhone, setWaPhone] = useState("");
-  const [showPassword, setShowPassword] = useState(false);
   const [statusTab, setStatusTab] = useState<"all" | OrderStatus>("all");
 
   const createMutation = useMutation({
@@ -89,7 +73,6 @@ export default function AdminCustomersPage() {
       setEmail("");
       setPassword("");
       setWaPhone("");
-      setShowPassword(false);
       queryClient.invalidateQueries({ queryKey: CUSTOMERS_KEY });
     },
     onError: () =>
@@ -120,6 +103,19 @@ export default function AdminCustomersPage() {
         : all.filter((c) => c.orderStatuses.includes(statusTab)),
     [all, statusTab]
   );
+  // Counts for the chips: how many customers have an order in each state.
+  const statusCounts = useMemo(() => {
+    const counts: Record<string, number> = { all: all.length };
+    for (const t of STATUS_TABS) {
+      const status = t.value;
+      if (status === "all") continue;
+      counts[status] = all.filter((c) =>
+        c.orderStatuses.includes(status)
+      ).length;
+    }
+    return counts;
+  }, [all]);
+
   const { query, setQuery, visible, total, hasMore, loadMore } = useListControls(
     statusFiltered,
     PAGE_SIZE,
@@ -143,283 +139,212 @@ export default function AdminCustomersPage() {
     );
   }
 
+  type CustomerRow = (typeof all)[number];
+
+  const columns: DataColumn<CustomerRow>[] = [
+    {
+      key: "name",
+      header: "Name",
+      mobile: "title",
+      cell: (c) => (
+        <span className="font-semibold text-tx-head">{c.name || "Unnamed"}</span>
+      ),
+    },
+    {
+      key: "phone",
+      header: "Phone",
+      mobile: "subtitle",
+      // A phone number is a code, not prose — tabular so the columns align.
+      cell: (c) =>
+        c.wa_phone ? (
+          <span className="tabular text-tx-muted">{c.wa_phone}</span>
+        ) : (
+          <span className="text-tx-faint">—</span>
+        ),
+    },
+    {
+      key: "account",
+      header: "Account",
+      mobile: "badge",
+      // Mint = they have a working login. Neutral = a lead with no account yet;
+      // that isn't a problem, so it isn't rose.
+      cell: (c) => (
+        <StatusBadge tone={c.profile_id ? "green" : "slate"}>
+          {c.profile_id ? "Account" : "Lead"}
+        </StatusBadge>
+      ),
+    },
+    {
+      key: "orders",
+      header: "Orders",
+      numeric: true,
+      cell: (c) => c.orderCount,
+    },
+    {
+      key: "conversations",
+      header: "Conversations",
+      numeric: true,
+      cell: (c) => c.conversationCount,
+    },
+    {
+      key: "created",
+      header: "Created",
+      numeric: true,
+      cell: (c) => fmtDate(c.created_at),
+    },
+  ];
+
   return (
-    <div className="space-y-7">
+    <div className="space-y-8">
       <PageHeader
-        eyebrow="People"
+        eyebrow={`${num(all.length)} on the books`}
         title="Customers"
-        subtitle="Everyone who's booked or messaged Wicket Travel."
+        subtitle="Everyone who has booked or messaged Wicket Travel."
         actions={
-          <div className="flex flex-wrap gap-2">
-            <Button variant="outline" onClick={exportCsv} disabled={all.length === 0}>
-              <Download className="size-4" />
+          <>
+            <Button variant="secondary" onClick={exportCsv} disabled={all.length === 0}>
+              <Download />
               Export CSV
             </Button>
             <Button onClick={() => setOpen(true)}>
-              <UserPlus className="size-4" />
-              Add Customer
+              <UserPlus />
+              Add customer
             </Button>
-          </div>
+          </>
         }
       />
 
-      <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-        <div className="flex items-center gap-1 overflow-x-auto rounded-xl bg-muted p-1">
-          {STATUS_TABS.map((t) => (
-            <button
-              key={t.value}
-              onClick={() => setStatusTab(t.value)}
-              className={cn(
-                "shrink-0 rounded-lg px-3.5 py-1.5 text-sm font-medium transition-colors",
-                statusTab === t.value
-                  ? "bg-primary text-primary-foreground shadow-sm"
-                  : "text-muted-foreground hover:text-foreground"
-              )}
-            >
-              {t.label}
-            </button>
-          ))}
-        </div>
-        <div className="relative lg:w-80">
-          <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-          <Input
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            placeholder="Search by name or phone…"
-            className="pl-9"
+      <section className="space-y-5">
+        <FilterBar>
+          <FilterChips
+            value={statusTab}
+            onValueChange={(v) => setStatusTab(v as "all" | OrderStatus)}
+            options={STATUS_TABS.map((t) => ({
+              value: t.value,
+              label: t.label,
+              count: statusCounts[t.value] ?? 0,
+            }))}
           />
-        </div>
-      </div>
+          <FilterBarSpacer />
+          <FilterSearch
+            value={query}
+            onValueChange={setQuery}
+            placeholder="Search by name or phone…"
+            aria-label="Search customers"
+          />
+        </FilterBar>
 
-      <SectionCard flush>
-        {isLoading ? (
-          <div className="p-4">
-            <TableSkeleton rows={6} columns={5} />
-          </div>
-        ) : isError ? (
-          <p className="px-6 py-10 text-center text-sm text-muted-foreground">
-            Couldn’t load customers. Refresh to try again.
-          </p>
-        ) : all.length === 0 ? (
-          <div className="flex flex-col items-center gap-2 px-6 py-14 text-center">
-            <div className="flex size-12 items-center justify-center rounded-2xl bg-sky-tint text-ocean-deep">
-              <Contact className="size-6" />
-            </div>
-            <p className="tracking-heading text-base font-semibold text-foreground">
-              No customers yet
-            </p>
-            <p className="max-w-sm text-sm text-muted-foreground">
-              Customers appear here once they sign up or message in.
-            </p>
-            <Button className="mt-2" onClick={() => setOpen(true)}>
-              <UserPlus className="size-4" />
-              Add Customer
-            </Button>
-          </div>
-        ) : (
-          <>
-            {/* Mobile cards */}
-            <div className="space-y-3 p-4 md:hidden">
-              {visible.length === 0 ? (
-                <p className="py-8 text-center text-sm text-muted-foreground">
-                  No customers match your search.
-                </p>
-              ) : (
-                visible.map((c) => (
-                  <Link key={c.id} href={`/admin/customers/${c.id}`} className="block">
-                    <MobileRecordCard
-                      title={<span className="text-tx-head">{c.name || "Unnamed"}</span>}
-                      subtitle={c.wa_phone ?? "No phone"}
-                      action={
-                        <span className="inline-flex items-center gap-0.5 text-xs font-medium text-ocean">
-                          View
-                          <ChevronRight className="size-4" />
-                        </span>
-                      }
-                      badge={
-                        <StatusBadge tone={c.profile_id ? "green" : "slate"}>
-                          {c.profile_id ? "Account" : "Lead"}
-                        </StatusBadge>
-                      }
-                      fields={[
-                        { label: "Orders", value: c.orderCount },
-                        { label: "Chats", value: c.conversationCount },
-                        { label: "Created", value: fmtDate(c.created_at), wide: true },
-                      ]}
-                    />
-                  </Link>
-                ))
-              )}
-            </div>
-
-            {/* Desktop table */}
-            <div className="hidden md:block">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead className="pl-6">Name</TableHead>
-                    <TableHead>Phone</TableHead>
-                    <TableHead>Account</TableHead>
-                    <TableHead className="text-center">Orders</TableHead>
-                    <TableHead className="text-center">Conversations</TableHead>
-                    <TableHead>Created</TableHead>
-                    <TableHead className="pr-6 text-right">Manage</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {visible.map((c) => (
-                    <TableRow
-                      key={c.id}
-                      className="cursor-pointer"
-                      onClick={() => router.push(`/admin/customers/${c.id}`)}
-                    >
-                      <TableCell className="pl-6 font-medium text-tx-head">
-                        <Link
-                          href={`/admin/customers/${c.id}`}
-                          className="hover:text-ocean"
-                          onClick={(e) => e.stopPropagation()}
-                        >
-                          {c.name || "Unnamed"}
-                        </Link>
-                      </TableCell>
-                      <TableCell className="text-muted-foreground">
-                        {c.wa_phone ?? "—"}
-                      </TableCell>
-                      <TableCell>
-                        <StatusBadge tone={c.profile_id ? "green" : "slate"}>
-                          {c.profile_id ? "Account" : "Lead"}
-                        </StatusBadge>
-                      </TableCell>
-                      <TableCell className="text-center tabular-nums">
-                        {c.orderCount}
-                      </TableCell>
-                      <TableCell className="text-center tabular-nums">
-                        {c.conversationCount}
-                      </TableCell>
-                      <TableCell className="text-muted-foreground">
-                        {fmtDate(c.created_at)}
-                      </TableCell>
-                      <TableCell
-                        className="pr-6 text-right"
-                        onClick={(e) => e.stopPropagation()}
-                      >
-                        <Link
-                          href={`/admin/customers/${c.id}`}
-                          className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-card px-3 py-1.5 text-sm font-medium text-foreground transition-colors hover:border-ocean hover:text-ocean"
-                        >
-                          <Eye className="size-4" />
-                          View
-                        </Link>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                  {visible.length === 0 ? (
-                    <TableRow>
-                      <TableCell
-                        colSpan={7}
-                        className="py-10 text-center text-sm text-muted-foreground"
-                      >
-                        No customers match your search.
-                      </TableCell>
-                    </TableRow>
-                  ) : null}
-                </TableBody>
-              </Table>
-            </div>
-
-            {hasMore ? (
-              <div className="flex justify-center border-t border-border p-4">
-                <Button variant="outline" size="sm" onClick={loadMore}>
-                  Load more ({total - visible.length} more)
-                </Button>
-              </div>
-            ) : null}
-          </>
-        )}
-      </SectionCard>
+        <DataTable
+          columns={columns}
+          rows={visible}
+          getRowKey={(c) => c.id}
+          rowHref={(c) => `/admin/customers/${c.id}`}
+          caption="Customers, newest first"
+          unit="customers"
+          loading={isLoading}
+          error={isError}
+          empty={
+            all.length === 0
+              ? {
+                  icon: <Contact />,
+                  title: "No customers yet",
+                  description: "Customers appear here once they sign up or message in.",
+                  action: (
+                    <Button onClick={() => setOpen(true)}>
+                      <UserPlus />
+                      Add customer
+                    </Button>
+                  ),
+                }
+              : {
+                  icon: <Contact />,
+                  title: "Nobody matches that",
+                  description:
+                    "Try a different name or phone number, or switch the status filter.",
+                }
+          }
+          footer={
+            hasMore ? (
+              <LoadMoreFooter
+                remaining={total - visible.length}
+                step={PAGE_SIZE}
+                unit="customers"
+                onLoadMore={loadMore}
+              />
+            ) : null
+          }
+        />
+      </section>
 
       {/* Add Customer dialog */}
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle className="tracking-heading">Add Customer</DialogTitle>
+            <DialogTitle>Add customer</DialogTitle>
             <DialogDescription>
               Creates a portal login so the customer can sign in straight away.
             </DialogDescription>
           </DialogHeader>
 
-          <form onSubmit={handleCreate} className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="cust-name" className="text-xs font-medium uppercase tracking-wider text-slate-600">
-                Full name
-              </Label>
-              <Input
-                id="cust-name"
-                value={fullName}
-                onChange={(e) => setFullName(e.target.value)}
-                placeholder="John Doe"
-                required
-                disabled={createMutation.isPending}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="cust-email" className="text-xs font-medium uppercase tracking-wider text-slate-600">
-                Email
-              </Label>
-              <Input
-                id="cust-email"
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="john@example.com"
-                required
-                disabled={createMutation.isPending}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="cust-phone" className="text-xs font-medium uppercase tracking-wider text-slate-600">
-                Phone number <span className="font-normal normal-case tracking-normal text-muted-foreground">(optional)</span>
-              </Label>
-              <Input
-                id="cust-phone"
-                type="tel"
-                value={waPhone}
-                onChange={(e) => setWaPhone(e.target.value)}
-                placeholder="+44 7700 900000"
-                disabled={createMutation.isPending}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="cust-pass" className="text-xs font-medium uppercase tracking-wider text-slate-600">
-                Temporary password
-              </Label>
-              <div className="relative">
+          <form onSubmit={handleCreate}>
+            <FieldGroup>
+              <Field label="Full name" htmlFor="cust-name" required>
                 <Input
+                  id="cust-name"
+                  value={fullName}
+                  onChange={(e) => setFullName(e.target.value)}
+                  placeholder="John Doe"
+                  required
+                  disabled={createMutation.isPending}
+                />
+              </Field>
+              <Field label="Email" htmlFor="cust-email" required>
+                <Input
+                  id="cust-email"
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="john@example.com"
+                  required
+                  disabled={createMutation.isPending}
+                />
+              </Field>
+              <Field
+                label="Phone number"
+                htmlFor="cust-phone"
+                hint="Optional — used to match them to an existing conversation."
+              >
+                <Input
+                  id="cust-phone"
+                  type="tel"
+                  value={waPhone}
+                  onChange={(e) => setWaPhone(e.target.value)}
+                  placeholder="+44 7700 900000"
+                  disabled={createMutation.isPending}
+                />
+              </Field>
+              <Field
+                label="Temporary password"
+                htmlFor="cust-pass"
+                hint="At least 8 characters. They can change it once they sign in."
+                required
+              >
+                <PasswordInput
                   id="cust-pass"
-                  type={showPassword ? "text" : "password"}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="At least 8 characters"
                   required
                   minLength={8}
                   disabled={createMutation.isPending}
-                  className="pr-10"
                 />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword((s) => !s)}
-                  aria-label={showPassword ? "Hide password" : "Show password"}
-                  className="absolute right-2 top-1/2 -translate-y-1/2 rounded-md p-1 text-muted-foreground transition-colors hover:text-foreground"
-                >
-                  {showPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
-                </button>
-              </div>
-            </div>
+              </Field>
+            </FieldGroup>
 
-            <DialogFooter className="gap-2">
+            <DialogFooter className="mt-8">
               <Button
                 type="button"
-                variant="outline"
+                variant="secondary"
                 onClick={() => setOpen(false)}
                 disabled={createMutation.isPending}
               >
@@ -428,7 +353,7 @@ export default function AdminCustomersPage() {
               <Button type="submit" disabled={createMutation.isPending}>
                 {createMutation.isPending ? (
                   <>
-                    <Loader2 className="size-4 animate-spin" />
+                    <Loader2 className="animate-spin" />
                     Creating…
                   </>
                 ) : (

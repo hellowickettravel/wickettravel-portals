@@ -1,4 +1,3 @@
-import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Panel } from "@/components/ui/section";
 import { cn } from "@/lib/utils";
@@ -11,19 +10,16 @@ import { cn } from "@/lib/utils";
  * so nothing jumps when the data lands.
  */
 
-/** A single stat card placeholder, matching <StatCard>. */
+/** A single stat card placeholder, matching <StatCard>'s anatomy exactly:
+ *  42px chip → micro-label → 30px metric → caption, in the same 24/22 box. */
 export function StatCardSkeleton() {
   return (
-    <Card size="sm">
-      <CardContent>
-        <div className="flex items-start justify-between gap-3">
-          <Skeleton className="h-3 w-20" />
-          <Skeleton className="size-[42px] rounded-icon" />
-        </div>
-        <Skeleton className="mt-4 h-7 w-16" />
-        <Skeleton className="mt-2 h-3 w-24" />
-      </CardContent>
-    </Card>
+    <div className="rounded-surface border border-line bg-surface px-6 py-[22px] shadow-lift">
+      <Skeleton className="size-[42px] rounded-icon" />
+      <Skeleton className="mt-[18px] h-3 w-24" />
+      <Skeleton className="mt-2.5 h-[26px] w-20" />
+      <Skeleton className="mt-2 h-3 w-28" />
+    </div>
   );
 }
 

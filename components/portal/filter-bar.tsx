@@ -172,7 +172,7 @@ function FilterSelect({
   return (
     <div className={cn("flex items-center gap-2", className)}>
       {label ? (
-        <label htmlFor={id} className="font-micro text-tx-faint">
+        <label htmlFor={id} className="font-micro text-tx-muted">
           {label}
         </label>
       ) : null}
@@ -194,4 +194,45 @@ function FilterSelect({
   );
 }
 
-export { FilterBar, FilterBarSpacer, FilterSearch, FilterChips, FilterSelect };
+/**
+ * A labelled compact date field, for "created from / to" style ranges.
+ * Same anatomy as <FilterSelect> so a bar mixing the two still lines up.
+ */
+function FilterDate({
+  label,
+  value,
+  onValueChange,
+  className,
+  ...props
+}: Omit<React.ComponentProps<typeof Input>, "value" | "onChange" | "size" | "type"> & {
+  label: string;
+  value: string;
+  onValueChange: (value: string) => void;
+}) {
+  const id = React.useId();
+  return (
+    <div className={cn("flex items-center gap-2", className)}>
+      <label htmlFor={id} className="font-micro whitespace-nowrap text-tx-muted">
+        {label}
+      </label>
+      <Input
+        id={id}
+        type="date"
+        size="sm"
+        value={value}
+        onChange={(e) => onValueChange(e.target.value)}
+        className={cn(compactControl, "w-auto")}
+        {...props}
+      />
+    </div>
+  );
+}
+
+export {
+  FilterBar,
+  FilterBarSpacer,
+  FilterSearch,
+  FilterChips,
+  FilterSelect,
+  FilterDate,
+};

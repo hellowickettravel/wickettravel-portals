@@ -70,6 +70,8 @@ type DataTableProps<T> = {
   footer?: ReactNode;
   /** Screen-reader description of what the table holds. */
   caption?: string;
+  /** Noun used when announcing the row count — "orders", "customers". */
+  unit?: string;
   className?: string;
 };
 
@@ -104,10 +106,22 @@ export function DataTable<T>({
   empty,
   footer,
   caption,
+  unit = "results",
   className,
 }: DataTableProps<T>) {
   const router = useRouter();
   const interactive = Boolean(rowHref || onRowClick);
+
+  /**
+   * Filtering happens above this component and changes the table silently —
+   * a sighted user watches rows disappear, a screen-reader user gets nothing.
+   * This says how many are left, and only speaks when the number changes.
+   */
+  const rowCount = (
+    <span role="status" aria-live="polite" className="sr-only">
+      {rows.length} {unit}
+    </span>
+  );
 
   /* ---------- Loading: keep the header, pulse the body ---------- */
   if (loading) {
@@ -179,6 +193,7 @@ export function DataTable<T>({
   if (rows.length === 0) {
     return (
       <Panel className={cn("overflow-hidden", className)}>
+        {rowCount}
         <EmptyState
           icon={empty?.icon}
           title={empty?.title ?? "Nothing here yet"}
@@ -204,6 +219,8 @@ export function DataTable<T>({
 
   return (
     <div data-slot="data-table" className={className}>
+      {rowCount}
+
       {/* ---------- Mobile: one card per record ---------- */}
       <div className="space-y-3 md:hidden">
         {rows.map((row) => {

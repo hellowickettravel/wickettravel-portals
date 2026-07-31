@@ -1,40 +1,28 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
-import { Search, Eye, Download, ChevronRight, Receipt } from "lucide-react";
+import { Download, Receipt } from "lucide-react";
+
 import { PageHeader } from "@/components/admin/page-header";
-import { SectionCard } from "@/components/admin/section-card";
-import { StatusBadge, type Tone } from "@/components/admin/status-badge";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { OrderStatusBadge, orderStatusLabel } from "@/components/admin/status-badge";
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import { TableSkeleton } from "@/components/portal/skeletons";
-import { MobileRecordCard } from "@/components/portal/mobile-record-card";
+  FilterBar,
+  FilterBarSpacer,
+  FilterChips,
+  FilterDate,
+  FilterSearch,
+  FilterSelect,
+} from "@/components/portal/filter-bar";
+import { DataTable, type DataColumn } from "@/components/portal/data-table";
+import { LoadMoreFooter } from "@/components/portal/pagination";
+import { Button } from "@/components/ui/button";
 import { listOrders, listEmployees } from "@/lib/actions/admin";
-import type { OrderStatus } from "@/lib/db/types";
-import { fmtDate, titleCase } from "@/lib/format";
+import type { OrderStatus, OrderWithRelations } from "@/lib/db/types";
+import { fmtDate, num } from "@/lib/format";
 import { downloadCsv } from "@/lib/csv";
-import { cn } from "@/lib/utils";
 
 const PAGE_SIZE = 20;
-
-const ORDER_TONE: Record<OrderStatus, Tone> = {
-  new: "blue",
-  in_progress: "amber",
-  completed: "green",
-  cancelled: "red",
-};
 
 const STATUS_TABS: { label: string; value: "all" | OrderStatus }[] = [
   { label: "All", value: "all" },
@@ -43,9 +31,6 @@ const STATUS_TABS: { label: string; value: "all" | OrderStatus }[] = [
   { label: "Completed", value: "completed" },
   { label: "Cancelled", value: "cancelled" },
 ];
-
-const selectClass =
-  "h-10 rounded-[10px] border border-input bg-card px-3 text-base text-foreground outline-none transition-colors focus-visible:border-ocean focus-visible:ring-[3px] focus-visible:ring-ocean/25 sm:text-sm";
 
 const ORDERS_KEY = ["admin", "orders"] as const;
 
@@ -56,7 +41,6 @@ const ORDERS_KEY = ["admin", "orders"] as const;
  * full order-detail view (flight details, pre-order note + the per-order inbox).
  */
 export default function TransactionsPage() {
-  const router = useRouter();
   const [tab, setTab] = useState<"all" | OrderStatus>("all");
   const [employeeId, setEmployeeId] = useState<string>("all");
   const [from, setFrom] = useState("");
@@ -107,6 +91,13 @@ export default function TransactionsPage() {
 
   const visible = filtered.slice(0, limit);
   const hasMore = filtered.length > limit;
+  const narrowed = Boolean(from || to || employeeId !== "all");
+
+  const tabCounts = useMemo(() => {
+    const counts: Record<string, number> = { all: all.length };
+    for (const o of all) counts[o.status] = (counts[o.status] ?? 0) + 1;
+    return counts;
+  }, [all]);
 
   function exportCsv() {
     downloadCsv(
@@ -116,270 +107,185 @@ export default function TransactionsPage() {
         o.order_number,
         o.customer?.name ?? "",
         o.assigned_employee?.full_name ?? "",
-        o.status,
+        orderStatusLabel(o.status),
         fmtDate(o.created_at),
         o.closed_at ? fmtDate(o.closed_at) : "",
       ])
     );
   }
 
+  const columns: DataColumn<OrderWithRelations>[] = [
+    {
+      key: "order",
+      header: "Order",
+      mobile: "title",
+      cell: (o) => (
+        <span className="font-mono text-[13.5px] font-medium text-tx-head">
+          {o.order_number}
+        </span>
+      ),
+    },
+    {
+      key: "customer",
+      header: "Customer",
+      mobile: "subtitle",
+      cell: (o) => o.customer?.name ?? "—",
+    },
+    {
+      key: "assigned",
+      header: "Assigned",
+      wide: true,
+      cell: (o) => (
+        <span className="text-tx-muted">
+          {o.assigned_employee?.full_name ?? "Unassigned"}
+        </span>
+      ),
+    },
+    {
+      key: "status",
+      header: "Status",
+      mobile: "badge",
+      cell: (o) => <OrderStatusBadge status={o.status} />,
+    },
+    {
+      key: "created",
+      header: "Created",
+      numeric: true,
+      cell: (o) => fmtDate(o.created_at),
+    },
+    {
+      key: "completed",
+      header: "Completed",
+      numeric: true,
+      cell: (o) =>
+        o.closed_at ? (
+          fmtDate(o.closed_at)
+        ) : (
+          <span className="text-tx-faint">—</span>
+        ),
+    },
+  ];
+
   return (
-    <div className="space-y-7">
+    /* One content block, so this is the 32px head→content step rather than the
+       72px section rhythm the dashboard and orders need. */
+    <div className="space-y-8">
       <PageHeader
-        eyebrow="Records"
+        eyebrow={`${num(all.length)} recorded · ${num(filtered.length)} shown`}
         title="Transactions"
-        subtitle="The complete record of every order across all customers."
+        subtitle="The complete record of every order across all customers, with who handled it and when it closed."
         actions={
-          <Button variant="outline" onClick={exportCsv} disabled={all.length === 0}>
-            <Download className="size-4" />
+          <Button variant="secondary" onClick={exportCsv} disabled={filtered.length === 0}>
+            <Download />
             Export CSV
           </Button>
         }
       />
 
-      {/* Filters */}
-      <div className="space-y-3">
-        <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-          <div className="flex items-center gap-1 overflow-x-auto rounded-xl bg-muted p-1">
-            {STATUS_TABS.map((t) => (
-              <button
-                key={t.value}
-                onClick={() => setTab(t.value)}
-                className={cn(
-                  "shrink-0 rounded-lg px-3.5 py-1.5 text-sm font-medium transition-colors",
-                  tab === t.value
-                    ? "bg-primary text-primary-foreground shadow-sm"
-                    : "text-muted-foreground hover:text-foreground"
-                )}
-              >
-                {t.label}
-              </button>
-            ))}
-          </div>
-          <div className="relative lg:w-72">
-            <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-            <Input
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              placeholder="Search by order # or customer…"
-              className="pl-9"
+      <section className="space-y-5">
+        <div className="space-y-3">
+          <FilterBar>
+            <FilterChips
+              value={tab}
+              onValueChange={(v) => setTab(v as "all" | OrderStatus)}
+              options={STATUS_TABS.map((t) => ({
+                value: t.value,
+                label: t.label,
+                count: tabCounts[t.value] ?? 0,
+              }))}
             />
-          </div>
-        </div>
+            <FilterBarSpacer />
+            <FilterSearch
+              value={query}
+              onValueChange={setQuery}
+              placeholder="Search by order # or customer…"
+              aria-label="Search transactions"
+            />
+          </FilterBar>
 
-        <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-end">
-          <div className="space-y-1.5">
-            <Label className="text-[11px] font-medium uppercase tracking-wider text-slate-600">
-              Employee
-            </Label>
-            <select
-              aria-label="Filter by assigned employee"
+          {/* The record-keeping filters sit on their own line: they narrow the
+              whole ledger, where the chips above only pick a status. */}
+          <FilterBar>
+            <FilterSelect
+              label="Employee"
               value={employeeId}
-              onChange={(e) => setEmployeeId(e.target.value)}
-              className={cn(selectClass, "w-full sm:w-52")}
-            >
-              <option value="all">All employees</option>
-              <option value="unassigned">Unassigned</option>
-              {employeeOptions.map((e) => (
-                <option key={e.id} value={e.id}>
-                  {e.full_name || e.email || "Employee"}
-                </option>
-              ))}
-            </select>
-          </div>
-          <div className="space-y-1.5">
-            <Label className="text-[11px] font-medium uppercase tracking-wider text-slate-600">
-              Created from
-            </Label>
-            <Input
-              type="date"
+              onValueChange={setEmployeeId}
+              aria-label="Filter by assigned employee"
+              options={[
+                { value: "all", label: "All employees" },
+                { value: "unassigned", label: "Unassigned" },
+                ...employeeOptions.map((e) => ({
+                  value: e.id,
+                  label: e.full_name || e.email || "Employee",
+                })),
+              ]}
+            />
+            <FilterDate
+              label="From"
               value={from}
               max={to || undefined}
-              onChange={(e) => setFrom(e.target.value)}
-              className="w-full sm:w-44"
+              onValueChange={setFrom}
+              aria-label="Created from"
             />
-          </div>
-          <div className="space-y-1.5">
-            <Label className="text-[11px] font-medium uppercase tracking-wider text-slate-600">
-              Created to
-            </Label>
-            <Input
-              type="date"
+            <FilterDate
+              label="To"
               value={to}
               min={from || undefined}
-              onChange={(e) => setTo(e.target.value)}
-              className="w-full sm:w-44"
+              onValueChange={setTo}
+              aria-label="Created to"
             />
-          </div>
-          {(from || to || employeeId !== "all") ? (
-            <Button
-              variant="ghost"
-              size="sm"
-              className="text-muted-foreground"
-              onClick={() => {
-                setFrom("");
-                setTo("");
-                setEmployeeId("all");
-              }}
-            >
-              Clear filters
-            </Button>
-          ) : null}
-        </div>
-      </div>
-
-      {/* Record */}
-      <SectionCard flush>
-        {isLoading ? (
-          <div className="p-4">
-            <TableSkeleton rows={8} columns={6} />
-          </div>
-        ) : isError ? (
-          <p className="px-6 py-10 text-center text-sm text-muted-foreground">
-            Couldn’t load transactions. Refresh to try again.
-          </p>
-        ) : all.length === 0 ? (
-          <div className="flex flex-col items-center gap-2 px-6 py-14 text-center">
-            <div className="flex size-12 items-center justify-center rounded-2xl bg-sky-tint text-ocean-deep">
-              <Receipt className="size-6" />
-            </div>
-            <p className="tracking-heading text-base font-semibold text-foreground">
-              No transactions yet
-            </p>
-            <p className="max-w-sm text-sm text-muted-foreground">
-              Every order placed across the portal will be recorded here.
-            </p>
-          </div>
-        ) : (
-          <>
-            {/* Mobile: stacked cards */}
-            <div className="space-y-3 p-4 md:hidden">
-              {filtered.length === 0 ? (
-                <p className="py-8 text-center text-sm text-muted-foreground">
-                  No transactions match your filters.
-                </p>
-              ) : (
-                visible.map((o) => (
-                  <Link key={o.id} href={`/admin/orders/${o.id}`} className="block">
-                    <MobileRecordCard
-                      title={<span className="text-tx-head">{o.order_number}</span>}
-                      subtitle={o.customer?.name ?? "—"}
-                      action={
-                        <span className="inline-flex items-center gap-0.5 text-xs font-medium text-ocean">
-                          View
-                          <ChevronRight className="size-4" />
-                        </span>
-                      }
-                      badge={
-                        <StatusBadge tone={ORDER_TONE[o.status]}>
-                          {titleCase(o.status)}
-                        </StatusBadge>
-                      }
-                      fields={[
-                        {
-                          label: "Assigned",
-                          value: o.assigned_employee?.full_name ?? "Unassigned",
-                          wide: true,
-                        },
-                        { label: "Created", value: fmtDate(o.created_at) },
-                        {
-                          label: "Completed",
-                          value: o.closed_at ? fmtDate(o.closed_at) : "—",
-                        },
-                      ]}
-                    />
-                  </Link>
-                ))
-              )}
-            </div>
-
-            {/* Desktop: full table */}
-            <div className="hidden md:block">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead className="pl-6">Order</TableHead>
-                    <TableHead>Customer</TableHead>
-                    <TableHead>Assigned</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead>Created</TableHead>
-                    <TableHead>Completed</TableHead>
-                    <TableHead className="pr-6 text-right">Open</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {visible.map((o) => (
-                    <TableRow
-                      key={o.id}
-                      className="cursor-pointer"
-                      onClick={() => router.push(`/admin/orders/${o.id}`)}
-                    >
-                      <TableCell className="pl-6 font-medium text-tx-head">
-                        <Link
-                          href={`/admin/orders/${o.id}`}
-                          className="hover:text-ocean"
-                          onClick={(e) => e.stopPropagation()}
-                        >
-                          {o.order_number}
-                        </Link>
-                      </TableCell>
-                      <TableCell>{o.customer?.name ?? "—"}</TableCell>
-                      <TableCell className="text-muted-foreground">
-                        {o.assigned_employee?.full_name ?? "Unassigned"}
-                      </TableCell>
-                      <TableCell>
-                        <StatusBadge tone={ORDER_TONE[o.status]}>
-                          {titleCase(o.status)}
-                        </StatusBadge>
-                      </TableCell>
-                      <TableCell className="text-muted-foreground">
-                        {fmtDate(o.created_at)}
-                      </TableCell>
-                      <TableCell className="text-muted-foreground">
-                        {o.closed_at ? fmtDate(o.closed_at) : "—"}
-                      </TableCell>
-                      <TableCell
-                        className="pr-6 text-right"
-                        onClick={(e) => e.stopPropagation()}
-                      >
-                        <Link
-                          href={`/admin/orders/${o.id}`}
-                          className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-card px-3 py-1.5 text-sm font-medium text-foreground transition-colors hover:border-ocean hover:text-ocean"
-                        >
-                          <Eye className="size-4" />
-                          View
-                        </Link>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                  {filtered.length === 0 ? (
-                    <TableRow>
-                      <TableCell
-                        colSpan={7}
-                        className="py-10 text-center text-sm text-muted-foreground"
-                      >
-                        No transactions match your filters.
-                      </TableCell>
-                    </TableRow>
-                  ) : null}
-                </TableBody>
-              </Table>
-            </div>
-
-            {hasMore ? (
-              <div className="flex justify-center border-t border-border p-4">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setLimit((l) => l + PAGE_SIZE)}
-                >
-                  Load more ({filtered.length - visible.length} more)
-                </Button>
-              </div>
+            {narrowed ? (
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-12 sm:h-[38px]"
+                onClick={() => {
+                  setFrom("");
+                  setTo("");
+                  setEmployeeId("all");
+                }}
+              >
+                Clear filters
+              </Button>
             ) : null}
-          </>
-        )}
-      </SectionCard>
+          </FilterBar>
+        </div>
+
+        <DataTable
+          columns={columns}
+          rows={visible}
+          getRowKey={(o) => o.id}
+          rowHref={(o) => `/admin/orders/${o.id}`}
+          caption="Every order, newest first"
+          unit="transactions"
+          loading={isLoading}
+          error={isError}
+          empty={
+            all.length === 0
+              ? {
+                  icon: <Receipt />,
+                  title: "No transactions yet",
+                  description: "Every order placed across the portal is recorded here.",
+                }
+              : {
+                  icon: <Receipt />,
+                  title: "Nothing matches those filters",
+                  description:
+                    "Widen the date range, or pick a different employee or status.",
+                }
+          }
+          footer={
+            hasMore ? (
+              <LoadMoreFooter
+                remaining={filtered.length - visible.length}
+                step={PAGE_SIZE}
+                unit="transactions"
+                onLoadMore={() => setLimit((l) => l + PAGE_SIZE)}
+              />
+            ) : null
+          }
+        />
+      </section>
     </div>
   );
 }

@@ -93,3 +93,42 @@ export function Pagination({
     </nav>
   );
 }
+
+/**
+ * The other paging model: a list that grows in place.
+ *
+ * Same footer surface as <Pagination> so the two are interchangeable at the
+ * bottom of a <DataTable>, and it says how many are left rather than just
+ * "load more" — a count is the thing that tells you whether to bother.
+ */
+export function LoadMoreFooter({
+  remaining,
+  step,
+  onLoadMore,
+  unit = "results",
+}: {
+  remaining: number;
+  /** How many the next click reveals. */
+  step: number;
+  onLoadMore: () => void;
+  unit?: string;
+}) {
+  if (remaining <= 0) return null;
+  return (
+    <div className="flex flex-col items-center justify-center gap-2 border-t border-line-faint bg-sunk px-5 py-3.5 sm:flex-row sm:gap-3">
+      <Button
+        type="button"
+        variant="secondary"
+        size="sm"
+        /* 38px suits a pointer and not a thumb; paging grows on phones. */
+        className="h-12 w-full sm:h-[38px] sm:w-auto"
+        onClick={onLoadMore}
+      >
+        Load {Math.min(step, remaining)} more
+      </Button>
+      <p className="text-[13px] text-tx-muted">
+        <span className="tabular text-tx-head">{remaining}</span> {unit} left
+      </p>
+    </div>
+  );
+}

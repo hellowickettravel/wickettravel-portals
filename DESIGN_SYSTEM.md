@@ -391,10 +391,11 @@ Built once so screens inherit them instead of each inventing its own.
 | Pattern | Where | Notes |
 |---|---|---|
 | `<PageHeader eyebrow title subtitle actions>` | `components/admin/page-header.tsx` | Eyebrow → H1 → lede → action, at 12/14. H1 steps to the H2 size below 640px. |
-| `<FilterBar>` + `FilterSearch` `FilterChips` `FilterSelect` | `components/portal/filter-bar.tsx` | One 38px row that wraps rather than scrolls. Selected chip is a white surface on a `sunk` track — sky tint would vanish against it. |
-| `<DataTable columns rows>` | `components/portal/data-table.tsx` | One column definition, two renderings: a real table from `md`, `<MobileRecordCard>`s below it. Loading, empty and error are states of the component, not branches each screen rewrites. |
+| `<FilterBar>` + `FilterSearch` `FilterChips` `FilterSelect` `FilterDate` | `components/portal/filter-bar.tsx` | One 38px row that wraps rather than scrolls, growing to 44/48px below `sm` for thumbs. Selected chip is a white surface on a `sunk` track — sky tint would vanish against it. |
+| `<DataTable columns rows>` | `components/portal/data-table.tsx` | One column definition, two renderings: a real table from `md`, `<MobileRecordCard>`s below it. Loading, empty and error are states of the component, not branches each screen rewrites. Announces its row count politely, so filtering isn't silent. |
 | `<EmptyState>` · `<ErrorState>` | `components/portal/states.tsx` | Icon chip, H4, one line, at most one action. |
-| `<Pagination page pageSize total>` | `components/portal/pagination.tsx` | Previous/next plus a tabular range, on the panel footer. |
+| `<Pagination page pageSize total>` · `<LoadMoreFooter>` | `components/portal/pagination.tsx` | Previous/next plus a tabular range, or a list that grows in place — same footer surface either way. |
+| `<OrdersTable rows>` | `components/admin/orders-table.tsx` | The order row, defined once. Server screens can't pass `<DataTable>` its cell functions across the RSC boundary, so they hand plain rows to this. |
 | Skeletons | `components/portal/skeletons.tsx` | Same surface, radius and rhythm as the real thing, so nothing jumps. |
 | `<Dialog>` | `components/ui/dialog.tsx` | `rounded-surface-lg`, `shadow-lift-lg`, `ocean-night/32` scrim, 260ms entrance. |
 | Toast | `.cn-toast` in `globals.css` | Sonner portals outside the tree, so its skin lives in CSS. Popup surface: clipped corner, lift-2, icon in the hue of what it says. |
@@ -402,6 +403,19 @@ Built once so screens inherit them instead of each inventing its own.
 **Table anatomy** — header row on `sunk` with Plex Mono micro-labels, 1px `line-faint`
 dividers, 14px of vertical air per cell, `sky-tint` row hover, and `numeric` on any column
 of money, counts or dates so the numerals go tabular.
+
+---
+
+## 15a. Composites
+
+| Composite | Where | Anatomy |
+|---|---|---|
+| `<StatCard tone label value icon hint>` | `components/admin/stat-card.tsx` | 42px icon chip → Plex Mono micro-label → 30px tabular metric → 13.5px caption, in a 24/22 box. **The tone is the meaning, never the variety**: `ocean` volume · `amber` money · `indigo` waiting · `mint` confirmed · `rose` attention · `coral` featured. The wash is the hue's tint fading to white at 62% on a 155° axis, bordered in its `-line` token. |
+| `<FareStub from to caption meta fare>` | `components/portal/fare-stub.tsx` | The signature. Route codes in Plex Mono 25px, coral plane between them, up to three facts along the foot, and the fare on a tear-off stub behind a 2px dashed perforation with a 22px notch punched through each end. Below 620px the tear turns horizontal and the fare drops underneath. **One per screen** — it is the booking, not a frame for other content. |
+| `<OrderStatusBadge status>` | `components/admin/status-badge.tsx` | The order lifecycle, badged once: `new` sky · `in_progress` amber with a live dot · `completed` mint · `cancelled` rose. |
+
+The fare stub's notch is filled with the page behind it (`--stub-notch`, default `canvas`),
+so it only reads as torn when it sits on the page rather than inside a card.
 
 ---
 
@@ -441,7 +455,10 @@ of money, counts or dates so the numerals go tabular.
 2. ✅ Primitives — button, input, textarea, select, field, choice, badge, icon chip, card, panel, section
 3. ✅ Shell + shared furniture — sidebar, topbar, drawer, page header, filter bar, data table, states, modal, toast, pagination
 4. ✅ Auth screens
-5. ⏳ Composites — fare stub, stat card
+5. ✅ Composites — fare stub, stat card, order status badge
 6. ⏳ Screens, one at a time — adopting `<DataTable>`, `<FilterBar>` and the state components as each is reached
+   - ✅ Admin: dashboard, orders, transactions, order detail, customers (list + detail)
+   - ⏳ Admin: employees, messages, analytics, visa queries, parents tickets, support, settings
+   - ⏳ Employee portal · Customer portal
 
 Restyling screens before the primitives exist leaves the old values alive in a hundred places.

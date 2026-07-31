@@ -37,27 +37,23 @@ export function CustomerDangerZone({
   }
 
   return (
-    <div className="flex flex-col gap-3 rounded-2xl border border-rose-200 bg-rose-50/50 p-5 sm:flex-row sm:items-center sm:justify-between">
+    <div className="flex flex-col gap-4 rounded-surface border border-rose-line bg-rose-tint p-5 sm:flex-row sm:items-center sm:justify-between md:px-6">
       <div>
-        <p className="tracking-heading text-sm font-semibold text-rose-700">
+        <p className="text-[16.5px] leading-[1.42] font-semibold text-rose">
           Danger zone
         </p>
-        <p className="text-xs text-muted-foreground">
+        <p className="mt-1.5 max-w-[58ch] text-[14.5px] leading-[1.6] text-tx-muted">
           Permanently delete this customer and their chat history. Orders are
           kept for revenue history.
         </p>
       </div>
       <Button
-        variant="outline"
-        className="shrink-0 border-rose-line text-rose hover:bg-rose-tint hover:text-rose"
+        variant="destructive"
+        className="shrink-0"
         onClick={() => setOpen(true)}
         disabled={busy}
       >
-        {busy ? (
-          <Loader2 className="size-4 animate-spin" />
-        ) : (
-          <Trash2 className="size-4" />
-        )}
+        {busy ? <Loader2 className="animate-spin" /> : <Trash2 />}
         Delete customer
       </Button>
 

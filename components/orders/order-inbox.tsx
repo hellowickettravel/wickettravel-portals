@@ -15,7 +15,9 @@ import {
 import { toast } from "sonner";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { SectionCard } from "@/components/admin/section-card";
+import { IconChip } from "@/components/ui/icon-chip";
+import { Panel } from "@/components/ui/section";
+import { EmptyState } from "@/components/portal/states";
 import { MessageAttachment } from "@/components/portal/message-attachment";
 import { MessageText } from "@/components/portal/message-text";
 import { ChatBackButton } from "@/components/portal/chat-back-button";
@@ -251,44 +253,43 @@ export function OrderInbox({
   const labelFlags = senderLabelFlags(thread, (m) => m.sender_id ?? m.sender_role);
 
   return (
-    <SectionCard flush className="overflow-hidden">
+    <Panel className="overflow-hidden">
       <div className="flex h-[440px] flex-col">
         {/* Header — back to the orders list + thread title */}
-        <div className="flex items-center gap-2.5 border-b border-border bg-card px-3 py-3">
+        <div className="flex items-center gap-2.5 border-b border-line bg-surface px-3 py-3">
           <ChatBackButton onClick={() => router.back()} label="Back to orders" />
           <div className="leading-tight">
-            <p className="tracking-heading text-sm font-semibold text-tx-head">Order chat</p>
-            <p className="text-xs text-muted-foreground">
+            <p className="text-[15px] font-semibold tracking-ui text-tx-head">
+              Order chat
+            </p>
+            <p className="text-[13px] text-tx-muted">
               Messages about this specific booking — visible to you and the
               Wicket Travel team.
             </p>
           </div>
         </div>
 
-        {/* Thread */}
+        {/* Thread — on canvas, so the bubbles are the surfaces. */}
         <div
           ref={scrollRef}
-          className="flex-1 space-y-3 overflow-y-auto bg-sunk/50 px-4 py-5 md:px-6"
+          className="flex-1 space-y-3 overflow-y-auto bg-canvas px-4 py-5 md:px-6"
         >
           {isLoading ? (
-            <div className="flex h-full items-center justify-center text-sm text-muted-foreground">
-              <Loader2 className="mr-2 size-4 animate-spin" />
+            <div className="flex h-full items-center justify-center gap-2 text-[14.5px] text-tx-muted">
+              <Loader2 className="size-4 animate-spin" />
               Loading messages…
             </div>
           ) : thread.length === 0 ? (
-            <div className="flex h-full flex-col items-center justify-center gap-2 text-center">
-              <div className="flex size-11 items-center justify-center rounded-2xl bg-sky-tint text-ocean-deep">
-                <MessagesSquare className="size-5" />
-              </div>
-              <p className="tracking-heading text-sm font-semibold text-foreground">
-                No messages yet
-              </p>
-              <p className="max-w-xs text-sm text-muted-foreground">
-                {canSend
+            <EmptyState
+              icon={<MessagesSquare />}
+              title="No messages yet"
+              description={
+                canSend
                   ? "Start the conversation about this booking below."
-                  : "There are no messages on this order."}
-              </p>
-            </div>
+                  : "There are no messages on this order."
+              }
+              className="h-full py-0"
+            />
           ) : (
             thread.map((m, i) => {
               const mine = m.sender_id === currentUserId;
@@ -315,10 +316,12 @@ export function OrderInbox({
                       <MessageReplyButton onClick={() => setReplyingTo(m)} />
                     ) : null}
                     <div className="min-w-0">
+                      {/* Who is speaking, once per run — Admin · Support Team ·
+                          Customer. A micro-label, like every other tag. */}
                       {showLabel ? (
                         <span
                           className={cn(
-                            "mb-1 block text-[11px] font-medium text-muted-foreground",
+                            "mb-1.5 block font-micro text-tx-faint",
                             mine ? "text-right" : "text-left"
                           )}
                         >
@@ -328,10 +331,12 @@ export function OrderInbox({
                       <div
                         id={`omsg-${m.id}`}
                         className={cn(
-                          "rounded-2xl px-3.5 py-2 text-sm shadow-sm transition-shadow",
+                          "px-3.5 py-2.5 text-[14.5px] leading-[1.6] shadow-lift transition-shadow duration-150 ease-brand",
+                          // The clipped corner, mirrored: the flat corner sits
+                          // on the side the message came from.
                           mine
-                            ? "rounded-br-md bg-primary text-primary-foreground"
-                            : "rounded-bl-md border border-border bg-white text-foreground"
+                            ? "rounded-[18px_5px_18px_18px] bg-ocean text-tx-invert"
+                            : "rounded-surface border border-line bg-surface text-tx-body"
                         )}
                       >
                         {quoted ? (
@@ -347,8 +352,8 @@ export function OrderInbox({
                         {m.body ? <MessageText text={m.body} mine={mine} /> : null}
                         <span
                           className={cn(
-                            "mt-1 block text-right text-[10px]",
-                            mine ? "text-white/70" : "text-muted-foreground"
+                            "tabular mt-1 block text-right text-[12.5px]",
+                            mine ? "text-tx-invert-3" : "text-tx-muted"
                           )}
                         >
                           {fmtClock(m.created_at)}
@@ -362,9 +367,9 @@ export function OrderInbox({
           )}
         </div>
 
-        {/* Composer / locked notice */}
+        {/* Composer, or the notice that says why there isn't one */}
         {canSend ? (
-          <form onSubmit={send} className="border-t border-border bg-card px-3 py-3">
+          <form onSubmit={send} className="border-t border-line bg-surface px-3 py-3">
             {replyingTo ? (
               <ReplyComposerBar
                 quoted={quotedRefOf(replyingTo)}
@@ -372,20 +377,20 @@ export function OrderInbox({
               />
             ) : null}
             {pendingFile ? (
-              <div className="mb-2 flex items-center gap-2.5 rounded-xl border border-border bg-sunk px-2.5 py-2">
+              <div className="mb-2 flex items-center gap-2.5 rounded-chip border border-line bg-sunk px-2.5 py-2">
                 {pendingPreview ? (
                   // eslint-disable-next-line @next/next/no-img-element
                   <img
                     src={pendingPreview}
                     alt={pendingFile.name}
-                    className="size-10 shrink-0 rounded-lg object-cover"
+                    className="size-10 shrink-0 rounded-chip object-cover"
                   />
                 ) : (
-                  <div className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-sky-tint text-ocean-deep">
-                    <FileText className="size-5" />
-                  </div>
+                  <IconChip tone="ocean" className="size-10 [&_svg]:size-[18px]">
+                    <FileText />
+                  </IconChip>
                 )}
-                <span className="min-w-0 flex-1 truncate text-sm text-foreground">
+                <span className="min-w-0 flex-1 truncate text-[14.5px] text-tx-body">
                   {pendingFile.name}
                 </span>
                 <button
@@ -393,7 +398,7 @@ export function OrderInbox({
                   aria-label="Remove attachment"
                   onClick={() => setPendingFile(null)}
                   disabled={uploading}
-                  className="inline-flex size-7 shrink-0 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-muted hover:text-foreground disabled:opacity-50"
+                  className="inline-flex size-9 shrink-0 items-center justify-center rounded-chip text-tx-faint outline-none transition-colors duration-150 ease-brand hover:bg-surface hover:text-tx-head focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-coral-deep disabled:opacity-50"
                 >
                   <X className="size-4" />
                 </button>
@@ -410,13 +415,13 @@ export function OrderInbox({
               <Button
                 type="button"
                 variant="ghost"
-                size="icon-sm"
+                size="icon"
                 aria-label="Attach file"
                 disabled={uploading}
-                className="shrink-0 text-tx-muted"
+                className="shrink-0 text-tx-muted hover:text-ocean"
                 onClick={() => fileRef.current?.click()}
               >
-                <Paperclip className="size-4" />
+                <Paperclip />
               </Button>
               {isStaff ? (
                 <SendOrderLinkButton
@@ -428,6 +433,7 @@ export function OrderInbox({
                 value={draft}
                 onChange={(e) => setDraft(e.target.value)}
                 placeholder={pendingFile ? "Add a caption…" : "Type a message…"}
+                aria-label="Message"
               />
               <Button
                 type="submit"
@@ -436,25 +442,25 @@ export function OrderInbox({
                 className="shrink-0"
                 disabled={(!draft.trim() && !pendingFile) || uploading}
               >
-                {uploading ? (
-                  <Loader2 className="size-4 animate-spin" />
-                ) : (
-                  <Send className="size-4" />
-                )}
+                {uploading ? <Loader2 className="animate-spin" /> : <Send />}
               </Button>
             </div>
           </form>
         ) : (
-          <div className="flex items-center justify-center gap-2 border-t border-border bg-muted/60 px-4 py-4 text-center text-sm text-muted-foreground">
-            <Lock className="size-4 shrink-0" />
-            {readOnly
-              ? "Read-only access — you can view but not send."
-              : `This order is ${
-                  status === "completed" ? "completed" : "cancelled"
-                } — messaging is closed.`}
+          /* Closed, not broken. The thread above stays fully readable — this bar
+             only says why there is no composer. */
+          <div className="flex items-center justify-center gap-2.5 border-t border-line bg-sunk px-4 py-4 text-center">
+            <Lock className="size-4 shrink-0 text-tx-faint" />
+            <p className="text-[14.5px] text-tx-muted">
+              {readOnly
+                ? "Read-only access — you can view this thread but not reply."
+                : `This order is ${
+                    status === "completed" ? "completed" : "cancelled"
+                  }, so messaging is closed.`}
+            </p>
           </div>
         )}
       </div>
-    </SectionCard>
+    </Panel>
   );
 }
