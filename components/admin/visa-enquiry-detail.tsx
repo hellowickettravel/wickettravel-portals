@@ -38,7 +38,7 @@ import { fmtDate, fmtRelative } from "@/lib/format";
 import { cn } from "@/lib/utils";
 
 const selectClass =
-  "h-10 rounded-[10px] border border-input bg-card px-3 text-base text-foreground outline-none transition-colors focus-visible:border-ocean focus-visible:ring-[3px] focus-visible:ring-ocean/25 sm:text-sm";
+  "h-10 rounded-control border border-input bg-card px-3 text-base text-foreground outline-none transition-colors focus-visible:border-ocean focus-visible:ring-[3px] focus-visible:ring-ocean/25 sm:text-sm";
 
 /** One label/value pair inside a section's definition grid. */
 function Field({
@@ -164,9 +164,9 @@ export function VisaEnquiryDetail({ detail }: { detail: Detail }) {
       </Link>
 
       {/* Header */}
-      <div className="flex flex-col gap-4 rounded-2xl border border-border bg-card p-5 shadow-lift sm:flex-row sm:items-center sm:justify-between">
+      <div className="flex flex-col gap-4 rounded-surface border border-border bg-card p-5 shadow-lift sm:flex-row sm:items-center sm:justify-between">
         <div className="flex items-center gap-3">
-          <div className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-sky-tint text-ocean-deep">
+          <div className="flex size-11 shrink-0 items-center justify-center rounded-surface bg-sky-tint text-ocean-deep">
             <Stamp className="size-5" />
           </div>
           <div className="leading-tight">
@@ -188,7 +188,7 @@ export function VisaEnquiryDetail({ detail }: { detail: Detail }) {
         <div className="flex items-center gap-2">
           <label
             htmlFor="enquiry-status"
-            className="text-[11px] font-medium uppercase tracking-wider text-slate-600"
+            className="text-[11px] font-medium uppercase tracking-wider text-tx-muted"
           >
             Status
           </label>
@@ -230,7 +230,7 @@ export function VisaEnquiryDetail({ detail }: { detail: Detail }) {
               return (
                 <span key={method} className="inline-flex items-center gap-1.5">
                   <Button
-                    variant={isPreferred ? "default" : "outline"}
+                    variant={isPreferred ? "ocean" : "outline"}
                     size="lg"
                     render={
                       <a
@@ -360,7 +360,7 @@ export function VisaEnquiryDetail({ detail }: { detail: Detail }) {
           description="Uploaded with the application. Links are private, short-lived signed URLs."
         >
           {enquiry.additional_notes ? (
-            <div className="mb-4 rounded-xl bg-sunk p-3.5 text-sm text-foreground">
+            <div className="mb-4 rounded-surface bg-sunk p-3.5 text-sm text-foreground">
               <p className="mb-1 text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
                 Applicant’s note
               </p>
@@ -378,9 +378,9 @@ export function VisaEnquiryDetail({ detail }: { detail: Detail }) {
               {documents.map((doc) => (
                 <li
                   key={doc.url}
-                  className="flex items-center gap-3 rounded-xl border border-border bg-card p-3"
+                  className="flex items-center gap-3 rounded-surface border border-border bg-card p-3"
                 >
-                  <div className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-sky-tint text-ocean-deep">
+                  <div className="flex size-9 shrink-0 items-center justify-center rounded-control bg-sky-tint text-ocean-deep">
                     <FileText className="size-4" />
                   </div>
                   <div className="min-w-0 flex-1">
@@ -433,7 +433,7 @@ export function VisaEnquiryDetail({ detail }: { detail: Detail }) {
                 {notes.map((note) => (
                   <li
                     key={note.id}
-                    className="rounded-xl bg-sunk p-3.5"
+                    className="rounded-surface bg-sunk p-3.5"
                   >
                     <p className="whitespace-pre-wrap break-words text-sm text-foreground">
                       {note.body}
@@ -449,7 +449,7 @@ export function VisaEnquiryDetail({ detail }: { detail: Detail }) {
             <form onSubmit={saveNote} className="space-y-2.5">
               <Label
                 htmlFor="new-note"
-                className="text-xs font-medium uppercase tracking-wider text-slate-600"
+                className="text-xs font-medium uppercase tracking-wider text-tx-muted"
               >
                 Add a note
               </Label>

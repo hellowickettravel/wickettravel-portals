@@ -149,12 +149,12 @@ export function NotificationsBell({
     <DropdownMenu>
       <DropdownMenuTrigger
         aria-label={unread > 0 ? `Notifications, ${unread} unread` : "Notifications"}
-        className="relative inline-flex size-[46px] shrink-0 items-center justify-center rounded-icon text-tx-muted outline-none transition-colors duration-150 ease-brand hover:bg-sunk hover:text-tx-head focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-coral-deep"
+        className="relative inline-flex size-[46px] shrink-0 items-center justify-center rounded-icon text-tx-muted outline-none transition-colors duration-150 ease-brand hover:bg-sunk hover:text-tx-head focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-flame"
       >
         <Bell className="size-5" />
         {unread > 0 ? (
-          /* Rose means attention — the topbar carries no brand colour. */
-          <span className="absolute top-1.5 right-1.5 inline-flex min-w-[17px] items-center justify-center rounded-chip bg-rose px-1 py-px text-[10px] leading-[1.4] font-semibold tabular text-tx-invert">
+          /* Ruby means attention — the topbar carries no brand colour. */
+          <span className="absolute top-1.5 right-1.5 inline-flex min-w-[17px] items-center justify-center rounded-chip bg-ruby px-1 py-px text-[10px] leading-[1.4] font-semibold tabular text-tx-invert">
             {unread > 9 ? "9+" : unread}
           </span>
         ) : null}

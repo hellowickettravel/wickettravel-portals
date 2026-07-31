@@ -63,7 +63,7 @@ export function EmployeePasswordReset({ employeeId }: { employeeId: string }) {
               You won&apos;t be able to see it again.
             </DialogDescription>
           </DialogHeader>
-          <div className="flex items-center gap-2 rounded-xl border border-border bg-sunk p-3">
+          <div className="flex items-center gap-2 rounded-surface border border-border bg-sunk p-3">
             <code className="flex-1 font-mono text-sm text-foreground">
               {tempPassword}
             </code>

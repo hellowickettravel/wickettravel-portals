@@ -39,7 +39,7 @@ export default async function AdminConversationPage({
         Back to messages
       </Link>
 
-      <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-lift">
+      <div className="overflow-hidden rounded-surface border border-border bg-card shadow-lift">
         {/* Header */}
         <div className="flex items-center justify-between gap-3 border-b border-border px-5 py-4">
           <div className="leading-tight">
@@ -87,10 +87,10 @@ export default async function AdminConversationPage({
                     ) : null}
                     <div
                       className={cn(
-                        "rounded-2xl px-3.5 py-2 text-sm shadow-sm",
+                        "rounded-surface px-3.5 py-2 text-sm",
                         outgoing
-                          ? "rounded-br-md bg-primary text-primary-foreground"
-                          : "rounded-bl-md border border-border bg-white text-foreground"
+                          ? "bg-ocean text-tx-invert"
+                          : "border border-line bg-surface text-tx-body"
                       )}
                     >
                       <MessageText text={m.body} mine={outgoing} />

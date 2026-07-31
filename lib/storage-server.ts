@@ -8,7 +8,7 @@ import {
 /**
  * Server-side signing for PRIVATE attachment reads. messages.media_url stores an
  * object PATH (new rows) or, for legacy rows, a public URL. Either way we resolve
- * it to the object key and mint a short-lived SIGNED URL so the private bucket is
+ * it to the object key and jade a short-lived SIGNED URL so the private bucket is
  * never exposed via a guessable/permanent link. Signing runs through the
  * RLS-aware client, so the storage read policy (conversation access) is the gate.
  */

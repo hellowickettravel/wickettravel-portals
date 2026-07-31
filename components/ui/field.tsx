@@ -5,10 +5,10 @@ import { cn } from "@/lib/utils"
 import { Label } from "@/components/ui/label"
 
 /**
- * Field wrapper — design-system.html §09.
+ * Field wrapper — design system v2 §09.
  *
- * Label (8px above) → optional hint (8px above the field) → control →
- * error message (8px below, with a 15px icon). Fields are 22px apart, which
+ * Label (7px above) → optional hint (7px above the field) → control →
+ * error message (7px below, with a 15px icon). Fields are 20px apart, which
  * is what <FieldGroup> applies: the space between groups is always larger
  * than the space inside one.
  *
@@ -40,16 +40,16 @@ function Field({
       {...props}
     >
       {label ? (
-        <Label htmlFor={htmlFor} required={required} className="mb-2">
+        <Label htmlFor={htmlFor} required={required} className="mb-[7px]">
           {label}
         </Label>
       ) : null}
       {hint ? (
-        <p className="mb-2 text-[13px] leading-[1.5] text-tx-muted">{hint}</p>
+        <p className="mb-[7px] text-[13px] leading-[1.5] text-tx-muted">{hint}</p>
       ) : null}
       {children}
       {error ? (
-        <p className="mt-2 flex items-center gap-1.5 text-[13px] leading-[1.5] text-rose">
+        <p className="mt-[7px] flex items-center gap-1.5 text-[13px] leading-[1.5] text-ruby">
           <CircleAlertIcon
             aria-hidden
             className="size-[15px] shrink-0"
@@ -62,12 +62,12 @@ function Field({
   )
 }
 
-/** Stacks fields at the locked 22px rhythm. */
+/** Stacks fields at the locked 20px rhythm. */
 function FieldGroup({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
       data-slot="field-group"
-      className={cn("space-y-[22px]", className)}
+      className={cn("space-y-5", className)}
       {...props}
     />
   )

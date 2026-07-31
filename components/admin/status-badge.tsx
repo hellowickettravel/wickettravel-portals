@@ -11,21 +11,21 @@ import type { OrderStatus } from "@/lib/db/types";
  * exists to fix the *mapping*: a status's colour comes from what it means,
  * never from wanting some variety across a table.
  *
- *   sky     new, unstarted            indigo  waiting on someone
- *   amber   in progress, money        mint    confirmed, active, done
- *   rose    cancelled, attention      neutral inert, archived, no account
+ *   sky     new, unstarted            violet  waiting on someone
+ *   gold   in progress, money        jade    confirmed, active, done
+ *   ruby    cancelled, attention      neutral inert, archived, no account
  */
 
 /** The legacy tone vocabulary, kept so existing screens keep rendering. */
-export type Tone = "blue" | "green" | "amber" | "red" | "slate" | "violet";
+export type Tone = "blue" | "green" | "gold" | "red" | "slate" | "violet";
 
 const TONE_VARIANT = {
   blue: "sky",
-  green: "mint",
-  amber: "amber",
-  red: "rose",
+  green: "jade",
+  gold: "gold",
+  red: "ruby",
   slate: "neutral",
-  violet: "indigo",
+  violet: "violet",
 } as const;
 
 export function StatusBadge({
@@ -51,15 +51,15 @@ export function StatusBadge({
 
 const ORDER_STATUS = {
   new: { variant: "sky", label: "New", dot: false },
-  in_progress: { variant: "amber", label: "In progress", dot: true },
-  completed: { variant: "mint", label: "Completed", dot: false },
-  cancelled: { variant: "rose", label: "Cancelled", dot: false },
+  in_progress: { variant: "gold", label: "In progress", dot: true },
+  completed: { variant: "jade", label: "Completed", dot: false },
+  cancelled: { variant: "ruby", label: "Cancelled", dot: false },
 } as const;
 
 /**
  * The order lifecycle, badged. One definition, used by every screen that
  * shows an order — dashboard, orders, transactions, order detail, customers —
- * so `in_progress` is amber everywhere and reads "In progress", not
+ * so `in_progress` is gold everywhere and reads "In progress", not
  * "In_progress".
  */
 export function OrderStatusBadge({
@@ -90,7 +90,7 @@ export function orderTone(status: string): Tone {
       return "blue";
     case "In Progress":
     case "Pending":
-      return "amber";
+      return "gold";
     case "Closed":
     case "Completed":
     case "Confirmed":

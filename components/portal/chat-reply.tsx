@@ -41,7 +41,7 @@ export function MessageReplyButton({
       aria-label="Reply to this message"
       title="Reply"
       className={cn(
-        "inline-flex size-7 items-center justify-center rounded-chip border border-line bg-surface text-tx-faint opacity-0 shadow-lift outline-none transition-all duration-150 ease-brand hover:border-ocean hover:text-ocean focus-visible:opacity-100 focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-coral-deep group-hover:opacity-100",
+        "inline-flex size-7 items-center justify-center rounded-chip border border-line bg-surface text-tx-faint opacity-0 shadow-lift outline-none transition-all duration-150 ease-brand hover:border-ocean hover:text-ocean focus-visible:opacity-100 focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-flame group-hover:opacity-100",
         className
       )}
     >
@@ -80,7 +80,7 @@ export function QuotedMessage({
       <span
         className={cn(
           "w-0.5 shrink-0 rounded-full",
-          mine ? "bg-sky" : "bg-ocean"
+          mine ? "bg-white/60" : "bg-ocean"
         )}
       />
       <span className="min-w-0 flex-1">
@@ -134,7 +134,7 @@ export function ReplyComposerBar({
         type="button"
         aria-label="Cancel reply"
         onClick={onCancel}
-        className="inline-flex size-9 shrink-0 items-center justify-center self-center rounded-chip text-tx-faint outline-none transition-colors duration-150 ease-brand hover:bg-surface hover:text-tx-head focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-coral-deep"
+        className="inline-flex size-9 shrink-0 items-center justify-center self-center rounded-chip text-tx-faint outline-none transition-colors duration-150 ease-brand hover:bg-surface hover:text-tx-head focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-flame"
       >
         <X className="size-4" />
       </button>

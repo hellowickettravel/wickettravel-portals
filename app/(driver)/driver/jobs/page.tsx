@@ -39,18 +39,18 @@ export default function JobBoardPage() {
       </div>
 
       {!online ? (
-        <div className="flex items-center gap-3 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3">
-          <WifiOff className="size-4 shrink-0 text-amber-600" />
-          <p className="flex-1 text-xs text-amber-800">
+        <div className="flex items-center gap-3 rounded-surface border border-gold-line bg-gold-tint px-4 py-3">
+          <WifiOff className="size-4 shrink-0 text-gold" />
+          <p className="flex-1 text-xs text-gold">
             You&apos;re offline — go online to accept new rides.
           </p>
           <OnlineToggle />
         </div>
       ) : null}
 
-      {/* Airport filter — horizontal scroll on phones, no page overflow */}
-      <div className="-mx-4 overflow-x-auto px-4 sm:mx-0 sm:px-0">
-        <div className="flex w-max gap-2 sm:w-full sm:flex-wrap">
+      {/* Airport filter — it wraps, it never scrolls sideways (v2 §02). */}
+      <div>
+        <div className="flex flex-wrap gap-2">
           {filters.map((f) => {
             const active = filter === f.value;
             const count =
@@ -64,16 +64,16 @@ export default function JobBoardPage() {
                 onClick={() => setFilter(f.value)}
                 aria-pressed={active}
                 className={cn(
-                  "inline-flex h-9 shrink-0 items-center gap-1.5 rounded-full px-3.5 text-sm font-medium outline-none transition-colors focus-visible:ring-2 focus-visible:ring-primary/40",
+                  "inline-flex h-9 shrink-0 items-center gap-1.5 rounded-control px-3.5 text-sm font-medium outline-none transition-colors focus-visible:ring-2 focus-visible:ring-ocean/40",
                   active
-                    ? "bg-primary text-primary-foreground shadow-sm shadow-ocean/25"
+                    ? "bg-ocean text-tx-invert"
                     : "bg-card text-muted-foreground ring-1 ring-inset ring-line-strong hover:text-foreground"
                 )}
               >
                 {f.label}
                 <span
                   className={cn(
-                    "rounded-full px-1.5 py-0.5 text-[10px] font-semibold",
+                    "rounded-chip px-1.5 py-0.5 text-[10px] font-semibold",
                     active ? "bg-white/20 text-white" : "bg-sky-tint text-ocean-deep"
                   )}
                 >
@@ -87,8 +87,8 @@ export default function JobBoardPage() {
 
       {/* Rides */}
       {filtered.length === 0 ? (
-        <div className="rounded-2xl border border-dashed border-line-strong bg-sunk/60 px-6 py-14 text-center">
-          <div className="mx-auto flex size-12 items-center justify-center rounded-2xl bg-sky-tint text-ocean-deep">
+        <div className="rounded-surface border border-dashed border-line-strong bg-sunk/60 px-6 py-14 text-center">
+          <div className="mx-auto flex size-12 items-center justify-center rounded-surface bg-sky-tint text-ocean-deep">
             <Inbox className="size-6" />
           </div>
           <p className="mt-3 tracking-heading text-sm font-semibold text-tx-head">

@@ -230,19 +230,19 @@ export default function CustomerMessagesPage() {
         </p>
       </div>
 
-      <div className="flex h-[calc(100dvh-16rem)] min-h-[420px] flex-col overflow-hidden rounded-2xl border border-border bg-card shadow-lift">
+      <div className="flex h-[calc(100dvh-16rem)] min-h-[420px] flex-col overflow-hidden rounded-surface border border-border bg-card shadow-lift">
         {/* Chat header */}
         <div className="flex items-center gap-3 border-b border-border px-4 py-3.5 sm:px-5">
           <ChatBackButton onClick={() => router.back()} label="Go back" />
           <div className="relative">
-            <div className="flex size-10 items-center justify-center rounded-full bg-primary text-primary-foreground">
+            <div className="flex size-10 items-center justify-center rounded-full bg-sky-tint text-ocean">
               <Plane className="size-5 -rotate-45" />
             </div>
-            <span className="absolute -bottom-0.5 -right-0.5 size-3 rounded-full border-2 border-card bg-emerald-500" />
+            <span className="absolute -bottom-0.5 -right-0.5 size-3 rounded-full border-2 border-card bg-jade" />
           </div>
           <div className="leading-tight">
             <p className="tracking-heading text-sm font-semibold text-tx-head">Wicket Travel Team</p>
-            <p className="text-xs text-emerald-600">Typically replies in minutes</p>
+            <p className="text-xs text-jade">Typically replies in minutes</p>
           </div>
         </div>
 
@@ -258,7 +258,7 @@ export default function CustomerMessagesPage() {
             </div>
           ) : !conversation ? (
             <div className="flex h-full flex-col items-center justify-center gap-2 text-center">
-              <div className="flex size-12 items-center justify-center rounded-2xl bg-sky-tint text-ocean-deep">
+              <div className="flex size-12 items-center justify-center rounded-surface bg-sky-tint text-ocean-deep">
                 <MessageCircle className="size-6" />
               </div>
               <p className="tracking-heading text-sm font-semibold text-foreground">
@@ -314,10 +314,10 @@ export default function CustomerMessagesPage() {
                       <div
                         id={`cmsg-${m.id}`}
                         className={cn(
-                          "rounded-2xl px-3.5 py-2 text-sm shadow-sm transition-shadow",
+                          "rounded-surface px-3.5 py-2 text-sm transition-colors",
                           mine
-                            ? "rounded-br-md bg-primary text-primary-foreground"
-                            : "rounded-bl-md border border-border bg-white text-foreground"
+                            ? "bg-ocean text-tx-invert"
+                            : "border border-line bg-surface text-tx-body"
                         )}
                       >
                         {quoted ? (
@@ -358,16 +358,16 @@ export default function CustomerMessagesPage() {
             />
           ) : null}
           {pendingFile ? (
-            <div className="mb-2 flex items-center gap-2.5 rounded-xl border border-border bg-sunk px-2.5 py-2">
+            <div className="mb-2 flex items-center gap-2.5 rounded-surface border border-border bg-sunk px-2.5 py-2">
               {pendingPreview ? (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img
                   src={pendingPreview}
                   alt={pendingFile.name}
-                  className="size-10 shrink-0 rounded-lg object-cover"
+                  className="size-10 shrink-0 rounded-control object-cover"
                 />
               ) : (
-                <div className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-sky-tint text-ocean-deep">
+                <div className="flex size-10 shrink-0 items-center justify-center rounded-control bg-sky-tint text-ocean-deep">
                   <FileText className="size-5" />
                 </div>
               )}
@@ -379,7 +379,7 @@ export default function CustomerMessagesPage() {
                 aria-label="Remove attachment"
                 onClick={() => setPendingFile(null)}
                 disabled={uploading}
-                className="inline-flex size-7 shrink-0 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-muted hover:text-foreground disabled:opacity-50"
+                className="inline-flex size-7 shrink-0 items-center justify-center rounded-chip text-tx-muted transition-colors hover:bg-sunk hover:text-tx-head disabled:opacity-50"
               >
                 <X className="size-4" />
               </button>

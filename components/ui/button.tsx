@@ -5,55 +5,59 @@ import { cva, type VariantProps } from "class-variance-authority"
 import { cn } from "@/lib/utils"
 
 /**
- * Button — design-system.html §08.
+ * Button — design system v2 §07, "Compact, and flame leads".
  *
- * Four variants: primary (ocean, the everyday action), accent (coral, one per
- * view maximum), secondary (white + border) and ghost. Type is Hanken 600 at
- * 15px with tracking −0.002em — never uppercase, never letterspaced. Radius is
- * 8px uniform so controls read as controls. Icons are 18px Lucide at 1.75
- * stroke on the leading side, 9px from the label.
+ * Flame is the primary action colour now, so `default` is flame and there is
+ * one of them per view. `ocean` is the strong secondary — navigation-style
+ * actions. Everything quieter is `secondary`, `ghost` or `link`.
  *
- * Hover deepens the fill and the shadow. Buttons do NOT rise — only cards do.
- * Active nudges 1px down. Focus is a 2px coral ring at 3px offset.
+ * 42px tall at 18px padding (36 small, 48 large): enough presence, no bulk.
+ * Type is Hanken 600 at 15px — never uppercase, never letterspaced. Radius is
+ * 10px uniform so controls read as controls. Icons are 17px Lucide at 1.75
+ * stroke on the leading side, 8px from the label.
+ *
+ * Hover darkens the fill by exactly one step. **Buttons carry no shadow and
+ * never rise** — only cards do. Active nudges 1px down. Focus is a 2px flame
+ * ring at 2px offset.
  */
 const buttonVariants = cva(
-  "group/button inline-flex shrink-0 items-center justify-center gap-[9px] rounded-control border border-transparent bg-clip-padding font-sans font-semibold tracking-[-0.002em] whitespace-nowrap transition-[background-color,box-shadow,border-color,color,transform] duration-150 ease-brand outline-none select-none focus-visible:outline-2 focus-visible:outline-offset-[3px] focus-visible:outline-coral-deep active:not-aria-[haspopup]:translate-y-px disabled:pointer-events-none disabled:opacity-[.42] disabled:shadow-none aria-invalid:border-rose aria-invalid:ring-[3px] aria-invalid:ring-rose/10 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-[18px] [&_svg]:[stroke-width:1.75]",
+  "group/button inline-flex shrink-0 items-center justify-center gap-2 rounded-control border border-transparent bg-clip-padding font-sans font-semibold tracking-[-0.002em] whitespace-nowrap transition-[background-color,border-color,color,transform] duration-150 ease-brand outline-none select-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-flame active:not-aria-[haspopup]:translate-y-px disabled:pointer-events-none disabled:opacity-[.42] aria-invalid:border-ruby aria-invalid:ring-[3px] aria-invalid:ring-ruby/10 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-[17px] [&_svg]:[stroke-width:1.75]",
   {
     variants: {
       variant: {
-        // Primary — ocean. The everyday action.
-        default:
-          "bg-ocean text-tx-invert shadow-btn-ocean hover:bg-ocean-deep hover:shadow-btn-ocean-hover",
-        // Accent — coral. One per view, maximum.
-        accent:
-          "bg-coral-deep text-tx-invert shadow-btn-coral hover:bg-coral-press",
-        // Secondary — white, ocean-deep text, visible border.
+        // Primary — flame. The main action, one per view.
+        default: "bg-flame text-tx-invert hover:bg-flame-hover",
+        // Kept as an alias so older call sites still land on the primary.
+        accent: "bg-flame text-tx-invert hover:bg-flame-hover",
+        // Strong secondary — ocean. Navigation-style actions.
+        ocean: "bg-ocean text-tx-invert hover:bg-ocean-deep",
+        // Secondary — white, visible border, ocean on hover. No shadow.
         secondary:
-          "border-line-strong bg-surface text-ocean-deep shadow-lift hover:border-ocean hover:bg-sky-tint aria-expanded:border-ocean aria-expanded:bg-sky-tint",
+          "border-line-strong bg-surface text-tx-head hover:border-ocean hover:bg-sky-tint aria-expanded:border-ocean aria-expanded:bg-sky-tint",
         outline:
-          "border-line-strong bg-surface text-ocean-deep shadow-lift hover:border-ocean hover:bg-sky-tint aria-expanded:border-ocean aria-expanded:bg-sky-tint",
+          "border-line-strong bg-surface text-tx-head hover:border-ocean hover:bg-sky-tint aria-expanded:border-ocean aria-expanded:bg-sky-tint",
         // Ghost — transparent, ocean text, sky tint on hover.
         ghost:
           "bg-transparent text-ocean hover:bg-sky-tint aria-expanded:bg-sky-tint",
         destructive:
-          "bg-rose-tint text-rose border-rose-line hover:bg-rose hover:text-tx-invert hover:border-rose focus-visible:outline-rose",
+          "bg-ruby-tint text-ruby border-ruby-line hover:bg-ruby hover:text-tx-invert hover:border-ruby focus-visible:outline-ruby",
         link: "h-auto px-0 text-ocean underline-offset-[3px] decoration-1 hover:text-ocean-deep hover:underline",
       },
       size: {
-        // 38 · 46 · 54 — padding 16 / 22 / 28.
-        sm: "h-[38px] px-4 text-sm [&_svg:not([class*='size-'])]:size-4",
-        default: "h-[46px] px-[22px] text-[15px]",
-        lg: "h-[54px] px-7 text-base [&_svg:not([class*='size-'])]:size-5",
+        // 36 · 42 · 48 — padding 14 / 18 / 22.
+        sm: "h-9 px-3.5 text-sm [&_svg:not([class*='size-'])]:size-4",
+        default: "h-[42px] px-[18px] text-[15px]",
+        lg: "h-12 px-[22px] text-[15.5px] [&_svg:not([class*='size-'])]:size-[18px]",
         xs: "h-8 gap-1.5 px-3 text-[13px] [&_svg:not([class*='size-'])]:size-4",
-        icon: "size-[46px] px-0",
+        icon: "size-[42px] px-0",
         "icon-xs": "size-8 px-0 [&_svg:not([class*='size-'])]:size-4",
-        "icon-sm": "size-[38px] px-0 [&_svg:not([class*='size-'])]:size-4",
-        "icon-lg": "size-[54px] px-0 [&_svg:not([class*='size-'])]:size-5",
+        "icon-sm": "size-9 px-0 [&_svg:not([class*='size-'])]:size-4",
+        "icon-lg": "size-12 px-0 [&_svg:not([class*='size-'])]:size-[18px]",
       },
     },
     compoundVariants: [
       // Ghost carries tighter padding — there is no fill to balance.
-      { variant: "ghost", size: "default", className: "px-3" },
+      { variant: "ghost", size: "default", className: "px-[11px]" },
       { variant: "ghost", size: "sm", className: "px-2.5" },
       { variant: "ghost", size: "lg", className: "px-4" },
     ],

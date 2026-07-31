@@ -31,7 +31,7 @@ const PREF_ITEMS: { key: PrefKey; label: string; desc: string }[] = [
 
 function fieldLabel(text: string) {
   return (
-    <span className="text-xs font-medium uppercase tracking-wider text-slate-600">
+    <span className="text-xs font-medium uppercase tracking-wider text-tx-muted">
       {text}
     </span>
   );

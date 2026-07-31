@@ -1,24 +1,16 @@
 import type { Metadata } from "next";
-import { Hanken_Grotesk, Newsreader, IBM_Plex_Mono } from "next/font/google";
+import { Hanken_Grotesk, IBM_Plex_Mono } from "next/font/google";
 import { Toaster } from "@/components/ui/sonner";
 import { Providers } from "./providers";
 import "./globals.css";
 
-// Three faces, chosen for temperament (design-system.html §02).
-// Hanken Grotesk does all the work — headings, body, UI. Weights stop at 700.
+// Two faces (design system v2 §09). Hanken Grotesk does all the work —
+// headings, body, UI. Weights stop at 700. Newsreader is retired from the
+// portal; it belongs on the marketing site only, if at all.
 const hanken = Hanken_Grotesk({
   variable: "--font-hanken",
   subsets: ["latin"],
   weight: ["400", "500", "600", "700"],
-  display: "swap",
-});
-
-// Editorial accent — one italic line per page, maximum. Never headings or UI.
-const newsreader = Newsreader({
-  variable: "--font-newsreader",
-  subsets: ["latin"],
-  style: ["italic"],
-  weight: ["400"],
   display: "swap",
 });
 
@@ -57,7 +49,7 @@ export default function RootLayout({
   return (
     <html lang="en" className="h-full">
       <body
-        className={`${hanken.variable} ${newsreader.variable} ${plexMono.variable} min-h-full font-sans antialiased`}
+        className={`${hanken.variable} ${plexMono.variable} min-h-full font-sans antialiased`}
       >
         {/* Hoisted to <head> by React 19 — warms the Supabase TLS connection. */}
         {supabaseOrigin ? (

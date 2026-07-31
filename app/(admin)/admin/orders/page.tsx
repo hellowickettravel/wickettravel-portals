@@ -228,12 +228,12 @@ export default function OrdersPage() {
       key: "commission",
       header: "Commission",
       numeric: true,
-      // Amber is the money hue; it also keeps the two money columns apart.
-      // An unpriced order gets a faint dash, not an amber one — the hue is for
+      // Gold is the money hue; it also keeps the two money columns apart.
+      // An unpriced order gets a faint dash, not an gold one — the hue is for
       // a figure, and there isn't one.
       cell: (o) =>
         o.commission != null ? (
-          <span className="text-amber-deep">{gbp(o.commission)}</span>
+          <span className="text-gold">{gbp(o.commission)}</span>
         ) : (
           <span className="text-tx-faint">—</span>
         ),
@@ -301,23 +301,23 @@ export default function OrdersPage() {
             hint="all time"
           />
           <StatCard
-            tone="indigo"
+            tone="violet"
             icon={Clock}
             label="Active"
             value={num(totals.active)}
             hint="new and in progress"
           />
-          {/* Both of these are money, so both are amber. The hue reports what
+          {/* Both of these are money, so both are gold. The hue reports what
               the number is, not which card it sits in. */}
           <StatCard
-            tone="amber"
+            tone="gold"
             icon={Wallet}
             label="Revenue"
             value={gbp(totals.revenue)}
             hint="completed orders"
           />
           <StatCard
-            tone="amber"
+            tone="gold"
             icon={ClipboardList}
             label="Commission"
             value={gbp(totals.commission)}

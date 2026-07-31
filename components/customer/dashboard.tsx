@@ -21,7 +21,7 @@ import { gbp, fmtDate } from "@/lib/format";
 
 const ORDER_TONE: Record<OrderStatus, Tone> = {
   new: "blue",
-  in_progress: "amber",
+  in_progress: "gold",
   completed: "green",
   cancelled: "red",
 };
@@ -88,9 +88,8 @@ export function CustomerDashboard({ firstName }: { firstName: string }) {
       </div>
 
       {/* CTA */}
-      <div className="relative overflow-hidden rounded-2xl bg-[linear-gradient(165deg,var(--ocean)_0%,var(--ocean-deep)_58%,var(--ocean-night)_100%)] p-7 shadow-lift md:p-8">
-        <div className="bg-dot-grid pointer-events-none absolute inset-0 opacity-40 [mask-image:radial-gradient(120%_120%_at_20%_0%,black,transparent_75%)]" />
-        <div className="relative z-10 flex flex-col items-start justify-between gap-5 md:flex-row md:items-center">
+      <div className="rounded-surface bg-ocean p-6 md:p-7">
+        <div className="flex flex-col items-start justify-between gap-5 md:flex-row md:items-center">
           <div className="max-w-md">
             <h2 className="tracking-heading text-xl font-semibold text-white md:text-2xl">
               Planning your next trip?
@@ -101,10 +100,10 @@ export function CustomerDashboard({ firstName }: { firstName: string }) {
           </div>
           <Link
             href="/customer/book"
-            className="inline-flex h-[46px] items-center gap-[9px] rounded-control bg-white px-[22px] text-[15px] font-semibold tracking-ui text-ocean-deep shadow-lift outline-none transition-colors duration-150 ease-brand hover:bg-sky-tint focus-visible:ring-2 focus-visible:ring-white/70 focus-visible:ring-offset-2 focus-visible:ring-offset-ocean-deep"
+            className="inline-flex h-[42px] items-center gap-2 rounded-control bg-flame px-[18px] text-[15px] font-semibold tracking-ui text-tx-invert outline-none transition-colors duration-150 ease-brand hover:bg-flame-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
           >
             Book a New Flight
-            <ArrowRight className="size-4" />
+            <ArrowRight className="size-[17px]" />
           </Link>
         </div>
       </div>
@@ -133,7 +132,7 @@ export function CustomerDashboard({ firstName }: { firstName: string }) {
                 className="flex flex-col gap-3 py-3.5 first:pt-0 last:pb-0 sm:flex-row sm:items-center sm:justify-between"
               >
                 <div className="flex items-center gap-3">
-                  <div className="flex size-10 items-center justify-center rounded-xl bg-sky-tint text-ocean-deep">
+                  <div className="flex size-10 items-center justify-center rounded-surface bg-sky-tint text-ocean-deep">
                     <Plane className="size-5 -rotate-45" />
                   </div>
                   <div className="leading-tight">
@@ -164,7 +163,7 @@ export function CustomerDashboard({ firstName }: { firstName: string }) {
       </SectionCard>
 
       {/* Help footer */}
-      <div className="flex items-center justify-between rounded-2xl border border-border bg-sunk px-5 py-4">
+      <div className="flex items-center justify-between rounded-surface border border-border bg-sunk px-5 py-4">
         <p className="text-sm text-muted-foreground">
           Have a question? Chat with our team directly in the portal.
         </p>

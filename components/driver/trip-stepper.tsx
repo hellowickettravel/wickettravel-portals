@@ -22,8 +22,8 @@ export function TripStepper({ stage }: { stage: TripStage }) {
             <div className="flex flex-col items-center">
               <span
                 className={cn(
-                  "flex size-7 shrink-0 items-center justify-center rounded-full text-xs font-semibold transition-colors",
-                  done && "bg-coral-deep text-white",
+                  "flex size-7 shrink-0 items-center justify-center rounded-chip text-xs font-semibold transition-colors",
+                  done && "bg-flame text-white",
                   current && "bg-ocean text-white ring-4 ring-ocean/15",
                   !done && !current && "bg-sunk text-muted-foreground ring-1 ring-inset ring-line-strong"
                 )}
@@ -34,7 +34,7 @@ export function TripStepper({ stage }: { stage: TripStage }) {
                 <span
                   className={cn(
                     "my-1 w-0.5 flex-1 rounded-full",
-                    i < currentIdx ? "bg-coral-deep" : "bg-line-strong"
+                    i < currentIdx ? "bg-flame" : "bg-line-strong"
                   )}
                 />
               ) : null}
@@ -50,7 +50,7 @@ export function TripStepper({ stage }: { stage: TripStage }) {
                 {STAGE_META[s].label}
               </p>
               {current ? (
-                <p className="-mt-1 text-xs text-coral-press">In progress</p>
+                <p className="-mt-1 text-xs text-flame-hover">In progress</p>
               ) : null}
             </div>
           </li>

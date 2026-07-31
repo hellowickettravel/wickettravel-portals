@@ -32,8 +32,8 @@ function isThisMonth(iso: string) {
 /** Activity hue by what happened, not by position in the list. */
 const ACTIVITY_TONE = {
   order: "ocean",
-  message: "indigo",
-  assignment: "mint",
+  message: "violet",
+  assignment: "jade",
 } as const;
 
 const ACTIVITY_ICON = {
@@ -101,14 +101,14 @@ export default async function AdminDashboardPage() {
         {/* ---------- 4-up: the numbers, each in the hue of what it means ---------- */}
         <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-4">
           <StatCard
-            tone="indigo"
+            tone="violet"
             icon={Clock}
             label="Open orders"
             value={num(openOrders)}
             hint="new and in progress"
           />
           <StatCard
-            tone="amber"
+            tone="gold"
             icon={Wallet}
             label="Commission this month"
             value={gbp(commissionThisMonth)}
@@ -122,7 +122,7 @@ export default async function AdminDashboardPage() {
             hint="total threads"
           />
           <StatCard
-            tone="mint"
+            tone="jade"
             icon={UserCheck}
             label="Employees"
             value={num(employeesCount)}
@@ -135,14 +135,14 @@ export default async function AdminDashboardPage() {
       <section className="space-y-4">
         <div className="flex flex-wrap items-end justify-between gap-3">
           <div>
-            <p className="font-micro text-coral-deep">Latest five</p>
+            <p className="font-micro text-flame">Latest five</p>
             <h2 className="mt-2 text-[25px] leading-[1.26] font-bold tracking-[-0.01em] text-tx-head">
               Recent orders
             </h2>
           </div>
           <Link
             href="/admin/orders"
-            className="inline-flex items-center gap-1.5 rounded-chip text-[14.5px] font-semibold text-ocean underline-offset-[3px] outline-none transition-colors duration-150 ease-brand hover:text-ocean-deep hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-coral-deep"
+            className="inline-flex items-center gap-1.5 rounded-chip text-[14.5px] font-semibold text-ocean underline-offset-[3px] outline-none transition-colors duration-150 ease-brand hover:text-ocean-deep hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-flame"
           >
             View all orders
             <ArrowRight className="size-4" />
@@ -180,7 +180,7 @@ export default async function AdminDashboardPage() {
                     <li key={a.id}>
                       <Link
                         href={a.link}
-                        className="group flex gap-3 rounded-chip outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-coral-deep"
+                        className="group flex gap-3 rounded-chip outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-flame"
                       >
                         <IconChip
                           tone={ACTIVITY_TONE[a.kind]}

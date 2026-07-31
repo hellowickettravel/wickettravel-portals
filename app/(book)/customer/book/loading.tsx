@@ -13,8 +13,8 @@ export default function Loading() {
         <Skeleton className="size-9 rounded-full" />
         <Skeleton className="size-9 rounded-full" />
       </div>
-      <Skeleton className="h-64 w-full rounded-2xl" />
-      <Skeleton className="h-40 w-full rounded-2xl" />
+      <Skeleton className="h-64 w-full rounded-surface" />
+      <Skeleton className="h-40 w-full rounded-surface" />
     </div>
   );
 }

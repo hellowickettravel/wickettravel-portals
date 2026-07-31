@@ -73,8 +73,8 @@ export function FareStub({
       <div className="flex-1 p-6 min-[620px]:px-[26px]">
         <div className="flex flex-wrap items-center gap-x-[13px] gap-y-1">
           <span className={codeClass(from)}>{from}</span>
-          {/* The one coral mark on this surface. */}
-          <Plane className="size-[17px] shrink-0 -rotate-45 text-coral" aria-hidden />
+          {/* The one flame mark on this surface. */}
+          <Plane className="size-[17px] shrink-0 -rotate-45 text-flame" aria-hidden />
           <span className={codeClass(to)}>{to}</span>
         </div>
 
@@ -121,7 +121,7 @@ export function FareStub({
       {/* ---------- The tear-off ---------- */}
       <div className="flex flex-col justify-center p-6 min-[620px]:w-[152px] min-[620px]:shrink-0 min-[620px]:px-[26px]">
         <span className="font-micro text-tx-faint">{fareLabel}</span>
-        <p className="tabular mt-1 text-[27px] leading-[1.15] font-bold tracking-[-0.02em] text-coral-deep">
+        <p className="tabular mt-1 text-[27px] leading-[1.15] font-bold tracking-[-0.02em] text-flame">
           {fare}
         </p>
         {fareNote ? (

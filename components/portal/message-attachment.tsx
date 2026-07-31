@@ -74,7 +74,7 @@ export function MessageAttachment({
             e.stopPropagation();
             void downloadFile(url, name);
           }}
-          className="absolute bottom-2 right-2 inline-flex size-11 items-center justify-center rounded-chip bg-ocean-night/60 text-tx-invert shadow-lift outline-none transition-colors duration-150 ease-brand hover:bg-ocean-night/80 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white sm:opacity-0 sm:group-hover:opacity-100 sm:focus-visible:opacity-100"
+          className="absolute bottom-2 right-2 inline-flex size-11 items-center justify-center rounded-chip bg-ocean-ink/60 text-tx-invert shadow-lift outline-none transition-colors duration-150 ease-brand hover:bg-ocean-ink/80 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white sm:opacity-0 sm:group-hover:opacity-100 sm:focus-visible:opacity-100"
         >
           <Download className="size-4" />
         </button>
@@ -87,7 +87,7 @@ export function MessageAttachment({
       type="button"
       onClick={() => void downloadFile(url, name)}
       className={cn(
-        "mb-1 flex w-full max-w-[260px] items-center gap-2.5 rounded-chip border px-3 py-2 text-left text-[14.5px] outline-none transition-colors duration-150 ease-brand focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-coral-deep",
+        "mb-1 flex w-full max-w-[260px] items-center gap-2.5 rounded-chip border px-3 py-2 text-left text-[14.5px] outline-none transition-colors duration-150 ease-brand focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-flame",
         mine
           ? "border-white/25 bg-white/10 hover:bg-white/20"
           : "border-line bg-sunk hover:bg-sky-tint"

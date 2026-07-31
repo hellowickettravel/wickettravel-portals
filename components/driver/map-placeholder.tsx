@@ -18,28 +18,39 @@ export function MapPlaceholder({
   return (
     <div
       className={cn(
-        "relative overflow-hidden rounded-2xl ring-1 ring-foreground/10",
+        "relative overflow-hidden rounded-surface border border-line",
         className
       )}
       role="img"
       aria-label={`Map preview from ${from} to ${to}. Live tracking coming soon.`}
     >
-      {/* Map-ish backdrop */}
-      <div className="absolute inset-0 bg-[linear-gradient(135deg,var(--sky-tint)_0%,var(--surface-sunk)_100%)]" />
-      <div
-        className="absolute inset-0 opacity-[0.5]"
-        style={{
-          backgroundImage:
-            "linear-gradient(var(--line-hover) 1px, transparent 1px), linear-gradient(90deg, var(--line-hover) 1px, transparent 1px)",
-          backgroundSize: "28px 28px",
-        }}
-      />
+      {/* Map-ish backdrop. Flat sky tint plus a stroked SVG grid — a CSS
+          gradient grid would be a gradient, and v2 has none anywhere. */}
+      <div className="absolute inset-0 bg-sky-tint" />
+      <svg className="absolute inset-0 h-full w-full opacity-50" aria-hidden>
+        <defs>
+          <pattern
+            id="map-grid"
+            width="28"
+            height="28"
+            patternUnits="userSpaceOnUse"
+          >
+            <path
+              d="M 28 0 L 0 0 0 28"
+              fill="none"
+              stroke="var(--line-hover)"
+              strokeWidth="1"
+            />
+          </pattern>
+        </defs>
+        <rect width="100%" height="100%" fill="url(#map-grid)" />
+      </svg>
       {/* Route line */}
       <svg className="absolute inset-0 h-full w-full" preserveAspectRatio="none">
         <path
           d="M 15% 78% C 40% 60%, 55% 40%, 82% 24%"
           fill="none"
-          stroke="var(--coral-deep)"
+          stroke="var(--flame)"
           strokeWidth="3"
           strokeLinecap="round"
           strokeDasharray="2 9"
@@ -48,19 +59,19 @@ export function MapPlaceholder({
 
       {/* Pins */}
       <div className="absolute left-[11%] top-[70%] flex items-center gap-1.5">
-        <span className="flex size-7 items-center justify-center rounded-full bg-ocean text-white shadow-md">
+        <span className="flex size-7 items-center justify-center rounded-full bg-ocean text-white">
           <Plane className="size-3.5 -rotate-45" />
         </span>
       </div>
       <div className="absolute right-[13%] top-[16%] flex items-center gap-1.5">
-        <span className="flex size-7 items-center justify-center rounded-full bg-coral-deep text-white shadow-md">
+        <span className="flex size-7 items-center justify-center rounded-full bg-flame text-white">
           <MapPin className="size-3.5" />
         </span>
       </div>
 
       {/* Live-tracking chip */}
-      <div className="absolute bottom-3 left-3 inline-flex items-center gap-1.5 rounded-full bg-white/90 px-3 py-1.5 text-xs font-medium text-ocean-deep shadow-sm backdrop-blur">
-        <Navigation className="size-3.5 text-coral-press" />
+      <div className="absolute bottom-3 left-3 inline-flex items-center gap-1.5 rounded-chip border border-line bg-surface px-3 py-1.5 text-xs font-medium text-tx-head">
+        <Navigation className="size-3.5 text-flame-hover" />
         Live tracking coming soon
       </div>
     </div>

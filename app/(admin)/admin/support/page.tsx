@@ -31,7 +31,7 @@ const SUBMITTERS = [
 type Submitter = (typeof SUBMITTERS)[number]["value"];
 
 const selectClass =
-  "h-10 rounded-[10px] border border-input bg-card px-3 text-base text-foreground outline-none transition-colors focus-visible:border-ocean focus-visible:ring-[3px] focus-visible:ring-ocean/25 sm:text-sm";
+  "h-10 rounded-control border border-input bg-card px-3 text-base text-foreground outline-none transition-colors focus-visible:border-ocean focus-visible:ring-[3px] focus-visible:ring-ocean/25 sm:text-sm";
 
 export default function AdminSupportPage() {
   const queryClient = useQueryClient();
@@ -126,24 +126,24 @@ export default function AdminSupportPage() {
       />
 
       <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-        <div className="inline-flex items-center gap-1 rounded-xl bg-muted p-1">
+        <div className="inline-flex items-center gap-1 rounded-surface bg-muted p-1">
           {TABS.map((t) => (
             <button
               key={t}
               onClick={() => setTab(t)}
               className={cn(
-                "inline-flex items-center gap-1.5 rounded-lg px-3.5 py-1.5 text-sm font-medium transition-colors",
+                "inline-flex items-center gap-1.5 rounded-control px-3.5 py-1.5 text-sm font-medium transition-colors",
                 tab === t
-                  ? "bg-primary text-primary-foreground shadow-sm"
+                  ? "bg-ocean text-tx-invert"
                   : "text-muted-foreground hover:text-foreground"
               )}
             >
               {t}
               <span
                 className={cn(
-                  "rounded-full px-1.5 py-0.5 text-[11px] font-semibold tabular-nums",
+                  "rounded-chip px-1.5 py-0.5 text-[11px] font-semibold tabular-nums",
                   tab === t
-                    ? "bg-primary-foreground/20 text-primary-foreground"
+                    ? "bg-ocean-foreground/20 text-tx-invert"
                     : "bg-card text-muted-foreground"
                 )}
               >
@@ -193,7 +193,7 @@ export default function AdminSupportPage() {
           </p>
         ) : tickets.length === 0 ? (
           <div className="flex flex-col items-center gap-2 px-6 py-14 text-center">
-            <div className="flex size-12 items-center justify-center rounded-2xl bg-sky-tint text-ocean-deep">
+            <div className="flex size-12 items-center justify-center rounded-surface bg-sky-tint text-ocean-deep">
               <LifeBuoy className="size-6" />
             </div>
             <p className="tracking-heading text-base font-semibold text-foreground">
@@ -222,7 +222,7 @@ export default function AdminSupportPage() {
                       <p className="text-sm font-semibold text-foreground">
                         {t.subject}
                       </p>
-                      <StatusBadge tone={resolved ? "green" : "amber"}>
+                      <StatusBadge tone={resolved ? "green" : "gold"}>
                         {resolved ? "Resolved" : "Open"}
                       </StatusBadge>
                       <StatusBadge

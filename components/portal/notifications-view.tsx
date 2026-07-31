@@ -193,7 +193,7 @@ export function NotificationsView({
               type="button"
               onClick={() => readAllMutation.mutate()}
               disabled={readAllMutation.isPending}
-              className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-card px-3 py-2 text-sm font-medium text-foreground transition-colors hover:border-ocean hover:text-ocean disabled:opacity-50"
+              className="inline-flex items-center gap-1.5 rounded-control border border-border bg-card px-3 py-2 text-sm font-medium text-foreground transition-colors hover:border-ocean hover:text-ocean disabled:opacity-50"
             >
               <CheckCheck className="size-4" />
               Mark all read
@@ -203,22 +203,22 @@ export function NotificationsView({
       </div>
 
       {/* Filters */}
-      <div className="inline-flex items-center gap-1 rounded-xl bg-muted p-1">
+      <div className="inline-flex items-center gap-1 rounded-surface bg-muted p-1">
         {TABS.map((t) => (
           <button
             key={t.value}
             onClick={() => setFilter(t.value)}
             className={cn(
-              "inline-flex items-center gap-1.5 rounded-lg px-3.5 py-1.5 text-sm font-medium transition-colors",
+              "inline-flex items-center gap-1.5 rounded-control px-3.5 py-1.5 text-sm font-medium transition-colors",
               filter === t.value
-                ? "bg-primary text-primary-foreground shadow-sm"
+                ? "bg-ocean text-tx-invert"
                 : "text-muted-foreground hover:text-foreground"
             )}
           >
             {t.label}
             <span
               className={cn(
-                "inline-flex min-w-5 items-center justify-center rounded-full px-1.5 py-0.5 text-[11px] font-semibold tabular-nums leading-none",
+                "inline-flex min-w-5 items-center justify-center rounded-chip px-1.5 py-0.5 text-[11px] font-semibold tabular-nums leading-none",
                 filter === t.value
                   ? "bg-white/25 text-white"
                   : "bg-sky-tint text-ocean-deep"
@@ -231,7 +231,7 @@ export function NotificationsView({
       </div>
 
       {/* List */}
-      <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-lift">
+      <div className="overflow-hidden rounded-surface border border-border bg-card shadow-lift">
         {isLoading ? (
           <div className="flex items-center justify-center gap-2 px-6 py-16 text-sm text-muted-foreground">
             <RefreshCw className="size-4 animate-spin" />
@@ -239,7 +239,7 @@ export function NotificationsView({
           </div>
         ) : visible.length === 0 ? (
           <div className="flex flex-col items-center gap-2 px-6 py-16 text-center">
-            <div className="flex size-12 items-center justify-center rounded-2xl bg-sky-tint text-ocean-deep">
+            <div className="flex size-12 items-center justify-center rounded-surface bg-sky-tint text-ocean-deep">
               <Inbox className="size-6" />
             </div>
             <p className="tracking-heading text-base font-semibold text-foreground">
@@ -280,7 +280,7 @@ export function NotificationsView({
                     }
                     className="flex min-w-0 flex-1 items-start gap-3 text-left outline-none"
                   >
-                    <div className="mt-0.5 flex size-9 shrink-0 items-center justify-center rounded-lg bg-sky-tint text-ocean-deep">
+                    <div className="mt-0.5 flex size-9 shrink-0 items-center justify-center rounded-control bg-sky-tint text-ocean-deep">
                       <Icon className="size-[18px]" />
                     </div>
                     <div className="min-w-0 flex-1">
@@ -289,7 +289,7 @@ export function NotificationsView({
                           {titleLine}
                         </p>
                         {!n.is_read ? (
-                          <span className="size-2 shrink-0 rounded-full bg-primary" />
+                          <span className="size-2 shrink-0 rounded-full bg-ocean" />
                         ) : null}
                       </div>
                       {n.body ? (
@@ -310,9 +310,9 @@ export function NotificationsView({
                       starMutation.mutate({ id: n.id, starred: !n.is_starred })
                     }
                     className={cn(
-                      "mt-0.5 inline-flex size-8 shrink-0 items-center justify-center rounded-full outline-none transition-colors hover:bg-muted focus-visible:ring-2 focus-visible:ring-primary/40",
+                      "mt-0.5 inline-flex size-8 shrink-0 items-center justify-center rounded-chip outline-none transition-colors hover:bg-sunk focus-visible:ring-2 focus-visible:ring-ocean/40",
                       n.is_starred
-                        ? "text-amber-500 hover:text-amber-600"
+                        ? "text-gold hover:text-gold"
                         : "text-muted-foreground hover:text-foreground"
                     )}
                   >

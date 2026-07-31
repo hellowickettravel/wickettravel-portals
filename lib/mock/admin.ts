@@ -77,15 +77,15 @@ export type ActivityItem = {
   text: string;
   meta: string;
   time: string;
-  tone: "blue" | "green" | "amber" | "slate";
+  tone: "blue" | "green" | "gold" | "slate";
 };
 
 export const ACTIVITY: ActivityItem[] = [
   { id: "a1", text: "New order WT-1042 created", meta: "by Aisha Khan", time: "2m ago", tone: "blue" },
   { id: "a2", text: "Order WT-1040 marked Closed", meta: "by Priya Sharma", time: "1h ago", tone: "green" },
-  { id: "a3", text: "New conversation from Grace Miller", meta: "unassigned → Sofia Rossi", time: "3h ago", tone: "amber" },
+  { id: "a3", text: "New conversation from Grace Miller", meta: "unassigned → Sofia Rossi", time: "3h ago", tone: "gold" },
   { id: "a4", text: "Employee Tom Bailey deactivated", meta: "by Admin", time: "Yesterday", tone: "slate" },
-  { id: "a5", text: "Order WT-1036 cancelled", meta: "by Daniel Owusu", time: "Yesterday", tone: "amber" },
+  { id: "a5", text: "Order WT-1036 cancelled", meta: "by Daniel Owusu", time: "Yesterday", tone: "gold" },
 ];
 
 // ----- Analytics -----
@@ -111,13 +111,13 @@ export const REVENUE_BY_MONTH: { month: string; revenue: number }[] = [
 export const ORDERS_BY_STATUS: {
   label: string;
   value: number;
-  tone: "blue" | "amber" | "green" | "red";
+  tone: "blue" | "gold" | "green" | "red";
   color: string;
 }[] = [
   { label: "Open", value: 42, tone: "blue", color: "var(--ocean)" },
-  { label: "In Progress", value: 23, tone: "amber", color: "var(--amber)" },
-  { label: "Closed", value: 78, tone: "green", color: "var(--mint)" },
-  { label: "Cancelled", value: 9, tone: "red", color: "var(--rose)" },
+  { label: "In Progress", value: 23, tone: "gold", color: "var(--gold)" },
+  { label: "Closed", value: 78, tone: "green", color: "var(--jade)" },
+  { label: "Cancelled", value: 9, tone: "red", color: "var(--ruby)" },
 ];
 
 export const TOP_EMPLOYEES: { name: string; closed: number }[] = [

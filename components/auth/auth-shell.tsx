@@ -7,31 +7,28 @@ import { Monogram } from "@/components/brand/monogram";
 import { AuthFooter } from "@/components/auth/auth-footer";
 
 /**
- * The ocean statement panel. One per auth screen, on the left from `lg` up.
+ * The ocean statement panel — design system v2 §08.
  *
- * It carries the brand mark, a display-size line, and exactly one editorial
- * moment in Newsreader italic — the only place on the page that face appears.
+ * **Solid ocean.** No gradient, no dot texture, no italic pull-quote: a micro
+ * label, a 29px heading capped at 15ch, one 15.5px supporting line capped at
+ * 34ch, and a single trust line pinned to the foot.
+ *
  * Below `lg` it is not rendered at all; the form column grows its own compact
  * brand lockup instead.
  */
 function AuthStatement({
   eyebrow,
   headline,
-  editorial,
+  lede,
 }: {
   eyebrow: string;
   headline: ReactNode;
-  editorial: ReactNode;
+  lede: ReactNode;
 }) {
   return (
-    <section className="relative hidden overflow-hidden bg-[linear-gradient(165deg,var(--ocean)_0%,var(--ocean-deep)_58%,var(--ocean-night)_100%)] lg:flex lg:flex-col lg:justify-between lg:p-14 xl:p-16">
-      <div
-        aria-hidden
-        className="bg-dot-grid pointer-events-none absolute inset-0 opacity-60 [mask-image:radial-gradient(120%_120%_at_30%_0%,black,transparent_75%)]"
-      />
-
+    <section className="hidden bg-ocean lg:flex lg:flex-col lg:justify-between lg:p-11 xl:p-14">
       {/* Brand lockup */}
-      <div className="relative z-10 flex items-center gap-3">
+      <div className="flex items-center gap-3">
         <Monogram tone="light" />
         <span className="text-[16.5px] font-bold tracking-heading text-tx-invert">
           Wicket Travel
@@ -40,26 +37,26 @@ function AuthStatement({
 
       {/* The statement. The measures sit on the type itself, not on the
           wrapper — `ch` resolves against the element's own font-size, so a cap
-          set on a 16px container would strangle a 44px heading. */}
-      <div className="relative z-10">
-        <p className="font-micro text-sky">{eyebrow}</p>
+          set on a 16px container would strangle a 29px heading. */}
+      <div>
+        <p className="font-micro text-white/60">{eyebrow}</p>
         {/* A statement, not a heading. The page's one <h1> is the form's, in
             the card opposite — an <h2> here would put a level 2 above it in
             the document and give screen readers a heading order to untangle. */}
-        <p className="mt-3 max-w-[16ch] text-[32px] leading-[1.08] font-bold tracking-display text-balance text-tx-invert xl:text-[44px]">
+        <p className="mt-3.5 max-w-[15ch] text-[29px] leading-[1.2] font-bold tracking-display text-balance text-tx-invert">
           {headline}
         </p>
-        <p className="mt-5 max-w-[32ch] font-editorial text-[22px] leading-[1.45] text-tx-invert-2">
-          {editorial}
+        <p className="mt-3 max-w-[34ch] text-[15.5px] leading-[1.6] text-tx-invert-2">
+          {lede}
         </p>
       </div>
 
       {/* The fact at the foot */}
-      <div className="relative z-10 flex max-w-md items-start gap-3">
-        <span className="inline-flex size-[42px] shrink-0 items-center justify-center rounded-icon bg-white/10 text-sky [&_svg]:size-5 [&_svg]:[stroke-width:1.75]">
+      <div className="flex max-w-md items-start gap-3">
+        <span className="inline-flex size-[34px] shrink-0 items-center justify-center rounded-control bg-white/13 text-tx-invert [&_svg]:size-[17px] [&_svg]:[stroke-width:1.75]">
           <ShieldCheck />
         </span>
-        <p className="max-w-[42ch] text-[14.5px] leading-[1.6] text-tx-invert-3">
+        <p className="max-w-[42ch] text-[13.5px] leading-[1.6] text-tx-invert-3">
           <span className="font-semibold text-tx-invert-2">Encrypted, and yours.</span>{" "}
           Your bookings and conversations are visible only to you and the people
           you deal with.
@@ -82,25 +79,22 @@ function AuthStatement({
 export function AuthShell({
   eyebrow,
   headline,
-  editorial,
+  lede,
   children,
   className,
 }: {
   eyebrow: string;
   headline: ReactNode;
-  editorial: ReactNode;
+  /** One supporting line under the statement. Plain text — never a pull-quote. */
+  lede: ReactNode;
   children: ReactNode;
   className?: string;
 }) {
   return (
-    <main className="grid min-h-dvh bg-canvas lg:grid-cols-[1.05fr_1fr]">
-      <AuthStatement
-        eyebrow={eyebrow}
-        headline={headline}
-        editorial={editorial}
-      />
+    <main className="grid min-h-dvh bg-canvas lg:grid-cols-2">
+      <AuthStatement eyebrow={eyebrow} headline={headline} lede={lede} />
 
-      <section className="flex flex-col px-6 py-10 sm:px-10 lg:px-14 lg:py-14">
+      <section className="flex flex-col px-6 py-8 sm:px-10 lg:px-11 lg:py-11">
         {/* Compact brand lockup — the statement panel's stand-in below lg. */}
         <div className="flex items-center gap-3 lg:hidden">
           <Monogram />
@@ -135,17 +129,15 @@ export function AuthHeading({
   lede?: ReactNode;
 }) {
   return (
-    <div className="mb-8">
+    <div className="mb-7">
       {eyebrow ? (
-        <p className="mb-3 font-micro text-coral-deep">{eyebrow}</p>
+        <p className="mb-2.5 font-micro text-flame">{eyebrow}</p>
       ) : null}
-      <h1 className="text-[25px] leading-[1.26] font-bold tracking-heading text-tx-head">
+      <h1 className="text-2xl leading-[1.2] font-bold tracking-heading text-tx-head">
         {title}
       </h1>
       {lede ? (
-        <p className="mt-3.5 text-[14.5px] leading-[1.6] text-tx-muted">
-          {lede}
-        </p>
+        <p className="mt-1.5 text-[15px] leading-[1.6] text-tx-muted">{lede}</p>
       ) : null}
     </div>
   );

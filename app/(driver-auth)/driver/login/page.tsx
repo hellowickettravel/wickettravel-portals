@@ -26,33 +26,29 @@ export default function DriverLoginPage() {
   return (
     <main className="grid min-h-dvh lg:grid-cols-[1.1fr_1fr]">
       {/* Brand / hero — hidden on phones */}
-      <section className="relative hidden overflow-hidden bg-[linear-gradient(165deg,var(--ocean)_0%,var(--ocean-deep)_58%,var(--ocean-night)_100%)] lg:flex lg:flex-col lg:justify-between lg:p-12 xl:p-16">
-        <div className="bg-dot-grid pointer-events-none absolute inset-0 opacity-60 [mask-image:radial-gradient(120%_120%_at_30%_0%,black,transparent_75%)]" />
-        <div className="pointer-events-none absolute -right-24 -top-24 size-[420px] rounded-full bg-[radial-gradient(circle,rgba(255,111,77,0.34),transparent_70%)] blur-2xl" />
+      <section className="hidden bg-ocean lg:flex lg:flex-col lg:justify-between lg:p-11 xl:p-14">
 
-        <div className="relative z-10">
+        <div>
           <BrandLogo variant="white" className="h-9 w-auto" priority />
         </div>
 
-        <div className="relative z-10 max-w-xl">
-          <p className="text-xs font-semibold uppercase tracking-[0.22em] text-coral">
-            Driver Partner
-          </p>
-          <h1 className="mt-5 max-w-md text-4xl font-semibold leading-[1.15] tracking-tight text-balance text-white xl:text-5xl">
+        <div className="max-w-xl">
+          <p className="font-micro text-white/60">Driver partner</p>
+          <h1 className="mt-3.5 max-w-[15ch] text-[29px] leading-[1.2] font-bold tracking-display text-balance text-white">
             Drive with Wicket. Earn on every airport ride.
           </h1>
-          <p className="mt-5 max-w-md text-base leading-relaxed text-white/70">
+          <p className="mt-3 max-w-[34ch] text-[15.5px] leading-[1.6] text-tx-invert-2">
             Accept airport pickups across Hyderabad, Chennai & Bengaluru, track
             your trips, and get weekly payouts — all from your phone.
           </p>
         </div>
 
-        <div className="relative z-10 flex max-w-md items-center gap-3">
-          <div className="flex size-9 shrink-0 items-center justify-center rounded-full bg-white/10 ring-1 ring-inset ring-white/15">
-            <Star className="size-4 text-coral" />
+        <div className="flex max-w-md items-center gap-3">
+          <div className="flex size-[34px] shrink-0 items-center justify-center rounded-control bg-white/13">
+            <Star className="size-[17px] text-tx-invert" />
           </div>
-          <p className="text-[13px] leading-snug text-white/70">
-            <span className="font-medium text-white/90">Trusted by 2,000+ drivers</span>{" "}
+          <p className="text-[13.5px] leading-[1.6] text-tx-invert-3">
+            <span className="font-semibold text-tx-invert-2">Trusted by 2,000+ drivers</span>{" "}
             across South India.
           </p>
         </div>
@@ -65,20 +61,20 @@ export default function DriverLoginPage() {
             <BrandLogo className="h-8 w-auto" priority />
           </div>
 
-          <div className="mb-1 inline-flex items-center gap-1.5 rounded-full bg-sky-tint px-2.5 py-1 text-xs font-medium text-ocean-deep">
+          <div className="mb-1 inline-flex items-center gap-1.5 rounded-chip bg-sky-tint px-2.5 py-1 text-xs font-medium text-ocean">
             <Car className="size-3.5" />
             Driver Partner
           </div>
           <h2 className="mt-3 text-[28px] font-semibold leading-tight tracking-tight text-tx-head">
             Welcome back
           </h2>
-          <p className="mt-2 text-sm text-slate-500">
+          <p className="mt-2 text-sm text-tx-muted">
             Sign in to see available rides and your earnings.
           </p>
 
           <form onSubmit={handleSubmit} className="mt-8 space-y-5">
             <div className="space-y-2">
-              <Label htmlFor="phone" className="text-xs font-medium uppercase tracking-wider text-slate-600">
+              <Label htmlFor="phone" className="text-xs font-medium uppercase tracking-wider text-tx-muted">
                 Phone or email
               </Label>
               <Input
@@ -95,7 +91,7 @@ export default function DriverLoginPage() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="password" className="text-xs font-medium uppercase tracking-wider text-slate-600">
+              <Label htmlFor="password" className="text-xs font-medium uppercase tracking-wider text-tx-muted">
                 Password
               </Label>
               <PasswordInput
@@ -130,14 +126,14 @@ export default function DriverLoginPage() {
             </Button>
           </form>
 
-          <p className="mt-6 text-center text-sm text-slate-500">
+          <p className="mt-6 text-center text-sm text-tx-muted">
             New driver?{" "}
             <Link href="/driver/apply" className="font-medium text-ocean transition-colors hover:text-ocean-deep">
               Become a partner
             </Link>
           </p>
 
-          <div className="mt-8 flex items-center justify-center gap-1.5 text-xs text-slate-400">
+          <div className="mt-8 flex items-center justify-center gap-1.5 text-xs text-tx-faint">
             <ShieldCheck className="size-3.5" />
             Secure driver sign-in
           </div>

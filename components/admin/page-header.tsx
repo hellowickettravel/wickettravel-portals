@@ -3,7 +3,7 @@ import { cn } from "@/lib/utils";
 
 type PageHeaderProps = {
   /**
-   * Plex Mono micro-label in coral-deep. It should carry a FACT — a count, a
+   * Plex Mono micro-label in flame. It should carry a FACT — a count, a
    * date, a route — not a category. "12 open" beats "Orders".
    */
   eyebrow?: ReactNode;
@@ -41,7 +41,7 @@ export function PageHeader({
     >
       <div className="min-w-0">
         {eyebrow ? (
-          <p className="mb-3 font-micro text-coral-deep">{eyebrow}</p>
+          <p className="mb-3 font-micro text-flame">{eyebrow}</p>
         ) : null}
         <h1 className="text-[25px] leading-[1.26] font-bold tracking-heading text-tx-head text-balance sm:text-[32px] sm:leading-[1.16]">
           {title}

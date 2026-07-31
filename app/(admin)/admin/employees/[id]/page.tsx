@@ -17,13 +17,13 @@ import { gbp, fmtDate, titleCase } from "@/lib/format";
 
 const ACCESS_TONE: Record<AccessLevel, Tone> = {
   full: "blue",
-  semi_admin: "amber",
+  semi_admin: "gold",
   chat_only: "violet",
   view_only: "slate",
 };
 const ORDER_TONE: Record<OrderStatus, Tone> = {
   new: "blue",
-  in_progress: "amber",
+  in_progress: "gold",
   completed: "green",
   cancelled: "red",
 };
@@ -51,7 +51,7 @@ export default async function AdminEmployeeDetailPage({
       </Link>
 
       {/* Header */}
-      <div className="flex flex-col gap-4 rounded-2xl border border-border bg-card p-5 shadow-lift sm:flex-row sm:items-center sm:justify-between">
+      <div className="flex flex-col gap-4 rounded-surface border border-border bg-card p-5 shadow-lift sm:flex-row sm:items-center sm:justify-between">
         <div className="space-y-1.5">
           <UserCell name={profile.full_name || "Unnamed"} />
           <div className="flex flex-wrap items-center gap-2">

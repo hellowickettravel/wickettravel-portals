@@ -138,7 +138,7 @@ function isImage(att: SignedOrderAttachment): boolean {
  * rendered so staff can see whether the customer engaged the gate; shows an
  * empty hint when nothing was provided.
  *
- * The note sits on coral tint — it is the customer's own words, quoted, and
+ * The note sits on flame tint — it is the customer's own words, quoted, and
  * the system reserves that surface for exactly this kind of aside.
  */
 export function PreOrderNoteCard({
@@ -167,8 +167,8 @@ export function PreOrderNoteCard({
         ) : (
           <div className="space-y-5">
             {note ? (
-              <div className="flex gap-3 rounded-surface border border-coral-line bg-coral-tint p-4">
-                <FileText className="mt-0.5 size-[18px] shrink-0 text-coral-deep" />
+              <div className="flex gap-3 rounded-surface border border-flame-line bg-flame-tint p-4">
+                <FileText className="mt-0.5 size-[18px] shrink-0 text-flame" />
                 <p className="whitespace-pre-wrap text-[14.5px] leading-[1.6] text-tx-body">
                   {note}
                 </p>
@@ -189,7 +189,7 @@ export function PreOrderNoteCard({
                         href={att.url}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="group block overflow-hidden rounded-chip border border-line bg-sunk outline-none transition-shadow duration-150 ease-brand hover:shadow-lift focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-coral-deep"
+                        className="group block overflow-hidden rounded-chip border border-line bg-sunk outline-none transition-shadow duration-150 ease-brand hover:shadow-lift focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-flame"
                       >
                         {/* eslint-disable-next-line @next/next/no-img-element */}
                         <img
@@ -205,7 +205,7 @@ export function PreOrderNoteCard({
                         target="_blank"
                         rel="noopener noreferrer"
                         className={cn(
-                          "flex items-center gap-2.5 rounded-chip border border-line bg-sunk px-3 py-2.5 text-[14.5px] outline-none transition-colors duration-150 ease-brand hover:border-line-hover hover:bg-surface focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-coral-deep",
+                          "flex items-center gap-2.5 rounded-chip border border-line bg-sunk px-3 py-2.5 text-[14.5px] outline-none transition-colors duration-150 ease-brand hover:border-line-hover hover:bg-surface focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-flame",
                           !att.url && "pointer-events-none opacity-60"
                         )}
                       >

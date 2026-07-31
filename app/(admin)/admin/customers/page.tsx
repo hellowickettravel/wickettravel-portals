@@ -166,8 +166,8 @@ export default function AdminCustomersPage() {
       key: "account",
       header: "Account",
       mobile: "badge",
-      // Mint = they have a working login. Neutral = a lead with no account yet;
-      // that isn't a problem, so it isn't rose.
+      // Jade = they have a working login. Neutral = a lead with no account yet;
+      // that isn't a problem, so it isn't ruby.
       cell: (c) => (
         <StatusBadge tone={c.profile_id ? "green" : "slate"}>
           {c.profile_id ? "Account" : "Lead"}

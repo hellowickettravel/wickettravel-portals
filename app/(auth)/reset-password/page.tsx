@@ -116,7 +116,7 @@ export default function ResetPasswordPage() {
     <AuthShell
       eyebrow="Wicket Travel"
       headline="A new password, and you're back in."
-      editorial="Reset links are single-use, which is exactly why they're safe."
+      lede="Reset links are single-use, which is exactly why they're safe."
     >
       {status === "verifying" ? (
         /* ---------- Verifying the recovery link ---------- */
@@ -129,7 +129,7 @@ export default function ResetPasswordPage() {
       ) : status === "invalid" ? (
         /* ---------- Invalid / expired link ---------- */
         <>
-          <IconChip tone="rose">
+          <IconChip tone="ruby">
             <ShieldAlert />
           </IconChip>
           <h1 className="mt-5 text-[25px] leading-[1.26] font-bold tracking-heading text-tx-head">

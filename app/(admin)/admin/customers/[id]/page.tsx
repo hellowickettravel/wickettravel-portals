@@ -60,7 +60,7 @@ export default async function AdminCustomerDetailPage({
         <div className="space-y-5">
           <Link
             href="/admin/customers"
-            className="inline-flex items-center gap-1.5 rounded-chip text-[14.5px] font-semibold text-ocean underline-offset-[3px] outline-none transition-colors duration-150 ease-brand hover:text-ocean-deep hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-coral-deep"
+            className="inline-flex items-center gap-1.5 rounded-chip text-[14.5px] font-semibold text-ocean underline-offset-[3px] outline-none transition-colors duration-150 ease-brand hover:text-ocean-deep hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-flame"
           >
             <ArrowLeft className="size-4" />
             Back to customers
@@ -107,14 +107,14 @@ export default async function AdminCustomerDetailPage({
             hint="all time"
           />
           <StatCard
-            tone="indigo"
+            tone="violet"
             icon={Clock}
             label="Open orders"
             value={num(openOrders)}
             hint="new and in progress"
           />
           <StatCard
-            tone="mint"
+            tone="jade"
             icon={CheckCircle2}
             label="Completed"
             value={num(completedOrders)}
@@ -157,7 +157,7 @@ export default async function AdminCustomerDetailPage({
                 <li key={c.id}>
                   <Link
                     href={`/admin/messages/${c.id}`}
-                    className="flex items-center gap-4 px-5 py-3.5 outline-none transition-colors duration-150 ease-brand hover:bg-sky-tint focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-coral-deep"
+                    className="flex items-center gap-4 px-5 py-3.5 outline-none transition-colors duration-150 ease-brand hover:bg-sky-tint focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-flame"
                   >
                     <IconChip tone="ocean" className="size-9 rounded-chip [&_svg]:size-4">
                       <MessageSquare />
@@ -184,7 +184,7 @@ export default async function AdminCustomerDetailPage({
         </Panel>
       </section>
 
-      {/* Carries its own rose surface — it should look like a warning, not
+      {/* Carries its own ruby surface — it should look like a warning, not
           like another card on the page. */}
       <CustomerDangerZone
         customerId={customer.id}

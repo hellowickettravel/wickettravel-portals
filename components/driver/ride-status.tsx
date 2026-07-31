@@ -1,31 +1,31 @@
 import { cn } from "@/lib/utils";
 import { STAGE_META, type TripStage } from "@/lib/driver/mock";
 
-type Tone = "blue" | "green" | "amber" | "red" | "slate";
+type Tone = "blue" | "green" | "gold" | "red" | "slate";
 
 const TONE_BG: Record<Tone, string> = {
   blue: "bg-sky-tint text-ocean-deep",
-  green: "bg-emerald-50 text-emerald-700",
-  amber: "bg-amber-50 text-amber-700",
-  red: "bg-rose-50 text-rose-700",
-  slate: "bg-slate-100 text-slate-600",
+  green: "bg-jade-tint text-jade",
+  gold: "bg-gold-tint text-gold",
+  red: "bg-ruby-tint text-ruby",
+  slate: "bg-sunk text-tx-muted",
 };
 
 const TONE_DOT: Record<Tone, string> = {
   blue: "bg-ocean",
-  green: "bg-emerald-500",
-  amber: "bg-amber-500",
-  red: "bg-rose-500",
-  slate: "bg-slate-400",
+  green: "bg-jade",
+  gold: "bg-gold",
+  red: "bg-ruby",
+  slate: "bg-tx-faint",
 };
 
 const STAGE_TONE: Record<TripStage, Tone> = {
   available: "blue",
   accepted: "blue",
-  heading: "amber",
-  arrived: "amber",
-  onboard: "amber",
-  enroute: "amber",
+  heading: "gold",
+  arrived: "gold",
+  onboard: "gold",
+  enroute: "gold",
   completed: "green",
   cancelled: "red",
 };
@@ -42,7 +42,7 @@ export function RideStatusBadge({
   return (
     <span
       className={cn(
-        "inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium whitespace-nowrap",
+        "inline-flex items-center gap-1.5 rounded-chip px-2.5 py-1 text-xs font-medium whitespace-nowrap",
         TONE_BG[tone],
         className
       )}

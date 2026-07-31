@@ -206,7 +206,7 @@ export default function LoginPage() {
     <AuthShell
       eyebrow="Wicket Travel"
       headline="Every fare, every message, one desk."
-      editorial="The booking and the conversation about it, finally in the same place."
+      lede="The booking and the conversation about it, finally in the same place."
     >
       <AuthHeading
         eyebrow="Sign in"

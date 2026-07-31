@@ -11,11 +11,10 @@
   --color-foreground: var(--foreground);
 
   /* ── Fonts ────────────────────────────────────────────────
-     Hanken Grotesk everywhere · Newsreader italic for the one
-     editorial line per page · IBM Plex Mono 500 for codes,
-     references and uppercase micro-labels. */
+     Hanken Grotesk everywhere · IBM Plex Mono 500 for codes,
+     references and uppercase micro-labels. Newsreader is retired
+     from the portal (v2 §09). */
   --font-sans: var(--font-hanken);
-  --font-serif: var(--font-newsreader);
   --font-mono: var(--font-plex-mono);
 
   /* ── Tracking ─────────────────────────────────────────────
@@ -26,34 +25,39 @@
   --tracking-ui: -0.002em; /* buttons, labels, field text */
   --tracking-micro: 0.1em; /* Plex Mono uppercase */
 
-  /* ── Brand ── */
+  /* ── Structure — blue ── */
   --color-ocean: var(--ocean);
   --color-ocean-deep: var(--ocean-deep);
-  --color-ocean-night: var(--ocean-night);
-  --color-sky: var(--sky);
+  --color-ocean-ink: var(--ocean-ink);
   --color-sky-tint: var(--sky-tint);
   --color-sky-line: var(--sky-line);
+  --color-sky-chip: var(--sky-chip);
 
-  --color-coral: var(--coral);
-  --color-coral-deep: var(--coral-deep);
-  --color-coral-press: var(--coral-press);
-  --color-coral-tint: var(--coral-tint);
-  --color-coral-line: var(--coral-line);
+  /* ── Action — orange ── */
+  --color-flame: var(--flame);
+  --color-flame-hover: var(--flame-hover);
+  --color-flame-vivid: var(--flame-vivid);
+  --color-flame-tint: var(--flame-tint);
+  --color-flame-line: var(--flame-line);
+  --color-flame-chip: var(--flame-chip);
 
   /* ── Data hues ── */
-  --color-amber: var(--amber);
-  --color-amber-deep: var(--amber-deep);
-  --color-amber-tint: var(--amber-tint);
-  --color-amber-line: var(--amber-line);
-  --color-mint: var(--mint);
-  --color-mint-tint: var(--mint-tint);
-  --color-mint-line: var(--mint-line);
-  --color-indigo: var(--indigo);
-  --color-indigo-tint: var(--indigo-tint);
-  --color-indigo-line: var(--indigo-line);
-  --color-rose: var(--rose);
-  --color-rose-tint: var(--rose-tint);
-  --color-rose-line: var(--rose-line);
+  --color-gold: var(--gold);
+  --color-gold-tint: var(--gold-tint);
+  --color-gold-line: var(--gold-line);
+  --color-gold-chip: var(--gold-chip);
+  --color-jade: var(--jade);
+  --color-jade-tint: var(--jade-tint);
+  --color-jade-line: var(--jade-line);
+  --color-jade-chip: var(--jade-chip);
+  --color-violet: var(--violet);
+  --color-violet-tint: var(--violet-tint);
+  --color-violet-line: var(--violet-line);
+  --color-violet-chip: var(--violet-chip);
+  --color-ruby: var(--ruby);
+  --color-ruby-tint: var(--ruby-tint);
+  --color-ruby-line: var(--ruby-line);
+  --color-ruby-chip: var(--ruby-chip);
 
   /* ── Surfaces ── */
   --color-canvas: var(--canvas);
@@ -75,20 +79,17 @@
   --color-tx-invert-2: var(--tx-invert-2);
   --color-tx-invert-3: var(--tx-invert-3);
 
-  /* ── Radius: the clipped corner ── */
+  /* ── Radius: one value per element type, no asymmetry ── */
   --radius-surface: var(--r-surface);
   --radius-surface-lg: var(--r-surface-lg);
   --radius-control: var(--r-control);
   --radius-chip: var(--r-chip);
   --radius-icon: var(--r-icon);
 
-  /* ── Depth: soft, ocean-tinted ── */
+  /* ── Depth ── */
   --shadow-lift: var(--lift-1);
   --shadow-lift-lg: var(--lift-2);
   --shadow-lift-in: var(--lift-in);
-  --shadow-btn-ocean: var(--btn-ocean);
-  --shadow-btn-ocean-hover: var(--btn-ocean-hover);
-  --shadow-btn-coral: var(--btn-coral);
 
   /* ── Motion ── */
   --ease-brand: var(--ease);
@@ -123,98 +124,101 @@
   --color-popover: var(--popover);
   --color-card-foreground: var(--card-foreground);
   --color-card: var(--card);
-  --radius-sm: calc(var(--radius) * 0.6);
-  --radius-md: calc(var(--radius) * 0.8);
-  --radius-lg: var(--radius);
-  --radius-xl: calc(var(--radius) * 1.4);
-  --radius-2xl: calc(var(--radius) * 1.8);
-  --radius-3xl: calc(var(--radius) * 2.2);
-  --radius-4xl: calc(var(--radius) * 2.6);
+  /* Tailwind's own radius aliases are pinned onto the five system values, so a
+     stray `rounded-xl` from a shadcn primitive still lands on 14px rather than
+     inventing a sixth corner. There is no 16px anywhere. */
+  --radius-sm: var(--r-chip); /* 7 */
+  --radius-md: var(--r-control); /* 10 */
+  --radius-lg: var(--r-control); /* 10 */
+  --radius-xl: var(--r-surface); /* 14 */
+  --radius-2xl: var(--r-surface); /* 14 */
+  --radius-3xl: var(--r-surface-lg); /* 18 */
+  --radius-4xl: var(--r-surface-lg); /* 18 */
 }
 
 /* =========================================================
-   WICKET TRAVEL — DESIGN SYSTEM, LOCKED. LIGHT ONLY.
-   Source of truth: design-system.html / DESIGN_SYSTEM.md
-   Ocean is the everyday action. Coral appears once per view.
+   WICKET TRAVEL — DESIGN SYSTEM v2. LIGHT ONLY.
+   Source of truth: wicket-design-system-v2.html / DESIGN_SYSTEM.md
+
+   Blue builds the room. Orange does the work.
+   No gradients. No visible scrollbars. No asymmetric corners.
    ========================================================= */
 :root {
   color-scheme: light;
 
-  /* — brand — */
+  /* — structure: blue — */
   --ocean: #0f4c81;
-  --ocean-deep: #0a3a66;
-  --ocean-night: #082f55;
-  --sky: #7ec3f0;
+  --ocean-deep: #0c3d69;
+  --ocean-ink: #0a3355;
   --sky-tint: #edf4fb;
-  --sky-line: #d5e6f5;
+  --sky-line: #d3e4f4;
 
-  --coral: #ff6f4d;
-  --coral-deep: #c0451f;
-  --coral-press: #a63a18; /* accent button hover */
-  --coral-tint: #fff1ec;
-  --coral-line: #fbdace;
+  /* — action: orange. Flame is the PRIMARY action colour. — */
+  --flame: #d24417;
+  --flame-hover: #b63a11;
+  --flame-vivid: #f2622a; /* graphics only — fails AA for small text */
+  --flame-tint: #fff0ea;
+  --flame-line: #fad5c4;
 
-  /* — data — */
-  --amber: #e9a233;
-  --amber-deep: #8f5b08;
-  --amber-tint: #fef5e6;
-  --amber-line: #f5dfb8;
-  --mint: #0e7f72;
-  --mint-tint: #e4f3f0;
-  --mint-line: #c4e5de;
-  --indigo: #4552c0;
-  --indigo-tint: #eff1fd;
-  --indigo-line: #dadffa;
-  --rose: #bb3348;
-  --rose-tint: #fdeef0;
-  --rose-line: #f8d3d9;
+  /* — data: the hue is fixed by meaning, on every screen — */
+  --gold: #c97a0c; /* money */
+  --gold-tint: #fdf3e3;
+  --gold-line: #f2dfbc;
+  --jade: #0c7a6b; /* live, confirmed */
+  --jade-tint: #e3f3f0;
+  --jade-line: #c1e4dd;
+  --violet: #4a4fbf; /* waiting */
+  --violet-tint: #eeeffc;
+  --violet-line: #d8daf8;
+  --ruby: #b32f44; /* attention */
+  --ruby-tint: #fcedef;
+  --ruby-line: #f5d0d6;
+
+  /* — icon-chip fills: one step deeper than the tint, so a chip still
+       separates when it sits on a stat card painted in its own tint — */
+  --sky-chip: #dceaf7;
+  --flame-chip: #fbdcce;
+  --gold-chip: #f9e7c6;
+  --jade-chip: #cfe8e3;
+  --violet-chip: #e1e3fa;
+  --ruby-chip: #f7dade;
 
   /* — surfaces — */
-  --canvas: #f6f9fc;
+  --canvas: #f5f8fc;
   --surface: #ffffff;
-  --surface-sunk: #f1f5fa;
+  --surface-sunk: #f0f4f9;
 
   /* — lines: internal · card & section · interactive · hover — */
-  --line-faint: #f0f4f9;
-  --line: #e7edf5;
-  --line-strong: #d7e1ec;
+  --line-faint: #eff3f8;
+  --line: #e5ebf3;
+  --line-strong: #d3dce7;
   --line-hover: #c3d2e1;
 
-  /* — text: five colours, never pure black — */
-  --tx-head: #0a3a66;
-  --tx-body: #37485c;
-  --tx-muted: #6b7c8e;
-  --tx-faint: #98a6b5;
+  /* — text: four colours plus invert, never pure black — */
+  --tx-head: #0c3355;
+  --tx-body: #3a4a5c;
+  --tx-muted: #6d7d8f;
+  --tx-faint: #96a4b4;
   --tx-invert: #ffffff;
-  --tx-invert-2: #c6dcef;
-  --tx-invert-3: #a6c6e2;
+  --tx-invert-2: #bbd2e6;
+  --tx-invert-3: #a9c5dd;
 
-  /* — radius language: the clipped corner — */
-  --r-surface: 5px 18px 18px 18px; /* cards, panels, images */
-  --r-surface-lg: 6px 24px 24px 24px; /* feature blocks, modals */
-  --r-control: 8px; /* buttons, inputs, selects */
-  --r-chip: 6px; /* badges, tags, labels */
-  --r-icon: 12px; /* icon chips */
+  /* — radius: consistent per element type. No asymmetry. — */
+  --r-surface: 14px; /* cards, panels, stat cards, tables, images */
+  --r-surface-lg: 18px; /* modals, sidebar, hero and auth panels */
+  --r-control: 10px; /* buttons, inputs, selects, nav items */
+  --r-chip: 7px; /* badges and tags — never a pill */
+  --r-icon: 11px; /* icon chips and the monogram badge */
 
   /* — depth: soft, ocean-tinted. Never black shadows. — */
-  --lift-1:
-    0 1px 2px rgba(10, 58, 102, 0.04), 0 6px 16px rgba(10, 58, 102, 0.05);
-  --lift-2:
-    0 2px 6px rgba(10, 58, 102, 0.05), 0 14px 30px rgba(10, 58, 102, 0.09);
-  --lift-in: inset 0 1px 2px rgba(10, 58, 102, 0.05);
-
-  /* Buttons carry their own tinted shadow and deepen on hover — they never rise. */
-  --btn-ocean:
-    0 1px 2px rgba(10, 58, 102, 0.14), 0 5px 14px rgba(15, 76, 129, 0.22);
-  --btn-ocean-hover:
-    0 2px 4px rgba(10, 58, 102, 0.16), 0 9px 20px rgba(15, 76, 129, 0.26);
-  --btn-coral:
-    0 1px 2px rgba(120, 40, 18, 0.16), 0 5px 14px rgba(192, 69, 31, 0.24);
+  --lift-1: 0 1px 2px rgba(12, 51, 85, 0.05), 0 4px 12px rgba(12, 51, 85, 0.05);
+  --lift-2: 0 2px 6px rgba(12, 51, 85, 0.06), 0 12px 26px rgba(12, 51, 85, 0.09);
+  --lift-in: inset 0 1px 2px rgba(12, 51, 85, 0.05);
 
   --ease: cubic-bezier(0.22, 0.68, 0.28, 1);
 
-  /* Controls are 8px uniform, so shadcn's radius scale starts there. */
-  --radius: 0.5rem;
+  /* Controls are 10px, so shadcn's radius scale starts there. */
+  --radius: 0.625rem;
 
   /* ── shadcn/ui tokens → the locked palette ── */
   --background: var(--canvas);
@@ -225,8 +229,8 @@
   --popover: var(--surface);
   --popover-foreground: var(--tx-body);
 
-  /* primary = OCEAN — the everyday action */
-  --primary: var(--ocean);
+  /* primary = FLAME — the main action on a screen */
+  --primary: var(--flame);
   --primary-foreground: var(--tx-invert);
 
   --secondary: var(--sky-tint);
@@ -238,33 +242,48 @@
   --accent: var(--sky-tint);
   --accent-foreground: var(--ocean-deep);
 
-  --destructive: var(--rose);
+  --destructive: var(--ruby);
 
   --border: var(--line);
   --input: var(--line-strong);
   --ring: var(--ocean);
 
   --chart-1: var(--ocean);
-  --chart-2: var(--coral-deep);
-  --chart-3: var(--amber);
-  --chart-4: var(--mint);
-  --chart-5: var(--indigo);
+  --chart-2: var(--flame);
+  --chart-3: var(--gold);
+  --chart-4: var(--jade);
+  --chart-5: var(--violet);
 
-  /* Ocean rail for the portal shells */
-  --sidebar: var(--ocean-deep);
+  /* Solid ocean rail for the portal shells — no gradient. */
+  --sidebar: var(--ocean);
   --sidebar-foreground: var(--tx-invert-2);
-  --sidebar-primary: var(--coral-deep); /* active pill = the one coral */
+  --sidebar-primary: var(--flame); /* the flame icon on the active pill */
   --sidebar-primary-foreground: var(--tx-invert);
-  --sidebar-accent: var(--ocean); /* hover row */
+  --sidebar-accent: var(--ocean-deep); /* hover row */
   --sidebar-accent-foreground: var(--tx-invert);
-  --sidebar-border: var(--ocean);
-  --sidebar-ring: var(--coral-deep);
+  --sidebar-border: var(--ocean-deep);
+  --sidebar-ring: var(--flame);
 }
 
 @layer base {
   * {
     @apply border-border outline-ring/50;
   }
+
+  /* ── No scrollbar is ever visible inside the app ──────────
+     v2 §02, and it is a hard rule. The document's own page scrollbar on
+     <html> is the single exception, so everything *below* the root scrolls
+     silently: sidebar, chat thread, modal body, table region, drawer. */
+  *:not(html):not(body) {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+  *:not(html):not(body)::-webkit-scrollbar {
+    display: none;
+    width: 0;
+    height: 0;
+  }
+
   html {
     color-scheme: light;
     -webkit-text-size-adjust: 100%;
@@ -274,12 +293,12 @@
     color: var(--tx-body);
     font-family: var(--font-hanken), system-ui, -apple-system, sans-serif;
     font-size: 16px;
-    line-height: 1.7;
+    line-height: 1.68;
     font-weight: 400;
     -webkit-font-smoothing: antialiased;
     /* Safety net: the page itself must never scroll sideways on mobile —
-       only opted-in elements (overflow-x-auto regions) scroll. `clip` keeps
-       position: sticky working, unlike `hidden`. */
+       only opted-in elements scroll. `clip` keeps position: sticky working,
+       unlike `hidden`. */
     overflow-x: clip;
   }
   h1,
@@ -307,18 +326,18 @@
     }
   }
 
-  /* One icon family, one weight (design-system.html §07).
+  /* One icon family, one weight (v2 ship checklist).
      Lucide ships stroke-width="2" as a presentation attribute; this rule wins
      over it, so every icon in the product is 1.75 without per-call-site props.
-     Sizes: 16 inline · 18 buttons · 20 nav & chips · 24 page headers. */
+     Sizes: 16 inline · 17 buttons · 19 nav & chips · 22 page headers. */
   svg.lucide {
     stroke-width: 1.75;
   }
 }
 
-/* A card sitting on a white section keeps its border but drops its shadow —
-   otherwise it floats for no reason (design-system.html §05). */
 @layer components {
+  /* A card sitting on a white section keeps its border but drops its shadow —
+     otherwise it floats for no reason. */
   [data-section-tone="white"] [data-slot="card"],
   [data-section-tone="white"] [data-slot="panel"] {
     box-shadow: none;
@@ -327,8 +346,8 @@
   /* ── Toast ────────────────────────────────────────────────
      Sonner renders into its own portal outside the component tree, so its
      skin lives here rather than in a className. A toast is a popup surface:
-     the clipped corner, lift-2, and the same five text colours as everything
-     else. The icon takes the hue of what it is telling you. */
+     14px radius, lift-2, and the same text colours as everything else. The
+     icon takes the hue of what it is telling you. */
   .cn-toast {
     border-radius: var(--r-surface);
     box-shadow: var(--lift-2);
@@ -345,13 +364,13 @@
     color: var(--tx-muted);
   }
   .cn-toast[data-type="success"] [data-icon] {
-    color: var(--mint);
+    color: var(--jade);
   }
   .cn-toast[data-type="error"] [data-icon] {
-    color: var(--rose);
+    color: var(--ruby);
   }
   .cn-toast[data-type="warning"] [data-icon] {
-    color: var(--amber-deep);
+    color: var(--gold);
   }
   .cn-toast[data-type="info"] [data-icon],
   .cn-toast[data-type="loading"] [data-icon] {
@@ -362,7 +381,7 @@
     border: 1px solid var(--line-strong);
     border-radius: var(--r-control);
     background: var(--surface);
-    color: var(--ocean-deep);
+    color: var(--tx-head);
     font-size: 13px;
     font-weight: 600;
     height: 32px;
@@ -390,16 +409,21 @@
   line-height: 1.5;
 }
 
-/* Newsreader italic — one editorial moment per page, maximum. */
-@utility font-editorial {
-  font-family: var(--font-newsreader), Georgia, serif;
-  font-style: italic;
-  font-weight: 400;
-}
-
 /* Fares, metrics and every table column of numbers. */
 @utility tabular {
   font-variant-numeric: tabular-nums;
+}
+
+/* Explicit opt-in for a silent scroll area. The global rule above already
+   covers everything below <html>; this states the intent at the call site. */
+@utility no-bar {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  &::-webkit-scrollbar {
+    display: none;
+    width: 0;
+    height: 0;
+  }
 }
 
 /* Accessibility: honour reduced-motion — neutralise entrance animations,
@@ -413,13 +437,4 @@
     transition-duration: 0.001ms !important;
     scroll-behavior: auto !important;
   }
-}
-
-/* Faint dot-grid texture (used on the login hero panel) */
-@utility bg-dot-grid {
-  background-image: radial-gradient(
-    rgb(255 255 255 / 0.1) 1px,
-    transparent 1px
-  );
-  background-size: 22px 22px;
 }

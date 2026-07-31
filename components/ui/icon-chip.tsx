@@ -4,24 +4,26 @@ import { cva, type VariantProps } from "class-variance-authority"
 import { cn } from "@/lib/utils"
 
 /**
- * Icon chip — design-system.html §07.
+ * Icon chip — design system v2 §06.
  *
- * 42px square, 12px radius, the hue at 9–16% background, holding a 20px
- * Lucide icon at 1.75 stroke. Chips carry meaning, not decoration:
- * ocean for volume · amber for money · indigo for waiting · mint for
- * confirmed · rose for attention · coral for featured.
+ * 40px square, 11px radius, a **flat** fill one step deeper than the hue's
+ * tint, holding a 19px Lucide icon at 1.75 stroke. Solid, never an alpha
+ * wash — so the chip still separates when it sits on a stat card painted in
+ * that same hue. Chips carry meaning, not decoration: ocean for volume ·
+ * gold for money · violet for waiting · jade for confirmed · ruby for
+ * attention · flame for featured.
  */
 const iconChipVariants = cva(
-  "inline-flex size-[42px] shrink-0 items-center justify-center rounded-icon [&_svg]:size-5 [&_svg]:shrink-0 [&_svg]:[stroke-width:1.75]",
+  "inline-flex size-10 shrink-0 items-center justify-center rounded-icon [&_svg]:size-[19px] [&_svg]:shrink-0 [&_svg]:[stroke-width:1.75]",
   {
     variants: {
       tone: {
-        ocean: "bg-ocean/10 text-ocean",
-        coral: "bg-coral-tint text-coral-deep",
-        amber: "bg-amber/16 text-amber-deep",
-        mint: "bg-mint/11 text-mint",
-        indigo: "bg-indigo/10 text-indigo",
-        rose: "bg-rose/9 text-rose",
+        ocean: "bg-sky-chip text-ocean",
+        flame: "bg-flame-chip text-flame",
+        gold: "bg-gold-chip text-gold",
+        jade: "bg-jade-chip text-jade",
+        violet: "bg-violet-chip text-violet",
+        ruby: "bg-ruby-chip text-ruby",
         neutral: "bg-sunk text-tx-muted",
       },
     },

@@ -15,7 +15,7 @@ import {
  * lib/security/password.ts so the UI and the validation gate can never drift.
  *
  * The meter uses the data hues by meaning rather than a red-to-green ramp:
- * rose is attention, amber is partway, ocean is fine, mint is confirmed.
+ * ruby is attention, gold is partway, ocean is fine, jade is confirmed.
  */
 export function PasswordStrength({ password }: { password: string }) {
   if (!password) return null;
@@ -25,21 +25,21 @@ export function PasswordStrength({ password }: { password: string }) {
 
   const barTone =
     tone === "weak"
-      ? "bg-rose"
+      ? "bg-ruby"
       : tone === "fair"
-        ? "bg-amber"
+        ? "bg-gold"
         : tone === "good"
           ? "bg-ocean"
-          : "bg-mint";
+          : "bg-jade";
 
   const labelTone =
     tone === "weak"
-      ? "text-rose"
+      ? "text-ruby"
       : tone === "fair"
-        ? "text-amber-deep"
+        ? "text-gold"
         : tone === "good"
           ? "text-ocean"
-          : "text-mint";
+          : "text-jade";
 
   return (
     <div className="mt-3 space-y-3">
@@ -68,7 +68,7 @@ export function PasswordStrength({ password }: { password: string }) {
               key={rule.id}
               className={cn(
                 "flex items-center gap-2 text-[13px] leading-[1.5] transition-colors duration-150 ease-brand",
-                ok ? "text-mint" : "text-tx-muted"
+                ok ? "text-jade" : "text-tx-muted"
               )}
             >
               {ok ? (

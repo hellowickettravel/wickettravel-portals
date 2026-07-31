@@ -28,17 +28,21 @@ A custom "Shared Team Inbox + Orders CRM + Admin panel" for a UK-based flight-ti
 - /employee — employee portal (the heart: 2-pane chat inbox, create order from chat)
 - /customer — customer portal: place/track orders, chat with the team in real time
 
-## Design system
+## Design system — v2
 **`DESIGN_SYSTEM.md` at the repo root is the working source of truth for code**, extracted
-from `design-system.html` (the visual specimen, live at `/style-guide`). Read it before
-touching anything visual. The essentials:
+from `wicket-design-system-v2.html` (the visual brief). The in-app specimen is `/style-guide`.
+**v2 replaces v1 entirely** — `design-system.html` and its vocabulary are retired (§17).
+Read DESIGN_SYSTEM.md before touching anything visual. The essentials:
 
 - **Light mode only.** There is no dark theme and no `.dark` block.
-- **Ocean is the brand** — `#0F4C81` primary / `#0A3A66` deep / `#082F55` night. **Coral is the accent** — `#C0451F`, one per view, maximum.
-- **Typefaces:** Hanken Grotesk everywhere · Newsreader italic for one editorial line per page · IBM Plex Mono 500 for codes and uppercase micro-labels. Plus Jakarta Sans, Inter and Poppins are retired.
-- **The clipped corner:** surfaces `5px 18px 18px 18px`, controls 8px, badges 6px, icon chips 12px. No uniform-16px radius, no pill buttons.
-- **Token source of truth:** CSS variables in `app/globals.css` (`:root`), surfaced via `@theme inline`. Consume tokens (`bg-ocean`, `text-tx-head`, `bg-sky-tint`, `border-line`…) — **never hardcode a hex.** The only two exceptions are documented in §7 of DESIGN_SYSTEM.md.
-- **Portal shell:** 272px ocean-gradient sidebar, active nav = solid WHITE pill with a coral icon, 72px white topbar with no brand colour in it, content max 1160px.
+- **No gradients. No visible scrollbars. No asymmetric corners.** Those three are hard rules.
+- **Blue builds the room, orange does the work.** Ocean `#0F4C81` / deep `#0C3D69` / ink `#0A3355` is the structure. **Flame `#D24417` is the PRIMARY action** — one per view — with ocean as the strong secondary.
+- **Data hues, fixed by meaning:** gold `#C97A0C` money · violet `#4A4FBF` waiting · jade `#0C7A6B` live · ruby `#B32F44` attention.
+- **Typefaces:** Hanken Grotesk everywhere · IBM Plex Mono 500 for codes and uppercase micro-labels. Newsreader, Plus Jakarta Sans, Inter and Poppins are retired.
+- **Radius:** surfaces 14px, large blocks 18px, controls 10px, icon chips 11px, badges 7px. Circles for avatars and status dots only. No pills, no 16px-everywhere.
+- **Buttons:** 36 / 42 / 48px at 14 / 18 / 22px padding. No shadow, no lift — hover darkens one step. They never stretch except an auth card's submit.
+- **Token source of truth:** CSS variables in `app/globals.css` (`:root`), surfaced via `@theme inline`. Consume tokens (`bg-ocean`, `text-flame`, `text-tx-head`, `bg-sky-tint`, `border-line`…) — **never hardcode a hex.** The only two exceptions are documented in §8 of DESIGN_SYSTEM.md.
+- **Portal shell:** 272px **solid ocean** sidebar with a hidden scrollbar, active nav = solid WHITE pill with a **flame** icon, 72px white topbar with no brand colour in it, content max 1160px.
 - Anything not in DESIGN_SYSTEM.md is not in the system. Don't invent a value — pick the nearest one on the scale.
 
 ## Messaging (internal realtime)

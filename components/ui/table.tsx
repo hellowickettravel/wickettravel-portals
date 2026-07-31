@@ -7,7 +7,7 @@ import { cn } from "@/lib/utils"
 /**
  * Table — the portal's data surface.
  *
- * Header row on #F1F5FA with Plex Mono micro-labels, 1px #F0F4F9 dividers
+ * Header row on #F0F4F9 with Plex Mono micro-labels, 1px #F0F4F9 dividers
  * between rows, 14px of vertical air in every cell, and a sky-tint hover so a
  * row reads as a target. Numbers are tabular wherever a column says so, which
  * is what keeps a fare column aligned on the decimal.

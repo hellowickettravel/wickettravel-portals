@@ -44,7 +44,7 @@ function SelectTrigger({
       className={cn(
         fieldClassName,
         // Matches <Input> exactly — 48px default, 38px compact.
-        "flex w-fit items-center justify-between gap-2 pr-3 pl-[15px] whitespace-nowrap select-none data-placeholder:text-tx-faint data-[size=default]:h-12 data-[size=sm]:h-[38px] sm:data-[size=sm]:text-sm *:data-[slot=select-value]:line-clamp-1 *:data-[slot=select-value]:flex *:data-[slot=select-value]:items-center *:data-[slot=select-value]:gap-2 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg]:[stroke-width:1.75] [&_svg:not([class*='size-'])]:size-[18px]",
+        "flex w-fit items-center justify-between gap-2 pr-3 pl-3.5 whitespace-nowrap select-none data-placeholder:text-tx-faint data-[size=default]:h-[46px] data-[size=sm]:h-9 sm:data-[size=sm]:text-sm *:data-[slot=select-value]:line-clamp-1 *:data-[slot=select-value]:flex *:data-[slot=select-value]:items-center *:data-[slot=select-value]:gap-2 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg]:[stroke-width:1.75] [&_svg:not([class*='size-'])]:size-[17px]",
         className
       )}
       {...props}
@@ -120,7 +120,7 @@ function SelectItem({
     <SelectPrimitive.Item
       data-slot="select-item"
       className={cn(
-        "relative flex w-full cursor-default items-center gap-1.5 rounded-md py-1 pr-8 pl-1.5 text-sm outline-hidden select-none focus:bg-accent focus:text-accent-foreground not-data-[variant=destructive]:focus:**:text-accent-foreground data-disabled:pointer-events-none data-disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4 *:[span]:last:flex *:[span]:last:items-center *:[span]:last:gap-2",
+        "relative flex w-full cursor-default items-center gap-1.5 rounded-control py-1 pr-8 pl-1.5 text-sm outline-hidden select-none focus:bg-accent focus:text-accent-foreground not-data-[variant=destructive]:focus:**:text-accent-foreground data-disabled:pointer-events-none data-disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4 *:[span]:last:flex *:[span]:last:items-center *:[span]:last:gap-2",
         className
       )}
       {...props}
@@ -216,7 +216,7 @@ function NativeSelect({
         className={cn(
           fieldClassName,
           "cursor-pointer appearance-none py-0",
-          compact ? "h-[38px] pr-9 pl-3 sm:text-sm" : "h-12 pr-10 pl-[15px]",
+          compact ? "h-9 pr-9 pl-3 sm:text-sm" : "h-[46px] pr-10 pl-3.5",
           className
         )}
         {...props}

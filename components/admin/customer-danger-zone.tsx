@@ -37,9 +37,9 @@ export function CustomerDangerZone({
   }
 
   return (
-    <div className="flex flex-col gap-4 rounded-surface border border-rose-line bg-rose-tint p-5 sm:flex-row sm:items-center sm:justify-between md:px-6">
+    <div className="flex flex-col gap-4 rounded-surface border border-ruby-line bg-ruby-tint p-5 sm:flex-row sm:items-center sm:justify-between md:px-6">
       <div>
-        <p className="text-[16.5px] leading-[1.42] font-semibold text-rose">
+        <p className="text-[16.5px] leading-[1.42] font-semibold text-ruby">
           Danger zone
         </p>
         <p className="mt-1.5 max-w-[58ch] text-[14.5px] leading-[1.6] text-tx-muted">

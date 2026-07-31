@@ -103,23 +103,23 @@ export function ResetEverything() {
   }
 
   return (
-    <div className="rounded-2xl border-2 border-rose-300 bg-rose-50/60 p-5 sm:p-6">
+    <div className="rounded-surface border-2 border-ruby-line bg-ruby-tint/60 p-5 sm:p-6">
       <div className="flex items-start gap-3">
-        <div className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-rose-100 text-rose-600">
+        <div className="flex size-10 shrink-0 items-center justify-center rounded-surface bg-ruby-tint text-ruby">
           <ShieldAlert className="size-5" />
         </div>
         <div className="min-w-0">
-          <h3 className="tracking-heading text-base font-semibold text-rose-700">
+          <h3 className="tracking-heading text-base font-semibold text-ruby">
             Danger zone — Reset everything
           </h3>
-          <p className="mt-1 text-sm text-rose-700/80">
+          <p className="mt-1 text-sm text-ruby/80">
             Permanently wipe the portal back to a fresh state. This{" "}
             <strong>deletes every employee, customer, order, message,
             conversation, support ticket and notification</strong>, removes all
             customer/employee/other-admin logins, and empties all uploaded
             attachments.
           </p>
-          <p className="mt-2 text-sm text-rose-700/80">
+          <p className="mt-2 text-sm text-ruby/80">
             <strong>Kept:</strong> your own admin account and your business
             settings (name, email, phone, commission and logo). Everything else
             is gone. <strong>This cannot be undone.</strong>
@@ -131,7 +131,6 @@ export function ResetEverything() {
         <Button
           type="button"
           variant="destructive"
-          className="w-full sm:w-auto"
           onClick={() => {
             reset();
             setOpen(true);
@@ -147,7 +146,7 @@ export function ResetEverything() {
           {step === "form" ? (
             <>
               <DialogHeader>
-                <DialogTitle className="tracking-heading text-rose-700">
+                <DialogTitle className="tracking-heading text-ruby">
                   Reset everything?
                 </DialogTitle>
                 <DialogDescription>
@@ -161,9 +160,9 @@ export function ResetEverything() {
               <div className="space-y-4">
                 <div className="space-y-2">
                   <Label htmlFor="reset-confirm">
-                    <span className="text-xs font-medium uppercase tracking-wider text-slate-600">
+                    <span className="text-xs font-medium uppercase tracking-wider text-tx-muted">
                       Type{" "}
-                      <span className="font-semibold text-rose-700">
+                      <span className="font-semibold text-ruby">
                         {CONFIRM_PHRASE}
                       </span>{" "}
                       to confirm
@@ -181,7 +180,7 @@ export function ResetEverything() {
 
                 <div className="space-y-2">
                   <Label htmlFor="reset-password">
-                    <span className="text-xs font-medium uppercase tracking-wider text-slate-600">
+                    <span className="text-xs font-medium uppercase tracking-wider text-tx-muted">
                       Confirm your password
                     </span>
                   </Label>
@@ -219,7 +218,7 @@ export function ResetEverything() {
           ) : (
             <>
               <DialogHeader>
-                <DialogTitle className="tracking-heading text-rose-700">
+                <DialogTitle className="tracking-heading text-ruby">
                   Final confirmation
                 </DialogTitle>
                 <DialogDescription>

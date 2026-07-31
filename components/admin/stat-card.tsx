@@ -6,37 +6,34 @@ import { cn } from "@/lib/utils";
 import { IconChip } from "@/components/ui/icon-chip";
 
 /**
- * Stat card — design-system.html §11, "Stat cards — one anatomy".
+ * Stat card — design system v2 §06, "Flat tint, matching border, one anatomy".
  *
- * Icon chip (42px) → Plex Mono micro-label → 30px tabular metric → caption.
- * Every card on every screen is that shape, that padding, that radius. The
- * only thing that varies is the hue, and the hue is not a decoration:
+ * Icon chip (40px) → Plex Mono micro-label → 29px tabular metric → caption,
+ * in a 20/22 box at 14px radius. Every card on every screen is that shape,
+ * that padding, that radius.
+ *
+ * The background is a **solid tint** with a 1px border one step darker in the
+ * same family. No gradient, and **no shadow** — the border does the work, and
+ * these sit in the page rather than floating above it.
+ *
+ * The only thing that varies is the hue, and the hue is meaning, not variety:
  *
  *   ocean   volume — bookings, orders, conversations
- *   amber   money — revenue, commission, order value
- *   indigo  waiting — pending, unassigned, awaiting a reply
- *   mint    confirmed — completed, live, online
- *   rose    attention — cancelled, failed, overdue
- *   coral   featured
- *
- * The wash is the specimen's own formula — the hue's tint fading to white at
- * 62% on a 155° axis, bordered in the hue's line token — so a tone the
- * specimen doesn't happen to draw (rose, coral) still lands on system values
- * rather than on a new one.
+ *   gold    money — revenue, commission, order value
+ *   violet  waiting — pending, unassigned, awaiting a reply
+ *   jade    confirmed — completed, live, online
+ *   ruby    attention — cancelled, failed, overdue
+ *   flame   featured
  */
-const statCardVariants = cva("rounded-surface border px-6 py-[22px] shadow-lift", {
+const statCardVariants = cva("rounded-surface border px-[22px] py-5", {
   variants: {
     tone: {
-      ocean:
-        "border-sky-line bg-[linear-gradient(155deg,var(--sky-tint),var(--surface)_62%)]",
-      amber:
-        "border-amber-line bg-[linear-gradient(155deg,var(--amber-tint),var(--surface)_62%)]",
-      mint: "border-mint-line bg-[linear-gradient(155deg,var(--mint-tint),var(--surface)_62%)]",
-      indigo:
-        "border-indigo-line bg-[linear-gradient(155deg,var(--indigo-tint),var(--surface)_62%)]",
-      rose: "border-rose-line bg-[linear-gradient(155deg,var(--rose-tint),var(--surface)_62%)]",
-      coral:
-        "border-coral-line bg-[linear-gradient(155deg,var(--coral-tint),var(--surface)_62%)]",
+      ocean: "border-sky-line bg-sky-tint",
+      gold: "border-gold-line bg-gold-tint",
+      jade: "border-jade-line bg-jade-tint",
+      violet: "border-violet-line bg-violet-tint",
+      ruby: "border-ruby-line bg-ruby-tint",
+      flame: "border-flame-line bg-flame-tint",
       neutral: "border-line bg-surface",
     },
   },
@@ -73,9 +70,9 @@ export function StatCard({
         <Icon />
       </IconChip>
 
-      <p className="mt-[18px] font-micro text-tx-faint">{label}</p>
+      <p className="mt-4 font-micro text-[10px] text-tx-faint">{label}</p>
 
-      <p className="tabular mt-[7px] text-[30px] leading-[1.14] font-bold tracking-[-0.022em] text-tx-head">
+      <p className="tabular mt-1.5 text-[29px] leading-[1.15] font-bold tracking-[-0.022em] text-tx-head">
         {value}
       </p>
 
@@ -85,8 +82,8 @@ export function StatCard({
             className={cn(
               "inline-flex items-center gap-1 font-semibold",
               /* Up isn't automatically good, but on every metric we show it is
-                 — volume, revenue, completions. Rose stays for the fall. */
-              trend.dir === "up" ? "text-mint" : "text-rose"
+                 — volume, revenue, completions. Ruby stays for the fall. */
+              trend.dir === "up" ? "text-jade" : "text-ruby"
             )}
           >
             {trend.dir === "up" ? (

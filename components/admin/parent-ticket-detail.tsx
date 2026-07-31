@@ -40,7 +40,7 @@ import { fmtDate, fmtRelative } from "@/lib/format";
 import { cn } from "@/lib/utils";
 
 const selectClass =
-  "h-10 rounded-[10px] border border-input bg-card px-3 text-base text-foreground outline-none transition-colors focus-visible:border-ocean focus-visible:ring-[3px] focus-visible:ring-ocean/25 sm:text-sm";
+  "h-10 rounded-control border border-input bg-card px-3 text-base text-foreground outline-none transition-colors focus-visible:border-ocean focus-visible:ring-[3px] focus-visible:ring-ocean/25 sm:text-sm";
 
 /** One label/value pair inside a section's definition grid. */
 function Field({
@@ -171,9 +171,9 @@ export function ParentTicketDetail({
       </Link>
 
       {/* Header */}
-      <div className="flex flex-col gap-4 rounded-2xl border border-border bg-card p-5 shadow-lift sm:flex-row sm:items-center sm:justify-between">
+      <div className="flex flex-col gap-4 rounded-surface border border-border bg-card p-5 shadow-lift sm:flex-row sm:items-center sm:justify-between">
         <div className="flex items-center gap-3">
-          <div className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-sky-tint text-ocean-deep">
+          <div className="flex size-11 shrink-0 items-center justify-center rounded-surface bg-sky-tint text-ocean-deep">
             <HeartHandshake className="size-5" />
           </div>
           <div className="leading-tight">
@@ -200,7 +200,7 @@ export function ParentTicketDetail({
         <div className="flex items-center gap-2">
           <label
             htmlFor="lead-status"
-            className="text-[11px] font-medium uppercase tracking-wider text-slate-600"
+            className="text-[11px] font-medium uppercase tracking-wider text-tx-muted"
           >
             Status
           </label>
@@ -367,7 +367,7 @@ export function ParentTicketDetail({
           description="Anything extra they added when submitting."
         >
           {enquiry.notes ? (
-            <p className="whitespace-pre-wrap break-words rounded-xl bg-sunk p-3.5 text-sm text-foreground">
+            <p className="whitespace-pre-wrap break-words rounded-surface bg-sunk p-3.5 text-sm text-foreground">
               {enquiry.notes}
             </p>
           ) : (
@@ -384,7 +384,7 @@ export function ParentTicketDetail({
             ) : (
               <ul className="space-y-2.5">
                 {notes.map((note) => (
-                  <li key={note.id} className="rounded-xl bg-sunk p-3.5">
+                  <li key={note.id} className="rounded-surface bg-sunk p-3.5">
                     <p className="whitespace-pre-wrap break-words text-sm text-foreground">
                       {note.body}
                     </p>
@@ -399,7 +399,7 @@ export function ParentTicketDetail({
             <form onSubmit={saveNote} className="space-y-2.5">
               <Label
                 htmlFor="new-note"
-                className="text-xs font-medium uppercase tracking-wider text-slate-600"
+                className="text-xs font-medium uppercase tracking-wider text-tx-muted"
               >
                 Add a note
               </Label>

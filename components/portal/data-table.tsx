@@ -246,7 +246,7 @@ export function DataTable<T>({
               <Link
                 key={getRowKey(row)}
                 href={rowHref(row)}
-                className="block rounded-surface outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-coral-deep"
+                className="block rounded-surface outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-flame"
               >
                 {card}
               </Link>
@@ -258,7 +258,7 @@ export function DataTable<T>({
                 key={getRowKey(row)}
                 type="button"
                 onClick={() => onRowClick(row)}
-                className="block w-full rounded-surface text-left outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-coral-deep"
+                className="block w-full rounded-surface text-left outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-flame"
               >
                 {card}
               </button>
@@ -314,7 +314,7 @@ export function DataTable<T>({
                       {i === 0 && rowHref ? (
                         <Link
                           href={rowHref(row)}
-                          className="rounded-chip outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-coral-deep"
+                          className="rounded-chip outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-flame"
                         >
                           {content}
                         </Link>

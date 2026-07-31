@@ -46,14 +46,14 @@ import { gbp, fmtDate, titleCase } from "@/lib/format";
 
 const ORDER_TONE: Record<OrderStatus, Tone> = {
   new: "blue",
-  in_progress: "amber",
+  in_progress: "gold",
   completed: "green",
   cancelled: "red",
 };
 
 function fieldLabel(text: string) {
   return (
-    <span className="text-xs font-medium uppercase tracking-wider text-slate-600">
+    <span className="text-xs font-medium uppercase tracking-wider text-tx-muted">
       {text}
     </span>
   );
@@ -192,9 +192,9 @@ export function EmployeeOrderDetail({
       </Link>
 
       {/* Header */}
-      <div className="flex flex-col gap-4 rounded-2xl border border-border bg-card p-5 shadow-lift sm:flex-row sm:items-center sm:justify-between">
+      <div className="flex flex-col gap-4 rounded-surface border border-border bg-card p-5 shadow-lift sm:flex-row sm:items-center sm:justify-between">
         <div className="flex items-center gap-3">
-          <div className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-sky-tint text-ocean-deep">
+          <div className="flex size-11 shrink-0 items-center justify-center rounded-surface bg-sky-tint text-ocean-deep">
             <Plane className="size-5 -rotate-45" />
           </div>
           <div className="leading-tight">
@@ -238,7 +238,7 @@ export function EmployeeOrderDetail({
                 <Button
                   variant="outline"
                   size="sm"
-                  className="border-rose-300 text-rose-600 hover:bg-rose-100 hover:text-rose-700"
+                  className="border-ruby-line text-ruby hover:bg-ruby-tint hover:text-ruby"
                   onClick={() => setCancelOpen(true)}
                   disabled={busy === "status"}
                 >
@@ -262,7 +262,7 @@ export function EmployeeOrderDetail({
             )}
           </div>
         ) : (
-          <span className="inline-flex items-center gap-1.5 self-start rounded-lg bg-muted px-3 py-1.5 text-xs font-medium text-muted-foreground sm:self-auto">
+          <span className="inline-flex items-center gap-1.5 self-start rounded-control bg-muted px-3 py-1.5 text-xs font-medium text-muted-foreground sm:self-auto">
             <Lock className="size-3.5" />
             View only
           </span>
@@ -287,7 +287,7 @@ export function EmployeeOrderDetail({
             <DataRow
               label="Commission"
               value={
-                <span className="text-emerald-600">
+                <span className="text-jade">
                   {order.commission != null ? gbp(order.commission) : "—"}
                 </span>
               }

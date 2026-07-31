@@ -40,7 +40,7 @@ const TICKETS_KEY = ["admin", "parent-tickets", "list"] as const;
 const PAGE_SIZE = 12;
 
 const selectClass =
-  "h-10 rounded-[10px] border border-input bg-card px-3 text-base text-foreground outline-none transition-colors focus-visible:border-ocean focus-visible:ring-[3px] focus-visible:ring-ocean/25 sm:text-sm";
+  "h-10 rounded-control border border-input bg-card px-3 text-base text-foreground outline-none transition-colors focus-visible:border-ocean focus-visible:ring-[3px] focus-visible:ring-ocean/25 sm:text-sm";
 
 const STATUS_TABS: { label: string; value: "all" | ParentTicketStatus }[] = [
   { label: "All", value: "all" },
@@ -125,15 +125,15 @@ export default function AdminParentsTicketsPage() {
       />
 
       <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-        <div className="flex items-center gap-1 overflow-x-auto rounded-xl bg-muted p-1">
+        <div className="flex flex-wrap items-center gap-1 rounded-surface bg-sunk p-1">
           {STATUS_TABS.map((t) => (
             <button
               key={t.value}
               onClick={() => setStatusTab(t.value)}
               className={cn(
-                "shrink-0 rounded-lg px-3.5 py-1.5 text-sm font-medium transition-colors",
+                "shrink-0 rounded-control px-3.5 py-1.5 text-sm font-medium transition-colors",
                 statusTab === t.value
-                  ? "bg-primary text-primary-foreground shadow-sm"
+                  ? "bg-ocean text-tx-invert"
                   : "text-muted-foreground hover:text-foreground"
               )}
             >
@@ -183,7 +183,7 @@ export default function AdminParentsTicketsPage() {
           </p>
         ) : all.length === 0 ? (
           <div className="flex flex-col items-center gap-2 px-6 py-14 text-center">
-            <div className="flex size-12 items-center justify-center rounded-2xl bg-sky-tint text-ocean-deep">
+            <div className="flex size-12 items-center justify-center rounded-surface bg-sky-tint text-ocean-deep">
               <HeartHandshake className="size-6" />
             </div>
             <p className="tracking-heading text-base font-semibold text-foreground">
@@ -324,7 +324,7 @@ export default function AdminParentsTicketsPage() {
                       >
                         <Link
                           href={`/admin/parents-tickets/${e.id}`}
-                          className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-card px-3 py-1.5 text-sm font-medium text-foreground transition-colors hover:border-ocean hover:text-ocean"
+                          className="inline-flex items-center gap-1.5 rounded-control border border-border bg-card px-3 py-1.5 text-sm font-medium text-foreground transition-colors hover:border-ocean hover:text-ocean"
                         >
                           <Eye className="size-4" />
                           View

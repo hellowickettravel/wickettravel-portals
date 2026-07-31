@@ -34,13 +34,13 @@ export default function EarningsPage() {
       </div>
 
       {/* Chart */}
-      <div className="rounded-2xl bg-card p-5 ring-1 ring-foreground/10 shadow-lift">
+      <div className="rounded-surface bg-card p-5 border border-line shadow-lift">
         <div className="mb-4 flex items-center justify-between">
           <div>
             <h2 className="tracking-heading text-sm font-semibold text-tx-head">Last 7 days</h2>
             <p className="text-xs text-muted-foreground">Net earnings per day</p>
           </div>
-          <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-medium text-emerald-700">
+          <span className="inline-flex items-center gap-1 rounded-chip bg-jade-tint px-2.5 py-1 text-xs font-medium text-jade">
             <TrendingUp className="size-3.5" />
             {inr(weekNet)}
           </span>
@@ -49,7 +49,7 @@ export default function EarningsPage() {
       </div>
 
       {/* Per-ride breakdown */}
-      <div className="rounded-2xl bg-card p-1.5 ring-1 ring-foreground/10 shadow-lift">
+      <div className="rounded-surface bg-card p-1.5 border border-line shadow-lift">
         <div className="flex items-center justify-between px-3.5 pb-1 pt-3">
           <h2 className="tracking-heading text-sm font-semibold text-tx-head">Recent payouts</h2>
           <span className="text-xs text-muted-foreground">Fare − fee = net</span>
@@ -57,7 +57,7 @@ export default function EarningsPage() {
         <ul className="divide-y divide-border">
           {EARNINGS.map((e) => (
             <li key={e.ref} className="flex items-center gap-3 px-3.5 py-3">
-              <div className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-sky-tint text-ocean-deep">
+              <div className="flex size-10 shrink-0 items-center justify-center rounded-surface bg-sky-tint text-ocean-deep">
                 <Wallet className="size-[18px]" />
               </div>
               <div className="min-w-0 flex-1">
@@ -67,7 +67,7 @@ export default function EarningsPage() {
                 </p>
               </div>
               <div className="text-right">
-                <p className="tracking-heading text-sm font-semibold text-emerald-700">
+                <p className="tracking-heading text-sm font-semibold text-jade">
                   {inr(netOf(e))}
                 </p>
                 <p className="text-[11px] text-muted-foreground">

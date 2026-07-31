@@ -25,9 +25,9 @@ export function OnlineToggle({
         onClick={() => setOnline(!online)}
         aria-pressed={online}
         className={cn(
-          "flex w-full items-center justify-between gap-3 rounded-2xl px-4 py-3.5 text-left ring-1 transition-colors outline-none focus-visible:ring-2 focus-visible:ring-primary/40",
+          "flex w-full items-center justify-between gap-3 rounded-surface px-4 py-3.5 text-left ring-1 transition-colors outline-none focus-visible:ring-2 focus-visible:ring-ocean/40",
           online
-            ? "bg-emerald-50 ring-emerald-200"
+            ? "bg-jade-tint ring-jade-line"
             : "bg-sunk ring-line-strong",
           className
         )}
@@ -35,19 +35,19 @@ export function OnlineToggle({
         <span className="flex items-center gap-3">
           <span
             className={cn(
-              "flex size-9 items-center justify-center rounded-full",
-              online ? "bg-emerald-500/15" : "bg-slate-300/40"
+              "flex size-9 items-center justify-center rounded-icon",
+              online ? "bg-jade/15" : "bg-line-hover/40"
             )}
           >
             <span
               className={cn(
                 "size-3 rounded-full",
-                online ? "bg-emerald-500 animate-pulse" : "bg-slate-400"
+                online ? "bg-jade animate-pulse" : "bg-tx-faint"
               )}
             />
           </span>
           <span>
-            <span className={cn("block text-sm font-semibold", online ? "text-emerald-700" : "text-slate-600")}>
+            <span className={cn("block text-sm font-semibold", online ? "text-jade" : "text-tx-muted")}>
               {online ? "You're Online" : "You're Offline"}
             </span>
             <span className="block text-xs text-muted-foreground">
@@ -66,17 +66,17 @@ export function OnlineToggle({
       onClick={() => setOnline(!online)}
       aria-pressed={online}
       className={cn(
-        "inline-flex items-center gap-2 rounded-full py-1.5 pl-2.5 pr-1.5 text-xs font-semibold ring-1 transition-colors outline-none focus-visible:ring-2 focus-visible:ring-primary/40",
+        "inline-flex items-center gap-2 rounded-control py-1.5 pl-2.5 pr-1.5 text-xs font-semibold ring-1 transition-colors outline-none focus-visible:ring-2 focus-visible:ring-ocean/40",
         online
-          ? "bg-emerald-50 text-emerald-700 ring-emerald-200"
-          : "bg-sunk text-slate-600 ring-line-strong",
+          ? "bg-jade-tint text-jade ring-jade-line"
+          : "bg-sunk text-tx-muted ring-line-strong",
         className
       )}
     >
       <span
         className={cn(
           "size-2 rounded-full",
-          online ? "bg-emerald-500 animate-pulse" : "bg-slate-400"
+          online ? "bg-jade animate-pulse" : "bg-tx-faint"
         )}
       />
       <span className="hidden sm:inline">{online ? "Online" : "Offline"}</span>

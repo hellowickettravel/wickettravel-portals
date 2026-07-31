@@ -69,7 +69,7 @@ import { fmtDate } from "@/lib/format";
 
 const ACCESS_TONE: Record<AccessLevel, Tone> = {
   full: "blue",
-  semi_admin: "amber",
+  semi_admin: "gold",
   chat_only: "violet",
   view_only: "slate",
 };
@@ -206,7 +206,7 @@ export default function EmployeesPage() {
     <DropdownMenu>
       <DropdownMenuTrigger
         aria-label={`Actions for ${emp.full_name || "employee"}`}
-        className="inline-flex size-9 items-center justify-center rounded-lg text-muted-foreground outline-none transition-colors hover:bg-muted hover:text-foreground focus-visible:ring-[3px] focus-visible:ring-ocean/25"
+        className="inline-flex size-9 items-center justify-center rounded-control text-muted-foreground outline-none transition-colors hover:bg-muted hover:text-foreground focus-visible:ring-[3px] focus-visible:ring-ocean/25"
       >
         <MoreHorizontal className="size-4" />
       </DropdownMenuTrigger>
@@ -289,7 +289,7 @@ export default function EmployeesPage() {
           </p>
         ) : all.length === 0 ? (
           <div className="flex flex-col items-center gap-2 px-6 py-14 text-center">
-            <div className="flex size-12 items-center justify-center rounded-2xl bg-sky-tint text-ocean-deep">
+            <div className="flex size-12 items-center justify-center rounded-surface bg-sky-tint text-ocean-deep">
               <UserPlus className="size-6" />
             </div>
             <p className="tracking-heading text-base font-semibold text-foreground">
@@ -423,7 +423,7 @@ export default function EmployeesPage() {
 
           <form onSubmit={handleCreate} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="emp-name" className="text-xs font-medium uppercase tracking-wider text-slate-600">
+              <Label htmlFor="emp-name" className="text-xs font-medium uppercase tracking-wider text-tx-muted">
                 Full name
               </Label>
               <Input
@@ -436,7 +436,7 @@ export default function EmployeesPage() {
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="emp-email" className="text-xs font-medium uppercase tracking-wider text-slate-600">
+              <Label htmlFor="emp-email" className="text-xs font-medium uppercase tracking-wider text-tx-muted">
                 Email
               </Label>
               <Input
@@ -450,7 +450,7 @@ export default function EmployeesPage() {
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="emp-access" className="text-xs font-medium uppercase tracking-wider text-slate-600">
+              <Label htmlFor="emp-access" className="text-xs font-medium uppercase tracking-wider text-tx-muted">
                 Access level
               </Label>
               <select
@@ -458,7 +458,7 @@ export default function EmployeesPage() {
                 value={accessLevel}
                 onChange={(e) => setAccessLevel(e.target.value as AccessLevel)}
                 disabled={createMutation.isPending}
-                className="h-10 w-full rounded-[10px] border border-input bg-sunk px-3 text-base text-foreground outline-none transition-[color,box-shadow,border-color] duration-150 focus-visible:border-ocean focus-visible:ring-[3px] focus-visible:ring-ocean/25 sm:text-sm"
+                className="h-10 w-full rounded-control border border-input bg-sunk px-3 text-base text-foreground outline-none transition-[color,box-shadow,border-color] duration-150 focus-visible:border-ocean focus-visible:ring-[3px] focus-visible:ring-ocean/25 sm:text-sm"
               >
                 {ACCESS_LEVELS.map((lvl) => (
                   <option key={lvl} value={lvl}>
@@ -468,7 +468,7 @@ export default function EmployeesPage() {
               </select>
             </div>
             <div className="space-y-2">
-              <Label htmlFor="emp-pass" className="text-xs font-medium uppercase tracking-wider text-slate-600">
+              <Label htmlFor="emp-pass" className="text-xs font-medium uppercase tracking-wider text-tx-muted">
                 Temporary password
               </Label>
               <div className="relative">
@@ -487,7 +487,7 @@ export default function EmployeesPage() {
                   type="button"
                   onClick={() => setShowPassword((s) => !s)}
                   aria-label={showPassword ? "Hide password" : "Show password"}
-                  className="absolute right-2 top-1/2 -translate-y-1/2 rounded-md p-1 text-muted-foreground transition-colors hover:text-foreground"
+                  className="absolute right-2 top-1/2 -translate-y-1/2 rounded-control p-1 text-muted-foreground transition-colors hover:text-foreground"
                 >
                   {showPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
                 </button>
@@ -541,7 +541,7 @@ export default function EmployeesPage() {
             }}
           >
             <div className="space-y-2">
-              <Label htmlFor="edit-name" className="text-xs font-medium uppercase tracking-wider text-slate-600">
+              <Label htmlFor="edit-name" className="text-xs font-medium uppercase tracking-wider text-tx-muted">
                 Full name
               </Label>
               <Input
@@ -554,7 +554,7 @@ export default function EmployeesPage() {
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="edit-email" className="text-xs font-medium uppercase tracking-wider text-slate-600">
+              <Label htmlFor="edit-email" className="text-xs font-medium uppercase tracking-wider text-tx-muted">
                 Email
               </Label>
               <Input
@@ -568,7 +568,7 @@ export default function EmployeesPage() {
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="edit-access" className="text-xs font-medium uppercase tracking-wider text-slate-600">
+              <Label htmlFor="edit-access" className="text-xs font-medium uppercase tracking-wider text-tx-muted">
                 Access level
               </Label>
               <select
@@ -576,7 +576,7 @@ export default function EmployeesPage() {
                 value={editAccess}
                 onChange={(e) => setEditAccess(e.target.value as AccessLevel)}
                 disabled={editMutation.isPending}
-                className="h-10 w-full rounded-[10px] border border-input bg-sunk px-3 text-base text-foreground outline-none transition-[color,box-shadow,border-color] duration-150 focus-visible:border-ocean focus-visible:ring-[3px] focus-visible:ring-ocean/25 sm:text-sm"
+                className="h-10 w-full rounded-control border border-input bg-sunk px-3 text-base text-foreground outline-none transition-[color,box-shadow,border-color] duration-150 focus-visible:border-ocean focus-visible:ring-[3px] focus-visible:ring-ocean/25 sm:text-sm"
               >
                 {ACCESS_LEVELS.map((lvl) => (
                   <option key={lvl} value={lvl}>

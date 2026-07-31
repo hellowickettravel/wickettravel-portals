@@ -50,7 +50,7 @@ const FAQS = [
 
 function fieldLabel(text: string) {
   return (
-    <span className="text-xs font-medium uppercase tracking-wider text-slate-600">
+    <span className="text-xs font-medium uppercase tracking-wider text-tx-muted">
       {text}
     </span>
   );
@@ -122,7 +122,7 @@ export function EmployeeSupport({ adminEmail }: { adminEmail: string }) {
                     <button
                       type="button"
                       onClick={() => setOpen(isOpen ? null : i)}
-                      className="flex w-full items-center justify-between gap-4 rounded-lg py-4 text-left outline-none transition-colors hover:text-ocean focus-visible:ring-2 focus-visible:ring-primary/40"
+                      className="flex w-full items-center justify-between gap-4 rounded-control py-4 text-left outline-none transition-colors hover:text-ocean focus-visible:ring-2 focus-visible:ring-ocean/40"
                     >
                       <span className="text-sm font-medium text-foreground">{f.q}</span>
                       <ChevronDown
@@ -147,14 +147,14 @@ export function EmployeeSupport({ adminEmail }: { adminEmail: string }) {
         {/* Contact admin */}
         <SectionCard title="Contact admin">
           <div className="flex flex-col items-start gap-3">
-            <div className="flex size-11 items-center justify-center rounded-xl bg-sky-tint text-ocean-deep">
+            <div className="flex size-11 items-center justify-center rounded-surface bg-sky-tint text-ocean-deep">
               <LifeBuoy className="size-5" />
             </div>
             <p className="text-sm text-muted-foreground">
               Need something changed — access level, assignments or a bug? Email
               your administrator directly.
             </p>
-            <Button variant="outline" className="w-full" render={<a href={mailtoHref} />}>
+            <Button variant="outline" render={<a href={mailtoHref} />}>
               <Mail className="size-4" />
               Email admin
             </Button>
@@ -227,7 +227,7 @@ export function EmployeeSupport({ adminEmail }: { adminEmail: string }) {
                     {fmtRelative(t.created_at)}
                   </p>
                 </div>
-                <StatusBadge tone={t.status === "resolved" ? "green" : "amber"}>
+                <StatusBadge tone={t.status === "resolved" ? "green" : "gold"}>
                   {t.status === "resolved" ? "Resolved" : "Open"}
                 </StatusBadge>
               </li>

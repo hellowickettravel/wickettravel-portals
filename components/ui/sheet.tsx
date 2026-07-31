@@ -36,7 +36,7 @@ function SheetOverlay({ className, ...props }: SheetPrimitive.Backdrop.Props) {
     <SheetPrimitive.Backdrop
       data-slot="sheet-overlay"
       className={cn(
-        "fixed inset-0 z-50 bg-ocean-night/32 transition-opacity duration-[260ms] ease-brand data-ending-style:opacity-0 data-starting-style:opacity-0",
+        "fixed inset-0 z-50 bg-ocean-ink/32 transition-opacity duration-[260ms] ease-brand data-ending-style:opacity-0 data-starting-style:opacity-0",
         className
       )}
       {...props}
@@ -114,7 +114,7 @@ function SheetFooter({ className, ...props }: React.ComponentProps<"div">) {
   )
 }
 
-/** H3 — 600 · 19/26 · #0A3A66. */
+/** H3 — 600 · 19/26 · #0C3355. */
 function SheetTitle({ className, ...props }: SheetPrimitive.Title.Props) {
   return (
     <SheetPrimitive.Title

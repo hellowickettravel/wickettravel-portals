@@ -3,21 +3,22 @@ import * as React from "react"
 import { cn } from "@/lib/utils"
 
 /**
- * Section shell — design-system.html §05 + §11.
+ * Section shell — design system v2 §03 + §09.
  *
  * Sections change by background, not by decoration: alternate canvas → white
  * → sky tint, with an ocean statement band once or twice per page. A 1px
- * #E7EDF5 rule top and bottom whenever the background changes.
+ * #E5EBF3 rule top and bottom whenever the background changes.
  *
- * `tone="white"` also drops the shadow from any <Card> inside it (see
- * globals.css) so cards stop floating for no reason.
+ * Every fill is one flat colour — the ocean band is solid ocean ink, not a
+ * gradient. `tone="white"` also drops the shadow from any <Card> inside it
+ * (see globals.css) so cards stop floating for no reason.
  */
 const sectionTones = {
   canvas: "bg-canvas",
   white: "border-y border-line bg-surface",
   sky: "border-y border-line bg-sky-tint",
   ocean:
-    "bg-[linear-gradient(165deg,var(--ocean)_0%,var(--ocean-deep)_58%,var(--ocean-night)_100%)] text-tx-invert-2 [&_h1]:text-tx-invert [&_h2]:text-tx-invert [&_h3]:text-tx-invert [&_h4]:text-tx-invert",
+    "bg-ocean-ink text-tx-invert-2 [&_h1]:text-tx-invert [&_h2]:text-tx-invert [&_h3]:text-tx-invert [&_h4]:text-tx-invert",
 } as const
 
 function Section({
@@ -74,7 +75,7 @@ function SectionHead({
       {...props}
     >
       {eyebrow ? (
-        <span className="mb-3 block font-micro text-coral-deep">{eyebrow}</span>
+        <span className="mb-3 block font-micro text-flame">{eyebrow}</span>
       ) : null}
       {title ? (
         <h2 className="text-[25px] leading-[1.26] font-bold tracking-[-0.01em] text-tx-head">

@@ -34,7 +34,7 @@ export const VISA_STATUS_LABELS: Record<VisaEnquiryStatus, string> = {
 export const VISA_STATUS_TONE: Record<VisaEnquiryStatus, Tone> = {
   new: "blue",
   contacted: "violet",
-  in_progress: "amber",
+  in_progress: "gold",
   completed: "green",
   closed: "slate",
 };

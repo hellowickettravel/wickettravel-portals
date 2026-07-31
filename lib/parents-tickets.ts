@@ -22,10 +22,10 @@ export const PARENT_TICKET_TYPE_LABELS: Record<ParentTicketType, string> = {
   requester: "Needs help",
 };
 
-/** Badge tone per side — traveller offers help (green), requester needs it (amber). */
+/** Badge tone per side — traveller offers help (green), requester needs it (gold). */
 export const PARENT_TICKET_TYPE_TONE: Record<ParentTicketType, Tone> = {
   traveller: "green",
-  requester: "amber",
+  requester: "gold",
 };
 
 export type ParentTicketStatus = "new" | "contacted" | "matched" | "closed";

@@ -76,7 +76,7 @@ function FilterSearch({
           type="button"
           onClick={() => onValueChange("")}
           aria-label="Clear search"
-          className="absolute top-1/2 right-1 inline-flex size-10 -translate-y-1/2 items-center justify-center rounded-chip text-tx-faint outline-none transition-colors duration-150 ease-brand hover:bg-sunk hover:text-tx-body focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-coral-deep sm:size-7"
+          className="absolute top-1/2 right-1 inline-flex size-10 -translate-y-1/2 items-center justify-center rounded-chip text-tx-faint outline-none transition-colors duration-150 ease-brand hover:bg-sunk hover:text-tx-body focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-flame sm:size-7"
         >
           <X className="size-4" />
         </button>
@@ -127,7 +127,7 @@ function FilterChips({
             aria-pressed={active}
             onClick={() => onValueChange(option.value)}
             className={cn(
-              "inline-flex h-11 items-center gap-2 rounded-chip px-3 text-[13px] font-semibold tracking-ui whitespace-nowrap outline-none transition-colors duration-150 ease-brand focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-coral-deep sm:h-[30px]",
+              "inline-flex h-11 items-center gap-2 rounded-chip px-3 text-[13px] font-semibold tracking-ui whitespace-nowrap outline-none transition-colors duration-150 ease-brand focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-flame sm:h-[30px]",
               active
                 ? "bg-surface text-ocean-deep shadow-lift"
                 : "text-tx-muted hover:text-tx-head"

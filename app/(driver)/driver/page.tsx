@@ -57,28 +57,27 @@ export default function DriverHomePage() {
             <h2 className="tracking-heading text-sm font-semibold text-tx-head">Active trip</h2>
             <RideStatusBadge stage={activeRide.stage} />
           </div>
-          <div className="relative overflow-hidden rounded-2xl bg-[linear-gradient(165deg,var(--ocean)_0%,var(--ocean-deep)_58%,var(--ocean-night)_100%)] p-5 shadow-lift">
-            <div className="bg-dot-grid pointer-events-none absolute inset-0 opacity-30 [mask-image:radial-gradient(120%_120%_at_20%_0%,black,transparent_75%)]" />
-            <div className="relative z-10">
+          <div className="rounded-surface bg-ocean p-5">
+            <div>
               <div className="flex items-center justify-between">
-                <span className="text-[11px] font-semibold uppercase tracking-wider text-coral">
+                <span className="font-mono text-[10px] font-medium tracking-[0.11em] text-flame-vivid uppercase">
                   {activeRide.ref}
                 </span>
-                <span className="inline-flex items-center gap-1.5 rounded-full bg-white/10 px-2.5 py-1 text-[11px] font-medium text-white ring-1 ring-inset ring-white/15">
-                  <Navigation className="size-3 text-coral" />
+                <span className="inline-flex items-center gap-1.5 rounded-chip bg-white/18 px-2.5 py-1 text-[11px] font-medium text-white">
+                  <Navigation className="size-3 text-flame-vivid" />
                   {STAGE_META[activeRide.stage].label}
                 </span>
               </div>
 
               <div className="mt-4 space-y-2.5">
                 <div className="flex items-center gap-2.5 text-white">
-                  <Plane className="size-4 shrink-0 -rotate-45 text-coral" />
+                  <Plane className="size-4 shrink-0 -rotate-45 text-flame-vivid" />
                   <span className="text-sm font-medium">
                     {airportShort(activeRide.pickupAirport)} Airport · {activeRide.pickupPoint}
                   </span>
                 </div>
                 <div className="flex items-center gap-2.5 text-white">
-                  <MapPin className="size-4 shrink-0 text-coral" />
+                  <MapPin className="size-4 shrink-0 text-flame-vivid" />
                   <span className="text-sm font-medium">{activeRide.dropoff}</span>
                 </div>
               </div>
@@ -98,7 +97,7 @@ export default function DriverHomePage() {
 
               <Button
                 render={<Link href={`/driver/rides/${activeRide.id}`} />}
-                className="mt-4 w-full bg-white text-ocean-deep shadow-lift hover:bg-sky-tint hover:text-ocean-deep"
+                className="mt-4"
               >
                 Continue trip
                 <ArrowRight className="size-4" />
@@ -107,8 +106,8 @@ export default function DriverHomePage() {
           </div>
         </div>
       ) : (
-        <div className="rounded-2xl border border-dashed border-line-strong bg-sunk/60 p-5 text-center">
-          <div className="mx-auto flex size-11 items-center justify-center rounded-xl bg-sky-tint text-ocean-deep">
+        <div className="rounded-surface border border-dashed border-line-strong bg-sunk/60 p-5 text-center">
+          <div className="mx-auto flex size-11 items-center justify-center rounded-surface bg-sky-tint text-ocean-deep">
             <Car className="size-5" />
           </div>
           <p className="mt-3 tracking-heading text-sm font-semibold text-tx-head">No active trip</p>
@@ -123,9 +122,9 @@ export default function DriverHomePage() {
       {/* Job board shortcut */}
       <Link
         href="/driver/jobs"
-        className="flex items-center gap-4 rounded-2xl bg-card p-4 ring-1 ring-foreground/10 shadow-lift outline-none transition-shadow hover:shadow-md focus-visible:ring-2 focus-visible:ring-primary/40"
+        className="flex items-center gap-4 rounded-surface bg-card p-4 border border-line shadow-lift outline-none transition-shadow hover:shadow-lift-lg focus-visible:ring-2 focus-visible:ring-ocean/40"
       >
-        <div className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-coral-deep/10 text-coral-press">
+        <div className="flex size-11 shrink-0 items-center justify-center rounded-surface bg-flame/10 text-flame-hover">
           <Car className="size-5" />
         </div>
         <div className="min-w-0 flex-1">
@@ -142,9 +141,9 @@ export default function DriverHomePage() {
       {/* Earnings shortcut */}
       <Link
         href="/driver/earnings"
-        className="flex items-center gap-4 rounded-2xl bg-card p-4 ring-1 ring-foreground/10 shadow-lift outline-none transition-shadow hover:shadow-md focus-visible:ring-2 focus-visible:ring-primary/40"
+        className="flex items-center gap-4 rounded-surface bg-card p-4 border border-line shadow-lift outline-none transition-shadow hover:shadow-lift-lg focus-visible:ring-2 focus-visible:ring-ocean/40"
       >
-        <div className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-sky-tint text-ocean-deep">
+        <div className="flex size-11 shrink-0 items-center justify-center rounded-surface bg-sky-tint text-ocean-deep">
           <Wallet className="size-5" />
         </div>
         <div className="min-w-0 flex-1">

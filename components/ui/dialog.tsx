@@ -43,7 +43,7 @@ function DialogOverlay({
     <DialogPrimitive.Backdrop
       data-slot="dialog-overlay"
       className={cn(
-        "fixed inset-0 isolate z-50 bg-ocean-night/32 transition-opacity duration-[260ms] ease-brand data-ending-style:opacity-0 data-starting-style:opacity-0",
+        "fixed inset-0 isolate z-50 bg-ocean-ink/32 transition-opacity duration-[260ms] ease-brand data-ending-style:opacity-0 data-starting-style:opacity-0",
         className
       )}
       {...props}
@@ -130,7 +130,7 @@ function DialogFooter({
   )
 }
 
-/** H3 — 600 · 19/26 · #0A3A66. */
+/** H3 — 600 · 19/26 · #0C3355. */
 function DialogTitle({ className, ...props }: DialogPrimitive.Title.Props) {
   return (
     <DialogPrimitive.Title
@@ -144,7 +144,7 @@ function DialogTitle({ className, ...props }: DialogPrimitive.Title.Props) {
   )
 }
 
-/** Small — 400 · 14.5/23 · #6B7C8E. */
+/** Small — 400 · 14.5/23 · #6D7D8F. */
 function DialogDescription({
   className,
   ...props

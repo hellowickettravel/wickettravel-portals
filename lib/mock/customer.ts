@@ -109,7 +109,7 @@ export const CUSTOMER_ORDERS: CustomerOrder[] = [
 export function customerStatusTone(status: CustomerOrderStatus): Tone {
   switch (status) {
     case "Quote requested":
-      return "amber";
+      return "gold";
     case "Confirmed":
       return "blue";
     case "Ticketed":

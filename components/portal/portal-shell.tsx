@@ -135,7 +135,7 @@ function pageTitleFor(pathname: string, navItems: NavItem[], fallback: string) {
 }
 
 /* ══════════════════════════════════════════════════════════════════
-   SIDEBAR — 272px of ocean gradient. Plex Mono group headers, 46px
+   SIDEBAR — 272px of solid ocean. Plex Mono group headers, 44px
    rows, and one solid white pill marking where you are.
    ══════════════════════════════════════════════════════════════════ */
 
@@ -149,11 +149,11 @@ function NavLinks({
   onNavigate?: () => void;
 }) {
   return (
-    <nav className="flex-1 overflow-y-auto px-3 pt-4 pb-4">
+    <nav className="no-bar flex-1 overflow-y-auto px-3 pt-4 pb-4">
       {groupNav(navItems).map((group, i) => (
         <div key={group.label ?? `group-${i}`} className={cn(i > 0 && "mt-6")}>
           {group.label ? (
-            <p className="px-3 pb-2 font-mono text-[9.5px] leading-none font-medium tracking-[0.17em] text-white/48 uppercase">
+            <p className="px-3 pb-[7px] pt-3.5 font-mono text-[9px] leading-none font-medium tracking-[0.17em] text-white/46 uppercase">
               {group.label}
             </p>
           ) : null}
@@ -168,10 +168,10 @@ function NavLinks({
                   onClick={onNavigate}
                   aria-current={active ? "page" : undefined}
                   className={cn(
-                    "flex h-[46px] items-center gap-[13px] rounded-icon px-3 text-[14.5px] tracking-ui outline-none transition-colors duration-150 ease-brand focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-coral [&_svg]:size-5 [&_svg]:shrink-0",
+                    "flex h-11 items-center gap-3 rounded-control px-[13px] text-[15px] tracking-ui outline-none transition-colors duration-150 ease-brand focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-flame [&_svg]:size-[19px] [&_svg]:shrink-0",
                     active
-                      ? "bg-surface font-semibold text-ocean-deep shadow-lift [&_svg]:text-coral-deep"
-                      : "font-medium text-white/86 hover:bg-white/9 hover:text-white"
+                      ? "bg-surface font-semibold text-ocean [&_svg]:text-flame"
+                      : "font-medium text-white/85 hover:bg-white/10 hover:text-white"
                   )}
                 >
                   <Icon />
@@ -180,7 +180,7 @@ function NavLinks({
                     <span
                       className={cn(
                         "inline-flex min-w-[22px] items-center justify-center rounded-chip px-1.5 py-0.5 text-[11px] leading-none font-semibold tabular",
-                        active ? "bg-sky-tint text-ocean" : "bg-white/14 text-white"
+                        active ? "bg-sky-tint text-ocean" : "bg-white/18 text-white"
                       )}
                     >
                       {item.badge > 99 ? "99+" : item.badge}
@@ -204,9 +204,9 @@ function SidebarBrand({
   logoUrl?: string | null;
 }) {
   return (
-    <div className="flex items-center gap-3 px-5 pt-6">
+    <div className="flex items-center gap-3 px-5 pt-5">
       {logoUrl ? (
-        <span className="inline-flex size-[46px] shrink-0 items-center justify-center overflow-hidden rounded-icon bg-surface">
+        <span className="inline-flex size-11 shrink-0 items-center justify-center overflow-hidden rounded-icon bg-surface">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src={logoUrl} alt="" className="size-full object-cover" />
         </span>
@@ -217,7 +217,7 @@ function SidebarBrand({
         <span className="block truncate text-[16.5px] font-bold tracking-heading text-white">
           Wicket Travel
         </span>
-        <span className="mt-1 block font-micro text-white/48">
+        <span className="mt-[3px] block font-mono text-[9px] leading-none font-medium tracking-[0.16em] text-white/58 uppercase">
           {portalLabel}
         </span>
       </span>
@@ -228,12 +228,12 @@ function SidebarBrand({
 /** Pinned sign-out, behind the hairline at the foot of the rail. */
 function SidebarSignOut({ onNavigate }: { onNavigate?: () => void }) {
   return (
-    <div className="mt-auto border-t border-white/12 px-3 py-3">
+    <div className="mt-auto border-t border-white/15 px-3 py-3">
       <form action={signOut}>
         <button
           type="submit"
           onClick={onNavigate}
-          className="flex h-[46px] w-full items-center gap-[13px] rounded-icon px-3 text-[14.5px] font-medium tracking-ui text-white/86 outline-none transition-colors duration-150 ease-brand hover:bg-white/9 hover:text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-coral [&_svg]:size-5 [&_svg]:shrink-0"
+          className="flex h-11 w-full items-center gap-3 rounded-control px-[13px] text-[15px] font-medium tracking-ui text-white/85 outline-none transition-colors duration-150 ease-brand hover:bg-white/10 hover:text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-flame [&_svg]:size-[19px] [&_svg]:shrink-0"
         >
           <LogOut />
           Sign out
@@ -258,7 +258,7 @@ function SidebarRail({
   onNavigate?: () => void;
 }) {
   return (
-    <div className="flex h-full flex-col bg-[linear-gradient(180deg,var(--ocean)_0%,var(--ocean-deep)_44%,var(--ocean-night)_100%)]">
+    <div className="flex h-full flex-col bg-ocean">
       <SidebarBrand portalLabel={portalLabel} logoUrl={logoUrl} />
       <NavLinks navItems={navItems} pathname={pathname} onNavigate={onNavigate} />
       <SidebarSignOut onNavigate={onNavigate} />
@@ -273,7 +273,7 @@ function SidebarRail({
 
 /** Shared skin for the topbar's 46px icon controls. */
 const topbarControl =
-  "inline-flex size-[46px] shrink-0 items-center justify-center rounded-icon text-tx-muted outline-none transition-colors duration-150 ease-brand hover:bg-sunk hover:text-tx-head focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-coral-deep";
+  "inline-flex size-11 shrink-0 items-center justify-center rounded-icon text-tx-muted outline-none transition-colors duration-150 ease-brand hover:bg-sunk hover:text-tx-head focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-flame";
 
 export function PortalShell({
   navItems,
@@ -301,7 +301,7 @@ export function PortalShell({
           tab order. This is the way past them. */}
       <a
         href="#portal-content"
-        className="sr-only focus:not-sr-only focus:fixed focus:top-3 focus:left-3 focus:z-50 focus:inline-flex focus:h-[46px] focus:items-center focus:rounded-control focus:bg-ocean focus:px-[22px] focus:text-[15px] focus:font-semibold focus:text-tx-invert focus:shadow-btn-ocean focus:outline-2 focus:outline-offset-[3px] focus:outline-coral-deep"
+        className="sr-only focus:not-sr-only focus:fixed focus:top-3 focus:left-3 focus:z-50 focus:inline-flex focus:h-[42px] focus:items-center focus:rounded-control focus:bg-flame focus:px-[18px] focus:text-[15px] focus:font-semibold focus:text-tx-invert focus:outline-2 focus:outline-offset-2 focus:outline-flame"
       >
         Skip to content
       </a>
@@ -338,7 +338,7 @@ export function PortalShell({
                 <SheetTitle className="sr-only">Navigation</SheetTitle>
                 <SheetClose
                   aria-label="Close navigation menu"
-                  className="absolute top-6 right-3 z-10 inline-flex size-11 items-center justify-center rounded-icon text-white/70 outline-none transition-colors duration-150 ease-brand hover:bg-white/9 hover:text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-coral"
+                  className="absolute top-5 right-3 z-10 inline-flex size-11 items-center justify-center rounded-icon text-white/70 outline-none transition-colors duration-150 ease-brand hover:bg-white/10 hover:text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-flame"
                 >
                   <X className="size-5" />
                 </SheetClose>
@@ -375,7 +375,7 @@ export function PortalShell({
               ) : null}
 
               <DropdownMenu>
-                <DropdownMenuTrigger className="flex h-[46px] items-center gap-2.5 rounded-icon pr-2 pl-1 outline-none transition-colors duration-150 ease-brand hover:bg-sunk focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-coral-deep">
+                <DropdownMenuTrigger className="flex h-[46px] items-center gap-2.5 rounded-icon pr-2 pl-1 outline-none transition-colors duration-150 ease-brand hover:bg-sunk focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-flame">
                   {/* The avatar is the one circle in the system. */}
                   <Avatar className="size-9">
                     <AvatarFallback className="bg-sunk text-[13px] font-semibold text-tx-head">

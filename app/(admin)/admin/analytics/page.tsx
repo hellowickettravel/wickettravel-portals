@@ -32,7 +32,7 @@ function BarChart({
         <div key={d.label} className="flex flex-1 flex-col items-center gap-2">
           <div className="flex w-full flex-1 items-end">
             <div
-              className="w-full rounded-t-md transition-all"
+              className="w-full rounded-chip transition-all"
               style={{
                 height: `${Math.max((d.value / max) * 100, 2)}%`,
                 backgroundColor: color,
@@ -114,9 +114,9 @@ function TopEmployees({ data }: { data: { name: string; closed: number }[] }) {
             <span className="font-medium text-foreground">{e.name}</span>
             <span className="text-muted-foreground">{e.closed} completed</span>
           </div>
-          <div className="h-2 w-full overflow-hidden rounded-full bg-muted">
+          <div className="h-2 w-full overflow-hidden rounded-chip bg-sunk">
             <div
-              className="h-full rounded-full bg-primary"
+              className="h-full rounded-chip bg-ocean"
               style={{ width: `${(e.closed / max) * 100}%` }}
             />
           </div>
@@ -187,9 +187,9 @@ export default async function AnalyticsPage({
 
   const statusData = [
     { label: "New", value: orders.filter((o) => o.status === "new").length, color: "var(--ocean)" },
-    { label: "In progress", value: orders.filter((o) => o.status === "in_progress").length, color: "var(--amber)" },
-    { label: "Completed", value: orders.filter((o) => o.status === "completed").length, color: "var(--mint)" },
-    { label: "Cancelled", value: orders.filter((o) => o.status === "cancelled").length, color: "var(--rose)" },
+    { label: "In progress", value: orders.filter((o) => o.status === "in_progress").length, color: "var(--gold)" },
+    { label: "Completed", value: orders.filter((o) => o.status === "completed").length, color: "var(--jade)" },
+    { label: "Cancelled", value: orders.filter((o) => o.status === "cancelled").length, color: "var(--ruby)" },
   ];
 
   const closedByEmployee = new Map<string, number>();
@@ -222,15 +222,15 @@ export default async function AnalyticsPage({
         title="Analytics"
         subtitle="Performance across orders, revenue and your team."
         actions={
-          <div className="inline-flex items-center gap-1 rounded-xl bg-muted p-1">
+          <div className="inline-flex items-center gap-1 rounded-surface bg-muted p-1">
             {RANGES.map((r) => (
               <Link
                 key={r.key}
                 href={`/admin/analytics?range=${r.key}`}
                 className={cn(
-                  "rounded-lg px-3 py-1.5 text-sm font-medium transition-colors",
+                  "rounded-control px-3 py-1.5 text-sm font-medium transition-colors",
                   r.key === range.key
-                    ? "bg-primary text-primary-foreground shadow-sm"
+                    ? "bg-ocean text-tx-invert"
                     : "text-muted-foreground hover:text-foreground"
                 )}
               >
@@ -251,7 +251,7 @@ export default async function AnalyticsPage({
       {!hasData ? (
         <SectionCard title="No data yet">
           <div className="flex flex-col items-center gap-2 py-12 text-center">
-            <div className="flex size-12 items-center justify-center rounded-2xl bg-sky-tint text-ocean-deep">
+            <div className="flex size-12 items-center justify-center rounded-surface bg-sky-tint text-ocean-deep">
               <BarChart3 className="size-6" />
             </div>
             <p className="tracking-heading text-base font-semibold text-foreground">

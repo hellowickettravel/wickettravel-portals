@@ -25,7 +25,7 @@ import { cn } from "@/lib/utils";
 
 const ORDER_TONE: Record<OrderStatus, Tone> = {
   new: "blue",
-  in_progress: "amber",
+  in_progress: "gold",
   completed: "green",
   cancelled: "red",
 };
@@ -48,7 +48,7 @@ function DetailRow({
 }) {
   return (
     <div className="flex items-center gap-2.5">
-      <Icon className="size-4 text-slate-400" />
+      <Icon className="size-4 text-tx-faint" />
       <span className="text-muted-foreground">{label}</span>
       <span className="ml-auto font-medium text-foreground">{value}</span>
     </div>
@@ -97,8 +97,8 @@ export default function CustomerOrdersPage() {
           </div>
         </SectionCard>
       ) : rows.length === 0 ? (
-        <div className="flex flex-col items-center justify-center gap-3 rounded-2xl border border-border bg-card py-16 text-center shadow-lift">
-          <div className="flex size-12 items-center justify-center rounded-2xl bg-sky-tint text-ocean-deep">
+        <div className="flex flex-col items-center justify-center gap-3 rounded-surface border border-border bg-card py-16 text-center shadow-lift">
+          <div className="flex size-12 items-center justify-center rounded-surface bg-sky-tint text-ocean-deep">
             <Plane className="size-6 -rotate-45" />
           </div>
           <p className="tracking-heading text-base font-semibold text-foreground">
@@ -119,14 +119,14 @@ export default function CustomerOrdersPage() {
             return (
               <div
                 key={o.id}
-                className="overflow-hidden rounded-2xl border border-border bg-card shadow-lift"
+                className="overflow-hidden rounded-surface border border-border bg-card shadow-lift"
               >
                 <button
                   type="button"
                   onClick={() => setOpenId(open ? null : o.id)}
-                  className="flex w-full items-center gap-4 px-5 py-4 text-left outline-none transition-colors hover:bg-sunk focus-visible:bg-sunk focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-primary/40"
+                  className="flex w-full items-center gap-4 px-5 py-4 text-left outline-none transition-colors hover:bg-sunk focus-visible:bg-sunk focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ocean/40"
                 >
-                  <div className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-sky-tint text-ocean-deep">
+                  <div className="flex size-11 shrink-0 items-center justify-center rounded-surface bg-sky-tint text-ocean-deep">
                     <Plane className="size-5 -rotate-45" />
                   </div>
                   <div className="min-w-0 flex-1">
@@ -184,13 +184,14 @@ export default function CustomerOrdersPage() {
                       />
                     </div>
                     {o.notes ? (
-                      <p className="mt-4 rounded-lg bg-white p-3 text-sm text-muted-foreground">
+                      <p className="mt-4 rounded-control bg-white p-3 text-sm text-muted-foreground">
                         {o.notes}
                       </p>
                     ) : null}
                     <div className="mt-5 flex flex-wrap gap-2">
                       <Button
                         render={<Link href={`/customer/orders/${o.id}`} />}
+                        variant="ocean"
                         size="sm"
                       >
                         View details

@@ -74,16 +74,16 @@ function isActive(pathname: string, href: string, exact?: boolean) {
 /** Navy desktop sidebar (md+). */
 function DesktopSidebar({ pathname }: { pathname: string }) {
   return (
-    <aside className="sticky top-0 hidden h-dvh w-[264px] shrink-0 flex-col bg-sidebar text-sidebar-foreground md:flex">
+    <aside className="sticky top-0 hidden h-dvh w-[272px] shrink-0 flex-col bg-sidebar text-sidebar-foreground md:flex">
       {/* Brand */}
       <Link href="/customer" className="flex h-16 flex-col justify-center px-6">
         <BrandLogo variant="white" className="h-7 w-auto" priority />
-        <p className="mt-1 text-[11px] font-medium text-sidebar-foreground/70">
+        <p className="mt-1 font-mono text-[9px] leading-none font-medium tracking-[0.16em] text-white/58 uppercase">
           Travel Portal
         </p>
       </Link>
 
-      <nav className="flex-1 space-y-1 px-3 py-4">
+      <nav className="no-bar flex-1 space-y-1 overflow-y-auto px-3 py-4">
         {NAV.map((item) => {
           const active = isActive(pathname, item.href, item.exact);
           const Icon = item.icon;
@@ -92,31 +92,31 @@ function DesktopSidebar({ pathname }: { pathname: string }) {
               key={item.href}
               href={item.href}
               className={cn(
-                "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium outline-none transition-colors focus-visible:ring-2 focus-visible:ring-white/40",
+                "flex h-11 items-center gap-3 rounded-control px-[13px] text-[15px] font-medium outline-none transition-colors duration-150 ease-brand focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-flame",
                 active
-                  ? "bg-primary text-primary-foreground shadow-sm shadow-coral-deep/30"
-                  : "text-sidebar-foreground/80 hover:bg-sidebar-accent hover:text-white"
+                  ? "bg-surface font-semibold text-ocean [&_svg]:text-flame"
+                  : "text-white/85 hover:bg-white/10 hover:text-white"
               )}
             >
-              <Icon className="size-[18px]" />
+              <Icon className="size-[19px]" />
               {item.label}
             </Link>
           );
         })}
       </nav>
 
-      <div className="border-t border-sidebar-foreground/10 px-3 py-3">
+      <div className="border-t border-white/15 px-3 py-3">
         <form action={signOut}>
           <button
             type="submit"
-            className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-sidebar-foreground/80 outline-none transition-colors hover:bg-sidebar-accent hover:text-white focus-visible:ring-2 focus-visible:ring-white/40"
+            className="flex h-11 w-full items-center gap-3 rounded-control px-[13px] text-[15px] font-medium text-white/85 outline-none transition-colors duration-150 ease-brand hover:bg-white/10 hover:text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-flame"
           >
-            <LogOut className="size-[18px]" />
+            <LogOut className="size-[19px]" />
             Sign out
           </button>
         </form>
       </div>
-      <div className="px-6 py-4 text-[11px] text-sidebar-foreground/60">
+      <div className="px-6 py-4 text-[11px] text-white/50">
         © 2026 Wicket Travel
       </div>
     </aside>
@@ -141,12 +141,12 @@ function MobileTabBar({ pathname }: { pathname: string }) {
       <Link
         href={href}
         className={cn(
-          "flex min-h-[44px] flex-1 flex-col items-center justify-center gap-0.5 rounded-lg py-1.5 text-[11px] font-medium outline-none transition-colors focus-visible:ring-2 focus-visible:ring-primary/40",
-          active ? "text-coral-deep" : "text-muted-foreground"
+          "flex min-h-[44px] flex-1 flex-col items-center justify-center gap-0.5 rounded-control py-1.5 text-[11px] font-medium outline-none transition-colors focus-visible:ring-2 focus-visible:ring-ocean/40",
+          active ? "text-flame" : "text-muted-foreground"
         )}
         aria-current={active ? "page" : undefined}
       >
-        <Icon className={cn("size-[22px]", active && "fill-coral-deep/10")} />
+        <Icon className={cn("size-[22px]", active && "fill-flame/10")} />
         {label}
       </Link>
     );
@@ -156,7 +156,7 @@ function MobileTabBar({ pathname }: { pathname: string }) {
   const CenterIcon = TABS.center.icon;
 
   return (
-    <nav className="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-white/90 pb-[env(safe-area-inset-bottom)] backdrop-blur md:hidden">
+    <nav className="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-surface pb-[env(safe-area-inset-bottom)] md:hidden">
       <div className="mx-auto flex max-w-md items-center justify-around gap-1 px-2 pt-1">
         {TABS.left.map((t) => (
           <Tab key={t.href} {...t} />
@@ -169,7 +169,7 @@ function MobileTabBar({ pathname }: { pathname: string }) {
             aria-label={TABS.center.label}
             aria-current={bookActive ? "page" : undefined}
             className={cn(
-              "-mt-6 flex size-14 flex-col items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg shadow-coral-deep/40 outline-none ring-4 ring-white transition-transform active:scale-95 focus-visible:ring-primary/50"
+              "-mt-6 flex size-14 flex-col items-center justify-center rounded-icon bg-flame text-tx-invert outline-none ring-4 ring-white transition-transform active:scale-95 focus-visible:ring-flame/50"
             )}
           >
             <CenterIcon className="size-6 -rotate-45" />
@@ -201,7 +201,7 @@ export function CustomerShell({
 
       <div className="flex min-w-0 flex-1 flex-col">
         {/* Top bar */}
-        <header className="sticky top-0 z-30 flex h-16 items-center justify-between gap-4 border-b border-border bg-white/85 px-5 backdrop-blur md:px-8">
+        <header className="sticky top-0 z-30 flex h-16 items-center justify-between gap-4 border-b border-border bg-white/85 px-5 md:px-8">
           {/* Mobile brand (sidebar is hidden below md) */}
           <Link href="/customer" className="flex items-center md:hidden">
             <BrandLogo className="h-7 w-auto" priority />
@@ -212,7 +212,7 @@ export function CustomerShell({
           <div className="flex items-center gap-1">
             <NotificationsBell userId={userId} portal="customer" />
             <DropdownMenu>
-              <DropdownMenuTrigger className="flex items-center gap-2.5 rounded-full py-1 pl-1 pr-2 outline-none transition-colors hover:bg-muted focus-visible:ring-[3px] focus-visible:ring-primary/30">
+              <DropdownMenuTrigger className="flex items-center gap-2.5 rounded-control py-1 pl-1 pr-2 outline-none transition-colors hover:bg-sunk focus-visible:ring-[3px] focus-visible:ring-ocean/30">
                 <Avatar className="size-9">
                   <AvatarFallback className="bg-sky-tint text-sm font-semibold text-ocean-deep">
                     {initialsOf(userName)}

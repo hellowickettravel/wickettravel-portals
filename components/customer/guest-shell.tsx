@@ -22,7 +22,7 @@ export function GuestBookShell({ children }: { children: React.ReactNode }) {
           <nav className="flex items-center gap-2">
             <Link
               href={signInHref}
-              className="flex h-10 items-center rounded-[10px] px-3.5 text-sm font-medium text-white/85 transition-colors hover:bg-white/10 hover:text-white"
+              className="flex h-10 items-center rounded-control px-3.5 text-sm font-medium text-white/85 transition-colors hover:bg-white/10 hover:text-white"
             >
               Sign in
             </Link>

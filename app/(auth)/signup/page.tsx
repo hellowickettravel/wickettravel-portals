@@ -167,7 +167,7 @@ export default function SignupPage() {
     <AuthShell
       eyebrow="Wicket Travel"
       headline="Tell us where. We'll find the fare."
-      editorial="One account, and the whole trip stops living in your inbox."
+      lede="One account, and the whole trip stops living in your inbox."
     >
       {sentTo ? (
         /* ---------- Check-your-email confirmation ---------- */

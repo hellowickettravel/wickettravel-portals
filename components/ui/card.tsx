@@ -3,10 +3,10 @@ import * as React from "react"
 import { cn } from "@/lib/utils"
 
 /**
- * Card — design-system.html §05.
+ * Card — design system v2 §04 + §09.
  *
- * #FFFFFF, 1px #E7EDF5, the clipped corner, lift-1. Padding is 26/28 on
- * desktop and 20/22 on mobile; `size="sm"` is the portal-screen density.
+ * #FFFFFF, 1px #E5EBF3, 14px radius, lift-1. Padding is 20–24px on desktop
+ * and 18px on mobile; `size="sm"` is the portal-screen density.
  *
  * A card sitting inside a white <Section> keeps its border and drops its
  * shadow — otherwise it floats for no reason. That rule lives in globals.css
@@ -23,8 +23,8 @@ function Card({
       data-size={size}
       className={cn(
         "group/card flex flex-col gap-(--card-spacing) overflow-hidden rounded-surface border border-line bg-card py-(--card-spacing) text-sm text-card-foreground shadow-lift",
-        "[--card-px:22px] [--card-spacing:20px] md:[--card-px:28px] md:[--card-spacing:26px]",
-        "data-[size=sm]:[--card-px:18px] data-[size=sm]:[--card-spacing:16px] md:data-[size=sm]:[--card-px:20px] md:data-[size=sm]:[--card-spacing:20px]",
+        "[--card-px:18px] [--card-spacing:18px] md:[--card-px:24px] md:[--card-spacing:22px]",
+        "data-[size=sm]:[--card-px:16px] data-[size=sm]:[--card-spacing:16px] md:data-[size=sm]:[--card-px:20px] md:data-[size=sm]:[--card-spacing:18px]",
         "has-data-[slot=card-footer]:pb-0 has-[>img:first-child]:pt-0",
         className
       )}
@@ -46,7 +46,7 @@ function CardHeader({ className, ...props }: React.ComponentProps<"div">) {
   )
 }
 
-/** H4 — 600 · 16.5/23 · #0A3A66. */
+/** H3 card title — 600 · 16.5/23 · #0C3355. */
 function CardTitle({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
@@ -60,7 +60,7 @@ function CardTitle({ className, ...props }: React.ComponentProps<"div">) {
   )
 }
 
-/** Small — 400 · 14.5/23 · #6B7C8E. */
+/** Small — 400 · 14.5/23 · #6D7D8F. */
 function CardDescription({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div

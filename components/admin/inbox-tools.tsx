@@ -19,14 +19,14 @@ import {
 
 function fieldLabel(text: string) {
   return (
-    <span className="text-xs font-medium uppercase tracking-wider text-slate-600">
+    <span className="text-xs font-medium uppercase tracking-wider text-tx-muted">
       {text}
     </span>
   );
 }
 
 const selectClass =
-  "h-10 w-full rounded-[10px] border border-input bg-sunk px-3 text-base text-foreground outline-none transition-[color,box-shadow,border-color] duration-150 focus-visible:border-ocean focus-visible:ring-[3px] focus-visible:ring-ocean/25 sm:text-sm";
+  "h-10 w-full rounded-control border border-input bg-sunk px-3 text-base text-foreground outline-none transition-[color,box-shadow,border-color] duration-150 focus-visible:border-ocean focus-visible:ring-[3px] focus-visible:ring-ocean/25 sm:text-sm";
 
 /**
  * Admin conversation-routing panel. Messaging is fully internal (Supabase
@@ -95,7 +95,7 @@ export function InboxTools() {
             employeeId: assignEmp,
           });
         }}
-        className="max-w-xl space-y-3 rounded-xl border border-border bg-sunk/40 p-4"
+        className="max-w-xl space-y-3 rounded-surface border border-border bg-sunk/40 p-4"
       >
         <p className="flex items-center gap-2 text-sm font-semibold text-foreground">
           <UserCheck className="size-4 text-ocean" />
@@ -136,11 +136,7 @@ export function InboxTools() {
             ))}
           </select>
         </div>
-        <Button
-          type="submit"
-          disabled={assignMutation.isPending}
-          className="w-full"
-        >
+        <Button type="submit" disabled={assignMutation.isPending}>
           {assignMutation.isPending ? (
             <>
               <Loader2 className="size-4 animate-spin" />

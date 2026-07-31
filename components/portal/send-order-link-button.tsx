@@ -29,7 +29,7 @@ export function SendOrderLinkButton({
       onClick={() =>
         onSend(`✈️ Ready to book? Start your flight order here:\n${buildBookLink()}`)
       }
-      className="size-10 shrink-0 rounded-full text-muted-foreground"
+      className="size-10 shrink-0 rounded-icon text-tx-muted"
     >
       <Link2 className="size-4" />
     </Button>

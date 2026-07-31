@@ -17,7 +17,7 @@ import { gbp, fmtDate } from "@/lib/format";
 
 const ORDER_TONE: Record<OrderStatus, Tone> = {
   new: "blue",
-  in_progress: "amber",
+  in_progress: "gold",
   completed: "green",
   cancelled: "red",
 };
@@ -57,9 +57,9 @@ export default async function CustomerOrderDetailPage({
       </Link>
 
       {/* Header */}
-      <div className="flex flex-col gap-4 rounded-2xl border border-border bg-card p-5 shadow-lift sm:flex-row sm:items-center sm:justify-between">
+      <div className="flex flex-col gap-4 rounded-surface border border-border bg-card p-5 shadow-lift sm:flex-row sm:items-center sm:justify-between">
         <div className="flex items-center gap-3">
-          <div className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-sky-tint text-ocean-deep">
+          <div className="flex size-11 shrink-0 items-center justify-center rounded-surface bg-sky-tint text-ocean-deep">
             <Plane className="size-5 -rotate-45" />
           </div>
           <div className="leading-tight">
@@ -94,7 +94,7 @@ export default async function CustomerOrderDetailPage({
         <div className="space-y-5">
           <SectionCard title="Your quote">
             <div className="flex items-center gap-3">
-              <div className="flex size-11 items-center justify-center rounded-xl bg-sky-tint text-ocean-deep">
+              <div className="flex size-11 items-center justify-center rounded-surface bg-sky-tint text-ocean-deep">
                 <Ticket className="size-5" />
               </div>
               <div>

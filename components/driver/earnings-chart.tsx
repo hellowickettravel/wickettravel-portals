@@ -27,8 +27,8 @@ export function EarningsChart({
               <div className="relative flex h-full w-full items-end justify-center">
                 <div
                   className={cn(
-                    "w-full max-w-9 rounded-t-lg transition-all",
-                    isPeak ? "bg-coral-deep" : "bg-ocean/85"
+                    "w-full max-w-9 rounded-chip transition-all",
+                    isPeak ? "bg-flame" : "bg-ocean/85"
                   )}
                   style={{ height: `${Math.max(pct, 6)}%` }}
                   title={`${d.label}: ${inr(d.value)}`}

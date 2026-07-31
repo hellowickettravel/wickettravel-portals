@@ -331,11 +331,10 @@ export function OrderInbox({
                       <div
                         id={`omsg-${m.id}`}
                         className={cn(
-                          "px-3.5 py-2.5 text-[14.5px] leading-[1.6] shadow-lift transition-shadow duration-150 ease-brand",
-                          // The clipped corner, mirrored: the flat corner sits
-                          // on the side the message came from.
+                          "rounded-surface px-3.5 py-2.5 text-[14.5px] leading-[1.6] transition-colors duration-150 ease-brand",
+                          // Flat fills, one radius. The side tells you who spoke.
                           mine
-                            ? "rounded-[18px_5px_18px_18px] bg-ocean text-tx-invert"
+                            ? "bg-ocean text-tx-invert"
                             : "rounded-surface border border-line bg-surface text-tx-body"
                         )}
                       >
@@ -398,7 +397,7 @@ export function OrderInbox({
                   aria-label="Remove attachment"
                   onClick={() => setPendingFile(null)}
                   disabled={uploading}
-                  className="inline-flex size-9 shrink-0 items-center justify-center rounded-chip text-tx-faint outline-none transition-colors duration-150 ease-brand hover:bg-surface hover:text-tx-head focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-coral-deep disabled:opacity-50"
+                  className="inline-flex size-9 shrink-0 items-center justify-center rounded-chip text-tx-faint outline-none transition-colors duration-150 ease-brand hover:bg-surface hover:text-tx-head focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-flame disabled:opacity-50"
                 >
                   <X className="size-4" />
                 </button>

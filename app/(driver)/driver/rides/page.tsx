@@ -64,9 +64,9 @@ export default function MyRidesPage() {
         </p>
       </div>
 
-      {/* Tabs — scrollable on phones */}
-      <div className="-mx-4 overflow-x-auto px-4 sm:mx-0 sm:px-0">
-        <div className="inline-flex w-max gap-1 rounded-xl bg-muted p-1 sm:w-full">
+      {/* Tabs — they wrap, they never scroll sideways (v2 §02). */}
+      <div>
+        <div className="flex flex-wrap gap-1 rounded-surface bg-sunk p-1">
           {tabs.map((t) => {
             const active = tab === t;
             const count = buckets[t].length;
@@ -77,9 +77,9 @@ export default function MyRidesPage() {
                 onClick={() => setTab(t)}
                 aria-pressed={active}
                 className={cn(
-                  "inline-flex h-9 flex-1 items-center justify-center gap-1.5 rounded-lg px-3 text-sm font-medium whitespace-nowrap outline-none transition-colors focus-visible:ring-2 focus-visible:ring-primary/40",
+                  "inline-flex h-9 flex-1 items-center justify-center gap-1.5 rounded-control px-3 text-sm font-medium whitespace-nowrap outline-none transition-colors focus-visible:ring-2 focus-visible:ring-ocean/40",
                   active
-                    ? "bg-card text-tx-head shadow-sm"
+                    ? "bg-card text-tx-head"
                     : "text-muted-foreground hover:text-foreground"
                 )}
               >
@@ -87,7 +87,7 @@ export default function MyRidesPage() {
                 {count > 0 ? (
                   <span
                     className={cn(
-                      "rounded-full px-1.5 text-[10px] font-semibold",
+                      "rounded-chip px-1.5 text-[10px] font-semibold",
                       active ? "bg-sky-tint text-ocean-deep" : "bg-line-strong/60 text-muted-foreground"
                     )}
                   >
@@ -102,8 +102,8 @@ export default function MyRidesPage() {
 
       {/* List */}
       {rides.length === 0 ? (
-        <div className="rounded-2xl border border-dashed border-line-strong bg-sunk/60 px-6 py-16 text-center">
-          <div className="mx-auto flex size-12 items-center justify-center rounded-2xl bg-sky-tint text-ocean-deep">
+        <div className="rounded-surface border border-dashed border-line-strong bg-sunk/60 px-6 py-16 text-center">
+          <div className="mx-auto flex size-12 items-center justify-center rounded-surface bg-sky-tint text-ocean-deep">
             <EmptyIcon className="size-6" />
           </div>
           <p className="mt-3 tracking-heading text-sm font-semibold text-tx-head">

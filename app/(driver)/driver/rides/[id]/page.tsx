@@ -41,8 +41,8 @@ export default function RideDetailPage({ params }: { params: Promise<{ id: strin
     return (
       <div className="animate-in fade-in duration-300">
         <BackBar onBack={() => router.push("/driver/jobs")} />
-        <div className="mt-10 rounded-2xl border border-dashed border-line-strong bg-sunk/60 px-6 py-14 text-center">
-          <div className="mx-auto flex size-12 items-center justify-center rounded-2xl bg-sky-tint text-ocean-deep">
+        <div className="mt-10 rounded-surface border border-dashed border-line-strong bg-sunk/60 px-6 py-14 text-center">
+          <div className="mx-auto flex size-12 items-center justify-center rounded-surface bg-sky-tint text-ocean-deep">
             <Car className="size-6" />
           </div>
           <p className="mt-3 tracking-heading text-sm font-semibold text-tx-head">Ride not found</p>
@@ -94,7 +94,7 @@ export default function RideDetailPage({ params }: { params: Promise<{ id: strin
 
       {/* Status flow (only for accepted/active trips) */}
       {isActive && !isClosed ? (
-        <div className="rounded-2xl bg-card p-5 ring-1 ring-foreground/10 shadow-lift">
+        <div className="rounded-surface bg-card p-5 border border-line shadow-lift">
           <h2 className="mb-4 tracking-heading text-sm font-semibold text-tx-head">Trip progress</h2>
           <TripStepper stage={ride.stage} />
         </div>
@@ -104,22 +104,22 @@ export default function RideDetailPage({ params }: { params: Promise<{ id: strin
       {isClosed ? (
         <div
           className={cn(
-            "flex items-center gap-3 rounded-2xl px-4 py-3.5 ring-1",
+            "flex items-center gap-3 rounded-surface px-4 py-3.5 ring-1",
             ride.stage === "completed"
-              ? "bg-emerald-50 ring-emerald-200"
-              : "bg-rose-50 ring-rose-200"
+              ? "bg-jade-tint ring-jade-line"
+              : "bg-ruby-tint ring-ruby-line"
           )}
         >
           {ride.stage === "completed" ? (
-            <CircleCheck className="size-5 shrink-0 text-emerald-600" />
+            <CircleCheck className="size-5 shrink-0 text-jade" />
           ) : (
-            <Ban className="size-5 shrink-0 text-rose-600" />
+            <Ban className="size-5 shrink-0 text-ruby" />
           )}
           <div>
             <p
               className={cn(
                 "text-sm font-semibold",
-                ride.stage === "completed" ? "text-emerald-700" : "text-rose-700"
+                ride.stage === "completed" ? "text-jade" : "text-ruby"
               )}
             >
               {ride.stage === "completed" ? "Trip completed" : "Trip cancelled"}
@@ -134,7 +134,7 @@ export default function RideDetailPage({ params }: { params: Promise<{ id: strin
       ) : null}
 
       {/* Customer */}
-      <div className="rounded-2xl bg-card p-4 ring-1 ring-foreground/10 shadow-lift">
+      <div className="rounded-surface bg-card p-4 border border-line shadow-lift">
         <div className="flex items-center justify-between gap-3">
           <div className="flex items-center gap-3">
             <div className="flex size-11 items-center justify-center rounded-full bg-sky-tint font-semibold text-ocean-deep">
@@ -169,7 +169,7 @@ export default function RideDetailPage({ params }: { params: Promise<{ id: strin
       </div>
 
       {/* Trip details */}
-      <div className="rounded-2xl bg-card p-5 ring-1 ring-foreground/10 shadow-lift">
+      <div className="rounded-surface bg-card p-5 border border-line shadow-lift">
         <h2 className="mb-3 tracking-heading text-sm font-semibold text-tx-head">Trip details</h2>
 
         <div className="space-y-3">
@@ -188,7 +188,7 @@ export default function RideDetailPage({ params }: { params: Promise<{ id: strin
       </div>
 
       {/* Fare breakdown */}
-      <div className="rounded-2xl bg-card p-5 ring-1 ring-foreground/10 shadow-lift">
+      <div className="rounded-surface bg-card p-5 border border-line shadow-lift">
         <h2 className="mb-3 tracking-heading text-sm font-semibold text-tx-head">Fare</h2>
         <dl className="space-y-2 text-sm">
           <div className="flex justify-between">
@@ -197,20 +197,20 @@ export default function RideDetailPage({ params }: { params: Promise<{ id: strin
           </div>
           <div className="flex justify-between">
             <dt className="text-muted-foreground">Wicket commission (15%)</dt>
-            <dd className="font-medium text-rose-600">− {inr(ride.commission)}</dd>
+            <dd className="font-medium text-ruby">− {inr(ride.commission)}</dd>
           </div>
           <div className="flex justify-between border-t border-border pt-2">
             <dt className="font-semibold text-tx-head">You earn</dt>
-            <dd className="tracking-heading text-base font-bold text-emerald-700">{inr(net)}</dd>
+            <dd className="tracking-heading text-base font-bold text-jade">{inr(net)}</dd>
           </div>
         </dl>
       </div>
 
       {/* Sticky action bar */}
       {!isClosed ? (
-        <div className="sticky bottom-24 z-20 -mx-4 border-t border-border bg-white/95 px-4 py-3 backdrop-blur sm:-mx-6 sm:px-6 lg:bottom-0">
+        <div className="sticky bottom-24 z-20 -mx-4 border-t border-line bg-surface px-4 py-3 sm:-mx-6 sm:px-6 lg:bottom-0">
           {isAvailable ? (
-            <div className="flex items-center gap-2">
+            <div className="flex flex-wrap items-center gap-3">
               <Button
                 variant="outline"
                 onClick={() => {
@@ -219,7 +219,6 @@ export default function RideDetailPage({ params }: { params: Promise<{ id: strin
                   router.push("/driver/jobs");
                 }}
                 size="lg"
-            className="flex-1"
               >
                 <X className="size-4" />
                 Decline
@@ -230,7 +229,6 @@ export default function RideDetailPage({ params }: { params: Promise<{ id: strin
                   toast.success("Ride accepted", { description: ride.ref });
                 }}
                 size="lg"
-            className="flex-[1.6]"
               >
                 <Check className="size-4" />
                 Accept ride
@@ -251,7 +249,7 @@ export default function RideDetailPage({ params }: { params: Promise<{ id: strin
                     toast.success(nextLabel);
                   }
                 }}
-                className="h-12 w-full rounded-xl text-[15px]"
+                size="lg"
               >
                 {ride.stage === "enroute" ? (
                   <CircleCheck className="size-5" />
@@ -267,7 +265,7 @@ export default function RideDetailPage({ params }: { params: Promise<{ id: strin
                   toast("Trip cancelled");
                   router.push("/driver/rides");
                 }}
-                className="flex w-full items-center justify-center gap-1 py-1 text-xs font-medium text-rose-600 outline-none transition-colors hover:text-rose-700 focus-visible:underline"
+                className="flex w-full items-center justify-center gap-1 py-1 text-xs font-medium text-ruby outline-none transition-colors hover:text-ruby focus-visible:underline"
               >
                 Cancel this trip
               </button>
@@ -279,7 +277,6 @@ export default function RideDetailPage({ params }: { params: Promise<{ id: strin
                 toast.success("Trip resumed", { description: ride.ref });
               }}
               size="lg"
-            className="w-full"
             >
               Resume this trip
               <ChevronRight className="size-4" />
@@ -296,7 +293,7 @@ function BackBar({ onBack }: { onBack: () => void }) {
     <button
       type="button"
       onClick={onBack}
-      className="inline-flex h-9 items-center gap-1.5 rounded-lg pr-2 text-sm font-medium text-muted-foreground outline-none transition-colors hover:text-foreground focus-visible:ring-2 focus-visible:ring-primary/40"
+      className="inline-flex h-9 items-center gap-1.5 rounded-control pr-2 text-sm font-medium text-muted-foreground outline-none transition-colors hover:text-foreground focus-visible:ring-2 focus-visible:ring-ocean/40"
     >
       <ArrowLeft className="size-4" />
       Back
@@ -321,8 +318,8 @@ function DetailRow({
     <div className="flex items-start gap-3">
       <span
         className={cn(
-          "mt-0.5 flex size-8 shrink-0 items-center justify-center rounded-lg",
-          accent === "brand" ? "bg-ocean/10 text-ocean" : "bg-coral-deep/10 text-coral-press"
+          "mt-0.5 flex size-8 shrink-0 items-center justify-center rounded-control",
+          accent === "brand" ? "bg-ocean/10 text-ocean" : "bg-flame/10 text-flame-hover"
         )}
       >
         <Icon className={cn("size-4", accent === "brand" && "-rotate-45")} />

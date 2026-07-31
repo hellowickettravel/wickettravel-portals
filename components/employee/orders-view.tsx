@@ -27,7 +27,7 @@ import { cn } from "@/lib/utils";
 
 const ORDER_TONE: Record<OrderStatus, Tone> = {
   new: "blue",
-  in_progress: "amber",
+  in_progress: "gold",
   completed: "green",
   cancelled: "red",
 };
@@ -64,7 +64,7 @@ export function EmployeeOrders({ accessLevel }: { accessLevel: AccessLevel }) {
       />
 
       {/* Personal totals (NOT company-wide) */}
-      <div className="grid grid-cols-1 gap-4 rounded-2xl border border-border bg-card p-1 shadow-lift sm:grid-cols-3">
+      <div className="grid grid-cols-1 gap-4 rounded-surface border border-border bg-card p-1 shadow-lift sm:grid-cols-3">
         {[
           { label: "My orders", value: String(rows.length) },
           { label: "My open", value: String(myOpen) },
@@ -90,7 +90,7 @@ export function EmployeeOrders({ accessLevel }: { accessLevel: AccessLevel }) {
           </p>
         ) : rows.length === 0 ? (
           <div className="flex flex-col items-center gap-2 px-6 py-14 text-center">
-            <div className="flex size-12 items-center justify-center rounded-2xl bg-sky-tint text-ocean-deep">
+            <div className="flex size-12 items-center justify-center rounded-surface bg-sky-tint text-ocean-deep">
               <ShoppingBag className="size-6" />
             </div>
             <p className="tracking-heading text-base font-semibold text-foreground">
@@ -142,7 +142,7 @@ export function EmployeeOrders({ accessLevel }: { accessLevel: AccessLevel }) {
                     {
                       label: "Commission",
                       value: (
-                        <span className="text-emerald-600">
+                        <span className="text-jade">
                           {o.commission != null ? gbp(o.commission) : "—"}
                         </span>
                       ),
@@ -190,7 +190,7 @@ export function EmployeeOrders({ accessLevel }: { accessLevel: AccessLevel }) {
                       <TableCell className="text-right font-medium tabular-nums">
                         {o.selling_price != null ? gbp(o.selling_price) : "—"}
                       </TableCell>
-                      <TableCell className="text-right tabular-nums text-emerald-600">
+                      <TableCell className="text-right tabular-nums text-jade">
                         {o.commission != null ? gbp(o.commission) : "—"}
                       </TableCell>
                       <TableCell>

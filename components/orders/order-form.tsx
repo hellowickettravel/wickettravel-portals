@@ -79,13 +79,13 @@ export type OrderFormConversation = {
 export type OrderFormRole = "admin" | "employee" | "customer";
 
 const selectClass =
-  "h-11 w-full rounded-[10px] border border-input bg-sunk px-3 text-base text-foreground outline-none transition-[color,box-shadow,border-color] duration-150 focus-visible:border-ocean focus-visible:ring-[3px] focus-visible:ring-ocean/25 disabled:opacity-50 sm:text-sm";
+  "h-11 w-full rounded-control border border-input bg-sunk px-3 text-base text-foreground outline-none transition-[color,box-shadow,border-color] duration-150 focus-visible:border-ocean focus-visible:ring-[3px] focus-visible:ring-ocean/25 disabled:opacity-50 sm:text-sm";
 
 function fieldLabel(text: string, required?: boolean) {
   return (
-    <span className="text-xs font-medium uppercase tracking-wider text-slate-600">
+    <span className="text-xs font-medium uppercase tracking-wider text-tx-muted">
       {text}
-      {required ? <span className="ml-0.5 text-coral-deep">*</span> : null}
+      {required ? <span className="ml-0.5 text-flame">*</span> : null}
     </span>
   );
 }
@@ -93,7 +93,7 @@ function fieldLabel(text: string, required?: boolean) {
 function FieldError({ message }: { message?: string }) {
   if (!message) return null;
   return (
-    <p className="text-xs font-medium text-rose-600 animate-in fade-in slide-in-from-top-1 motion-reduce:animate-none">
+    <p className="text-xs font-medium text-ruby animate-in fade-in slide-in-from-top-1 motion-reduce:animate-none">
       {message}
     </p>
   );
@@ -121,7 +121,7 @@ function Stepper({
         aria-label={`Fewer ${label}`}
         onClick={() => onChange(Math.max(min, value - 1))}
         disabled={disabled || value <= min}
-        className="flex size-11 cursor-pointer items-center justify-center rounded-lg border border-border bg-white text-foreground outline-none transition-colors hover:bg-muted focus-visible:ring-2 focus-visible:ring-ocean/40 disabled:cursor-default disabled:opacity-40"
+        className="flex size-11 cursor-pointer items-center justify-center rounded-control border border-border bg-white text-foreground outline-none transition-colors hover:bg-muted focus-visible:ring-2 focus-visible:ring-ocean/40 disabled:cursor-default disabled:opacity-40"
       >
         <Minus className="size-4" />
       </button>
@@ -133,7 +133,7 @@ function Stepper({
         aria-label={`More ${label}`}
         onClick={() => onChange(Math.min(max, value + 1))}
         disabled={disabled || value >= max}
-        className="flex size-11 cursor-pointer items-center justify-center rounded-lg border border-border bg-white text-foreground outline-none transition-colors hover:bg-muted focus-visible:ring-2 focus-visible:ring-ocean/40 disabled:cursor-default disabled:opacity-40"
+        className="flex size-11 cursor-pointer items-center justify-center rounded-control border border-border bg-white text-foreground outline-none transition-colors hover:bg-muted focus-visible:ring-2 focus-visible:ring-ocean/40 disabled:cursor-default disabled:opacity-40"
       >
         <Plus className="size-4" />
       </button>
@@ -170,15 +170,15 @@ function StepIndicator({
                 disabled={!done}
                 aria-current={current ? "step" : undefined}
                 className={cn(
-                  "group flex min-w-0 flex-1 flex-col items-center gap-1.5 rounded-xl px-1 py-1.5 text-center outline-none focus-visible:ring-2 focus-visible:ring-ocean/40",
+                  "group flex min-w-0 flex-1 flex-col items-center gap-1.5 rounded-surface px-1 py-1.5 text-center outline-none focus-visible:ring-2 focus-visible:ring-ocean/40",
                   done && "cursor-pointer"
                 )}
               >
                 <span
                   className={cn(
-                    "flex size-9 items-center justify-center rounded-full text-sm font-semibold transition-colors duration-200",
+                    "flex size-9 items-center justify-center rounded-icon text-sm font-semibold transition-colors duration-200",
                     current
-                      ? "bg-primary text-primary-foreground shadow-sm shadow-coral-deep/30 ring-4 ring-coral-deep/15"
+                      ? "bg-ocean text-tx-invert ring-4 ring-flame/15"
                       : done
                         ? "bg-ocean-deep text-white group-hover:bg-ocean-deep"
                         : "bg-muted text-muted-foreground"
@@ -864,7 +864,7 @@ export function OrderForm({
 
       {/* Trip summary chip — keeps the essentials visible past Step 1 */}
       {step > 1 && routeFrom && routeTo ? (
-        <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5 rounded-xl border border-line-strong bg-sky-tint/60 px-4 py-2.5 text-sm text-ocean-deep animate-in fade-in slide-in-from-top-1 motion-reduce:animate-none">
+        <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5 rounded-surface border border-line-strong bg-sky-tint/60 px-4 py-2.5 text-sm text-ocean-deep animate-in fade-in slide-in-from-top-1 motion-reduce:animate-none">
           <span className="inline-flex items-center gap-1.5 font-semibold">
             <Plane className="size-4 -rotate-45" />
             {routeFrom} → {routeTo}
@@ -936,7 +936,7 @@ export function OrderForm({
                 <div className="space-y-2">
                   <Label htmlFor="of-conv">{fieldLabel("Conversation", true)}</Label>
                   {presetConversationId ? (
-                    <p className="rounded-[10px] border border-border bg-sunk px-3 py-2.5 text-sm font-medium text-foreground">
+                    <p className="rounded-control border border-border bg-sunk px-3 py-2.5 text-sm font-medium text-foreground">
                       {selectedConversation?.label ?? "Selected conversation"}
                     </p>
                   ) : (
@@ -972,7 +972,7 @@ export function OrderForm({
                 <div className="space-y-2">
                   <Label htmlFor="of-from">{fieldLabel("From", true)}</Label>
                   <div className="relative">
-                    <PlaneTakeoff className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-slate-400" />
+                    <PlaneTakeoff className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-tx-faint" />
                     <Input
                       id="of-from"
                       value={routeFrom}
@@ -986,7 +986,7 @@ export function OrderForm({
                 <div className="space-y-2">
                   <Label htmlFor="of-to">{fieldLabel("To", true)}</Label>
                   <div className="relative">
-                    <PlaneLanding className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-slate-400" />
+                    <PlaneLanding className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-tx-faint" />
                     <Input
                       id="of-to"
                       value={routeTo}
@@ -1046,17 +1046,17 @@ export function OrderForm({
                           type="button"
                           onClick={() => setTripType(t.value)}
                           className={cn(
-                            "flex cursor-pointer items-center gap-3 rounded-[12px] border px-4 py-3 text-left outline-none transition-all focus-visible:ring-[3px] focus-visible:ring-ocean/25",
+                            "flex cursor-pointer items-center gap-3 rounded-icon border px-4 py-3 text-left outline-none transition-all focus-visible:ring-[3px] focus-visible:ring-ocean/25",
                             active
-                              ? "border-ocean bg-sky-tint/60 shadow-sm"
+                              ? "border-ocean bg-sky-tint/60"
                               : "border-border bg-sunk hover:border-ocean/40"
                           )}
                         >
                           <span
                             className={cn(
-                              "flex size-9 items-center justify-center rounded-lg transition-colors",
+                              "flex size-9 items-center justify-center rounded-control transition-colors",
                               active
-                                ? "bg-primary text-primary-foreground"
+                                ? "bg-ocean text-tx-invert"
                                 : "bg-white text-muted-foreground"
                             )}
                           >
@@ -1098,9 +1098,9 @@ export function OrderForm({
                           type="button"
                           onClick={() => setCabin(c.value)}
                           className={cn(
-                            "min-h-11 cursor-pointer rounded-full border px-4 py-2 text-sm font-medium outline-none transition-all focus-visible:ring-[3px] focus-visible:ring-ocean/25",
+                            "min-h-11 cursor-pointer rounded-control border px-4 py-2 text-sm font-medium outline-none transition-all focus-visible:ring-[3px] focus-visible:ring-ocean/25",
                             active
-                              ? "border-ocean bg-primary text-primary-foreground shadow-sm"
+                              ? "border-ocean bg-ocean text-tx-invert"
                               : "border-border bg-sunk text-muted-foreground hover:border-ocean/40 hover:text-foreground"
                           )}
                         >
@@ -1142,7 +1142,7 @@ export function OrderForm({
               <div className="space-y-5">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2.5">
-                    <Users className="size-4 text-slate-400" />
+                    <Users className="size-4 text-tx-faint" />
                     <div>
                       <p className="text-sm font-medium text-foreground">Adults</p>
                       <p className="text-xs text-muted-foreground">Aged 18+</p>
@@ -1153,7 +1153,7 @@ export function OrderForm({
 
                 <div className="flex items-center justify-between border-t border-border pt-5">
                   <div className="flex items-center gap-2.5">
-                    <Users className="size-4 text-slate-400" />
+                    <Users className="size-4 text-tx-faint" />
                     <div>
                       <p className="text-sm font-medium text-foreground">Children</p>
                       <p className="text-xs text-muted-foreground">Under 18</p>
@@ -1198,7 +1198,7 @@ export function OrderForm({
                               disabled={busy}
                             />
                             {isAdultAge ? (
-                              <p className="text-[11px] font-medium text-amber-600">
+                              <p className="text-[11px] font-medium text-gold">
                                 18+ → counted as an adult
                               </p>
                             ) : null}
@@ -1219,7 +1219,7 @@ export function OrderForm({
           <div key="step-2" className={stepAnim} role="group" aria-label="Step 2: flight check">
             <SectionCard>
               <div className="flex flex-col gap-4 sm:flex-row">
-                <div className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-sky-tint text-ocean-deep">
+                <div className="flex size-11 shrink-0 items-center justify-center rounded-surface bg-sky-tint text-ocean-deep">
                   <ShieldCheck className="size-5" />
                 </div>
                 <div className="space-y-1">
@@ -1259,17 +1259,17 @@ export function OrderForm({
                       type="button"
                       onClick={() => setGateChoice(opt.value)}
                       className={cn(
-                        "flex cursor-pointer items-center gap-3 rounded-[12px] border px-4 py-3.5 text-left outline-none transition-all focus-visible:ring-[3px] focus-visible:ring-ocean/25",
+                        "flex cursor-pointer items-center gap-3 rounded-icon border px-4 py-3.5 text-left outline-none transition-all focus-visible:ring-[3px] focus-visible:ring-ocean/25",
                         active
-                          ? "border-ocean bg-sky-tint/60 shadow-sm"
+                          ? "border-ocean bg-sky-tint/60"
                           : "border-border bg-sunk hover:border-ocean/40"
                       )}
                     >
                       <span
                         className={cn(
-                          "flex size-9 shrink-0 items-center justify-center rounded-lg transition-colors",
+                          "flex size-9 shrink-0 items-center justify-center rounded-control transition-colors",
                           active
-                            ? "bg-primary text-primary-foreground"
+                            ? "bg-ocean text-tx-invert"
                             : "bg-white text-muted-foreground"
                         )}
                       >
@@ -1327,7 +1327,7 @@ export function OrderForm({
                     <button
                       type="button"
                       onClick={() => fileInputRef.current?.click()}
-                      className="flex min-h-11 w-full cursor-pointer items-center justify-center gap-2 rounded-[10px] border border-dashed border-border bg-sunk px-4 py-3 text-sm font-medium text-muted-foreground outline-none transition-colors hover:border-ocean hover:text-ocean focus-visible:ring-[3px] focus-visible:ring-ocean/25"
+                      className="flex min-h-11 w-full cursor-pointer items-center justify-center gap-2 rounded-control border border-dashed border-border bg-sunk px-4 py-3 text-sm font-medium text-muted-foreground outline-none transition-colors hover:border-ocean hover:text-ocean focus-visible:ring-[3px] focus-visible:ring-ocean/25"
                     >
                       <Paperclip className="size-4" />
                       Attach PNG, JPG or PDF (max 10MB each)
@@ -1338,7 +1338,7 @@ export function OrderForm({
                         {files.map((file, i) => (
                           <li
                             key={`${file.name}-${i}`}
-                            className="flex items-center gap-2.5 rounded-[10px] border border-border bg-card px-3 py-2 text-sm animate-in fade-in slide-in-from-bottom-1 motion-reduce:animate-none"
+                            className="flex items-center gap-2.5 rounded-control border border-border bg-card px-3 py-2 text-sm animate-in fade-in slide-in-from-bottom-1 motion-reduce:animate-none"
                           >
                             <FileText className="size-4 shrink-0 text-ocean" />
                             <span className="min-w-0 flex-1 truncate text-foreground">
@@ -1352,7 +1352,7 @@ export function OrderForm({
                               onClick={() =>
                                 setFiles((prev) => prev.filter((_, idx) => idx !== i))
                               }
-                              className="shrink-0 cursor-pointer rounded-md p-1 text-muted-foreground transition-colors hover:bg-muted hover:text-rose-600"
+                              className="shrink-0 cursor-pointer rounded-control p-1 text-muted-foreground transition-colors hover:bg-muted hover:text-ruby"
                               aria-label={`Remove ${file.name}`}
                             >
                               <X className="size-4" />
@@ -1366,7 +1366,7 @@ export function OrderForm({
               ) : null}
 
               {gateChoice === "no" ? (
-                <label className="mt-5 flex cursor-pointer items-start gap-3 rounded-[10px] border border-border bg-sunk px-4 py-3 animate-in fade-in slide-in-from-top-1 motion-reduce:animate-none">
+                <label className="mt-5 flex cursor-pointer items-start gap-3 rounded-control border border-border bg-sunk px-4 py-3 animate-in fade-in slide-in-from-top-1 motion-reduce:animate-none">
                   <Switch
                     checked={acknowledged}
                     onCheckedChange={(v: boolean) => setAcknowledged(v)}
@@ -1397,10 +1397,10 @@ export function OrderForm({
                 {paxRows.map((row, i) => (
                   <div
                     key={i}
-                    className="rounded-[12px] border border-border bg-sunk p-3.5 sm:p-4"
+                    className="rounded-icon border border-border bg-sunk p-3.5 sm:p-4"
                   >
                     <div className="mb-3 flex items-center gap-2">
-                      <span className="flex size-7 items-center justify-center rounded-lg bg-sky-tint text-xs font-semibold text-ocean-deep">
+                      <span className="flex size-7 items-center justify-center rounded-control bg-sky-tint text-xs font-semibold text-ocean-deep">
                         {i + 1}
                       </span>
                       <span className="text-sm font-semibold text-foreground">
@@ -1462,13 +1462,13 @@ export function OrderForm({
                   <div className="space-y-2">
                     <Label>{fieldLabel("Email")}</Label>
                     {contactEmail ? (
-                      <p className="flex h-11 items-center gap-2 truncate rounded-[10px] border border-border bg-sunk px-3 text-sm font-medium text-foreground">
-                        <Mail className="size-4 shrink-0 text-slate-400" />
+                      <p className="flex h-11 items-center gap-2 truncate rounded-control border border-border bg-sunk px-3 text-sm font-medium text-foreground">
+                        <Mail className="size-4 shrink-0 text-tx-faint" />
                         <span className="truncate">{contactEmail}</span>
                       </p>
                     ) : (
-                      <p className="flex min-h-11 items-center gap-2 rounded-[10px] border border-border bg-sunk px-3 py-2 text-sm text-muted-foreground">
-                        <LogIn className="size-4 shrink-0 text-slate-400" />
+                      <p className="flex min-h-11 items-center gap-2 rounded-control border border-border bg-sunk px-3 py-2 text-sm text-muted-foreground">
+                        <LogIn className="size-4 shrink-0 text-tx-faint" />
                         From your account once you sign in
                       </p>
                     )}
@@ -1476,7 +1476,7 @@ export function OrderForm({
                   <div className="space-y-2">
                     <Label htmlFor="of-phone">{fieldLabel("Phone number")}</Label>
                     <div className="relative">
-                      <Phone className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-slate-400" />
+                      <Phone className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-tx-faint" />
                       <Input
                         id="of-phone"
                         type="tel"
@@ -1496,9 +1496,9 @@ export function OrderForm({
 
             <SectionCard title="Extras" description="Optional — tick anything you need.">
               <div className="space-y-1">
-                <label className="flex min-h-11 cursor-pointer items-center justify-between gap-3 rounded-[10px] px-1 py-2.5">
+                <label className="flex min-h-11 cursor-pointer items-center justify-between gap-3 rounded-control px-1 py-2.5">
                   <span className="flex items-center gap-2.5">
-                    <Accessibility className="size-4 text-slate-400" />
+                    <Accessibility className="size-4 text-tx-faint" />
                     <span className="text-sm font-medium text-foreground">
                       Wheelchair assistance
                     </span>
@@ -1510,9 +1510,9 @@ export function OrderForm({
                 </label>
 
                 <div className="border-t border-border pt-1">
-                  <label className="flex min-h-11 cursor-pointer items-center justify-between gap-3 rounded-[10px] px-1 py-2.5">
+                  <label className="flex min-h-11 cursor-pointer items-center justify-between gap-3 rounded-control px-1 py-2.5">
                     <span className="flex items-center gap-2.5">
-                      <Luggage className="size-4 text-slate-400" />
+                      <Luggage className="size-4 text-tx-faint" />
                       <span className="text-sm font-medium text-foreground">
                         Extra luggage
                       </span>
@@ -1546,7 +1546,7 @@ export function OrderForm({
                 <div className="space-y-2 border-t border-border pt-3.5">
                   <Label htmlFor="of-meal">
                     <span className="flex items-center gap-2.5">
-                      <UtensilsCrossed className="size-4 text-slate-400" />
+                      <UtensilsCrossed className="size-4 text-tx-faint" />
                       {fieldLabel("Meal preference")}
                     </span>
                   </Label>
@@ -1568,7 +1568,7 @@ export function OrderForm({
                 <div className="space-y-2 border-t border-border pt-3.5">
                   <Label htmlFor="of-assist">
                     <span className="flex items-center gap-2.5">
-                      <UserRound className="size-4 text-slate-400" />
+                      <UserRound className="size-4 text-tx-faint" />
                       {fieldLabel("Special assistance")}
                     </span>
                   </Label>
@@ -1584,7 +1584,7 @@ export function OrderForm({
                 <div className="space-y-2 border-t border-border pt-3.5">
                   <Label htmlFor="of-extra-note">
                     <span className="flex items-center gap-2.5">
-                      <StickyNote className="size-4 text-slate-400" />
+                      <StickyNote className="size-4 text-tx-faint" />
                       {fieldLabel("Anything else?")}
                     </span>
                   </Label>
@@ -1677,7 +1677,7 @@ export function OrderForm({
                         {paxRows.map((r, i) => (
                           <span
                             key={i}
-                            className="inline-flex items-center rounded-full bg-sky-tint px-2.5 py-0.5 text-xs font-medium text-ocean-deep"
+                            className="inline-flex items-center rounded-chip bg-sky-tint px-2.5 py-0.5 text-xs font-medium text-ocean"
                           >
                             {r.given.trim()} {r.surname.trim()}
                           </span>
@@ -1712,7 +1712,7 @@ export function OrderForm({
               </div>
 
               {isGuest ? (
-                <div className="mt-4 flex items-start gap-2.5 rounded-[10px] border border-line-strong bg-sky-tint/60 px-3.5 py-3 text-sm text-ocean-deep">
+                <div className="mt-4 flex items-start gap-2.5 rounded-control border border-line-strong bg-sky-tint/60 px-3.5 py-3 text-sm text-ocean-deep">
                   <LogIn className="mt-0.5 size-4 shrink-0" />
                   <span>
                     You&apos;ll create a free account (or sign in) to place this
@@ -1804,7 +1804,7 @@ function ReviewRow({
             type="button"
             onClick={onEdit}
             aria-label={`Edit ${label.toLowerCase()}`}
-            className="cursor-pointer rounded-md p-1 text-slate-400 transition-colors hover:bg-muted hover:text-ocean"
+            className="cursor-pointer rounded-control p-1 text-tx-faint transition-colors hover:bg-muted hover:text-ocean"
           >
             <Pencil className="size-3.5" />
           </button>

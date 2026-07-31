@@ -49,7 +49,7 @@ function EmptyState({
 }
 
 /**
- * Error state — rose, because rose means attention, and a sentence that says
+ * Error state — ruby, because ruby means attention, and a sentence that says
  * what to do next rather than what went wrong internally.
  */
 function ErrorState({
@@ -72,7 +72,7 @@ function ErrorState({
         className
       )}
     >
-      <IconChip tone="rose">
+      <IconChip tone="ruby">
         <TriangleAlert />
       </IconChip>
       <p className="mt-4 text-[16.5px] leading-[1.42] font-semibold text-tx-head">

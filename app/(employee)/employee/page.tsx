@@ -26,7 +26,7 @@ import { fmtRelative, titleCase } from "@/lib/format";
 
 const ORDER_TONE: Record<OrderStatus, Tone> = {
   new: "blue",
-  in_progress: "amber",
+  in_progress: "gold",
   completed: "green",
   cancelled: "red",
 };
@@ -106,7 +106,7 @@ export default async function EmployeeDashboardPage() {
                     {c.preview ?? "No messages yet"}
                   </span>
                   {c.unreadCount > 0 ? (
-                    <span className="inline-flex min-w-5 items-center justify-center rounded-full bg-primary px-1.5 py-0.5 text-xs font-semibold text-primary-foreground">
+                    <span className="inline-flex min-w-5 items-center justify-center rounded-chip bg-ocean px-1.5 py-0.5 text-xs font-semibold text-tx-invert">
                       {c.unreadCount}
                     </span>
                   ) : null}

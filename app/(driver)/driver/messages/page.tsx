@@ -35,14 +35,14 @@ export default function DriverMessagesPage() {
 
   return (
     <div className="animate-in fade-in slide-in-from-bottom-2 duration-500 ease-out">
-      <div className="flex h-[calc(100dvh-9.5rem)] min-h-[440px] flex-col overflow-hidden rounded-2xl bg-card ring-1 ring-foreground/10 shadow-lift lg:h-[calc(100dvh-8rem)]">
+      <div className="flex h-[calc(100dvh-9.5rem)] min-h-[440px] flex-col overflow-hidden rounded-surface bg-card border border-line shadow-lift lg:h-[calc(100dvh-8rem)]">
         {/* Chat header */}
         <div className="flex items-center gap-3 border-b border-border px-3 py-3 sm:px-4">
           <button
             type="button"
             onClick={() => router.back()}
             aria-label="Go back"
-            className="flex size-9 items-center justify-center rounded-full text-muted-foreground outline-none transition-colors hover:bg-muted hover:text-foreground focus-visible:ring-2 focus-visible:ring-primary/40"
+            className="flex size-9 items-center justify-center rounded-icon text-tx-muted outline-none transition-colors hover:bg-sunk hover:text-tx-head focus-visible:ring-2 focus-visible:ring-ocean/40"
           >
             <ArrowLeft className="size-5" />
           </button>
@@ -50,7 +50,7 @@ export default function DriverMessagesPage() {
             <div className="flex size-10 items-center justify-center rounded-full bg-sky-tint font-semibold text-ocean-deep">
               {customerName.split(" ").map((p) => p[0]).slice(0, 2).join("")}
             </div>
-            <span className="absolute -bottom-0.5 -right-0.5 size-3 rounded-full border-2 border-card bg-emerald-500" />
+            <span className="absolute -bottom-0.5 -right-0.5 size-3 rounded-full border-2 border-card bg-jade" />
           </div>
           <div className="min-w-0 flex-1 leading-tight">
             <p className="truncate tracking-heading text-sm font-semibold text-tx-head">
@@ -78,7 +78,7 @@ export default function DriverMessagesPage() {
 
         {/* Messages */}
         <div ref={scrollRef} className="flex-1 space-y-2.5 overflow-y-auto bg-sunk/40 px-4 py-4">
-          <p className="mx-auto w-fit rounded-full bg-white px-3 py-1 text-[11px] text-muted-foreground ring-1 ring-inset ring-line-strong">
+          <p className="mx-auto w-fit rounded-chip border border-line bg-surface px-3 py-1 text-[11px] text-tx-muted">
             Today
           </p>
           {messages.map((m) => {
@@ -88,10 +88,10 @@ export default function DriverMessagesPage() {
                 <div className="max-w-[80%] sm:max-w-[65%]">
                   <div
                     className={cn(
-                      "rounded-2xl px-3.5 py-2 text-sm shadow-sm",
+                      "rounded-surface px-3.5 py-2 text-sm",
                       mine
-                        ? "rounded-br-md bg-primary text-primary-foreground"
-                        : "rounded-bl-md border border-border bg-white text-foreground"
+                        ? "bg-ocean text-tx-invert"
+                        : "border border-line bg-surface text-tx-body"
                     )}
                   >
                     {m.body}
