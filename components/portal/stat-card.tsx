@@ -11,13 +11,13 @@ type StatCardProps = {
 
 export function StatCard({ label, value, hint, icon: Icon }: StatCardProps) {
   return (
-    <Card className="shadow-card">
+    <Card className="shadow-lift">
       <CardContent className="flex items-start justify-between gap-4">
         <div className="space-y-1.5">
-          <p className="font-label text-xs font-medium uppercase tracking-wide text-muted-foreground">
+          <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
             {label}
           </p>
-          <p className="font-heading text-2xl font-semibold text-foreground">
+          <p className="font-sans text-2xl font-semibold text-foreground">
             {value}
           </p>
           {hint ? (
@@ -26,7 +26,7 @@ export function StatCard({ label, value, hint, icon: Icon }: StatCardProps) {
         </div>
         <div
           className={cn(
-            "flex size-11 items-center justify-center rounded-xl bg-chip text-brand-dark"
+            "flex size-11 items-center justify-center rounded-xl bg-sky-tint text-ocean-deep"
           )}
         >
           <Icon className="size-5" />

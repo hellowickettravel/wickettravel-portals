@@ -207,7 +207,7 @@ export default function OrdersPage() {
       />
 
       {/* Totals strip */}
-      <div className="grid grid-cols-2 gap-4 rounded-2xl border border-border bg-card p-1 shadow-card sm:grid-cols-4">
+      <div className="grid grid-cols-2 gap-4 rounded-2xl border border-border bg-card p-1 shadow-lift sm:grid-cols-4">
         {[
           { label: "Total orders", value: String(totals.total) },
           { label: "Active", value: String(totals.active) },
@@ -218,10 +218,10 @@ export default function OrdersPage() {
             key={t.label}
             className={cn("px-5 py-4", i > 0 && "sm:border-l sm:border-border")}
           >
-            <p className="font-label text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+            <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
               {t.label}
             </p>
-            <p className="mt-1 font-display text-xl font-semibold text-foreground">
+            <p className="mt-1 tracking-heading text-xl font-semibold text-foreground">
               {t.value}
             </p>
           </div>
@@ -252,7 +252,7 @@ export default function OrdersPage() {
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Search orders, customers, routes…"
-            className="h-10 rounded-[10px] bg-card pl-9"
+            className="pl-9"
           />
         </div>
       </div>
@@ -269,10 +269,10 @@ export default function OrdersPage() {
           </p>
         ) : all.length === 0 ? (
           <div className="flex flex-col items-center gap-2 px-6 py-14 text-center">
-            <div className="flex size-12 items-center justify-center rounded-2xl bg-chip text-brand-dark">
+            <div className="flex size-12 items-center justify-center rounded-2xl bg-sky-tint text-ocean-deep">
               <Plus className="size-6" />
             </div>
-            <p className="font-display text-base font-semibold text-foreground">
+            <p className="tracking-heading text-base font-semibold text-foreground">
               No orders yet
             </p>
             <p className="max-w-sm text-sm text-muted-foreground">
@@ -291,10 +291,10 @@ export default function OrdersPage() {
                 visible.map((o) => (
                   <Link key={o.id} href={`/admin/orders/${o.id}`} className="block">
                     <MobileRecordCard
-                      title={<span className="text-navy">{o.order_number}</span>}
+                      title={<span className="text-tx-head">{o.order_number}</span>}
                       subtitle={o.customer?.name ?? "—"}
                       action={
-                        <span className="inline-flex items-center gap-0.5 text-xs font-medium text-brand">
+                        <span className="inline-flex items-center gap-0.5 text-xs font-medium text-ocean">
                           View
                           <ChevronRight className="size-4" />
                         </span>
@@ -362,10 +362,10 @@ export default function OrdersPage() {
                   className="cursor-pointer"
                   onClick={() => router.push(`/admin/orders/${o.id}`)}
                 >
-                  <TableCell className="pl-6 font-medium text-navy">
+                  <TableCell className="pl-6 font-medium text-tx-head">
                     <Link
                       href={`/admin/orders/${o.id}`}
-                      className="hover:text-brand"
+                      className="hover:text-ocean"
                       onClick={(e) => e.stopPropagation()}
                     >
                       {o.order_number}
@@ -378,7 +378,7 @@ export default function OrdersPage() {
                   <TableCell onClick={(e) => e.stopPropagation()}>
                     <Link
                       href={`/admin/orders/${o.id}`}
-                      className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-card px-2.5 py-1.5 text-xs font-medium text-foreground transition-colors hover:border-brand hover:text-brand"
+                      className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-card px-2.5 py-1.5 text-xs font-medium text-foreground transition-colors hover:border-ocean hover:text-ocean"
                       title="View the details the customer submitted with this order"
                     >
                       <ClipboardList className="size-3.5" />
@@ -414,7 +414,7 @@ export default function OrdersPage() {
                       <DropdownMenuTrigger
                         aria-label={`Actions for order ${o.id.slice(0, 8)}`}
                         onClick={(e) => e.stopPropagation()}
-                        className="inline-flex size-8 items-center justify-center rounded-lg text-muted-foreground outline-none transition-colors hover:bg-muted hover:text-foreground focus-visible:ring-[3px] focus-visible:ring-brand/25"
+                        className="inline-flex size-8 items-center justify-center rounded-lg text-muted-foreground outline-none transition-colors hover:bg-muted hover:text-foreground focus-visible:ring-[3px] focus-visible:ring-ocean/25"
                       >
                         <MoreHorizontal className="size-4" />
                       </DropdownMenuTrigger>

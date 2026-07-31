@@ -35,7 +35,7 @@ export default function DriverMessagesPage() {
 
   return (
     <div className="animate-in fade-in slide-in-from-bottom-2 duration-500 ease-out">
-      <div className="flex h-[calc(100dvh-9.5rem)] min-h-[440px] flex-col overflow-hidden rounded-2xl bg-card ring-1 ring-foreground/10 shadow-card lg:h-[calc(100dvh-8rem)]">
+      <div className="flex h-[calc(100dvh-9.5rem)] min-h-[440px] flex-col overflow-hidden rounded-2xl bg-card ring-1 ring-foreground/10 shadow-lift lg:h-[calc(100dvh-8rem)]">
         {/* Chat header */}
         <div className="flex items-center gap-3 border-b border-border px-3 py-3 sm:px-4">
           <button
@@ -47,13 +47,13 @@ export default function DriverMessagesPage() {
             <ArrowLeft className="size-5" />
           </button>
           <div className="relative">
-            <div className="flex size-10 items-center justify-center rounded-full bg-chip font-semibold text-brand-dark">
+            <div className="flex size-10 items-center justify-center rounded-full bg-sky-tint font-semibold text-ocean-deep">
               {customerName.split(" ").map((p) => p[0]).slice(0, 2).join("")}
             </div>
             <span className="absolute -bottom-0.5 -right-0.5 size-3 rounded-full border-2 border-card bg-emerald-500" />
           </div>
           <div className="min-w-0 flex-1 leading-tight">
-            <p className="truncate font-display text-sm font-semibold text-navy">
+            <p className="truncate tracking-heading text-sm font-semibold text-tx-head">
               {customerName}
             </p>
             <p className="flex items-center gap-1 text-xs text-muted-foreground">
@@ -61,14 +61,14 @@ export default function DriverMessagesPage() {
               {activeRide ? activeRide.ref : "Customer"}
             </p>
           </div>
-          <Button variant="ghost" size="icon" aria-label="Call customer" className="size-9 rounded-full text-muted-foreground">
+          <Button variant="ghost" size="icon-sm" aria-label="Call customer" className="text-tx-muted">
             <Phone className="size-4" />
           </Button>
         </div>
 
         {/* Trip context strip */}
         {activeRide ? (
-          <div className="flex items-center gap-2 border-b border-border bg-neutral-soft/60 px-4 py-2 text-xs text-muted-foreground">
+          <div className="flex items-center gap-2 border-b border-border bg-sunk/60 px-4 py-2 text-xs text-muted-foreground">
             <User className="size-3.5 shrink-0" />
             <span className="truncate">
               Pickup {activeRide.pickupPoint} · Drop {activeRide.dropoff}
@@ -77,8 +77,8 @@ export default function DriverMessagesPage() {
         ) : null}
 
         {/* Messages */}
-        <div ref={scrollRef} className="flex-1 space-y-2.5 overflow-y-auto bg-neutral-soft/40 px-4 py-4">
-          <p className="mx-auto w-fit rounded-full bg-white px-3 py-1 text-[11px] text-muted-foreground ring-1 ring-inset ring-outline">
+        <div ref={scrollRef} className="flex-1 space-y-2.5 overflow-y-auto bg-sunk/40 px-4 py-4">
+          <p className="mx-auto w-fit rounded-full bg-white px-3 py-1 text-[11px] text-muted-foreground ring-1 ring-inset ring-line-strong">
             Today
           </p>
           {messages.map((m) => {
@@ -116,13 +116,12 @@ export default function DriverMessagesPage() {
             value={draft}
             onChange={(e) => setDraft(e.target.value)}
             placeholder="Type a message…"
-            className="h-11 rounded-full bg-neutral-soft"
           />
           <Button
             type="submit"
             size="icon"
             aria-label="Send message"
-            className="size-11 shrink-0 rounded-full"
+            className="shrink-0"
             disabled={!draft.trim()}
           >
             <Send className="size-4" />

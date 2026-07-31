@@ -28,28 +28,28 @@ function initialsOf(name: string) {
 export default function DriverProfilePage() {
   return (
     <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-500 ease-out">
-      <h1 className="font-display text-xl font-semibold tracking-tight text-navy sm:text-2xl">
+      <h1 className="text-xl font-semibold tracking-tight text-tx-head sm:text-2xl">
         Profile
       </h1>
 
       {/* Identity card */}
-      <div className="relative overflow-hidden rounded-2xl bg-[linear-gradient(165deg,var(--ocean)_0%,var(--ocean-deep)_58%,var(--ocean-night)_100%)] p-5 shadow-card">
+      <div className="relative overflow-hidden rounded-2xl bg-[linear-gradient(165deg,var(--ocean)_0%,var(--ocean-deep)_58%,var(--ocean-night)_100%)] p-5 shadow-lift">
         <div className="bg-dot-grid pointer-events-none absolute inset-0 opacity-30 [mask-image:radial-gradient(120%_120%_at_20%_0%,black,transparent_75%)]" />
         <div className="relative z-10 flex items-center gap-4">
-          <div className="flex size-16 shrink-0 items-center justify-center rounded-2xl bg-orange text-xl font-bold text-white shadow-md">
+          <div className="flex size-16 shrink-0 items-center justify-center rounded-2xl bg-coral-deep text-xl font-bold text-white shadow-md">
             {initialsOf(DRIVER.name)}
           </div>
           <div className="min-w-0">
             <div className="flex items-center gap-1.5">
-              <p className="truncate font-display text-lg font-semibold text-white">
+              <p className="truncate tracking-heading text-lg font-semibold text-white">
                 {DRIVER.name}
               </p>
-              <BadgeCheck className="size-4 shrink-0 text-orange-light" />
+              <BadgeCheck className="size-4 shrink-0 text-coral" />
             </div>
             <p className="text-xs text-white/70">{DRIVER.city} · Partner since {DRIVER.memberSince}</p>
             <div className="mt-1.5 flex items-center gap-3">
               <span className="inline-flex items-center gap-1 rounded-full bg-white/10 px-2 py-0.5 text-xs font-medium text-white ring-1 ring-inset ring-white/15">
-                <Star className="size-3 fill-orange text-orange" />
+                <Star className="size-3 fill-coral-deep text-coral-deep" />
                 {DRIVER.rating}
               </span>
               <span className="text-xs text-white/70">{DRIVER.totalTrips.toLocaleString("en-IN")} trips</span>
@@ -62,22 +62,22 @@ export default function DriverProfilePage() {
       <section>
         <SectionLabel>Availability</SectionLabel>
         <OnlineToggle size="full" />
-        <div className="mt-3 flex items-center gap-3 rounded-2xl bg-card p-4 ring-1 ring-foreground/10 shadow-card">
-          <div className="flex size-9 items-center justify-center rounded-xl bg-chip text-brand-dark">
+        <div className="mt-3 flex items-center gap-3 rounded-2xl bg-card p-4 ring-1 ring-foreground/10 shadow-lift">
+          <div className="flex size-9 items-center justify-center rounded-xl bg-sky-tint text-ocean-deep">
             <Clock3 className="size-[18px]" />
           </div>
           <div className="flex-1">
-            <p className="text-sm font-medium text-navy">Working hours</p>
+            <p className="text-sm font-medium text-tx-head">Working hours</p>
             <p className="text-xs text-muted-foreground">6:00 AM – 11:00 PM · All days</p>
           </div>
-          <Button variant="outline" size="sm" className="rounded-lg">Edit</Button>
+          <Button variant="outline" size="sm">Edit</Button>
         </div>
       </section>
 
       {/* Contact */}
       <section>
         <SectionLabel>Contact</SectionLabel>
-        <div className="divide-y divide-border rounded-2xl bg-card ring-1 ring-foreground/10 shadow-card">
+        <div className="divide-y divide-border rounded-2xl bg-card ring-1 ring-foreground/10 shadow-lift">
           <InfoRow icon={Phone} label="Phone" value={DRIVER.phone} />
           <InfoRow icon={Mail} label="Email" value={DRIVER.email} />
           <InfoRow icon={MapPin} label="Base city" value={DRIVER.city} />
@@ -87,7 +87,7 @@ export default function DriverProfilePage() {
       {/* Vehicle */}
       <section>
         <SectionLabel>Vehicle</SectionLabel>
-        <div className="divide-y divide-border rounded-2xl bg-card ring-1 ring-foreground/10 shadow-card">
+        <div className="divide-y divide-border rounded-2xl bg-card ring-1 ring-foreground/10 shadow-lift">
           <InfoRow icon={Car} label="Type" value={DRIVER.vehicle.type} />
           <InfoRow icon={Car} label="Make & model" value={DRIVER.vehicle.makeModel} />
           <InfoRow icon={Hash} label="Registration" value={DRIVER.vehicle.plate} />
@@ -99,12 +99,12 @@ export default function DriverProfilePage() {
       {/* Covered airports */}
       <section>
         <SectionLabel>Airports covered</SectionLabel>
-        <div className="rounded-2xl bg-card p-4 ring-1 ring-foreground/10 shadow-card">
+        <div className="rounded-2xl bg-card p-4 ring-1 ring-foreground/10 shadow-lift">
           <div className="flex flex-wrap gap-2">
             {DRIVER.airports.map((a) => (
               <span
                 key={a}
-                className="inline-flex items-center gap-1.5 rounded-full bg-chip px-3 py-1.5 text-sm font-medium text-brand-dark"
+                className="inline-flex items-center gap-1.5 rounded-full bg-sky-tint px-3 py-1.5 text-sm font-medium text-ocean-deep"
               >
                 <Plane className="size-3.5 -rotate-45" />
                 {airportLabel(a)}
@@ -118,14 +118,14 @@ export default function DriverProfilePage() {
       {/* Documents */}
       <section>
         <SectionLabel>Documents</SectionLabel>
-        <div className="divide-y divide-border rounded-2xl bg-card ring-1 ring-foreground/10 shadow-card">
+        <div className="divide-y divide-border rounded-2xl bg-card ring-1 ring-foreground/10 shadow-lift">
           {DRIVER.documents.map((doc) => (
             <div key={doc.name} className="flex items-center gap-3 px-4 py-3.5">
-              <div className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-chip text-brand-dark">
+              <div className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-sky-tint text-ocean-deep">
                 <FileText className="size-[18px]" />
               </div>
               <div className="min-w-0 flex-1">
-                <p className="text-sm font-medium text-navy">{doc.name}</p>
+                <p className="text-sm font-medium text-tx-head">{doc.name}</p>
                 <p className="text-xs text-muted-foreground">{doc.detail}</p>
               </div>
               {doc.status === "verified" ? (
@@ -148,7 +148,8 @@ export default function DriverProfilePage() {
       <Button
         render={<Link href="/driver/login" />}
         variant="outline"
-        className="h-12 w-full rounded-xl text-rose-600 hover:bg-rose-50 hover:text-rose-700"
+        size="lg"
+            className="w-full text-rose hover:bg-rose-tint hover:text-rose"
       >
         <LogOut className="size-4" />
         Sign out
@@ -163,7 +164,7 @@ export default function DriverProfilePage() {
 
 function SectionLabel({ children }: { children: React.ReactNode }) {
   return (
-    <p className="mb-2 font-label text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+    <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
       {children}
     </p>
   );
@@ -180,12 +181,12 @@ function InfoRow({
 }) {
   return (
     <div className="flex items-center gap-3 px-4 py-3.5">
-      <div className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-chip text-brand-dark">
+      <div className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-sky-tint text-ocean-deep">
         <Icon className="size-[18px]" />
       </div>
       <div className="min-w-0 flex-1">
         <p className="text-xs text-muted-foreground">{label}</p>
-        <p className="truncate text-sm font-medium text-navy">{value}</p>
+        <p className="truncate text-sm font-medium text-tx-head">{value}</p>
       </div>
     </div>
   );

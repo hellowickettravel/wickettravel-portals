@@ -42,13 +42,13 @@ export function RideCard({
     <>
       {/* Top row: ref + status/vehicle */}
       <div className="flex items-center justify-between gap-2">
-        <span className="font-label text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+        <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
           {ride.ref}
         </span>
         {showStatus ? (
           <RideStatusBadge stage={ride.stage} />
         ) : (
-          <span className="inline-flex items-center gap-1 rounded-full bg-chip px-2.5 py-1 text-xs font-medium text-brand-dark">
+          <span className="inline-flex items-center gap-1 rounded-full bg-sky-tint px-2.5 py-1 text-xs font-medium text-ocean-deep">
             {ride.vehicleType}
           </span>
         )}
@@ -57,29 +57,29 @@ export function RideCard({
       {/* Route */}
       <div className="mt-3 space-y-2">
         <div className="flex items-start gap-2.5">
-          <span className="mt-0.5 flex size-6 shrink-0 items-center justify-center rounded-lg bg-brand/10 text-brand">
+          <span className="mt-0.5 flex size-6 shrink-0 items-center justify-center rounded-lg bg-ocean/10 text-ocean">
             <Plane className="size-3.5 -rotate-45" />
           </span>
           <div className="min-w-0">
             <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
               Pickup
             </p>
-            <p className="truncate text-sm font-semibold text-navy">
+            <p className="truncate text-sm font-semibold text-tx-head">
               {airportShort(ride.pickupAirport)} Airport
             </p>
             <p className="truncate text-xs text-muted-foreground">{ride.pickupPoint}</p>
           </div>
         </div>
-        <div className="ml-3 h-3 border-l border-dashed border-outline" />
+        <div className="ml-3 h-3 border-l border-dashed border-line-strong" />
         <div className="flex items-start gap-2.5">
-          <span className="mt-0.5 flex size-6 shrink-0 items-center justify-center rounded-lg bg-orange/10 text-orange-dark">
+          <span className="mt-0.5 flex size-6 shrink-0 items-center justify-center rounded-lg bg-coral-deep/10 text-coral-press">
             <MapPin className="size-3.5" />
           </span>
           <div className="min-w-0">
             <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
               Drop-off
             </p>
-            <p className="truncate text-sm font-semibold text-navy">{ride.dropoff}</p>
+            <p className="truncate text-sm font-semibold text-tx-head">{ride.dropoff}</p>
             <p className="text-xs text-muted-foreground">
               {ride.distanceKm} km · ~{ride.etaMins} min
             </p>
@@ -110,11 +110,11 @@ export function RideCard({
       {/* Fare */}
       <div className="mt-3 flex items-end justify-between gap-3 border-t border-border pt-3">
         <div>
-          <p className="font-display text-lg font-bold text-navy">{inr(ride.fare)}</p>
+          <p className="tracking-heading text-lg font-bold text-tx-head">{inr(ride.fare)}</p>
           <p className="text-[11px] text-muted-foreground">You earn {inr(net)} after fee</p>
         </div>
         {href ? (
-          <span className="inline-flex items-center gap-1 text-sm font-medium text-brand">
+          <span className="inline-flex items-center gap-1 text-sm font-medium text-ocean">
             Details <ArrowRight className="size-4" />
           </span>
         ) : null}
@@ -125,7 +125,7 @@ export function RideCard({
   return (
     <div
       className={cn(
-        "rounded-2xl bg-card p-4 ring-1 ring-foreground/10 shadow-card transition-shadow",
+        "rounded-2xl bg-card p-4 ring-1 ring-foreground/10 shadow-lift transition-shadow",
         className
       )}
     >
@@ -146,12 +146,12 @@ export function RideCard({
             type="button"
             variant="outline"
             onClick={onDecline}
-            className="h-11 flex-1 rounded-xl"
+            className="flex-1"
           >
             <X className="size-4" />
             Decline
           </Button>
-          <Button type="button" onClick={onAccept} className="h-11 flex-[1.6] rounded-xl">
+          <Button type="button" onClick={onAccept} className="flex-[1.6]">
             <Check className="size-4" />
             Accept ride
           </Button>

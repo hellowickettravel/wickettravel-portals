@@ -114,8 +114,8 @@ export function OrderInbox({
     const el = document.getElementById(`omsg-${id}`);
     if (el) {
       el.scrollIntoView({ behavior: "smooth", block: "center" });
-      el.classList.add("ring-2", "ring-brand/50");
-      setTimeout(() => el.classList.remove("ring-2", "ring-brand/50"), 1200);
+      el.classList.add("ring-2", "ring-ocean/50");
+      setTimeout(() => el.classList.remove("ring-2", "ring-ocean/50"), 1200);
     }
   }
 
@@ -257,7 +257,7 @@ export function OrderInbox({
         <div className="flex items-center gap-2.5 border-b border-border bg-card px-3 py-3">
           <ChatBackButton onClick={() => router.back()} label="Back to orders" />
           <div className="leading-tight">
-            <p className="font-display text-sm font-semibold text-navy">Order chat</p>
+            <p className="tracking-heading text-sm font-semibold text-tx-head">Order chat</p>
             <p className="text-xs text-muted-foreground">
               Messages about this specific booking — visible to you and the
               Wicket Travel team.
@@ -268,7 +268,7 @@ export function OrderInbox({
         {/* Thread */}
         <div
           ref={scrollRef}
-          className="flex-1 space-y-3 overflow-y-auto bg-neutral-soft/50 px-4 py-5 md:px-6"
+          className="flex-1 space-y-3 overflow-y-auto bg-sunk/50 px-4 py-5 md:px-6"
         >
           {isLoading ? (
             <div className="flex h-full items-center justify-center text-sm text-muted-foreground">
@@ -277,10 +277,10 @@ export function OrderInbox({
             </div>
           ) : thread.length === 0 ? (
             <div className="flex h-full flex-col items-center justify-center gap-2 text-center">
-              <div className="flex size-11 items-center justify-center rounded-2xl bg-chip text-brand-dark">
+              <div className="flex size-11 items-center justify-center rounded-2xl bg-sky-tint text-ocean-deep">
                 <MessagesSquare className="size-5" />
               </div>
-              <p className="font-display text-sm font-semibold text-foreground">
+              <p className="tracking-heading text-sm font-semibold text-foreground">
                 No messages yet
               </p>
               <p className="max-w-xs text-sm text-muted-foreground">
@@ -372,7 +372,7 @@ export function OrderInbox({
               />
             ) : null}
             {pendingFile ? (
-              <div className="mb-2 flex items-center gap-2.5 rounded-xl border border-border bg-neutral-soft px-2.5 py-2">
+              <div className="mb-2 flex items-center gap-2.5 rounded-xl border border-border bg-sunk px-2.5 py-2">
                 {pendingPreview ? (
                   // eslint-disable-next-line @next/next/no-img-element
                   <img
@@ -381,7 +381,7 @@ export function OrderInbox({
                     className="size-10 shrink-0 rounded-lg object-cover"
                   />
                 ) : (
-                  <div className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-chip text-brand-dark">
+                  <div className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-sky-tint text-ocean-deep">
                     <FileText className="size-5" />
                   </div>
                 )}
@@ -410,10 +410,10 @@ export function OrderInbox({
               <Button
                 type="button"
                 variant="ghost"
-                size="icon"
+                size="icon-sm"
                 aria-label="Attach file"
                 disabled={uploading}
-                className="size-10 shrink-0 rounded-full text-muted-foreground"
+                className="shrink-0 text-tx-muted"
                 onClick={() => fileRef.current?.click()}
               >
                 <Paperclip className="size-4" />
@@ -428,13 +428,12 @@ export function OrderInbox({
                 value={draft}
                 onChange={(e) => setDraft(e.target.value)}
                 placeholder={pendingFile ? "Add a caption…" : "Type a message…"}
-                className="h-11 rounded-full bg-neutral-soft"
               />
               <Button
                 type="submit"
                 size="icon"
                 aria-label="Send message"
-                className="size-11 shrink-0 rounded-full"
+                className="shrink-0"
                 disabled={(!draft.trim() && !pendingFile) || uploading}
               >
                 {uploading ? (

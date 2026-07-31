@@ -88,11 +88,11 @@ export default function DriverApplyPage() {
         <div className="animate-in fade-in slide-in-from-bottom-2 duration-500 ease-out">
           {/* Intro */}
           <div className="mb-8">
-            <div className="inline-flex items-center gap-1.5 rounded-full bg-chip px-2.5 py-1 text-xs font-medium text-brand-dark">
+            <div className="inline-flex items-center gap-1.5 rounded-full bg-sky-tint px-2.5 py-1 text-xs font-medium text-ocean-deep">
               <Car className="size-3.5" />
               Become a Partner
             </div>
-            <h1 className="mt-3 font-display text-2xl font-semibold tracking-tight text-navy sm:text-3xl">
+            <h1 className="mt-3 text-2xl font-semibold tracking-tight text-tx-head sm:text-3xl">
               Drive with Wicket Travel
             </h1>
             <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
@@ -112,17 +112,16 @@ export default function DriverApplyPage() {
                     placeholder="e.g. Rajesh Kumar"
                     value={applicantName}
                     onChange={(e) => setApplicantName(e.target.value)}
-                    className="h-11 rounded-[10px] bg-white"
                   />
                 </Field>
                 <Field label="Phone number" htmlFor="phone" required>
-                  <Input id="phone" type="tel" inputMode="tel" required placeholder="+91 98765 43210" className="h-11 rounded-[10px] bg-white" />
+                  <Input id="phone" type="tel" inputMode="tel" required placeholder="+91 98765 43210" />
                 </Field>
                 <Field label="Email" htmlFor="email" required>
-                  <Input id="email" type="email" required placeholder="you@example.in" className="h-11 rounded-[10px] bg-white" />
+                  <Input id="email" type="email" required placeholder="you@example.in" />
                 </Field>
                 <Field label="City" htmlFor="city" required>
-                  <Input id="city" required placeholder="e.g. Hyderabad" className="h-11 rounded-[10px] bg-white" />
+                  <Input id="city" required placeholder="e.g. Hyderabad" />
                 </Field>
               </div>
             </FormSection>
@@ -131,8 +130,8 @@ export default function DriverApplyPage() {
             <FormSection icon={Car} title="Vehicle details" step={2}>
               <div className="space-y-4">
                 <div className="space-y-2">
-                  <Label className="font-label text-xs font-medium uppercase tracking-wider text-slate-600">
-                    Vehicle type <span className="text-orange-dark">*</span>
+                  <Label className="text-xs font-medium uppercase tracking-wider text-slate-600">
+                    Vehicle type <span className="text-coral-press">*</span>
                   </Label>
                   <div className="grid grid-cols-3 gap-2">
                     {VEHICLE_TYPES.map((t) => {
@@ -146,8 +145,8 @@ export default function DriverApplyPage() {
                           className={cn(
                             "flex min-h-[44px] items-center justify-center rounded-xl px-2 py-2.5 text-center text-sm font-medium outline-none transition-colors focus-visible:ring-2 focus-visible:ring-primary/40",
                             active
-                              ? "bg-primary text-primary-foreground shadow-sm shadow-orange/25"
-                              : "bg-white text-muted-foreground ring-1 ring-inset ring-outline hover:text-foreground"
+                              ? "bg-primary text-primary-foreground shadow-sm shadow-ocean/25"
+                              : "bg-white text-muted-foreground ring-1 ring-inset ring-line-strong hover:text-foreground"
                           )}
                         >
                           {t}
@@ -159,16 +158,16 @@ export default function DriverApplyPage() {
 
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                   <Field label="Make & model" htmlFor="model" required>
-                    <Input id="model" required placeholder="e.g. Toyota Innova Crysta" className="h-11 rounded-[10px] bg-white" />
+                    <Input id="model" required placeholder="e.g. Toyota Innova Crysta" />
                   </Field>
                   <Field label="Registration / plate no." htmlFor="plate" required>
-                    <Input id="plate" required placeholder="e.g. TS 09 AB 1234" className="h-11 rounded-[10px] bg-white uppercase" />
+                    <Input id="plate" required placeholder="e.g. TS 09 AB 1234" className="uppercase" />
                   </Field>
                   <Field label="Number of seats" htmlFor="seats" required>
-                    <Input id="seats" type="number" min={2} max={20} required placeholder="e.g. 6" className="h-11 rounded-[10px] bg-white" />
+                    <Input id="seats" type="number" min={2} max={20} required placeholder="e.g. 6" />
                   </Field>
                   <Field label="Vehicle colour" htmlFor="colour">
-                    <Input id="colour" placeholder="e.g. Pearl White" className="h-11 rounded-[10px] bg-white" />
+                    <Input id="colour" placeholder="e.g. Pearl White" />
                   </Field>
                 </div>
               </div>
@@ -178,8 +177,8 @@ export default function DriverApplyPage() {
             <FormSection icon={Plane} title="Airports & service area" step={3}>
               <div className="space-y-4">
                 <div className="space-y-2">
-                  <Label className="font-label text-xs font-medium uppercase tracking-wider text-slate-600">
-                    Airports you cover <span className="text-orange-dark">*</span>
+                  <Label className="text-xs font-medium uppercase tracking-wider text-slate-600">
+                    Airports you cover <span className="text-coral-press">*</span>
                   </Label>
                   <div className="space-y-2">
                     {AIRPORTS.map((a) => {
@@ -193,20 +192,20 @@ export default function DriverApplyPage() {
                           className={cn(
                             "flex w-full items-center gap-3 rounded-xl px-4 py-3 text-left outline-none transition-colors focus-visible:ring-2 focus-visible:ring-primary/40",
                             active
-                              ? "bg-chip ring-1 ring-inset ring-brand/30"
-                              : "bg-white ring-1 ring-inset ring-outline hover:bg-neutral-soft"
+                              ? "bg-sky-tint ring-1 ring-inset ring-ocean/30"
+                              : "bg-white ring-1 ring-inset ring-line-strong hover:bg-sunk"
                           )}
                         >
                           <span
                             className={cn(
                               "flex size-5 shrink-0 items-center justify-center rounded-md transition-colors",
-                              active ? "bg-primary text-white" : "ring-1 ring-inset ring-outline"
+                              active ? "bg-primary text-white" : "ring-1 ring-inset ring-line-strong"
                             )}
                           >
                             {active ? <Check className="size-3.5" /> : null}
                           </span>
                           <span className="min-w-0 flex-1">
-                            <span className="block text-sm font-medium text-navy">
+                            <span className="block text-sm font-medium text-tx-head">
                               {a.city} · {a.code}
                             </span>
                             <span className="block text-xs text-muted-foreground">{a.name}</span>
@@ -221,7 +220,7 @@ export default function DriverApplyPage() {
                   <Textarea
                     id="area"
                     placeholder="e.g. Hyderabad city + outstation to Warangal & Vijayawada. Available 6 AM–11 PM."
-                    className="min-h-24 rounded-[10px] bg-white"
+                    className="min-h-24"
                   />
                 </Field>
               </div>
@@ -242,19 +241,19 @@ export default function DriverApplyPage() {
                         "flex cursor-pointer items-center gap-3 rounded-xl border border-dashed px-4 py-3.5 outline-none transition-colors",
                         name
                           ? "border-emerald-300 bg-emerald-50/60"
-                          : "border-outline bg-white hover:border-brand/40 hover:bg-neutral-soft"
+                          : "border-line-strong bg-white hover:border-ocean/40 hover:bg-sunk"
                       )}
                     >
                       <span
                         className={cn(
                           "flex size-10 shrink-0 items-center justify-center rounded-xl",
-                          name ? "bg-emerald-500/15 text-emerald-600" : "bg-chip text-brand-dark"
+                          name ? "bg-emerald-500/15 text-emerald-600" : "bg-sky-tint text-ocean-deep"
                         )}
                       >
                         {name ? <CircleCheck className="size-5" /> : <Upload className="size-5" />}
                       </span>
                       <span className="min-w-0 flex-1">
-                        <span className="block text-sm font-medium text-navy">{doc.label}</span>
+                        <span className="block text-sm font-medium text-tx-head">{doc.label}</span>
                         <span className="block truncate text-xs text-muted-foreground">
                           {name ?? "Tap to upload"}
                         </span>
@@ -273,7 +272,7 @@ export default function DriverApplyPage() {
 
             {/* Submit */}
             <div className="space-y-3 pt-2">
-              <Button type="submit" disabled={loading} className="h-12 w-full rounded-xl text-[15px] font-semibold">
+              <Button type="submit" disabled={loading} size="lg" className="w-full">
                 {loading ? (
                   <>
                     <Loader2 className="size-4 animate-spin" />
@@ -307,18 +306,18 @@ function SubmittedState({ name, onLogin }: { name: string; onLogin: () => void }
           <div className="mx-auto flex size-20 items-center justify-center rounded-3xl bg-emerald-50 ring-1 ring-emerald-200">
             <CircleCheck className="size-10 text-emerald-600" />
           </div>
-          <h1 className="mt-6 font-display text-2xl font-semibold tracking-tight text-navy">
+          <h1 className="mt-6 text-2xl font-semibold tracking-tight text-tx-head">
             Application submitted!
           </h1>
           <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
             Thanks, {firstName}. Your driver application is now{" "}
-            <span className="font-medium text-navy">pending approval</span>. Our
+            <span className="font-medium text-tx-head">pending approval</span>. Our
             team will verify your details and documents, usually within 1–2
             business days.
           </p>
 
           {/* Timeline */}
-          <div className="mt-8 space-y-3 rounded-2xl bg-card p-5 text-left ring-1 ring-foreground/10 shadow-card">
+          <div className="mt-8 space-y-3 rounded-2xl bg-card p-5 text-left ring-1 ring-foreground/10 shadow-lift">
             <TimelineRow icon={CircleCheck} tone="done" title="Application received" sub="We've got your details" />
             <TimelineRow icon={Clock3} tone="current" title="Under review" sub="Verifying documents & vehicle" />
             <TimelineRow icon={ShieldCheck} tone="upcoming" title="Approved & activated" sub="You'll get a call + SMS" />
@@ -333,7 +332,7 @@ function SubmittedState({ name, onLogin }: { name: string; onLogin: () => void }
             </span>
           </div>
 
-          <Button onClick={onLogin} variant="outline" className="mt-8 h-11 w-full rounded-xl">
+          <Button onClick={onLogin} variant="outline" className="mt-8 w-full">
             Back to sign in
           </Button>
           <p className="mt-3 text-xs text-muted-foreground">
@@ -363,13 +362,13 @@ function TimelineRow({
           "flex size-9 shrink-0 items-center justify-center rounded-full",
           tone === "done" && "bg-emerald-500/15 text-emerald-600",
           tone === "current" && "bg-amber-500/15 text-amber-600",
-          tone === "upcoming" && "bg-neutral-soft text-muted-foreground"
+          tone === "upcoming" && "bg-sunk text-muted-foreground"
         )}
       >
         <Icon className="size-[18px]" />
       </span>
       <div>
-        <p className={cn("text-sm font-medium", tone === "upcoming" ? "text-muted-foreground" : "text-navy")}>
+        <p className={cn("text-sm font-medium", tone === "upcoming" ? "text-muted-foreground" : "text-tx-head")}>
           {title}
         </p>
         <p className="text-xs text-muted-foreground">{sub}</p>
@@ -395,16 +394,16 @@ function FormSection({
   children: React.ReactNode;
 }) {
   return (
-    <section className="rounded-2xl bg-card p-5 ring-1 ring-foreground/10 shadow-card sm:p-6">
+    <section className="rounded-2xl bg-card p-5 ring-1 ring-foreground/10 shadow-lift sm:p-6">
       <div className="mb-4 flex items-center gap-3">
-        <span className="flex size-9 items-center justify-center rounded-xl bg-brand/10 text-brand">
+        <span className="flex size-9 items-center justify-center rounded-xl bg-ocean/10 text-ocean">
           <Icon className="size-[18px]" />
         </span>
         <div>
-          <p className="font-label text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+          <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
             Step {step} of 4
           </p>
-          <h2 className="font-display text-base font-semibold text-navy">{title}</h2>
+          <h2 className="tracking-heading text-base font-semibold text-tx-head">{title}</h2>
         </div>
       </div>
       {children}
@@ -425,8 +424,8 @@ function Field({
 }) {
   return (
     <div className="space-y-2">
-      <Label htmlFor={htmlFor} className="font-label text-xs font-medium uppercase tracking-wider text-slate-600">
-        {label} {required ? <span className="text-orange-dark">*</span> : null}
+      <Label htmlFor={htmlFor} className="text-xs font-medium uppercase tracking-wider text-slate-600">
+        {label} {required ? <span className="text-coral-press">*</span> : null}
       </Label>
       {children}
     </div>

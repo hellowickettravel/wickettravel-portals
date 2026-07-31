@@ -94,7 +94,7 @@ function DesktopSidebar({ pathname }: { pathname: string }) {
               className={cn(
                 "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium outline-none transition-colors focus-visible:ring-2 focus-visible:ring-white/40",
                 active
-                  ? "bg-primary text-primary-foreground shadow-sm shadow-orange/30"
+                  ? "bg-primary text-primary-foreground shadow-sm shadow-coral-deep/30"
                   : "text-sidebar-foreground/80 hover:bg-sidebar-accent hover:text-white"
               )}
             >
@@ -142,11 +142,11 @@ function MobileTabBar({ pathname }: { pathname: string }) {
         href={href}
         className={cn(
           "flex min-h-[44px] flex-1 flex-col items-center justify-center gap-0.5 rounded-lg py-1.5 text-[11px] font-medium outline-none transition-colors focus-visible:ring-2 focus-visible:ring-primary/40",
-          active ? "text-orange" : "text-muted-foreground"
+          active ? "text-coral-deep" : "text-muted-foreground"
         )}
         aria-current={active ? "page" : undefined}
       >
-        <Icon className={cn("size-[22px]", active && "fill-orange/10")} />
+        <Icon className={cn("size-[22px]", active && "fill-coral-deep/10")} />
         {label}
       </Link>
     );
@@ -169,7 +169,7 @@ function MobileTabBar({ pathname }: { pathname: string }) {
             aria-label={TABS.center.label}
             aria-current={bookActive ? "page" : undefined}
             className={cn(
-              "-mt-6 flex size-14 flex-col items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg shadow-orange/40 outline-none ring-4 ring-white transition-transform active:scale-95 focus-visible:ring-primary/50"
+              "-mt-6 flex size-14 flex-col items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg shadow-coral-deep/40 outline-none ring-4 ring-white transition-transform active:scale-95 focus-visible:ring-primary/50"
             )}
           >
             <CenterIcon className="size-6 -rotate-45" />
@@ -214,7 +214,7 @@ export function CustomerShell({
             <DropdownMenu>
               <DropdownMenuTrigger className="flex items-center gap-2.5 rounded-full py-1 pl-1 pr-2 outline-none transition-colors hover:bg-muted focus-visible:ring-[3px] focus-visible:ring-primary/30">
                 <Avatar className="size-9">
-                  <AvatarFallback className="bg-chip text-sm font-semibold text-brand-dark">
+                  <AvatarFallback className="bg-sky-tint text-sm font-semibold text-ocean-deep">
                     {initialsOf(userName)}
                   </AvatarFallback>
                 </Avatar>

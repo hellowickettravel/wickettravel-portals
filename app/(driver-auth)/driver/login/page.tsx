@@ -35,10 +35,10 @@ export default function DriverLoginPage() {
         </div>
 
         <div className="relative z-10 max-w-xl">
-          <p className="font-label text-xs font-semibold uppercase tracking-[0.22em] text-orange-light">
+          <p className="text-xs font-semibold uppercase tracking-[0.22em] text-coral">
             Driver Partner
           </p>
-          <h1 className="mt-5 max-w-md font-display text-4xl font-semibold leading-[1.15] tracking-tight text-balance text-white xl:text-5xl">
+          <h1 className="mt-5 max-w-md text-4xl font-semibold leading-[1.15] tracking-tight text-balance text-white xl:text-5xl">
             Drive with Wicket. Earn on every airport ride.
           </h1>
           <p className="mt-5 max-w-md text-base leading-relaxed text-white/70">
@@ -49,7 +49,7 @@ export default function DriverLoginPage() {
 
         <div className="relative z-10 flex max-w-md items-center gap-3">
           <div className="flex size-9 shrink-0 items-center justify-center rounded-full bg-white/10 ring-1 ring-inset ring-white/15">
-            <Star className="size-4 text-orange-light" />
+            <Star className="size-4 text-coral" />
           </div>
           <p className="text-[13px] leading-snug text-white/70">
             <span className="font-medium text-white/90">Trusted by 2,000+ drivers</span>{" "}
@@ -65,11 +65,11 @@ export default function DriverLoginPage() {
             <BrandLogo className="h-8 w-auto" priority />
           </div>
 
-          <div className="mb-1 inline-flex items-center gap-1.5 rounded-full bg-chip px-2.5 py-1 text-xs font-medium text-brand-dark">
+          <div className="mb-1 inline-flex items-center gap-1.5 rounded-full bg-sky-tint px-2.5 py-1 text-xs font-medium text-ocean-deep">
             <Car className="size-3.5" />
             Driver Partner
           </div>
-          <h2 className="mt-3 font-display text-[28px] font-semibold leading-tight tracking-tight text-navy">
+          <h2 className="mt-3 text-[28px] font-semibold leading-tight tracking-tight text-tx-head">
             Welcome back
           </h2>
           <p className="mt-2 text-sm text-slate-500">
@@ -78,7 +78,7 @@ export default function DriverLoginPage() {
 
           <form onSubmit={handleSubmit} className="mt-8 space-y-5">
             <div className="space-y-2">
-              <Label htmlFor="phone" className="font-label text-xs font-medium uppercase tracking-wider text-slate-600">
+              <Label htmlFor="phone" className="text-xs font-medium uppercase tracking-wider text-slate-600">
                 Phone or email
               </Label>
               <Input
@@ -91,12 +91,11 @@ export default function DriverLoginPage() {
                 onChange={(e) => setPhone(e.target.value)}
                 required
                 disabled={loading}
-                className="h-11 rounded-[10px] bg-neutral-soft"
               />
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="password" className="font-label text-xs font-medium uppercase tracking-wider text-slate-600">
+              <Label htmlFor="password" className="text-xs font-medium uppercase tracking-wider text-slate-600">
                 Password
               </Label>
               <PasswordInput
@@ -107,10 +106,9 @@ export default function DriverLoginPage() {
                 onChange={(e) => setPassword(e.target.value)}
                 required
                 disabled={loading}
-                className="h-11 rounded-[10px] bg-neutral-soft"
               />
               <div className="flex justify-end">
-                <button type="button" className="text-xs font-medium text-brand transition-colors hover:text-brand-dark">
+                <button type="button" className="text-xs font-medium text-ocean transition-colors hover:text-ocean-deep">
                   Forgot password?
                 </button>
               </div>
@@ -119,7 +117,7 @@ export default function DriverLoginPage() {
             <Button
               type="submit"
               disabled={loading}
-              className="h-11 w-full rounded-[10px] text-sm font-semibold"
+              variant="accent" className="w-full"
             >
               {loading ? (
                 <>
@@ -134,7 +132,7 @@ export default function DriverLoginPage() {
 
           <p className="mt-6 text-center text-sm text-slate-500">
             New driver?{" "}
-            <Link href="/driver/apply" className="font-medium text-brand transition-colors hover:text-brand-dark">
+            <Link href="/driver/apply" className="font-medium text-ocean transition-colors hover:text-ocean-deep">
               Become a partner
             </Link>
           </p>

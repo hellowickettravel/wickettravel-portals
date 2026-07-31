@@ -72,14 +72,14 @@ function DesktopSidebar({ pathname }: { pathname: string }) {
       {/* Driver card */}
       <div className="mx-3 mb-2 flex items-center gap-3 rounded-xl bg-white/5 px-3 py-2.5 ring-1 ring-inset ring-white/10">
         <Avatar className="size-10">
-          <AvatarFallback className="bg-orange text-sm font-semibold text-white">
+          <AvatarFallback className="bg-coral-deep text-sm font-semibold text-white">
             {initialsOf(DRIVER.name)}
           </AvatarFallback>
         </Avatar>
         <div className="min-w-0 leading-tight">
           <p className="truncate text-sm font-semibold text-white">{DRIVER.name}</p>
           <p className="flex items-center gap-1 text-[11px] text-sidebar-foreground/70">
-            <Star className="size-3 fill-orange text-orange" />
+            <Star className="size-3 fill-coral-deep text-coral-deep" />
             {DRIVER.rating} · {DRIVER.vehicle.type}
           </p>
         </div>
@@ -96,7 +96,7 @@ function DesktopSidebar({ pathname }: { pathname: string }) {
               className={cn(
                 "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium outline-none transition-colors focus-visible:ring-2 focus-visible:ring-white/40",
                 active
-                  ? "bg-primary text-primary-foreground shadow-sm shadow-orange/30"
+                  ? "bg-primary text-primary-foreground shadow-sm shadow-coral-deep/30"
                   : "text-sidebar-foreground/80 hover:bg-sidebar-accent hover:text-white"
               )}
             >
@@ -137,13 +137,13 @@ function MobileTabBar({ pathname }: { pathname: string }) {
               aria-current={active ? "page" : undefined}
               className={cn(
                 "flex min-h-[52px] flex-1 flex-col items-center justify-center gap-0.5 rounded-lg py-1.5 text-[10.5px] font-medium outline-none transition-colors focus-visible:ring-2 focus-visible:ring-primary/40",
-                active ? "text-orange-dark" : "text-muted-foreground"
+                active ? "text-coral-press" : "text-muted-foreground"
               )}
             >
               <span
                 className={cn(
                   "flex size-7 items-center justify-center rounded-lg transition-colors",
-                  active && "bg-orange/10"
+                  active && "bg-coral-deep/10"
                 )}
               >
                 <Icon className="size-[20px]" />
@@ -183,13 +183,13 @@ export function DriverShell({ children }: { children: React.ReactNode }) {
               className="relative flex size-10 items-center justify-center rounded-full text-muted-foreground outline-none transition-colors hover:bg-muted hover:text-foreground focus-visible:ring-2 focus-visible:ring-primary/40"
             >
               <MessageSquare className="size-[18px]" />
-              <span className="absolute right-2 top-2 size-2 rounded-full bg-orange ring-2 ring-white" />
+              <span className="absolute right-2 top-2 size-2 rounded-full bg-coral-deep ring-2 ring-white" />
             </Link>
 
             <DropdownMenu>
               <DropdownMenuTrigger className="flex items-center gap-2 rounded-full py-1 pl-1 pr-1 outline-none transition-colors hover:bg-muted focus-visible:ring-[3px] focus-visible:ring-primary/30 sm:pr-2">
                 <Avatar className="size-9">
-                  <AvatarFallback className="bg-chip text-sm font-semibold text-brand-dark">
+                  <AvatarFallback className="bg-sky-tint text-sm font-semibold text-ocean-deep">
                     {initialsOf(DRIVER.name)}
                   </AvatarFallback>
                 </Avatar>

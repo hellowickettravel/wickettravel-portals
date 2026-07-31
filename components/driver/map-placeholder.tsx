@@ -48,19 +48,19 @@ export function MapPlaceholder({
 
       {/* Pins */}
       <div className="absolute left-[11%] top-[70%] flex items-center gap-1.5">
-        <span className="flex size-7 items-center justify-center rounded-full bg-brand text-white shadow-md">
+        <span className="flex size-7 items-center justify-center rounded-full bg-ocean text-white shadow-md">
           <Plane className="size-3.5 -rotate-45" />
         </span>
       </div>
       <div className="absolute right-[13%] top-[16%] flex items-center gap-1.5">
-        <span className="flex size-7 items-center justify-center rounded-full bg-orange text-white shadow-md">
+        <span className="flex size-7 items-center justify-center rounded-full bg-coral-deep text-white shadow-md">
           <MapPin className="size-3.5" />
         </span>
       </div>
 
       {/* Live-tracking chip */}
-      <div className="absolute bottom-3 left-3 inline-flex items-center gap-1.5 rounded-full bg-white/90 px-3 py-1.5 text-xs font-medium text-brand-dark shadow-sm backdrop-blur">
-        <Navigation className="size-3.5 text-orange-dark" />
+      <div className="absolute bottom-3 left-3 inline-flex items-center gap-1.5 rounded-full bg-white/90 px-3 py-1.5 text-xs font-medium text-ocean-deep shadow-sm backdrop-blur">
+        <Navigation className="size-3.5 text-coral-press" />
         Live tracking coming soon
       </div>
     </div>

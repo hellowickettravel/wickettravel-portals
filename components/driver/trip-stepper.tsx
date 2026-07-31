@@ -23,9 +23,9 @@ export function TripStepper({ stage }: { stage: TripStage }) {
               <span
                 className={cn(
                   "flex size-7 shrink-0 items-center justify-center rounded-full text-xs font-semibold transition-colors",
-                  done && "bg-orange text-white",
-                  current && "bg-brand text-white ring-4 ring-brand/15",
-                  !done && !current && "bg-neutral-soft text-muted-foreground ring-1 ring-inset ring-outline"
+                  done && "bg-coral-deep text-white",
+                  current && "bg-ocean text-white ring-4 ring-ocean/15",
+                  !done && !current && "bg-sunk text-muted-foreground ring-1 ring-inset ring-line-strong"
                 )}
               >
                 {done ? <Check className="size-3.5" /> : i + 1}
@@ -34,7 +34,7 @@ export function TripStepper({ stage }: { stage: TripStage }) {
                 <span
                   className={cn(
                     "my-1 w-0.5 flex-1 rounded-full",
-                    i < currentIdx ? "bg-orange" : "bg-outline"
+                    i < currentIdx ? "bg-coral-deep" : "bg-line-strong"
                   )}
                 />
               ) : null}
@@ -44,13 +44,13 @@ export function TripStepper({ stage }: { stage: TripStage }) {
               <p
                 className={cn(
                   "text-sm font-medium leading-7",
-                  current ? "text-navy" : done ? "text-foreground" : "text-muted-foreground"
+                  current ? "text-tx-head" : done ? "text-foreground" : "text-muted-foreground"
                 )}
               >
                 {STAGE_META[s].label}
               </p>
               {current ? (
-                <p className="-mt-1 text-xs text-orange-dark">In progress</p>
+                <p className="-mt-1 text-xs text-coral-press">In progress</p>
               ) : null}
             </div>
           </li>

@@ -9,7 +9,7 @@ export default async function EmployeeMessagesPage() {
   return (
     <div className="space-y-5 animate-in fade-in slide-in-from-bottom-2 duration-500 ease-out">
       <div>
-        <h1 className="font-display text-xl font-semibold tracking-tight text-navy sm:text-2xl">
+        <h1 className="text-xl font-semibold tracking-tight text-tx-head sm:text-2xl">
           Messages
         </h1>
         <p className="mt-1 text-sm text-muted-foreground">

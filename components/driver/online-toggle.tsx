@@ -28,7 +28,7 @@ export function OnlineToggle({
           "flex w-full items-center justify-between gap-3 rounded-2xl px-4 py-3.5 text-left ring-1 transition-colors outline-none focus-visible:ring-2 focus-visible:ring-primary/40",
           online
             ? "bg-emerald-50 ring-emerald-200"
-            : "bg-neutral-soft ring-outline",
+            : "bg-sunk ring-line-strong",
           className
         )}
       >
@@ -69,7 +69,7 @@ export function OnlineToggle({
         "inline-flex items-center gap-2 rounded-full py-1.5 pl-2.5 pr-1.5 text-xs font-semibold ring-1 transition-colors outline-none focus-visible:ring-2 focus-visible:ring-primary/40",
         online
           ? "bg-emerald-50 text-emerald-700 ring-emerald-200"
-          : "bg-neutral-soft text-slate-600 ring-outline",
+          : "bg-sunk text-slate-600 ring-line-strong",
         className
       )}
     >

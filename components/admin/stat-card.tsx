@@ -14,17 +14,17 @@ type StatCardProps = {
 
 export function StatCard({ label, value, icon: Icon, trend, hint }: StatCardProps) {
   return (
-    <Card className="shadow-card">
+    <Card className="shadow-lift">
       <CardContent>
         <div className="flex items-start justify-between gap-3">
-          <p className="font-label text-xs font-medium uppercase tracking-wide text-muted-foreground">
+          <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
             {label}
           </p>
-          <div className="flex size-9 items-center justify-center rounded-xl bg-chip text-brand-dark">
+          <div className="flex size-9 items-center justify-center rounded-xl bg-sky-tint text-ocean-deep">
             <Icon className="size-[18px]" />
           </div>
         </div>
-        <p className="mt-3 font-display text-2xl font-semibold text-foreground">
+        <p className="mt-3 tracking-heading text-2xl font-semibold text-foreground">
           {value}
         </p>
         {trend ? (

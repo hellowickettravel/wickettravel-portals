@@ -41,18 +41,19 @@ export default function RideDetailPage({ params }: { params: Promise<{ id: strin
     return (
       <div className="animate-in fade-in duration-300">
         <BackBar onBack={() => router.push("/driver/jobs")} />
-        <div className="mt-10 rounded-2xl border border-dashed border-outline bg-neutral-soft/60 px-6 py-14 text-center">
-          <div className="mx-auto flex size-12 items-center justify-center rounded-2xl bg-chip text-brand-dark">
+        <div className="mt-10 rounded-2xl border border-dashed border-line-strong bg-sunk/60 px-6 py-14 text-center">
+          <div className="mx-auto flex size-12 items-center justify-center rounded-2xl bg-sky-tint text-ocean-deep">
             <Car className="size-6" />
           </div>
-          <p className="mt-3 font-display text-sm font-semibold text-navy">Ride not found</p>
+          <p className="mt-3 tracking-heading text-sm font-semibold text-tx-head">Ride not found</p>
           <p className="mt-1 text-xs text-muted-foreground">
             This ride is no longer available or has been completed.
           </p>
           <Button
             render={<Link href="/driver/jobs" />}
             variant="outline"
-            className="mt-4 h-10 rounded-xl"
+            size="sm"
+          className="mt-4"
           >
             Back to Job Board
           </Button>
@@ -74,10 +75,10 @@ export default function RideDetailPage({ params }: { params: Promise<{ id: strin
       {/* Header */}
       <div className="flex items-center justify-between gap-3">
         <div>
-          <p className="font-label text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+          <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
             {ride.ref}
           </p>
-          <h1 className="font-display text-xl font-semibold tracking-tight text-navy">
+          <h1 className="text-xl font-semibold tracking-tight text-tx-head">
             {airportShort(ride.pickupAirport)} → {ride.dropoff}
           </h1>
         </div>
@@ -93,8 +94,8 @@ export default function RideDetailPage({ params }: { params: Promise<{ id: strin
 
       {/* Status flow (only for accepted/active trips) */}
       {isActive && !isClosed ? (
-        <div className="rounded-2xl bg-card p-5 ring-1 ring-foreground/10 shadow-card">
-          <h2 className="mb-4 font-display text-sm font-semibold text-navy">Trip progress</h2>
+        <div className="rounded-2xl bg-card p-5 ring-1 ring-foreground/10 shadow-lift">
+          <h2 className="mb-4 tracking-heading text-sm font-semibold text-tx-head">Trip progress</h2>
           <TripStepper stage={ride.stage} />
         </div>
       ) : null}
@@ -133,14 +134,14 @@ export default function RideDetailPage({ params }: { params: Promise<{ id: strin
       ) : null}
 
       {/* Customer */}
-      <div className="rounded-2xl bg-card p-4 ring-1 ring-foreground/10 shadow-card">
+      <div className="rounded-2xl bg-card p-4 ring-1 ring-foreground/10 shadow-lift">
         <div className="flex items-center justify-between gap-3">
           <div className="flex items-center gap-3">
-            <div className="flex size-11 items-center justify-center rounded-full bg-chip font-semibold text-brand-dark">
+            <div className="flex size-11 items-center justify-center rounded-full bg-sky-tint font-semibold text-ocean-deep">
               {ride.customerName.split(" ").map((p) => p[0]).slice(0, 2).join("")}
             </div>
             <div>
-              <p className="text-sm font-semibold text-navy">{ride.customerName}</p>
+              <p className="text-sm font-semibold text-tx-head">{ride.customerName}</p>
               <p className="text-xs text-muted-foreground">{ride.customerPhone}</p>
             </div>
           </div>
@@ -150,7 +151,6 @@ export default function RideDetailPage({ params }: { params: Promise<{ id: strin
             <Button
               render={<Link href="/driver/messages" />}
               variant="outline"
-              className="h-11 rounded-xl"
             >
               <MessageSquare className="size-4" />
               Message
@@ -160,7 +160,6 @@ export default function RideDetailPage({ params }: { params: Promise<{ id: strin
                 toast("Calling customer", { description: ride.customerPhone })
               }
               variant="outline"
-              className="h-11 rounded-xl"
             >
               <Phone className="size-4" />
               Call
@@ -170,8 +169,8 @@ export default function RideDetailPage({ params }: { params: Promise<{ id: strin
       </div>
 
       {/* Trip details */}
-      <div className="rounded-2xl bg-card p-5 ring-1 ring-foreground/10 shadow-card">
-        <h2 className="mb-3 font-display text-sm font-semibold text-navy">Trip details</h2>
+      <div className="rounded-2xl bg-card p-5 ring-1 ring-foreground/10 shadow-lift">
+        <h2 className="mb-3 tracking-heading text-sm font-semibold text-tx-head">Trip details</h2>
 
         <div className="space-y-3">
           <DetailRow icon={Plane} label="Pickup" value={airportLabel(ride.pickupAirport)} sub={ride.pickupPoint} accent="brand" />
@@ -189,8 +188,8 @@ export default function RideDetailPage({ params }: { params: Promise<{ id: strin
       </div>
 
       {/* Fare breakdown */}
-      <div className="rounded-2xl bg-card p-5 ring-1 ring-foreground/10 shadow-card">
-        <h2 className="mb-3 font-display text-sm font-semibold text-navy">Fare</h2>
+      <div className="rounded-2xl bg-card p-5 ring-1 ring-foreground/10 shadow-lift">
+        <h2 className="mb-3 tracking-heading text-sm font-semibold text-tx-head">Fare</h2>
         <dl className="space-y-2 text-sm">
           <div className="flex justify-between">
             <dt className="text-muted-foreground">Trip fare</dt>
@@ -201,8 +200,8 @@ export default function RideDetailPage({ params }: { params: Promise<{ id: strin
             <dd className="font-medium text-rose-600">− {inr(ride.commission)}</dd>
           </div>
           <div className="flex justify-between border-t border-border pt-2">
-            <dt className="font-semibold text-navy">You earn</dt>
-            <dd className="font-display text-base font-bold text-emerald-700">{inr(net)}</dd>
+            <dt className="font-semibold text-tx-head">You earn</dt>
+            <dd className="tracking-heading text-base font-bold text-emerald-700">{inr(net)}</dd>
           </div>
         </dl>
       </div>
@@ -219,7 +218,8 @@ export default function RideDetailPage({ params }: { params: Promise<{ id: strin
                   toast("Ride dismissed");
                   router.push("/driver/jobs");
                 }}
-                className="h-12 flex-1 rounded-xl"
+                size="lg"
+            className="flex-1"
               >
                 <X className="size-4" />
                 Decline
@@ -229,7 +229,8 @@ export default function RideDetailPage({ params }: { params: Promise<{ id: strin
                   acceptJob(ride.id);
                   toast.success("Ride accepted", { description: ride.ref });
                 }}
-                className="h-12 flex-[1.6] rounded-xl"
+                size="lg"
+            className="flex-[1.6]"
               >
                 <Check className="size-4" />
                 Accept ride
@@ -277,7 +278,8 @@ export default function RideDetailPage({ params }: { params: Promise<{ id: strin
                 startTrip(ride.id);
                 toast.success("Trip resumed", { description: ride.ref });
               }}
-              className="h-12 w-full rounded-xl"
+              size="lg"
+            className="w-full"
             >
               Resume this trip
               <ChevronRight className="size-4" />
@@ -320,7 +322,7 @@ function DetailRow({
       <span
         className={cn(
           "mt-0.5 flex size-8 shrink-0 items-center justify-center rounded-lg",
-          accent === "brand" ? "bg-brand/10 text-brand" : "bg-orange/10 text-orange-dark"
+          accent === "brand" ? "bg-ocean/10 text-ocean" : "bg-coral-deep/10 text-coral-press"
         )}
       >
         <Icon className={cn("size-4", accent === "brand" && "-rotate-45")} />
@@ -329,7 +331,7 @@ function DetailRow({
         <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
           {label}
         </p>
-        <p className="text-sm font-semibold text-navy">{value}</p>
+        <p className="text-sm font-semibold text-tx-head">{value}</p>
         {sub ? <p className="text-xs text-muted-foreground">{sub}</p> : null}
       </div>
     </div>

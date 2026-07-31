@@ -13,11 +13,11 @@ export function PageHeader({ eyebrow, title, subtitle, actions }: PageHeaderProp
     <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
       <div>
         {eyebrow ? (
-          <p className="font-label text-xs font-semibold uppercase tracking-[0.18em] text-brand">
+          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-ocean">
             {eyebrow}
           </p>
         ) : null}
-        <h1 className="mt-1 font-display text-xl font-semibold tracking-tight text-navy sm:text-2xl">
+        <h1 className="mt-1 text-xl font-semibold tracking-tight text-tx-head sm:text-2xl">
           {title}
         </h1>
         {subtitle ? (

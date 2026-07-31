@@ -206,7 +206,7 @@ export default function EmployeesPage() {
     <DropdownMenu>
       <DropdownMenuTrigger
         aria-label={`Actions for ${emp.full_name || "employee"}`}
-        className="inline-flex size-9 items-center justify-center rounded-lg text-muted-foreground outline-none transition-colors hover:bg-muted hover:text-foreground focus-visible:ring-[3px] focus-visible:ring-brand/25"
+        className="inline-flex size-9 items-center justify-center rounded-lg text-muted-foreground outline-none transition-colors hover:bg-muted hover:text-foreground focus-visible:ring-[3px] focus-visible:ring-ocean/25"
       >
         <MoreHorizontal className="size-4" />
       </DropdownMenuTrigger>
@@ -273,7 +273,7 @@ export default function EmployeesPage() {
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Search by name or email…"
-            className="h-10 rounded-[10px] bg-card pl-9"
+            className="pl-9"
           />
         </div>
       ) : null}
@@ -289,10 +289,10 @@ export default function EmployeesPage() {
           </p>
         ) : all.length === 0 ? (
           <div className="flex flex-col items-center gap-2 px-6 py-14 text-center">
-            <div className="flex size-12 items-center justify-center rounded-2xl bg-chip text-brand-dark">
+            <div className="flex size-12 items-center justify-center rounded-2xl bg-sky-tint text-ocean-deep">
               <UserPlus className="size-6" />
             </div>
-            <p className="font-display text-base font-semibold text-foreground">
+            <p className="tracking-heading text-base font-semibold text-foreground">
               No employees yet
             </p>
             <p className="max-w-sm text-sm text-muted-foreground">
@@ -313,7 +313,7 @@ export default function EmployeesPage() {
                   <MobileRecordCard
                     key={emp.id}
                     title={
-                      <Link href={`/admin/employees/${emp.id}`} className="hover:text-brand">
+                      <Link href={`/admin/employees/${emp.id}`} className="hover:text-ocean">
                         <UserCell name={emp.full_name || "Unnamed"} />
                       </Link>
                     }
@@ -365,7 +365,7 @@ export default function EmployeesPage() {
                         <TableCell className="pl-6">
                           <Link
                             href={`/admin/employees/${emp.id}`}
-                            className="hover:text-brand"
+                            className="hover:text-ocean"
                             onClick={(e) => e.stopPropagation()}
                           >
                             <UserCell name={emp.full_name || "Unnamed"} />
@@ -415,7 +415,7 @@ export default function EmployeesPage() {
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle className="font-display">Add Employee</DialogTitle>
+            <DialogTitle className="tracking-heading">Add Employee</DialogTitle>
             <DialogDescription>
               Creates a login and team member with the access level you choose.
             </DialogDescription>
@@ -423,7 +423,7 @@ export default function EmployeesPage() {
 
           <form onSubmit={handleCreate} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="emp-name" className="font-label text-xs font-medium uppercase tracking-wider text-slate-600">
+              <Label htmlFor="emp-name" className="text-xs font-medium uppercase tracking-wider text-slate-600">
                 Full name
               </Label>
               <Input
@@ -433,11 +433,10 @@ export default function EmployeesPage() {
                 placeholder="Jane Smith"
                 required
                 disabled={createMutation.isPending}
-                className="h-10 rounded-[10px] bg-neutral-soft"
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="emp-email" className="font-label text-xs font-medium uppercase tracking-wider text-slate-600">
+              <Label htmlFor="emp-email" className="text-xs font-medium uppercase tracking-wider text-slate-600">
                 Email
               </Label>
               <Input
@@ -448,11 +447,10 @@ export default function EmployeesPage() {
                 placeholder="jane@wicket.co.uk"
                 required
                 disabled={createMutation.isPending}
-                className="h-10 rounded-[10px] bg-neutral-soft"
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="emp-access" className="font-label text-xs font-medium uppercase tracking-wider text-slate-600">
+              <Label htmlFor="emp-access" className="text-xs font-medium uppercase tracking-wider text-slate-600">
                 Access level
               </Label>
               <select
@@ -460,7 +458,7 @@ export default function EmployeesPage() {
                 value={accessLevel}
                 onChange={(e) => setAccessLevel(e.target.value as AccessLevel)}
                 disabled={createMutation.isPending}
-                className="h-10 w-full rounded-[10px] border border-input bg-neutral-soft px-3 text-sm text-foreground outline-none transition-[color,box-shadow,border-color] duration-150 focus-visible:border-brand focus-visible:ring-[3px] focus-visible:ring-brand/25"
+                className="h-10 w-full rounded-[10px] border border-input bg-sunk px-3 text-base text-foreground outline-none transition-[color,box-shadow,border-color] duration-150 focus-visible:border-ocean focus-visible:ring-[3px] focus-visible:ring-ocean/25 sm:text-sm"
               >
                 {ACCESS_LEVELS.map((lvl) => (
                   <option key={lvl} value={lvl}>
@@ -470,7 +468,7 @@ export default function EmployeesPage() {
               </select>
             </div>
             <div className="space-y-2">
-              <Label htmlFor="emp-pass" className="font-label text-xs font-medium uppercase tracking-wider text-slate-600">
+              <Label htmlFor="emp-pass" className="text-xs font-medium uppercase tracking-wider text-slate-600">
                 Temporary password
               </Label>
               <div className="relative">
@@ -483,7 +481,7 @@ export default function EmployeesPage() {
                   required
                   minLength={8}
                   disabled={createMutation.isPending}
-                  className="h-10 rounded-[10px] bg-neutral-soft pr-10"
+                  className="pr-10"
                 />
                 <button
                   type="button"
@@ -524,7 +522,7 @@ export default function EmployeesPage() {
       <Dialog open={editing !== null} onOpenChange={(o) => !o && setEditing(null)}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle className="font-display">Edit employee</DialogTitle>
+            <DialogTitle className="tracking-heading">Edit employee</DialogTitle>
             <DialogDescription>
               Update this team member’s details and access level.
             </DialogDescription>
@@ -543,7 +541,7 @@ export default function EmployeesPage() {
             }}
           >
             <div className="space-y-2">
-              <Label htmlFor="edit-name" className="font-label text-xs font-medium uppercase tracking-wider text-slate-600">
+              <Label htmlFor="edit-name" className="text-xs font-medium uppercase tracking-wider text-slate-600">
                 Full name
               </Label>
               <Input
@@ -553,11 +551,10 @@ export default function EmployeesPage() {
                 placeholder="Jane Smith"
                 required
                 disabled={editMutation.isPending}
-                className="h-10 rounded-[10px] bg-neutral-soft"
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="edit-email" className="font-label text-xs font-medium uppercase tracking-wider text-slate-600">
+              <Label htmlFor="edit-email" className="text-xs font-medium uppercase tracking-wider text-slate-600">
                 Email
               </Label>
               <Input
@@ -568,11 +565,10 @@ export default function EmployeesPage() {
                 placeholder="jane@wicket.co.uk"
                 required
                 disabled={editMutation.isPending}
-                className="h-10 rounded-[10px] bg-neutral-soft"
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="edit-access" className="font-label text-xs font-medium uppercase tracking-wider text-slate-600">
+              <Label htmlFor="edit-access" className="text-xs font-medium uppercase tracking-wider text-slate-600">
                 Access level
               </Label>
               <select
@@ -580,7 +576,7 @@ export default function EmployeesPage() {
                 value={editAccess}
                 onChange={(e) => setEditAccess(e.target.value as AccessLevel)}
                 disabled={editMutation.isPending}
-                className="h-10 w-full rounded-[10px] border border-input bg-neutral-soft px-3 text-sm text-foreground outline-none transition-[color,box-shadow,border-color] duration-150 focus-visible:border-brand focus-visible:ring-[3px] focus-visible:ring-brand/25"
+                className="h-10 w-full rounded-[10px] border border-input bg-sunk px-3 text-base text-foreground outline-none transition-[color,box-shadow,border-color] duration-150 focus-visible:border-ocean focus-visible:ring-[3px] focus-visible:ring-ocean/25 sm:text-sm"
               >
                 {ACCESS_LEVELS.map((lvl) => (
                   <option key={lvl} value={lvl}>

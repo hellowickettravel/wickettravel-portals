@@ -164,10 +164,10 @@ export default function SignupPage() {
           {sentTo ? (
             /* ---------- Check-your-email confirmation ---------- */
             <div className="text-center">
-              <div className="mx-auto mb-5 flex size-14 items-center justify-center rounded-2xl bg-chip text-brand-dark">
+              <div className="mx-auto mb-5 flex size-14 items-center justify-center rounded-2xl bg-sky-tint text-ocean-deep">
                 <MailCheck className="size-7" />
               </div>
-              <h2 className="font-display text-[26px] font-semibold leading-tight tracking-tight text-navy">
+              <h2 className="text-[26px] font-semibold leading-tight tracking-tight text-tx-head">
                 Check your email
               </h2>
               <p className="mt-3 text-sm text-slate-500">
@@ -175,12 +175,13 @@ export default function SignupPage() {
                 <span className="font-medium text-foreground">{sentTo}</span>.
                 Click it to activate your account, then sign in.
               </p>
-              <Link
-                href={loginHref}
-                className="mt-7 inline-flex h-11 w-full items-center justify-center rounded-[10px] bg-primary text-sm font-semibold text-white shadow-sm shadow-orange/25 transition-all duration-150 hover:bg-orange-dark hover:shadow-md hover:shadow-orange/30 hover:-translate-y-px"
+              <Button
+                variant="accent"
+                className="mt-7 w-full"
+                render={<Link href={loginHref} />}
               >
                 Go to sign in
-              </Link>
+              </Button>
               <p className="mt-5 text-xs text-slate-500">
                 Didn&apos;t get it? Check spam, or wait a minute and try again.
               </p>
@@ -188,10 +189,10 @@ export default function SignupPage() {
           ) : (
             /* ---------- Sign-up form ---------- */
             <>
-              <p className="font-label text-xs font-semibold uppercase tracking-[0.18em] text-brand">
+              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-ocean">
                 Sign up
               </p>
-              <h2 className="mt-2 font-display text-[28px] font-semibold leading-tight tracking-tight text-navy">
+              <h2 className="mt-2 text-[28px] font-semibold leading-tight tracking-tight text-tx-head">
                 Create your account
               </h2>
               <p className="mt-2 text-sm text-slate-500">
@@ -199,7 +200,7 @@ export default function SignupPage() {
               </p>
 
               {resumingBooking ? (
-                <div className="mt-5 flex items-start gap-2.5 rounded-[10px] border border-outline bg-chip/60 px-3.5 py-3 text-sm text-brand-dark">
+                <div className="mt-5 flex items-start gap-2.5 rounded-[10px] border border-line-strong bg-sky-tint/60 px-3.5 py-3 text-sm text-ocean-deep">
                   <Plane className="mt-0.5 size-4 shrink-0 -rotate-45" />
                   <span>
                     Your booking details are saved. Create your free account
@@ -212,7 +213,7 @@ export default function SignupPage() {
                 <div className="space-y-2">
                   <Label
                     htmlFor="fullName"
-                    className="font-label text-xs font-medium uppercase tracking-wider text-slate-600"
+                    className="text-xs font-medium uppercase tracking-wider text-slate-600"
                   >
                     Full name
                   </Label>
@@ -225,14 +226,13 @@ export default function SignupPage() {
                     onChange={(e) => setFullName(e.target.value)}
                     required
                     disabled={loading}
-                    className="h-11 rounded-[10px] bg-neutral-soft"
                   />
                 </div>
 
                 <div className="space-y-2">
                   <Label
                     htmlFor="email"
-                    className="font-label text-xs font-medium uppercase tracking-wider text-slate-600"
+                    className="text-xs font-medium uppercase tracking-wider text-slate-600"
                   >
                     Email
                   </Label>
@@ -245,14 +245,13 @@ export default function SignupPage() {
                     onChange={(e) => setEmail(e.target.value)}
                     required
                     disabled={loading}
-                    className="h-11 rounded-[10px] bg-neutral-soft"
                   />
                 </div>
 
                 <div className="space-y-2">
                   <Label
                     htmlFor="password"
-                    className="font-label text-xs font-medium uppercase tracking-wider text-slate-600"
+                    className="text-xs font-medium uppercase tracking-wider text-slate-600"
                   >
                     Password
                   </Label>
@@ -264,7 +263,6 @@ export default function SignupPage() {
                     onChange={(e) => setPassword(e.target.value)}
                     required
                     disabled={loading}
-                    className="h-11 rounded-[10px] bg-neutral-soft"
                   />
                   <PasswordStrength password={password} />
                 </div>
@@ -272,7 +270,7 @@ export default function SignupPage() {
                 <div className="space-y-2">
                   <Label
                     htmlFor="confirm"
-                    className="font-label text-xs font-medium uppercase tracking-wider text-slate-600"
+                    className="text-xs font-medium uppercase tracking-wider text-slate-600"
                   >
                     Confirm password
                   </Label>
@@ -284,14 +282,14 @@ export default function SignupPage() {
                     onChange={(e) => setConfirm(e.target.value)}
                     required
                     disabled={loading}
-                    className="h-11 rounded-[10px] bg-neutral-soft"
                   />
                 </div>
 
                 <Button
                   type="submit"
                   disabled={loading}
-                  className="h-11 w-full rounded-[10px] bg-primary text-sm font-semibold text-white shadow-sm shadow-orange/25 transition-all duration-150 hover:bg-orange-dark hover:shadow-md hover:shadow-orange/30 hover:-translate-y-px"
+                  variant="accent"
+                  className="w-full"
                 >
                   {loading ? (
                     <>
@@ -314,7 +312,7 @@ export default function SignupPage() {
                 Already have an account?{" "}
                 <Link
                   href={loginHref}
-                  className="font-medium text-brand transition-colors hover:text-brand-dark"
+                  className="font-medium text-ocean transition-colors hover:text-ocean-deep"
                 >
                   Sign in
                 </Link>

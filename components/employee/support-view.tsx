@@ -50,7 +50,7 @@ const FAQS = [
 
 function fieldLabel(text: string) {
   return (
-    <span className="font-label text-xs font-medium uppercase tracking-wider text-slate-600">
+    <span className="text-xs font-medium uppercase tracking-wider text-slate-600">
       {text}
     </span>
   );
@@ -112,7 +112,7 @@ export function EmployeeSupport({ adminEmail }: { adminEmail: string }) {
         <div className="lg:col-span-2">
           <SectionCard
             title="Frequently asked questions"
-            action={<MessageCircleQuestion className="size-5 text-brand" />}
+            action={<MessageCircleQuestion className="size-5 text-ocean" />}
           >
             <ul className="divide-y divide-border">
               {FAQS.map((f, i) => {
@@ -122,7 +122,7 @@ export function EmployeeSupport({ adminEmail }: { adminEmail: string }) {
                     <button
                       type="button"
                       onClick={() => setOpen(isOpen ? null : i)}
-                      className="flex w-full items-center justify-between gap-4 rounded-lg py-4 text-left outline-none transition-colors hover:text-brand focus-visible:ring-2 focus-visible:ring-primary/40"
+                      className="flex w-full items-center justify-between gap-4 rounded-lg py-4 text-left outline-none transition-colors hover:text-ocean focus-visible:ring-2 focus-visible:ring-primary/40"
                     >
                       <span className="text-sm font-medium text-foreground">{f.q}</span>
                       <ChevronDown
@@ -147,7 +147,7 @@ export function EmployeeSupport({ adminEmail }: { adminEmail: string }) {
         {/* Contact admin */}
         <SectionCard title="Contact admin">
           <div className="flex flex-col items-start gap-3">
-            <div className="flex size-11 items-center justify-center rounded-xl bg-chip text-brand-dark">
+            <div className="flex size-11 items-center justify-center rounded-xl bg-sky-tint text-ocean-deep">
               <LifeBuoy className="size-5" />
             </div>
             <p className="text-sm text-muted-foreground">
@@ -177,7 +177,6 @@ export function EmployeeSupport({ adminEmail }: { adminEmail: string }) {
               placeholder="Short summary"
               required
               disabled={mutation.isPending}
-              className="h-10 rounded-[10px] bg-neutral-soft"
             />
           </div>
           <div className="space-y-2">
@@ -189,7 +188,7 @@ export function EmployeeSupport({ adminEmail }: { adminEmail: string }) {
               placeholder="Describe what's happening…"
               required
               disabled={mutation.isPending}
-              className="min-h-28 rounded-[10px] bg-neutral-soft"
+              className="min-h-28"
             />
           </div>
           <div className="flex justify-end">

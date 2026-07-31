@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { BOOK_PATH } from "@/lib/orders/book-link";
 import { BrandLogo } from "@/components/brand/brand-logo";
+import { Button } from "@/components/ui/button";
 
 /**
  * Minimal shell for the one public customer page (/customer/book) when nobody
@@ -13,7 +14,7 @@ export function GuestBookShell({ children }: { children: React.ReactNode }) {
 
   return (
     <div className="min-h-dvh bg-background">
-      <header className="sticky top-0 z-30 border-b border-outline bg-sidebar text-sidebar-foreground">
+      <header className="sticky top-0 z-30 border-b border-line-strong bg-sidebar text-sidebar-foreground">
         <div className="mx-auto flex h-16 max-w-3xl items-center justify-between px-4 sm:px-6">
           <span className="flex items-center">
             <BrandLogo variant="white" className="h-7 w-auto" priority />
@@ -25,12 +26,13 @@ export function GuestBookShell({ children }: { children: React.ReactNode }) {
             >
               Sign in
             </Link>
-            <Link
-              href={signUpHref}
-              className="flex h-10 items-center rounded-[10px] bg-primary px-4 text-sm font-semibold text-primary-foreground shadow-sm shadow-orange/25 transition-all duration-150 hover:bg-orange-dark hover:shadow-md hover:shadow-orange/30"
+            <Button
+              variant="accent"
+              size="sm"
+              render={<Link href={signUpHref} />}
             >
               Sign up free
-            </Link>
+            </Button>
           </nav>
         </div>
       </header>

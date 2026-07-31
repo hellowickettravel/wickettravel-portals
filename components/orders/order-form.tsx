@@ -79,13 +79,13 @@ export type OrderFormConversation = {
 export type OrderFormRole = "admin" | "employee" | "customer";
 
 const selectClass =
-  "h-11 w-full rounded-[10px] border border-input bg-neutral-soft px-3 text-sm text-foreground outline-none transition-[color,box-shadow,border-color] duration-150 focus-visible:border-brand focus-visible:ring-[3px] focus-visible:ring-brand/25 disabled:opacity-50";
+  "h-11 w-full rounded-[10px] border border-input bg-sunk px-3 text-base text-foreground outline-none transition-[color,box-shadow,border-color] duration-150 focus-visible:border-ocean focus-visible:ring-[3px] focus-visible:ring-ocean/25 disabled:opacity-50 sm:text-sm";
 
 function fieldLabel(text: string, required?: boolean) {
   return (
-    <span className="font-label text-xs font-medium uppercase tracking-wider text-slate-600">
+    <span className="text-xs font-medium uppercase tracking-wider text-slate-600">
       {text}
-      {required ? <span className="ml-0.5 text-orange">*</span> : null}
+      {required ? <span className="ml-0.5 text-coral-deep">*</span> : null}
     </span>
   );
 }
@@ -121,11 +121,11 @@ function Stepper({
         aria-label={`Fewer ${label}`}
         onClick={() => onChange(Math.max(min, value - 1))}
         disabled={disabled || value <= min}
-        className="flex size-11 cursor-pointer items-center justify-center rounded-lg border border-border bg-white text-foreground outline-none transition-colors hover:bg-muted focus-visible:ring-2 focus-visible:ring-brand/40 disabled:cursor-default disabled:opacity-40"
+        className="flex size-11 cursor-pointer items-center justify-center rounded-lg border border-border bg-white text-foreground outline-none transition-colors hover:bg-muted focus-visible:ring-2 focus-visible:ring-ocean/40 disabled:cursor-default disabled:opacity-40"
       >
         <Minus className="size-4" />
       </button>
-      <span className="w-6 text-center font-display text-base font-semibold tabular-nums">
+      <span className="w-6 text-center tracking-heading text-base font-semibold tabular-nums">
         {value}
       </span>
       <button
@@ -133,7 +133,7 @@ function Stepper({
         aria-label={`More ${label}`}
         onClick={() => onChange(Math.min(max, value + 1))}
         disabled={disabled || value >= max}
-        className="flex size-11 cursor-pointer items-center justify-center rounded-lg border border-border bg-white text-foreground outline-none transition-colors hover:bg-muted focus-visible:ring-2 focus-visible:ring-brand/40 disabled:cursor-default disabled:opacity-40"
+        className="flex size-11 cursor-pointer items-center justify-center rounded-lg border border-border bg-white text-foreground outline-none transition-colors hover:bg-muted focus-visible:ring-2 focus-visible:ring-ocean/40 disabled:cursor-default disabled:opacity-40"
       >
         <Plus className="size-4" />
       </button>
@@ -170,7 +170,7 @@ function StepIndicator({
                 disabled={!done}
                 aria-current={current ? "step" : undefined}
                 className={cn(
-                  "group flex min-w-0 flex-1 flex-col items-center gap-1.5 rounded-xl px-1 py-1.5 text-center outline-none focus-visible:ring-2 focus-visible:ring-brand/40",
+                  "group flex min-w-0 flex-1 flex-col items-center gap-1.5 rounded-xl px-1 py-1.5 text-center outline-none focus-visible:ring-2 focus-visible:ring-ocean/40",
                   done && "cursor-pointer"
                 )}
               >
@@ -178,9 +178,9 @@ function StepIndicator({
                   className={cn(
                     "flex size-9 items-center justify-center rounded-full text-sm font-semibold transition-colors duration-200",
                     current
-                      ? "bg-primary text-primary-foreground shadow-sm shadow-orange/30 ring-4 ring-orange/15"
+                      ? "bg-primary text-primary-foreground shadow-sm shadow-coral-deep/30 ring-4 ring-coral-deep/15"
                       : done
-                        ? "bg-navy text-white group-hover:bg-brand-dark"
+                        ? "bg-ocean-deep text-white group-hover:bg-ocean-deep"
                         : "bg-muted text-muted-foreground"
                   )}
                 >
@@ -190,7 +190,7 @@ function StepIndicator({
                   <span
                     className={cn(
                       "block truncate text-xs font-semibold sm:text-sm",
-                      current ? "text-navy" : done ? "text-foreground" : "text-muted-foreground"
+                      current ? "text-tx-head" : done ? "text-foreground" : "text-muted-foreground"
                     )}
                   >
                     {s.label}
@@ -205,7 +205,7 @@ function StepIndicator({
                   aria-hidden
                   className={cn(
                     "mt-[17px] h-0.5 w-4 shrink-0 rounded-full transition-colors duration-300 sm:w-10",
-                    s.n < step ? "bg-navy" : "bg-border"
+                    s.n < step ? "bg-ocean-deep" : "bg-border"
                   )}
                 />
               ) : null}
@@ -851,7 +851,7 @@ export function OrderForm({
       {!isGuest ? (
         <Link
           href={backHref}
-          className="inline-flex items-center gap-1.5 text-sm font-medium text-brand transition-colors hover:text-brand-dark"
+          className="inline-flex items-center gap-1.5 text-sm font-medium text-ocean transition-colors hover:text-ocean-deep"
         >
           <ArrowLeft className="size-4" />
           Back to orders
@@ -864,25 +864,25 @@ export function OrderForm({
 
       {/* Trip summary chip — keeps the essentials visible past Step 1 */}
       {step > 1 && routeFrom && routeTo ? (
-        <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5 rounded-xl border border-outline bg-chip/60 px-4 py-2.5 text-sm text-brand-dark animate-in fade-in slide-in-from-top-1 motion-reduce:animate-none">
+        <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5 rounded-xl border border-line-strong bg-sky-tint/60 px-4 py-2.5 text-sm text-ocean-deep animate-in fade-in slide-in-from-top-1 motion-reduce:animate-none">
           <span className="inline-flex items-center gap-1.5 font-semibold">
             <Plane className="size-4 -rotate-45" />
             {routeFrom} → {routeTo}
           </span>
-          <span aria-hidden className="hidden size-1 rounded-full bg-brand/40 sm:block" />
+          <span aria-hidden className="hidden size-1 rounded-full bg-ocean/40 sm:block" />
           <span className="inline-flex items-center gap-1.5">
             <CalendarDays className="size-3.5" />
             {fmtDate(depart)}
             {ret ? ` – ${fmtDate(ret)}` : ""}
           </span>
-          <span aria-hidden className="hidden size-1 rounded-full bg-brand/40 sm:block" />
+          <span aria-hidden className="hidden size-1 rounded-full bg-ocean/40 sm:block" />
           <span className="inline-flex items-center gap-1.5">
             <Users className="size-3.5" />
             {travellerSummary}
           </span>
           {cabin ? (
             <>
-              <span aria-hidden className="hidden size-1 rounded-full bg-brand/40 sm:block" />
+              <span aria-hidden className="hidden size-1 rounded-full bg-ocean/40 sm:block" />
               <span className="inline-flex items-center gap-1.5">
                 <Armchair className="size-3.5" />
                 {cabinLabel(cabin)}
@@ -891,7 +891,7 @@ export function OrderForm({
           ) : null}
           {airline !== ANY_AIRLINE ? (
             <>
-              <span aria-hidden className="hidden size-1 rounded-full bg-brand/40 sm:block" />
+              <span aria-hidden className="hidden size-1 rounded-full bg-ocean/40 sm:block" />
               <span>{airline}</span>
             </>
           ) : null}
@@ -936,7 +936,7 @@ export function OrderForm({
                 <div className="space-y-2">
                   <Label htmlFor="of-conv">{fieldLabel("Conversation", true)}</Label>
                   {presetConversationId ? (
-                    <p className="rounded-[10px] border border-border bg-neutral-soft px-3 py-2.5 text-sm font-medium text-foreground">
+                    <p className="rounded-[10px] border border-border bg-sunk px-3 py-2.5 text-sm font-medium text-foreground">
                       {selectedConversation?.label ?? "Selected conversation"}
                     </p>
                   ) : (
@@ -979,7 +979,7 @@ export function OrderForm({
                       onChange={(e) => setRouteFrom(e.target.value)}
                       placeholder="London (LHR)"
                       disabled={busy}
-                      className="h-11 rounded-[10px] bg-neutral-soft pl-9"
+                      className="pl-9"
                     />
                   </div>
                 </div>
@@ -993,7 +993,7 @@ export function OrderForm({
                       onChange={(e) => setRouteTo(e.target.value)}
                       placeholder="Dubai (DXB)"
                       disabled={busy}
-                      className="h-11 rounded-[10px] bg-neutral-soft pl-9"
+                      className="pl-9"
                     />
                   </div>
                 </div>
@@ -1006,7 +1006,6 @@ export function OrderForm({
                     value={depart}
                     onChange={(e) => setDepart(e.target.value)}
                     disabled={busy}
-                    className="h-11 rounded-[10px] bg-neutral-soft"
                   />
                 </div>
                 <div className="space-y-2">
@@ -1023,7 +1022,6 @@ export function OrderForm({
                     value={ret}
                     onChange={(e) => setRet(e.target.value)}
                     disabled={busy}
-                    className="h-11 rounded-[10px] bg-neutral-soft"
                   />
                 </div>
               </div>
@@ -1048,10 +1046,10 @@ export function OrderForm({
                           type="button"
                           onClick={() => setTripType(t.value)}
                           className={cn(
-                            "flex cursor-pointer items-center gap-3 rounded-[12px] border px-4 py-3 text-left outline-none transition-all focus-visible:ring-[3px] focus-visible:ring-brand/25",
+                            "flex cursor-pointer items-center gap-3 rounded-[12px] border px-4 py-3 text-left outline-none transition-all focus-visible:ring-[3px] focus-visible:ring-ocean/25",
                             active
-                              ? "border-brand bg-chip/60 shadow-sm"
-                              : "border-border bg-neutral-soft hover:border-brand/40"
+                              ? "border-ocean bg-sky-tint/60 shadow-sm"
+                              : "border-border bg-sunk hover:border-ocean/40"
                           )}
                         >
                           <span
@@ -1076,7 +1074,7 @@ export function OrderForm({
                             className={cn(
                               "ml-auto flex size-5 items-center justify-center rounded-full border transition-colors",
                               active
-                                ? "border-brand bg-brand text-white"
+                                ? "border-ocean bg-ocean text-white"
                                 : "border-border bg-white"
                             )}
                           >
@@ -1100,10 +1098,10 @@ export function OrderForm({
                           type="button"
                           onClick={() => setCabin(c.value)}
                           className={cn(
-                            "min-h-11 cursor-pointer rounded-full border px-4 py-2 text-sm font-medium outline-none transition-all focus-visible:ring-[3px] focus-visible:ring-brand/25",
+                            "min-h-11 cursor-pointer rounded-full border px-4 py-2 text-sm font-medium outline-none transition-all focus-visible:ring-[3px] focus-visible:ring-ocean/25",
                             active
-                              ? "border-brand bg-primary text-primary-foreground shadow-sm"
-                              : "border-border bg-neutral-soft text-muted-foreground hover:border-brand/40 hover:text-foreground"
+                              ? "border-ocean bg-primary text-primary-foreground shadow-sm"
+                              : "border-border bg-sunk text-muted-foreground hover:border-ocean/40 hover:text-foreground"
                           )}
                         >
                           {c.label}
@@ -1198,7 +1196,6 @@ export function OrderForm({
                               }
                               placeholder={`Child ${i + 1}`}
                               disabled={busy}
-                              className="h-11 rounded-[10px] bg-neutral-soft"
                             />
                             {isAdultAge ? (
                               <p className="text-[11px] font-medium text-amber-600">
@@ -1222,11 +1219,11 @@ export function OrderForm({
           <div key="step-2" className={stepAnim} role="group" aria-label="Step 2: flight check">
             <SectionCard>
               <div className="flex flex-col gap-4 sm:flex-row">
-                <div className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-chip text-brand-dark">
+                <div className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-sky-tint text-ocean-deep">
                   <ShieldCheck className="size-5" />
                 </div>
                 <div className="space-y-1">
-                  <h3 className="font-display text-base font-semibold text-navy">
+                  <h3 className="tracking-heading text-base font-semibold text-tx-head">
                     Have you already checked specific flights?
                   </h3>
                   <p className="text-sm leading-relaxed text-muted-foreground">
@@ -1262,10 +1259,10 @@ export function OrderForm({
                       type="button"
                       onClick={() => setGateChoice(opt.value)}
                       className={cn(
-                        "flex cursor-pointer items-center gap-3 rounded-[12px] border px-4 py-3.5 text-left outline-none transition-all focus-visible:ring-[3px] focus-visible:ring-brand/25",
+                        "flex cursor-pointer items-center gap-3 rounded-[12px] border px-4 py-3.5 text-left outline-none transition-all focus-visible:ring-[3px] focus-visible:ring-ocean/25",
                         active
-                          ? "border-brand bg-chip/60 shadow-sm"
-                          : "border-border bg-neutral-soft hover:border-brand/40"
+                          ? "border-ocean bg-sky-tint/60 shadow-sm"
+                          : "border-border bg-sunk hover:border-ocean/40"
                       )}
                     >
                       <span
@@ -1289,7 +1286,7 @@ export function OrderForm({
                       <span
                         className={cn(
                           "ml-auto flex size-5 shrink-0 items-center justify-center rounded-full border transition-colors",
-                          active ? "border-brand bg-brand text-white" : "border-border bg-white"
+                          active ? "border-ocean bg-ocean text-white" : "border-border bg-white"
                         )}
                       >
                         {active ? <CheckCircle2 className="size-4" /> : null}
@@ -1311,7 +1308,6 @@ export function OrderForm({
                       onChange={(e) => setNote(e.target.value)}
                       placeholder="e.g. BA107 LHR→DXB on 12 Aug, ~£540 return seen on Skyscanner…"
                       rows={4}
-                      className="rounded-[10px] bg-neutral-soft"
                     />
                   </div>
 
@@ -1331,7 +1327,7 @@ export function OrderForm({
                     <button
                       type="button"
                       onClick={() => fileInputRef.current?.click()}
-                      className="flex min-h-11 w-full cursor-pointer items-center justify-center gap-2 rounded-[10px] border border-dashed border-border bg-neutral-soft px-4 py-3 text-sm font-medium text-muted-foreground outline-none transition-colors hover:border-brand hover:text-brand focus-visible:ring-[3px] focus-visible:ring-brand/25"
+                      className="flex min-h-11 w-full cursor-pointer items-center justify-center gap-2 rounded-[10px] border border-dashed border-border bg-sunk px-4 py-3 text-sm font-medium text-muted-foreground outline-none transition-colors hover:border-ocean hover:text-ocean focus-visible:ring-[3px] focus-visible:ring-ocean/25"
                     >
                       <Paperclip className="size-4" />
                       Attach PNG, JPG or PDF (max 10MB each)
@@ -1344,7 +1340,7 @@ export function OrderForm({
                             key={`${file.name}-${i}`}
                             className="flex items-center gap-2.5 rounded-[10px] border border-border bg-card px-3 py-2 text-sm animate-in fade-in slide-in-from-bottom-1 motion-reduce:animate-none"
                           >
-                            <FileText className="size-4 shrink-0 text-brand" />
+                            <FileText className="size-4 shrink-0 text-ocean" />
                             <span className="min-w-0 flex-1 truncate text-foreground">
                               {file.name}
                             </span>
@@ -1370,7 +1366,7 @@ export function OrderForm({
               ) : null}
 
               {gateChoice === "no" ? (
-                <label className="mt-5 flex cursor-pointer items-start gap-3 rounded-[10px] border border-border bg-neutral-soft px-4 py-3 animate-in fade-in slide-in-from-top-1 motion-reduce:animate-none">
+                <label className="mt-5 flex cursor-pointer items-start gap-3 rounded-[10px] border border-border bg-sunk px-4 py-3 animate-in fade-in slide-in-from-top-1 motion-reduce:animate-none">
                   <Switch
                     checked={acknowledged}
                     onCheckedChange={(v: boolean) => setAcknowledged(v)}
@@ -1401,10 +1397,10 @@ export function OrderForm({
                 {paxRows.map((row, i) => (
                   <div
                     key={i}
-                    className="rounded-[12px] border border-border bg-neutral-soft p-3.5 sm:p-4"
+                    className="rounded-[12px] border border-border bg-sunk p-3.5 sm:p-4"
                   >
                     <div className="mb-3 flex items-center gap-2">
-                      <span className="flex size-7 items-center justify-center rounded-lg bg-chip text-xs font-semibold text-brand-dark">
+                      <span className="flex size-7 items-center justify-center rounded-lg bg-sky-tint text-xs font-semibold text-ocean-deep">
                         {i + 1}
                       </span>
                       <span className="text-sm font-semibold text-foreground">
@@ -1424,7 +1420,6 @@ export function OrderForm({
                           placeholder="e.g. Jane Ann"
                           autoComplete="off"
                           disabled={busy}
-                          className="h-11 rounded-[10px] bg-white"
                         />
                       </div>
                       <div className="space-y-1.5">
@@ -1438,7 +1433,6 @@ export function OrderForm({
                           placeholder="e.g. Smith"
                           autoComplete="off"
                           disabled={busy}
-                          className="h-11 rounded-[10px] bg-white"
                         />
                       </div>
                     </div>
@@ -1450,7 +1444,7 @@ export function OrderForm({
                   <button
                     type="button"
                     onClick={() => goToStep(1)}
-                    className="cursor-pointer font-medium text-brand underline-offset-2 hover:underline"
+                    className="cursor-pointer font-medium text-ocean underline-offset-2 hover:underline"
                   >
                     Edit step 1
                   </button>
@@ -1468,12 +1462,12 @@ export function OrderForm({
                   <div className="space-y-2">
                     <Label>{fieldLabel("Email")}</Label>
                     {contactEmail ? (
-                      <p className="flex h-11 items-center gap-2 truncate rounded-[10px] border border-border bg-neutral-soft px-3 text-sm font-medium text-foreground">
+                      <p className="flex h-11 items-center gap-2 truncate rounded-[10px] border border-border bg-sunk px-3 text-sm font-medium text-foreground">
                         <Mail className="size-4 shrink-0 text-slate-400" />
                         <span className="truncate">{contactEmail}</span>
                       </p>
                     ) : (
-                      <p className="flex min-h-11 items-center gap-2 rounded-[10px] border border-border bg-neutral-soft px-3 py-2 text-sm text-muted-foreground">
+                      <p className="flex min-h-11 items-center gap-2 rounded-[10px] border border-border bg-sunk px-3 py-2 text-sm text-muted-foreground">
                         <LogIn className="size-4 shrink-0 text-slate-400" />
                         From your account once you sign in
                       </p>
@@ -1491,7 +1485,7 @@ export function OrderForm({
                         onChange={(e) => setPhone(e.target.value)}
                         placeholder="e.g. +44 7700 900123"
                         disabled={busy}
-                        className="h-11 rounded-[10px] bg-neutral-soft pl-9"
+                        className="pl-9"
                       />
                     </div>
                     <FieldError message={errors.phone} />
@@ -1544,7 +1538,6 @@ export function OrderForm({
                         onChange={(e) => setExtraLuggageKg(e.target.value)}
                         placeholder="e.g. 23"
                         disabled={busy}
-                        className="h-11 rounded-[10px] bg-neutral-soft"
                       />
                     </div>
                   ) : null}
@@ -1585,7 +1578,6 @@ export function OrderForm({
                     onChange={(e) => setAssistance(e.target.value)}
                     placeholder="e.g. travelling with an infant, mobility help at the gate…"
                     disabled={busy}
-                    className="h-11 rounded-[10px] bg-neutral-soft"
                   />
                 </div>
 
@@ -1603,7 +1595,6 @@ export function OrderForm({
                     placeholder="Flexible on dates, budget in mind, a stopover you'd love…"
                     rows={3}
                     disabled={busy}
-                    className="rounded-[10px] bg-neutral-soft"
                   />
                 </div>
               </div>
@@ -1686,7 +1677,7 @@ export function OrderForm({
                         {paxRows.map((r, i) => (
                           <span
                             key={i}
-                            className="inline-flex items-center rounded-full bg-chip px-2.5 py-0.5 text-xs font-medium text-brand-dark"
+                            className="inline-flex items-center rounded-full bg-sky-tint px-2.5 py-0.5 text-xs font-medium text-ocean-deep"
                           >
                             {r.given.trim()} {r.surname.trim()}
                           </span>
@@ -1721,7 +1712,7 @@ export function OrderForm({
               </div>
 
               {isGuest ? (
-                <div className="mt-4 flex items-start gap-2.5 rounded-[10px] border border-outline bg-chip/60 px-3.5 py-3 text-sm text-brand-dark">
+                <div className="mt-4 flex items-start gap-2.5 rounded-[10px] border border-line-strong bg-sky-tint/60 px-3.5 py-3 text-sm text-ocean-deep">
                   <LogIn className="mt-0.5 size-4 shrink-0" />
                   <span>
                     You&apos;ll create a free account (or sign in) to place this
@@ -1741,7 +1732,6 @@ export function OrderForm({
               variant="outline"
               onClick={() => goToStep(step - 1)}
               disabled={busy}
-              className="h-11 rounded-[10px] px-5"
             >
               <ArrowLeft className="size-4" />
               Back
@@ -1753,7 +1743,7 @@ export function OrderForm({
           {step < 3 ? (
             <Button
               type="submit"
-              className="h-11 rounded-[10px] px-6 sm:min-w-40"
+              className="sm:min-w-40"
             >
               Continue
               <ArrowRight className="size-4" />
@@ -1762,7 +1752,7 @@ export function OrderForm({
             <Button
               type="submit"
               disabled={busy}
-              className="h-11 rounded-[10px] px-6 sm:min-w-48"
+              className="sm:min-w-48"
             >
               {busy ? (
                 <>
@@ -1814,7 +1804,7 @@ function ReviewRow({
             type="button"
             onClick={onEdit}
             aria-label={`Edit ${label.toLowerCase()}`}
-            className="cursor-pointer rounded-md p-1 text-slate-400 transition-colors hover:bg-muted hover:text-brand"
+            className="cursor-pointer rounded-md p-1 text-slate-400 transition-colors hover:bg-muted hover:text-ocean"
           >
             <Pencil className="size-3.5" />
           </button>

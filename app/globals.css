@@ -15,9 +15,16 @@
      editorial line per page · IBM Plex Mono 500 for codes,
      references and uppercase micro-labels. */
   --font-sans: var(--font-hanken);
-  --font-heading: var(--font-hanken);
   --font-serif: var(--font-newsreader);
   --font-mono: var(--font-plex-mono);
+
+  /* ── Tracking ─────────────────────────────────────────────
+     The scale tightens as type grows and opens as it shrinks.
+     These are the only letter-spacings the system uses. */
+  --tracking-display: -0.02em; /* 42px+ */
+  --tracking-heading: -0.015em; /* h1–h4 */
+  --tracking-ui: -0.002em; /* buttons, labels, field text */
+  --tracking-micro: 0.1em; /* Plex Mono uppercase */
 
   /* ── Brand ── */
   --color-ocean: var(--ocean);
@@ -67,21 +74,6 @@
   --color-tx-invert: var(--tx-invert);
   --color-tx-invert-2: var(--tx-invert-2);
   --color-tx-invert-3: var(--tx-invert-3);
-
-  /* ── Legacy aliases ──────────────────────────────────────
-     Screens still reference the pre-2026 token names. They now
-     resolve to the locked palette so nothing renders off-brand
-     while screens are migrated one pass at a time. */
-  --color-brand: var(--ocean);
-  --color-brand-dark: var(--ocean-deep);
-  --color-navy: var(--ocean-deep);
-  --color-navy-dark: var(--ocean-night);
-  --color-navy-light: var(--ocean);
-  --color-orange: var(--coral-deep);
-  --color-orange-dark: var(--coral-press);
-  --color-orange-light: var(--coral);
-  --color-chip: var(--sky-tint);
-  --color-neutral-soft: var(--surface-sunk);
 
   /* ── Radius: the clipped corner ── */
   --radius-surface: var(--r-surface);
@@ -303,6 +295,18 @@
     color: var(--tx-head);
   }
 
+  /* iOS Safari zooms the whole viewport when you focus a field whose text is
+     under 16px. Fields sit at 15.5px on the scale, so hold every control at
+     16px on phone widths. A utility still wins over this, which is why
+     `fieldClassName` and the screens' own select classes restate it. */
+  @media (width < 40rem) {
+    input,
+    textarea,
+    select {
+      font-size: 16px;
+    }
+  }
+
   /* One icon family, one weight (design-system.html §07).
      Lucide ships stroke-width="2" as a presentation attribute; this rule wins
      over it, so every icon in the product is 1.75 without per-call-site props.
@@ -341,23 +345,9 @@
   font-weight: 400;
 }
 
-/* Legacy alias — heading face is the same grotesk as body. */
-@utility font-display {
-  font-family: var(--font-hanken), system-ui, sans-serif;
-  letter-spacing: -0.015em;
-}
-@utility font-label {
-  font-family: var(--font-hanken), system-ui, sans-serif;
-}
-
 /* Fares, metrics and every table column of numbers. */
 @utility tabular {
   font-variant-numeric: tabular-nums;
-}
-
-/* Resting card lift. Legacy alias for shadow-lift. */
-@utility shadow-card {
-  box-shadow: var(--lift-1);
 }
 
 /* Accessibility: honour reduced-motion — neutralise entrance animations,

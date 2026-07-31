@@ -74,7 +74,7 @@ export function MessageAttachment({
             e.stopPropagation();
             void downloadFile(url, name);
           }}
-          className="absolute bottom-2 right-2 inline-flex size-11 items-center justify-center rounded-full bg-navy/55 text-white shadow-sm backdrop-blur-sm transition hover:bg-navy/75 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/70 sm:size-9 sm:opacity-0 sm:group-hover:opacity-100 sm:focus-visible:opacity-100"
+          className="absolute bottom-2 right-2 inline-flex size-11 items-center justify-center rounded-full bg-ocean-deep/55 text-white shadow-sm backdrop-blur-sm transition hover:bg-ocean-deep/75 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/70 sm:size-9 sm:opacity-0 sm:group-hover:opacity-100 sm:focus-visible:opacity-100"
         >
           <Download className="size-4" />
         </button>
@@ -90,10 +90,10 @@ export function MessageAttachment({
         "mb-1 flex w-full max-w-[260px] items-center gap-2.5 rounded-lg border px-3 py-2 text-left text-sm transition-colors",
         mine
           ? "border-white/25 bg-white/10 hover:bg-white/20"
-          : "border-border bg-neutral-soft hover:bg-muted"
+          : "border-border bg-sunk hover:bg-muted"
       )}
     >
-      <FileText className={cn("size-5 shrink-0", mine ? "text-white" : "text-brand")} />
+      <FileText className={cn("size-5 shrink-0", mine ? "text-white" : "text-ocean")} />
       <span className="min-w-0 flex-1 truncate">{name}</span>
       <Download className={cn("size-4 shrink-0", mine ? "text-white/80" : "text-muted-foreground")} />
     </button>

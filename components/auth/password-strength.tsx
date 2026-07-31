@@ -25,7 +25,7 @@ export function PasswordStrength({ password }: { password: string }) {
       : tone === "fair"
         ? "bg-amber-500"
         : tone === "good"
-          ? "bg-brand"
+          ? "bg-ocean"
           : "bg-emerald-500";
 
   return (
@@ -38,20 +38,20 @@ export function PasswordStrength({ password }: { password: string }) {
               key={i}
               className={cn(
                 "h-full flex-1 rounded-full transition-colors",
-                i < score ? barTone : "bg-outline"
+                i < score ? barTone : "bg-line-strong"
               )}
             />
           ))}
         </div>
         <span
           className={cn(
-            "font-label text-[11px] font-semibold uppercase tracking-wider",
+            "text-[11px] font-semibold uppercase tracking-wider",
             tone === "weak"
               ? "text-red-600"
               : tone === "fair"
                 ? "text-amber-600"
                 : tone === "good"
-                  ? "text-brand"
+                  ? "text-ocean"
                   : "text-emerald-600"
           )}
         >

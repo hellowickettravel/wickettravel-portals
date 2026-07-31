@@ -176,12 +176,12 @@ export function NotificationsView({
   return (
     <div className="space-y-6">
       <div className="flex flex-col gap-1">
-        <p className="font-label text-[11px] font-semibold uppercase tracking-wide text-brand">
+        <p className="text-[11px] font-semibold uppercase tracking-wide text-ocean">
           Activity
         </p>
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
-            <h1 className="font-display text-xl font-semibold tracking-tight text-navy sm:text-2xl">
+            <h1 className="text-xl font-semibold tracking-tight text-tx-head sm:text-2xl">
               Notifications
             </h1>
             <p className="mt-1 text-sm text-muted-foreground">
@@ -193,7 +193,7 @@ export function NotificationsView({
               type="button"
               onClick={() => readAllMutation.mutate()}
               disabled={readAllMutation.isPending}
-              className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-card px-3 py-2 text-sm font-medium text-foreground transition-colors hover:border-brand hover:text-brand disabled:opacity-50"
+              className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-card px-3 py-2 text-sm font-medium text-foreground transition-colors hover:border-ocean hover:text-ocean disabled:opacity-50"
             >
               <CheckCheck className="size-4" />
               Mark all read
@@ -221,7 +221,7 @@ export function NotificationsView({
                 "inline-flex min-w-5 items-center justify-center rounded-full px-1.5 py-0.5 text-[11px] font-semibold tabular-nums leading-none",
                 filter === t.value
                   ? "bg-white/25 text-white"
-                  : "bg-chip text-brand-dark"
+                  : "bg-sky-tint text-ocean-deep"
               )}
             >
               {t.count}
@@ -231,7 +231,7 @@ export function NotificationsView({
       </div>
 
       {/* List */}
-      <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-card">
+      <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-lift">
         {isLoading ? (
           <div className="flex items-center justify-center gap-2 px-6 py-16 text-sm text-muted-foreground">
             <RefreshCw className="size-4 animate-spin" />
@@ -239,10 +239,10 @@ export function NotificationsView({
           </div>
         ) : visible.length === 0 ? (
           <div className="flex flex-col items-center gap-2 px-6 py-16 text-center">
-            <div className="flex size-12 items-center justify-center rounded-2xl bg-chip text-brand-dark">
+            <div className="flex size-12 items-center justify-center rounded-2xl bg-sky-tint text-ocean-deep">
               <Inbox className="size-6" />
             </div>
-            <p className="font-display text-base font-semibold text-foreground">
+            <p className="tracking-heading text-base font-semibold text-foreground">
               {filter === "unread"
                 ? "No unread notifications"
                 : filter === "starred"
@@ -269,8 +269,8 @@ export function NotificationsView({
                 <li
                   key={n.id}
                   className={cn(
-                    "flex items-start gap-3 px-4 py-3.5 transition-colors hover:bg-neutral-soft sm:px-5",
-                    !n.is_read && "bg-chip/40"
+                    "flex items-start gap-3 px-4 py-3.5 transition-colors hover:bg-sunk sm:px-5",
+                    !n.is_read && "bg-sky-tint/40"
                   )}
                 >
                   <button
@@ -280,7 +280,7 @@ export function NotificationsView({
                     }
                     className="flex min-w-0 flex-1 items-start gap-3 text-left outline-none"
                   >
-                    <div className="mt-0.5 flex size-9 shrink-0 items-center justify-center rounded-lg bg-chip text-brand-dark">
+                    <div className="mt-0.5 flex size-9 shrink-0 items-center justify-center rounded-lg bg-sky-tint text-ocean-deep">
                       <Icon className="size-[18px]" />
                     </div>
                     <div className="min-w-0 flex-1">

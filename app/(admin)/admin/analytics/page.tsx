@@ -18,7 +18,7 @@ const RANGES = [
 /** Vertical bar chart (CSS). */
 function BarChart({
   data,
-  color = "var(--brand)",
+  color = "var(--ocean)",
   format,
 }: {
   data: { label: string; value: number }[];
@@ -85,7 +85,7 @@ function Donut({
             })}
         </svg>
         <div className="absolute inset-0 flex flex-col items-center justify-center">
-          <span className="font-display text-2xl font-semibold text-foreground">
+          <span className="tracking-heading text-2xl font-semibold text-foreground">
             {total}
           </span>
           <span className="text-[11px] text-muted-foreground">orders</span>
@@ -251,10 +251,10 @@ export default async function AnalyticsPage({
       {!hasData ? (
         <SectionCard title="No data yet">
           <div className="flex flex-col items-center gap-2 py-12 text-center">
-            <div className="flex size-12 items-center justify-center rounded-2xl bg-chip text-brand-dark">
+            <div className="flex size-12 items-center justify-center rounded-2xl bg-sky-tint text-ocean-deep">
               <BarChart3 className="size-6" />
             </div>
-            <p className="font-display text-base font-semibold text-foreground">
+            <p className="tracking-heading text-base font-semibold text-foreground">
               Nothing to chart yet
             </p>
             <p className="max-w-sm text-sm text-muted-foreground">
@@ -272,7 +272,7 @@ export default async function AnalyticsPage({
             <SectionCard title="Revenue by month" description="Completed revenue (GBP)">
               <BarChart
                 data={revenueByMonth}
-                color="var(--navy)"
+                color="var(--ocean-deep)"
                 format={(v) => gbp(v)}
               />
             </SectionCard>

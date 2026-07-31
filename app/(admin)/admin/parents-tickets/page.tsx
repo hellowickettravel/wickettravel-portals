@@ -40,7 +40,7 @@ const TICKETS_KEY = ["admin", "parent-tickets", "list"] as const;
 const PAGE_SIZE = 12;
 
 const selectClass =
-  "h-10 rounded-[10px] border border-input bg-card px-3 text-sm text-foreground outline-none transition-colors focus-visible:border-brand focus-visible:ring-[3px] focus-visible:ring-brand/25";
+  "h-10 rounded-[10px] border border-input bg-card px-3 text-base text-foreground outline-none transition-colors focus-visible:border-ocean focus-visible:ring-[3px] focus-visible:ring-ocean/25 sm:text-sm";
 
 const STATUS_TABS: { label: string; value: "all" | ParentTicketStatus }[] = [
   { label: "All", value: "all" },
@@ -55,7 +55,7 @@ function Route({ from, to }: { from: string; to: string }) {
   return (
     <span className="inline-flex min-w-0 items-center gap-1.5 text-sm text-muted-foreground">
       <span className="truncate">{from}</span>
-      <ArrowRight className="size-3.5 shrink-0 text-brand" />
+      <ArrowRight className="size-3.5 shrink-0 text-ocean" />
       <span className="truncate">{to}</span>
     </span>
   );
@@ -165,7 +165,7 @@ export default function AdminParentsTicketsPage() {
               onChange={(e) => setQuery(e.target.value)}
               aria-label="Search parents tickets by name, email or reference"
               placeholder="Search name, email or reference…"
-              className="h-10 rounded-[10px] bg-card pl-9"
+              className="pl-9"
             />
           </div>
         </div>
@@ -183,10 +183,10 @@ export default function AdminParentsTicketsPage() {
           </p>
         ) : all.length === 0 ? (
           <div className="flex flex-col items-center gap-2 px-6 py-14 text-center">
-            <div className="flex size-12 items-center justify-center rounded-2xl bg-chip text-brand-dark">
+            <div className="flex size-12 items-center justify-center rounded-2xl bg-sky-tint text-ocean-deep">
               <HeartHandshake className="size-6" />
             </div>
-            <p className="font-display text-base font-semibold text-foreground">
+            <p className="tracking-heading text-base font-semibold text-foreground">
               No parents tickets yet
             </p>
             <p className="max-w-sm text-sm text-muted-foreground">
@@ -210,10 +210,10 @@ export default function AdminParentsTicketsPage() {
                     className="block"
                   >
                     <MobileRecordCard
-                      title={<span className="text-navy">{e.full_name}</span>}
+                      title={<span className="text-tx-head">{e.full_name}</span>}
                       subtitle={e.reference_number}
                       action={
-                        <span className="inline-flex items-center gap-0.5 text-xs font-medium text-brand">
+                        <span className="inline-flex items-center gap-0.5 text-xs font-medium text-ocean">
                           View
                           <ChevronRight className="size-4" />
                         </span>
@@ -279,7 +279,7 @@ export default function AdminParentsTicketsPage() {
                         router.push(`/admin/parents-tickets/${e.id}`)
                       }
                     >
-                      <TableCell className="pl-6 font-medium tabular-nums text-navy">
+                      <TableCell className="pl-6 font-medium tabular-nums text-tx-head">
                         {e.reference_number}
                       </TableCell>
                       <TableCell>
@@ -324,7 +324,7 @@ export default function AdminParentsTicketsPage() {
                       >
                         <Link
                           href={`/admin/parents-tickets/${e.id}`}
-                          className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-card px-3 py-1.5 text-sm font-medium text-foreground transition-colors hover:border-brand hover:text-brand"
+                          className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-card px-3 py-1.5 text-sm font-medium text-foreground transition-colors hover:border-ocean hover:text-ocean"
                         >
                           <Eye className="size-4" />
                           View

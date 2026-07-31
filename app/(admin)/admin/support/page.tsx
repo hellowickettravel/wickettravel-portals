@@ -31,7 +31,7 @@ const SUBMITTERS = [
 type Submitter = (typeof SUBMITTERS)[number]["value"];
 
 const selectClass =
-  "h-10 rounded-[10px] border border-input bg-card px-3 text-sm text-foreground outline-none transition-colors focus-visible:border-brand focus-visible:ring-[3px] focus-visible:ring-brand/25";
+  "h-10 rounded-[10px] border border-input bg-card px-3 text-base text-foreground outline-none transition-colors focus-visible:border-ocean focus-visible:ring-[3px] focus-visible:ring-ocean/25 sm:text-sm";
 
 export default function AdminSupportPage() {
   const queryClient = useQueryClient();
@@ -176,7 +176,7 @@ export default function AdminSupportPage() {
               onChange={(e) => setQuery(e.target.value)}
               aria-label="Search support tickets by subject, message or name"
               placeholder="Search subject, message or name…"
-              className="h-10 rounded-[10px] bg-card pl-9"
+              className="pl-9"
             />
           </div>
         </div>
@@ -193,10 +193,10 @@ export default function AdminSupportPage() {
           </p>
         ) : tickets.length === 0 ? (
           <div className="flex flex-col items-center gap-2 px-6 py-14 text-center">
-            <div className="flex size-12 items-center justify-center rounded-2xl bg-chip text-brand-dark">
+            <div className="flex size-12 items-center justify-center rounded-2xl bg-sky-tint text-ocean-deep">
               <LifeBuoy className="size-6" />
             </div>
-            <p className="font-display text-base font-semibold text-foreground">
+            <p className="tracking-heading text-base font-semibold text-foreground">
               No support tickets
             </p>
             <p className="max-w-sm text-sm text-muted-foreground">

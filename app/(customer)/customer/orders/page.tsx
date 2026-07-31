@@ -97,11 +97,11 @@ export default function CustomerOrdersPage() {
           </div>
         </SectionCard>
       ) : rows.length === 0 ? (
-        <div className="flex flex-col items-center justify-center gap-3 rounded-2xl border border-border bg-card py-16 text-center shadow-card">
-          <div className="flex size-12 items-center justify-center rounded-2xl bg-chip text-brand-dark">
+        <div className="flex flex-col items-center justify-center gap-3 rounded-2xl border border-border bg-card py-16 text-center shadow-lift">
+          <div className="flex size-12 items-center justify-center rounded-2xl bg-sky-tint text-ocean-deep">
             <Plane className="size-6 -rotate-45" />
           </div>
-          <p className="font-display text-base font-semibold text-foreground">
+          <p className="tracking-heading text-base font-semibold text-foreground">
             No orders yet
           </p>
           <p className="max-w-sm text-sm text-muted-foreground">
@@ -119,18 +119,18 @@ export default function CustomerOrdersPage() {
             return (
               <div
                 key={o.id}
-                className="overflow-hidden rounded-2xl border border-border bg-card shadow-card"
+                className="overflow-hidden rounded-2xl border border-border bg-card shadow-lift"
               >
                 <button
                   type="button"
                   onClick={() => setOpenId(open ? null : o.id)}
-                  className="flex w-full items-center gap-4 px-5 py-4 text-left outline-none transition-colors hover:bg-neutral-soft focus-visible:bg-neutral-soft focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-primary/40"
+                  className="flex w-full items-center gap-4 px-5 py-4 text-left outline-none transition-colors hover:bg-sunk focus-visible:bg-sunk focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-primary/40"
                 >
-                  <div className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-chip text-brand-dark">
+                  <div className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-sky-tint text-ocean-deep">
                     <Plane className="size-5 -rotate-45" />
                   </div>
                   <div className="min-w-0 flex-1">
-                    <p className="font-display text-base font-semibold text-navy">
+                    <p className="tracking-heading text-base font-semibold text-tx-head">
                       {o.route_from ?? "?"} → {o.route_to ?? "?"}
                     </p>
                     <p className="truncate text-xs text-muted-foreground">
@@ -140,7 +140,7 @@ export default function CustomerOrdersPage() {
                   </div>
                   <div className="hidden items-center gap-4 sm:flex">
                     {o.selling_price != null ? (
-                      <span className="font-display text-sm font-semibold text-foreground">
+                      <span className="tracking-heading text-sm font-semibold text-foreground">
                         {gbp(o.selling_price)}
                       </span>
                     ) : (
@@ -160,7 +160,7 @@ export default function CustomerOrdersPage() {
 
                 <div className="flex items-center justify-between px-5 pb-3 sm:hidden">
                   {o.selling_price != null ? (
-                    <span className="font-display text-sm font-semibold text-foreground">
+                    <span className="tracking-heading text-sm font-semibold text-foreground">
                       {gbp(o.selling_price)}
                     </span>
                   ) : (
@@ -172,7 +172,7 @@ export default function CustomerOrdersPage() {
                 </div>
 
                 {open ? (
-                  <div className="border-t border-border bg-neutral-soft/60 px-5 py-5">
+                  <div className="border-t border-border bg-sunk/60 px-5 py-5">
                     <div className="grid grid-cols-1 gap-x-8 gap-y-3 text-sm sm:grid-cols-2">
                       <DetailRow icon={Calendar} label="Departure" value={fmtDate(o.travel_date)} />
                       <DetailRow icon={Calendar} label="Return" value={o.return_date ? fmtDate(o.return_date) : "—"} />

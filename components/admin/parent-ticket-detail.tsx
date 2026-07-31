@@ -40,7 +40,7 @@ import { fmtDate, fmtRelative } from "@/lib/format";
 import { cn } from "@/lib/utils";
 
 const selectClass =
-  "h-10 rounded-[10px] border border-input bg-card px-3 text-sm text-foreground outline-none transition-colors focus-visible:border-brand focus-visible:ring-[3px] focus-visible:ring-brand/25";
+  "h-10 rounded-[10px] border border-input bg-card px-3 text-base text-foreground outline-none transition-colors focus-visible:border-ocean focus-visible:ring-[3px] focus-visible:ring-ocean/25 sm:text-sm";
 
 /** One label/value pair inside a section's definition grid. */
 function Field({
@@ -54,7 +54,7 @@ function Field({
 }) {
   return (
     <div className={cn("min-w-0", wide && "sm:col-span-2")}>
-      <dt className="font-label text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
+      <dt className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
         {label}
       </dt>
       <dd className="mt-1 whitespace-pre-wrap break-words text-sm text-foreground">
@@ -164,21 +164,21 @@ export function ParentTicketDetail({
     <div className="space-y-5">
       <Link
         href="/admin/parents-tickets"
-        className="inline-flex items-center gap-1.5 text-sm font-medium text-brand transition-colors hover:text-brand-dark"
+        className="inline-flex items-center gap-1.5 text-sm font-medium text-ocean transition-colors hover:text-ocean-deep"
       >
         <ArrowLeft className="size-4" />
         Back to parents tickets
       </Link>
 
       {/* Header */}
-      <div className="flex flex-col gap-4 rounded-2xl border border-border bg-card p-5 shadow-card sm:flex-row sm:items-center sm:justify-between">
+      <div className="flex flex-col gap-4 rounded-2xl border border-border bg-card p-5 shadow-lift sm:flex-row sm:items-center sm:justify-between">
         <div className="flex items-center gap-3">
-          <div className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-chip text-brand-dark">
+          <div className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-sky-tint text-ocean-deep">
             <HeartHandshake className="size-5" />
           </div>
           <div className="leading-tight">
             <div className="flex flex-wrap items-center gap-2">
-              <p className="font-display text-lg font-semibold text-navy">
+              <p className="tracking-heading text-lg font-semibold text-tx-head">
                 Lead {enquiry.reference_number}
               </p>
               <StatusBadge tone={PARENT_TICKET_TYPE_TONE[enquiry.enquiry_type]}>
@@ -200,7 +200,7 @@ export function ParentTicketDetail({
         <div className="flex items-center gap-2">
           <label
             htmlFor="lead-status"
-            className="font-label text-[11px] font-medium uppercase tracking-wider text-slate-600"
+            className="text-[11px] font-medium uppercase tracking-wider text-slate-600"
           >
             Status
           </label>
@@ -228,11 +228,11 @@ export function ParentTicketDetail({
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div className="space-y-1 text-sm">
             <p className="flex items-center gap-2 text-foreground">
-              <Mail className="size-4 text-brand" />
+              <Mail className="size-4 text-ocean" />
               {enquiry.email}
             </p>
             <p className="flex items-center gap-2 text-foreground">
-              <Phone className="size-4 text-brand" />
+              <Phone className="size-4 text-ocean" />
               {enquiry.phone}
             </p>
           </div>
@@ -310,7 +310,7 @@ export function ParentTicketDetail({
               value={
                 <span className="inline-flex flex-wrap items-center gap-1.5">
                   {enquiry.from_location}
-                  <ArrowRight className="size-3.5 text-brand" />
+                  <ArrowRight className="size-3.5 text-ocean" />
                   {enquiry.to_location}
                 </span>
               }
@@ -367,7 +367,7 @@ export function ParentTicketDetail({
           description="Anything extra they added when submitting."
         >
           {enquiry.notes ? (
-            <p className="whitespace-pre-wrap break-words rounded-xl bg-neutral-soft p-3.5 text-sm text-foreground">
+            <p className="whitespace-pre-wrap break-words rounded-xl bg-sunk p-3.5 text-sm text-foreground">
               {enquiry.notes}
             </p>
           ) : (
@@ -384,7 +384,7 @@ export function ParentTicketDetail({
             ) : (
               <ul className="space-y-2.5">
                 {notes.map((note) => (
-                  <li key={note.id} className="rounded-xl bg-neutral-soft p-3.5">
+                  <li key={note.id} className="rounded-xl bg-sunk p-3.5">
                     <p className="whitespace-pre-wrap break-words text-sm text-foreground">
                       {note.body}
                     </p>
@@ -399,7 +399,7 @@ export function ParentTicketDetail({
             <form onSubmit={saveNote} className="space-y-2.5">
               <Label
                 htmlFor="new-note"
-                className="font-label text-xs font-medium uppercase tracking-wider text-slate-600"
+                className="text-xs font-medium uppercase tracking-wider text-slate-600"
               >
                 Add a note
               </Label>
@@ -411,7 +411,6 @@ export function ParentTicketDetail({
                 rows={3}
                 maxLength={2000}
                 disabled={noteBusy}
-                className="rounded-[10px] bg-neutral-soft"
               />
               <div className="flex justify-end">
                 <Button

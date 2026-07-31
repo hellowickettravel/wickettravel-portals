@@ -109,7 +109,7 @@ export function ResetEverything() {
           <ShieldAlert className="size-5" />
         </div>
         <div className="min-w-0">
-          <h3 className="font-display text-base font-semibold text-rose-700">
+          <h3 className="tracking-heading text-base font-semibold text-rose-700">
             Danger zone — Reset everything
           </h3>
           <p className="mt-1 text-sm text-rose-700/80">
@@ -147,7 +147,7 @@ export function ResetEverything() {
           {step === "form" ? (
             <>
               <DialogHeader>
-                <DialogTitle className="font-display text-rose-700">
+                <DialogTitle className="tracking-heading text-rose-700">
                   Reset everything?
                 </DialogTitle>
                 <DialogDescription>
@@ -161,7 +161,7 @@ export function ResetEverything() {
               <div className="space-y-4">
                 <div className="space-y-2">
                   <Label htmlFor="reset-confirm">
-                    <span className="font-label text-xs font-medium uppercase tracking-wider text-slate-600">
+                    <span className="text-xs font-medium uppercase tracking-wider text-slate-600">
                       Type{" "}
                       <span className="font-semibold text-rose-700">
                         {CONFIRM_PHRASE}
@@ -176,13 +176,12 @@ export function ResetEverything() {
                     onChange={(e) => setConfirmText(e.target.value)}
                     placeholder={CONFIRM_PHRASE}
                     disabled={busy}
-                    className="h-10 rounded-[10px] bg-white"
                   />
                 </div>
 
                 <div className="space-y-2">
                   <Label htmlFor="reset-password">
-                    <span className="font-label text-xs font-medium uppercase tracking-wider text-slate-600">
+                    <span className="text-xs font-medium uppercase tracking-wider text-slate-600">
                       Confirm your password
                     </span>
                   </Label>
@@ -194,7 +193,6 @@ export function ResetEverything() {
                     onChange={(e) => setPassword(e.target.value)}
                     placeholder="Your account password"
                     disabled={busy}
-                    className="h-10 rounded-[10px] bg-white"
                   />
                 </div>
               </div>
@@ -221,7 +219,7 @@ export function ResetEverything() {
           ) : (
             <>
               <DialogHeader>
-                <DialogTitle className="font-display text-rose-700">
+                <DialogTitle className="tracking-heading text-rose-700">
                   Final confirmation
                 </DialogTitle>
                 <DialogDescription>

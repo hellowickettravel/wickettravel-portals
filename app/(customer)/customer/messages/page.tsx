@@ -214,15 +214,15 @@ export default function CustomerMessagesPage() {
     const el = document.getElementById(`cmsg-${id}`);
     if (el) {
       el.scrollIntoView({ behavior: "smooth", block: "center" });
-      el.classList.add("ring-2", "ring-brand/50");
-      setTimeout(() => el.classList.remove("ring-2", "ring-brand/50"), 1200);
+      el.classList.add("ring-2", "ring-ocean/50");
+      setTimeout(() => el.classList.remove("ring-2", "ring-ocean/50"), 1200);
     }
   }
 
   return (
     <div className="space-y-7 animate-in fade-in slide-in-from-bottom-2 duration-500 ease-out">
       <div>
-        <h1 className="font-display text-xl font-semibold tracking-tight text-navy sm:text-2xl">
+        <h1 className="text-xl font-semibold tracking-tight text-tx-head sm:text-2xl">
           Messages
         </h1>
         <p className="mt-1 text-sm text-muted-foreground">
@@ -230,7 +230,7 @@ export default function CustomerMessagesPage() {
         </p>
       </div>
 
-      <div className="flex h-[calc(100dvh-16rem)] min-h-[420px] flex-col overflow-hidden rounded-2xl border border-border bg-card shadow-card">
+      <div className="flex h-[calc(100dvh-16rem)] min-h-[420px] flex-col overflow-hidden rounded-2xl border border-border bg-card shadow-lift">
         {/* Chat header */}
         <div className="flex items-center gap-3 border-b border-border px-4 py-3.5 sm:px-5">
           <ChatBackButton onClick={() => router.back()} label="Go back" />
@@ -241,7 +241,7 @@ export default function CustomerMessagesPage() {
             <span className="absolute -bottom-0.5 -right-0.5 size-3 rounded-full border-2 border-card bg-emerald-500" />
           </div>
           <div className="leading-tight">
-            <p className="font-display text-sm font-semibold text-navy">Wicket Travel Team</p>
+            <p className="tracking-heading text-sm font-semibold text-tx-head">Wicket Travel Team</p>
             <p className="text-xs text-emerald-600">Typically replies in minutes</p>
           </div>
         </div>
@@ -249,7 +249,7 @@ export default function CustomerMessagesPage() {
         {/* Messages */}
         <div
           ref={scrollRef}
-          className="flex-1 space-y-3 overflow-y-auto bg-neutral-soft/50 px-4 py-5 md:px-6"
+          className="flex-1 space-y-3 overflow-y-auto bg-sunk/50 px-4 py-5 md:px-6"
         >
           {isLoading ? (
             <div className="flex h-full items-center justify-center text-sm text-muted-foreground">
@@ -258,10 +258,10 @@ export default function CustomerMessagesPage() {
             </div>
           ) : !conversation ? (
             <div className="flex h-full flex-col items-center justify-center gap-2 text-center">
-              <div className="flex size-12 items-center justify-center rounded-2xl bg-chip text-brand-dark">
+              <div className="flex size-12 items-center justify-center rounded-2xl bg-sky-tint text-ocean-deep">
                 <MessageCircle className="size-6" />
               </div>
-              <p className="font-display text-sm font-semibold text-foreground">
+              <p className="tracking-heading text-sm font-semibold text-foreground">
                 No conversation yet
               </p>
               <p className="max-w-xs text-xs text-muted-foreground">
@@ -358,7 +358,7 @@ export default function CustomerMessagesPage() {
             />
           ) : null}
           {pendingFile ? (
-            <div className="mb-2 flex items-center gap-2.5 rounded-xl border border-border bg-neutral-soft px-2.5 py-2">
+            <div className="mb-2 flex items-center gap-2.5 rounded-xl border border-border bg-sunk px-2.5 py-2">
               {pendingPreview ? (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img
@@ -367,7 +367,7 @@ export default function CustomerMessagesPage() {
                   className="size-10 shrink-0 rounded-lg object-cover"
                 />
               ) : (
-                <div className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-chip text-brand-dark">
+                <div className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-sky-tint text-ocean-deep">
                   <FileText className="size-5" />
                 </div>
               )}
@@ -396,10 +396,10 @@ export default function CustomerMessagesPage() {
             <Button
               type="button"
               variant="ghost"
-              size="icon"
+              size="icon-sm"
               aria-label="Attach file"
               disabled={!conversation || uploading}
-              className="size-10 shrink-0 rounded-full text-muted-foreground"
+              className="shrink-0 text-tx-muted"
               onClick={() => fileRef.current?.click()}
             >
               <Paperclip className="size-4" />
@@ -415,13 +415,12 @@ export default function CustomerMessagesPage() {
                   : "No conversation yet"
               }
               disabled={!conversation}
-              className="h-11 rounded-full bg-neutral-soft"
             />
             <Button
               type="submit"
               size="icon"
               aria-label="Send message"
-              className="size-11 shrink-0 rounded-full"
+              className="shrink-0"
               disabled={(!draft.trim() && !pendingFile) || !conversation || uploading}
             >
               {uploading ? (

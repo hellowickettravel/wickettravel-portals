@@ -64,17 +64,17 @@ export function EmployeeOrders({ accessLevel }: { accessLevel: AccessLevel }) {
       />
 
       {/* Personal totals (NOT company-wide) */}
-      <div className="grid grid-cols-1 gap-4 rounded-2xl border border-border bg-card p-1 shadow-card sm:grid-cols-3">
+      <div className="grid grid-cols-1 gap-4 rounded-2xl border border-border bg-card p-1 shadow-lift sm:grid-cols-3">
         {[
           { label: "My orders", value: String(rows.length) },
           { label: "My open", value: String(myOpen) },
           { label: "My commission", value: gbp(myCommission) },
         ].map((t, i) => (
           <div key={t.label} className={cn("px-5 py-4", i > 0 && "sm:border-l sm:border-border")}>
-            <p className="font-label text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+            <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
               {t.label}
             </p>
-            <p className="mt-1 font-display text-xl font-semibold text-foreground">{t.value}</p>
+            <p className="mt-1 tracking-heading text-xl font-semibold text-foreground">{t.value}</p>
           </div>
         ))}
       </div>
@@ -90,10 +90,10 @@ export function EmployeeOrders({ accessLevel }: { accessLevel: AccessLevel }) {
           </p>
         ) : rows.length === 0 ? (
           <div className="flex flex-col items-center gap-2 px-6 py-14 text-center">
-            <div className="flex size-12 items-center justify-center rounded-2xl bg-chip text-brand-dark">
+            <div className="flex size-12 items-center justify-center rounded-2xl bg-sky-tint text-ocean-deep">
               <ShoppingBag className="size-6" />
             </div>
-            <p className="font-display text-base font-semibold text-foreground">
+            <p className="tracking-heading text-base font-semibold text-foreground">
               No orders yet
             </p>
             <p className="max-w-sm text-sm text-muted-foreground">
@@ -120,7 +120,7 @@ export function EmployeeOrders({ accessLevel }: { accessLevel: AccessLevel }) {
                   aria-label={`View order for ${o.customer?.name ?? "customer"}`}
                 >
                 <MobileRecordCard
-                  title={<span className="text-navy">{o.customer?.name ?? "—"}</span>}
+                  title={<span className="text-tx-head">{o.customer?.name ?? "—"}</span>}
                   badge={
                     <StatusBadge tone={ORDER_TONE[o.status]}>
                       {titleCase(o.status)}
@@ -175,7 +175,7 @@ export function EmployeeOrders({ accessLevel }: { accessLevel: AccessLevel }) {
                       className="cursor-pointer"
                       onClick={() => router.push(`/employee/orders/${o.id}`)}
                     >
-                      <TableCell className="pl-6 font-medium text-navy">
+                      <TableCell className="pl-6 font-medium text-tx-head">
                         {o.customer?.name ?? "—"}
                       </TableCell>
                       <TableCell className="font-medium text-muted-foreground">
@@ -202,7 +202,7 @@ export function EmployeeOrders({ accessLevel }: { accessLevel: AccessLevel }) {
                         <Link
                           href={`/employee/orders/${o.id}`}
                           onClick={(e) => e.stopPropagation()}
-                          className="inline-flex items-center gap-1 text-sm font-medium text-brand transition-colors hover:text-brand-dark"
+                          className="inline-flex items-center gap-1 text-sm font-medium text-ocean transition-colors hover:text-ocean-deep"
                         >
                           View
                           <ChevronRight className="size-3.5" />

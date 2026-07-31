@@ -148,7 +148,7 @@ export function NotificationsBell({
     <DropdownMenu>
       <DropdownMenuTrigger
         aria-label={unread > 0 ? `Notifications, ${unread} unread` : "Notifications"}
-        className="relative inline-flex size-9 items-center justify-center rounded-full text-muted-foreground outline-none transition-colors hover:bg-muted hover:text-foreground focus-visible:ring-[3px] focus-visible:ring-brand/25"
+        className="relative inline-flex size-9 items-center justify-center rounded-full text-muted-foreground outline-none transition-colors hover:bg-muted hover:text-foreground focus-visible:ring-[3px] focus-visible:ring-ocean/25"
       >
         <Bell className="size-[18px]" />
         {unread > 0 ? (
@@ -164,7 +164,7 @@ export function NotificationsBell({
             <button
               type="button"
               onClick={() => readAllMutation.mutate()}
-              className="inline-flex items-center gap-1 text-xs font-medium text-brand transition-colors hover:text-brand-dark"
+              className="inline-flex items-center gap-1 text-xs font-medium text-ocean transition-colors hover:text-ocean-deep"
             >
               <CheckCheck className="size-3.5" />
               Mark all read
@@ -174,7 +174,7 @@ export function NotificationsBell({
 
         {items.length === 0 ? (
           <div className="flex flex-col items-center justify-center gap-2 px-4 py-9 text-center">
-            <div className="flex size-10 items-center justify-center rounded-full bg-chip text-brand-dark">
+            <div className="flex size-10 items-center justify-center rounded-full bg-sky-tint text-ocean-deep">
               <Bell className="size-5" />
             </div>
             <p className="text-sm font-medium text-foreground">
@@ -203,11 +203,11 @@ export function NotificationsBell({
                       openNotification(n.id, n.is_read, n.type, n.link)
                     }
                     className={cn(
-                      "flex w-full items-start gap-3 px-3.5 py-2.5 text-left transition-colors hover:bg-neutral-soft",
-                      !n.is_read && "bg-chip/40"
+                      "flex w-full items-start gap-3 px-3.5 py-2.5 text-left transition-colors hover:bg-sunk",
+                      !n.is_read && "bg-sky-tint/40"
                     )}
                   >
-                    <div className="mt-0.5 flex size-8 shrink-0 items-center justify-center rounded-lg bg-chip text-brand-dark">
+                    <div className="mt-0.5 flex size-8 shrink-0 items-center justify-center rounded-lg bg-sky-tint text-ocean-deep">
                       <Icon className="size-4" />
                     </div>
                     <div className="min-w-0 flex-1">
@@ -237,7 +237,7 @@ export function NotificationsBell({
 
         <Link
           href={notificationsHref}
-          className="flex items-center justify-center gap-1.5 border-t border-border px-3.5 py-2.5 text-sm font-medium text-brand outline-none transition-colors hover:bg-neutral-soft focus-visible:bg-neutral-soft"
+          className="flex items-center justify-center gap-1.5 border-t border-border px-3.5 py-2.5 text-sm font-medium text-ocean outline-none transition-colors hover:bg-sunk focus-visible:bg-sunk"
         >
           View all notifications
           <ArrowRight className="size-3.5" />

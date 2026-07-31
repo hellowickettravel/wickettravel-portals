@@ -28,7 +28,7 @@ const PREF_ITEMS: { key: PrefKey; label: string; desc: string }[] = [
 
 function fieldLabel(text: string) {
   return (
-    <span className="font-label text-xs font-medium uppercase tracking-wider text-slate-600">
+    <span className="text-xs font-medium uppercase tracking-wider text-slate-600">
       {text}
     </span>
   );
@@ -143,7 +143,6 @@ export function SettingsForm({
                 id="name"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                className="h-10 rounded-[10px] bg-neutral-soft"
               />
             </div>
             <div className="space-y-2">
@@ -152,7 +151,7 @@ export function SettingsForm({
                 id="email"
                 value={email}
                 readOnly
-                className="h-10 cursor-not-allowed rounded-[10px] bg-muted text-muted-foreground"
+                className="cursor-not-allowed bg-muted text-muted-foreground"
               />
             </div>
           </div>
@@ -183,7 +182,6 @@ export function SettingsForm({
                 value={newPassword}
                 onChange={(e) => setNewPassword(e.target.value)}
                 placeholder="At least 8 characters"
-                className="h-10 rounded-[10px] bg-neutral-soft"
               />
             </div>
             <div className="space-y-2">
@@ -194,7 +192,6 @@ export function SettingsForm({
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 placeholder="Re-enter new password"
-                className="h-10 rounded-[10px] bg-neutral-soft"
               />
             </div>
           </div>
@@ -225,7 +222,7 @@ export function SettingsForm({
           {PREF_ITEMS.map((p) => (
             <li key={p.key} className="flex items-center justify-between gap-4 py-3.5 first:pt-0 last:pb-0">
               <div className="flex items-start gap-3">
-                <BellRing className="mt-0.5 size-4 shrink-0 text-brand" />
+                <BellRing className="mt-0.5 size-4 shrink-0 text-ocean" />
                 <div>
                   <p className="text-sm font-medium text-foreground">{p.label}</p>
                   <p className="text-xs text-muted-foreground">{p.desc}</p>

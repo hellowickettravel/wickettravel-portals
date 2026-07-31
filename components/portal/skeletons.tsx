@@ -11,7 +11,7 @@ import { cn } from "@/lib/utils";
 /** A single stat card placeholder, matching <StatCard>. */
 export function StatCardSkeleton() {
   return (
-    <Card className="shadow-card">
+    <Card className="shadow-lift">
       <CardContent>
         <div className="flex items-start justify-between gap-3">
           <Skeleton className="h-3 w-20" />
@@ -48,7 +48,7 @@ export function TableSkeleton({
   return (
     <div
       className={cn(
-        "overflow-hidden rounded-2xl border border-border bg-card shadow-card",
+        "overflow-hidden rounded-2xl border border-border bg-card shadow-lift",
         className
       )}
     >
@@ -95,7 +95,7 @@ export function ConversationListSkeleton({ rows = 6 }: { rows?: number }) {
 /** Full inbox skeleton: conversation list + a message thread pane. */
 export function InboxSkeleton() {
   return (
-    <div className="flex h-[calc(100dvh-9.5rem)] min-h-[460px] overflow-hidden rounded-2xl border border-border bg-card shadow-card">
+    <div className="flex h-[calc(100dvh-9.5rem)] min-h-[460px] overflow-hidden rounded-2xl border border-border bg-card shadow-lift">
       {/* Left list */}
       <aside className="hidden w-[330px] shrink-0 flex-col border-r border-border md:flex">
         <div className="border-b border-border p-3">
@@ -115,7 +115,7 @@ export function InboxSkeleton() {
             <Skeleton className="h-3 w-20" />
           </div>
         </div>
-        <div className="flex-1 space-y-3 bg-neutral-soft/50 px-4 py-5 md:px-6">
+        <div className="flex-1 space-y-3 bg-sunk/50 px-4 py-5 md:px-6">
           {[
             { mine: false, w: "w-56" },
             { mine: true, w: "w-40" },

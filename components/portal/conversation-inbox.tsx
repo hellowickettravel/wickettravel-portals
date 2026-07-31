@@ -397,13 +397,13 @@ export function ConversationInbox({
     const el = document.getElementById(`cmsg-${id}`);
     if (el) {
       el.scrollIntoView({ behavior: "smooth", block: "center" });
-      el.classList.add("ring-2", "ring-brand/50");
-      setTimeout(() => el.classList.remove("ring-2", "ring-brand/50"), 1200);
+      el.classList.add("ring-2", "ring-ocean/50");
+      setTimeout(() => el.classList.remove("ring-2", "ring-ocean/50"), 1200);
     }
   }
 
   return (
-    <div className="flex h-[calc(100dvh-9.5rem)] min-h-[460px] overflow-hidden rounded-2xl border border-border bg-card shadow-card">
+    <div className="flex h-[calc(100dvh-9.5rem)] min-h-[460px] overflow-hidden rounded-2xl border border-border bg-card shadow-lift">
       {/* LEFT — conversation list */}
       <aside
         className={cn(
@@ -418,7 +418,7 @@ export function ConversationInbox({
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Search chats…"
-              className="h-10 rounded-[10px] bg-neutral-soft pl-9"
+              className="pl-9"
             />
           </div>
         </div>
@@ -429,10 +429,10 @@ export function ConversationInbox({
           </div>
         ) : conversations.length === 0 ? (
           <div className="flex flex-1 flex-col items-center justify-center gap-2 px-6 text-center">
-            <div className="flex size-12 items-center justify-center rounded-2xl bg-chip text-brand-dark">
+            <div className="flex size-12 items-center justify-center rounded-2xl bg-sky-tint text-ocean-deep">
               <Inbox className="size-6" />
             </div>
-            <p className="font-display text-sm font-semibold text-foreground">
+            <p className="tracking-heading text-sm font-semibold text-foreground">
               No conversations yet
             </p>
             <p className="max-w-[16rem] text-xs text-muted-foreground">
@@ -456,14 +456,14 @@ export function ConversationInbox({
                     type="button"
                     onClick={() => openConversation(c.id)}
                     className={cn(
-                      "flex w-full items-center gap-3 border-b border-l-2 border-border/70 px-4 py-3 text-left outline-none transition-colors focus-visible:bg-neutral-soft focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-primary/40",
+                      "flex w-full items-center gap-3 border-b border-l-2 border-border/70 px-4 py-3 text-left outline-none transition-colors focus-visible:bg-sunk focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-primary/40",
                       isActive
-                        ? "border-l-primary bg-chip/70"
-                        : "border-l-transparent hover:bg-neutral-soft"
+                        ? "border-l-primary bg-sky-tint/70"
+                        : "border-l-transparent hover:bg-sunk"
                     )}
                   >
                     <Avatar className="size-10">
-                      <AvatarFallback className="bg-chip text-xs font-semibold text-brand-dark">
+                      <AvatarFallback className="bg-sky-tint text-xs font-semibold text-ocean-deep">
                         {initialsOf(name)}
                       </AvatarFallback>
                     </Avatar>
@@ -507,12 +507,12 @@ export function ConversationInbox({
                   label="Back to conversations"
                 />
                 <Avatar className="size-9">
-                  <AvatarFallback className="bg-chip text-xs font-semibold text-brand-dark">
+                  <AvatarFallback className="bg-sky-tint text-xs font-semibold text-ocean-deep">
                     {initialsOf(active.customer?.name || active.customer?.wa_phone || "?")}
                   </AvatarFallback>
                 </Avatar>
                 <div className="leading-tight">
-                  <p className="font-display text-sm font-semibold text-navy">
+                  <p className="tracking-heading text-sm font-semibold text-tx-head">
                     {active.customer?.name || "Unknown customer"}
                   </p>
                   <p className="text-xs text-muted-foreground">
@@ -536,7 +536,7 @@ export function ConversationInbox({
                           employeeId: e.target.value || null,
                         })
                       }
-                      className="h-9 max-w-[10rem] rounded-[10px] border border-input bg-neutral-soft px-2.5 text-sm text-foreground outline-none transition-colors focus-visible:border-primary focus-visible:ring-[3px] focus-visible:ring-primary/30 disabled:opacity-50"
+                      className="h-9 max-w-[10rem] rounded-[10px] border border-input bg-sunk px-2.5 text-base text-foreground outline-none transition-colors focus-visible:border-primary focus-visible:ring-[3px] focus-visible:ring-primary/30 disabled:opacity-50 sm:text-sm"
                     >
                       <option value="">Unassigned</option>
                       {activeEmployees.map((emp) => (
@@ -586,7 +586,7 @@ export function ConversationInbox({
             {/* Messages */}
             <div
               ref={scrollRef}
-              className="flex-1 space-y-3 overflow-y-auto bg-neutral-soft/50 px-4 py-5 md:px-6"
+              className="flex-1 space-y-3 overflow-y-auto bg-sunk/50 px-4 py-5 md:px-6"
             >
               {messagesLoading ? (
                 <div className="flex h-full items-center justify-center text-sm text-muted-foreground">
@@ -683,7 +683,7 @@ export function ConversationInbox({
                   />
                 ) : null}
                 {pendingFile ? (
-                  <div className="mb-2 flex items-center gap-2.5 rounded-xl border border-border bg-neutral-soft px-2.5 py-2">
+                  <div className="mb-2 flex items-center gap-2.5 rounded-xl border border-border bg-sunk px-2.5 py-2">
                     {pendingPreview ? (
                       // eslint-disable-next-line @next/next/no-img-element
                       <img
@@ -692,7 +692,7 @@ export function ConversationInbox({
                         className="size-10 shrink-0 rounded-lg object-cover"
                       />
                     ) : (
-                      <div className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-chip text-brand-dark">
+                      <div className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-sky-tint text-ocean-deep">
                         <FileText className="size-5" />
                       </div>
                     )}
@@ -721,10 +721,10 @@ export function ConversationInbox({
                   <Button
                     type="button"
                     variant="ghost"
-                    size="icon"
+                    size="icon-sm"
                     aria-label="Attach file"
                     disabled={uploading}
-                    className="size-10 shrink-0 rounded-full text-muted-foreground"
+                    className="shrink-0 text-tx-muted"
                     onClick={() => fileRef.current?.click()}
                   >
                     <Paperclip className="size-4" />
@@ -741,13 +741,12 @@ export function ConversationInbox({
                     value={draft}
                     onChange={(e) => setDraft(e.target.value)}
                     placeholder={pendingFile ? "Add a caption…" : "Type a message…"}
-                    className="h-11 rounded-full bg-neutral-soft"
                   />
                   <Button
                     type="submit"
                     size="icon"
                     aria-label="Send message"
-                    className="size-11 shrink-0 rounded-full"
+                    className="shrink-0"
                     disabled={(!draft.trim() && !pendingFile) || uploading}
                   >
                     {uploading ? (

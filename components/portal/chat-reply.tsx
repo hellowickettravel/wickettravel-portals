@@ -41,7 +41,7 @@ export function MessageReplyButton({
       aria-label="Reply to this message"
       title="Reply"
       className={cn(
-        "inline-flex size-7 items-center justify-center rounded-full border border-border bg-white text-muted-foreground opacity-0 shadow-sm outline-none transition-all hover:border-brand hover:text-brand focus-visible:opacity-100 focus-visible:ring-2 focus-visible:ring-primary/40 group-hover:opacity-100",
+        "inline-flex size-7 items-center justify-center rounded-full border border-border bg-white text-muted-foreground opacity-0 shadow-sm outline-none transition-all hover:border-ocean hover:text-ocean focus-visible:opacity-100 focus-visible:ring-2 focus-visible:ring-primary/40 group-hover:opacity-100",
         className
       )}
     >
@@ -74,20 +74,20 @@ export function QuotedMessage({
         onJump && "cursor-pointer",
         mine
           ? "bg-white/15 hover:bg-white/20"
-          : "bg-neutral-soft hover:bg-muted"
+          : "bg-sunk hover:bg-muted"
       )}
     >
       <span
         className={cn(
           "w-0.5 shrink-0 rounded-full",
-          mine ? "bg-white/70" : "bg-brand"
+          mine ? "bg-white/70" : "bg-ocean"
         )}
       />
       <span className="min-w-0 flex-1">
         <span
           className={cn(
             "block text-[11px] font-semibold",
-            mine ? "text-white/90" : "text-brand"
+            mine ? "text-white/90" : "text-ocean"
           )}
         >
           {quoted.label}
@@ -117,10 +117,10 @@ export function ReplyComposerBar({
   onCancel: () => void;
 }) {
   return (
-    <div className="mb-2 flex items-stretch gap-2 rounded-xl border border-border bg-neutral-soft py-1.5 pl-2.5 pr-2">
-      <span className="w-0.5 shrink-0 rounded-full bg-brand" />
+    <div className="mb-2 flex items-stretch gap-2 rounded-xl border border-border bg-sunk py-1.5 pl-2.5 pr-2">
+      <span className="w-0.5 shrink-0 rounded-full bg-ocean" />
       <div className="min-w-0 flex-1">
-        <p className="text-[11px] font-semibold text-brand">
+        <p className="text-[11px] font-semibold text-ocean">
           Replying to {quoted.label}
         </p>
         <p className="flex items-center gap-1 truncate text-xs text-muted-foreground">

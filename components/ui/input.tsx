@@ -10,11 +10,15 @@ import { cn } from "@/lib/utils"
  * ALWAYS visible at rest (1px #D7E1EC) with a real inner shadow, so the field
  * reads as a container rather than appearing only on focus.
  *
+ * One deliberate deviation from the scale: below 640px the text is held at
+ * 16px. iOS Safari zooms the whole viewport when you focus a field under 16px,
+ * and 15.5px lands just the wrong side of that line. Desktop keeps the 15.5px.
+ *
  * Exported so <Textarea>, <SelectTrigger> and any native <select> stay
  * pixel-identical to <Input>.
  */
 const fieldClassName =
-  "w-full min-w-0 rounded-control border border-line-strong bg-surface font-sans text-[15.5px] font-normal text-tx-body shadow-lift-in transition-[color,box-shadow,border-color,background-color] duration-150 ease-brand outline-none placeholder:text-tx-faint hover:border-line-hover focus-visible:border-ocean focus-visible:ring-[3px] focus-visible:ring-ocean/12 disabled:cursor-not-allowed disabled:border-line-strong disabled:bg-sunk disabled:text-tx-faint disabled:shadow-none aria-invalid:border-rose aria-invalid:ring-[3px] aria-invalid:ring-rose/10"
+  "w-full min-w-0 rounded-control border border-line-strong bg-surface font-sans text-base font-normal tracking-ui text-tx-body shadow-lift-in sm:text-[15.5px] transition-[color,box-shadow,border-color,background-color] duration-150 ease-brand outline-none placeholder:text-tx-faint hover:border-line-hover focus-visible:border-ocean focus-visible:ring-[3px] focus-visible:ring-ocean/12 disabled:cursor-not-allowed disabled:border-line-strong disabled:bg-sunk disabled:text-tx-faint disabled:shadow-none aria-invalid:border-rose aria-invalid:ring-[3px] aria-invalid:ring-rose/10"
 
 function Input({
   className,

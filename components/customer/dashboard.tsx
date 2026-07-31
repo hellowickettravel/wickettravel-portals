@@ -73,7 +73,7 @@ export function CustomerDashboard({ firstName }: { firstName: string }) {
   return (
     <div className="space-y-7 animate-in fade-in slide-in-from-bottom-2 duration-500 ease-out">
       <div>
-        <h1 className="font-display text-xl font-semibold tracking-tight text-navy sm:text-2xl">
+        <h1 className="text-xl font-semibold tracking-tight text-tx-head sm:text-2xl">
           Welcome back, {firstName}
         </h1>
         <p className="mt-1 text-sm text-muted-foreground">
@@ -88,11 +88,11 @@ export function CustomerDashboard({ firstName }: { firstName: string }) {
       </div>
 
       {/* CTA */}
-      <div className="relative overflow-hidden rounded-2xl bg-[linear-gradient(165deg,var(--ocean)_0%,var(--ocean-deep)_58%,var(--ocean-night)_100%)] p-7 shadow-card md:p-8">
+      <div className="relative overflow-hidden rounded-2xl bg-[linear-gradient(165deg,var(--ocean)_0%,var(--ocean-deep)_58%,var(--ocean-night)_100%)] p-7 shadow-lift md:p-8">
         <div className="bg-dot-grid pointer-events-none absolute inset-0 opacity-40 [mask-image:radial-gradient(120%_120%_at_20%_0%,black,transparent_75%)]" />
         <div className="relative z-10 flex flex-col items-start justify-between gap-5 md:flex-row md:items-center">
           <div className="max-w-md">
-            <h2 className="font-display text-xl font-semibold text-white md:text-2xl">
+            <h2 className="tracking-heading text-xl font-semibold text-white md:text-2xl">
               Planning your next trip?
             </h2>
             <p className="mt-1.5 text-sm text-white/75">
@@ -101,7 +101,7 @@ export function CustomerDashboard({ firstName }: { firstName: string }) {
           </div>
           <Link
             href="/customer/book"
-            className="inline-flex h-11 items-center gap-2 rounded-[10px] bg-white px-5 text-sm font-semibold text-brand-dark shadow-sm outline-none transition-all hover:-translate-y-px hover:shadow-md focus-visible:ring-2 focus-visible:ring-white/70 focus-visible:ring-offset-2 focus-visible:ring-offset-navy"
+            className="inline-flex h-[46px] items-center gap-[9px] rounded-control bg-white px-[22px] text-[15px] font-semibold tracking-ui text-ocean-deep shadow-lift outline-none transition-colors duration-150 ease-brand hover:bg-sky-tint focus-visible:ring-2 focus-visible:ring-white/70 focus-visible:ring-offset-2 focus-visible:ring-offset-ocean-deep"
           >
             Book a New Flight
             <ArrowRight className="size-4" />
@@ -115,7 +115,7 @@ export function CustomerDashboard({ firstName }: { firstName: string }) {
         action={
           <Link
             href="/customer/orders"
-            className="inline-flex items-center gap-1 text-sm font-medium text-brand transition-colors hover:text-brand-dark"
+            className="inline-flex items-center gap-1 text-sm font-medium text-ocean transition-colors hover:text-ocean-deep"
           >
             View all <ArrowRight className="size-4" />
           </Link>
@@ -133,7 +133,7 @@ export function CustomerDashboard({ firstName }: { firstName: string }) {
                 className="flex flex-col gap-3 py-3.5 first:pt-0 last:pb-0 sm:flex-row sm:items-center sm:justify-between"
               >
                 <div className="flex items-center gap-3">
-                  <div className="flex size-10 items-center justify-center rounded-xl bg-chip text-brand-dark">
+                  <div className="flex size-10 items-center justify-center rounded-xl bg-sky-tint text-ocean-deep">
                     <Plane className="size-5 -rotate-45" />
                   </div>
                   <div className="leading-tight">
@@ -149,7 +149,7 @@ export function CustomerDashboard({ firstName }: { firstName: string }) {
                 </div>
                 <div className="flex items-center gap-4 pl-13 sm:pl-0">
                   {o.selling_price != null ? (
-                    <span className="font-display text-sm font-semibold text-foreground">
+                    <span className="tracking-heading text-sm font-semibold text-foreground">
                       {gbp(o.selling_price)}
                     </span>
                   ) : null}
@@ -164,13 +164,13 @@ export function CustomerDashboard({ firstName }: { firstName: string }) {
       </SectionCard>
 
       {/* Help footer */}
-      <div className="flex items-center justify-between rounded-2xl border border-border bg-neutral-soft px-5 py-4">
+      <div className="flex items-center justify-between rounded-2xl border border-border bg-sunk px-5 py-4">
         <p className="text-sm text-muted-foreground">
           Have a question? Chat with our team directly in the portal.
         </p>
         <Link
           href="/customer/messages"
-          className="inline-flex items-center gap-1 text-sm font-medium text-brand hover:text-brand-dark"
+          className="inline-flex items-center gap-1 text-sm font-medium text-ocean hover:text-ocean-deep"
         >
           Open messages <ArrowUpRight className="size-4" />
         </Link>

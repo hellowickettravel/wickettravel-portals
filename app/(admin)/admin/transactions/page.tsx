@@ -45,7 +45,7 @@ const STATUS_TABS: { label: string; value: "all" | OrderStatus }[] = [
 ];
 
 const selectClass =
-  "h-10 rounded-[10px] border border-input bg-card px-3 text-sm text-foreground outline-none transition-colors focus-visible:border-brand focus-visible:ring-[3px] focus-visible:ring-brand/25";
+  "h-10 rounded-[10px] border border-input bg-card px-3 text-base text-foreground outline-none transition-colors focus-visible:border-ocean focus-visible:ring-[3px] focus-visible:ring-ocean/25 sm:text-sm";
 
 const ORDERS_KEY = ["admin", "orders"] as const;
 
@@ -162,14 +162,14 @@ export default function TransactionsPage() {
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               placeholder="Search by order # or customer…"
-              className="h-10 rounded-[10px] bg-card pl-9"
+              className="pl-9"
             />
           </div>
         </div>
 
         <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-end">
           <div className="space-y-1.5">
-            <Label className="font-label text-[11px] font-medium uppercase tracking-wider text-slate-600">
+            <Label className="text-[11px] font-medium uppercase tracking-wider text-slate-600">
               Employee
             </Label>
             <select
@@ -188,7 +188,7 @@ export default function TransactionsPage() {
             </select>
           </div>
           <div className="space-y-1.5">
-            <Label className="font-label text-[11px] font-medium uppercase tracking-wider text-slate-600">
+            <Label className="text-[11px] font-medium uppercase tracking-wider text-slate-600">
               Created from
             </Label>
             <Input
@@ -196,11 +196,11 @@ export default function TransactionsPage() {
               value={from}
               max={to || undefined}
               onChange={(e) => setFrom(e.target.value)}
-              className="h-10 w-full rounded-[10px] bg-card sm:w-44"
+              className="w-full sm:w-44"
             />
           </div>
           <div className="space-y-1.5">
-            <Label className="font-label text-[11px] font-medium uppercase tracking-wider text-slate-600">
+            <Label className="text-[11px] font-medium uppercase tracking-wider text-slate-600">
               Created to
             </Label>
             <Input
@@ -208,7 +208,7 @@ export default function TransactionsPage() {
               value={to}
               min={from || undefined}
               onChange={(e) => setTo(e.target.value)}
-              className="h-10 w-full rounded-[10px] bg-card sm:w-44"
+              className="w-full sm:w-44"
             />
           </div>
           {(from || to || employeeId !== "all") ? (
@@ -240,10 +240,10 @@ export default function TransactionsPage() {
           </p>
         ) : all.length === 0 ? (
           <div className="flex flex-col items-center gap-2 px-6 py-14 text-center">
-            <div className="flex size-12 items-center justify-center rounded-2xl bg-chip text-brand-dark">
+            <div className="flex size-12 items-center justify-center rounded-2xl bg-sky-tint text-ocean-deep">
               <Receipt className="size-6" />
             </div>
-            <p className="font-display text-base font-semibold text-foreground">
+            <p className="tracking-heading text-base font-semibold text-foreground">
               No transactions yet
             </p>
             <p className="max-w-sm text-sm text-muted-foreground">
@@ -262,10 +262,10 @@ export default function TransactionsPage() {
                 visible.map((o) => (
                   <Link key={o.id} href={`/admin/orders/${o.id}`} className="block">
                     <MobileRecordCard
-                      title={<span className="text-navy">{o.order_number}</span>}
+                      title={<span className="text-tx-head">{o.order_number}</span>}
                       subtitle={o.customer?.name ?? "—"}
                       action={
-                        <span className="inline-flex items-center gap-0.5 text-xs font-medium text-brand">
+                        <span className="inline-flex items-center gap-0.5 text-xs font-medium text-ocean">
                           View
                           <ChevronRight className="size-4" />
                         </span>
@@ -314,10 +314,10 @@ export default function TransactionsPage() {
                       className="cursor-pointer"
                       onClick={() => router.push(`/admin/orders/${o.id}`)}
                     >
-                      <TableCell className="pl-6 font-medium text-navy">
+                      <TableCell className="pl-6 font-medium text-tx-head">
                         <Link
                           href={`/admin/orders/${o.id}`}
-                          className="hover:text-brand"
+                          className="hover:text-ocean"
                           onClick={(e) => e.stopPropagation()}
                         >
                           {o.order_number}
@@ -344,7 +344,7 @@ export default function TransactionsPage() {
                       >
                         <Link
                           href={`/admin/orders/${o.id}`}
-                          className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-card px-3 py-1.5 text-sm font-medium text-foreground transition-colors hover:border-brand hover:text-brand"
+                          className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-card px-3 py-1.5 text-sm font-medium text-foreground transition-colors hover:border-ocean hover:text-ocean"
                         >
                           <Eye className="size-4" />
                           View

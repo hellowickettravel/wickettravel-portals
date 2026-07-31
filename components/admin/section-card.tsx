@@ -28,12 +28,12 @@ export function SectionCard({
   flush,
 }: SectionCardProps) {
   return (
-    <Card className={cn("shadow-card", className)}>
+    <Card className={cn("shadow-lift", className)}>
       {title || action ? (
         <CardHeader className="flex flex-row items-start justify-between gap-3">
           <div className="space-y-1">
             {title ? (
-              <CardTitle className="font-display text-base">{title}</CardTitle>
+              <CardTitle className="tracking-heading text-base">{title}</CardTitle>
             ) : null}
             {description ? (
               <CardDescription>{description}</CardDescription>

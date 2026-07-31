@@ -17,7 +17,7 @@ export default function EarningsPage() {
   return (
     <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-500 ease-out">
       <div>
-        <h1 className="font-display text-xl font-semibold tracking-tight text-navy sm:text-2xl">
+        <h1 className="text-xl font-semibold tracking-tight text-tx-head sm:text-2xl">
           Earnings
         </h1>
         <p className="mt-1 text-sm text-muted-foreground">
@@ -34,10 +34,10 @@ export default function EarningsPage() {
       </div>
 
       {/* Chart */}
-      <div className="rounded-2xl bg-card p-5 ring-1 ring-foreground/10 shadow-card">
+      <div className="rounded-2xl bg-card p-5 ring-1 ring-foreground/10 shadow-lift">
         <div className="mb-4 flex items-center justify-between">
           <div>
-            <h2 className="font-display text-sm font-semibold text-navy">Last 7 days</h2>
+            <h2 className="tracking-heading text-sm font-semibold text-tx-head">Last 7 days</h2>
             <p className="text-xs text-muted-foreground">Net earnings per day</p>
           </div>
           <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-medium text-emerald-700">
@@ -49,25 +49,25 @@ export default function EarningsPage() {
       </div>
 
       {/* Per-ride breakdown */}
-      <div className="rounded-2xl bg-card p-1.5 ring-1 ring-foreground/10 shadow-card">
+      <div className="rounded-2xl bg-card p-1.5 ring-1 ring-foreground/10 shadow-lift">
         <div className="flex items-center justify-between px-3.5 pb-1 pt-3">
-          <h2 className="font-display text-sm font-semibold text-navy">Recent payouts</h2>
+          <h2 className="tracking-heading text-sm font-semibold text-tx-head">Recent payouts</h2>
           <span className="text-xs text-muted-foreground">Fare − fee = net</span>
         </div>
         <ul className="divide-y divide-border">
           {EARNINGS.map((e) => (
             <li key={e.ref} className="flex items-center gap-3 px-3.5 py-3">
-              <div className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-chip text-brand-dark">
+              <div className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-sky-tint text-ocean-deep">
                 <Wallet className="size-[18px]" />
               </div>
               <div className="min-w-0 flex-1">
-                <p className="truncate text-sm font-medium text-navy">{e.route}</p>
+                <p className="truncate text-sm font-medium text-tx-head">{e.route}</p>
                 <p className="text-xs text-muted-foreground">
                   {e.ref} · {e.dateLabel}
                 </p>
               </div>
               <div className="text-right">
-                <p className="font-display text-sm font-semibold text-emerald-700">
+                <p className="tracking-heading text-sm font-semibold text-emerald-700">
                   {inr(netOf(e))}
                 </p>
                 <p className="text-[11px] text-muted-foreground">

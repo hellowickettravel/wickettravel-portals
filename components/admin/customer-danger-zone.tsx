@@ -39,7 +39,7 @@ export function CustomerDangerZone({
   return (
     <div className="flex flex-col gap-3 rounded-2xl border border-rose-200 bg-rose-50/50 p-5 sm:flex-row sm:items-center sm:justify-between">
       <div>
-        <p className="font-display text-sm font-semibold text-rose-700">
+        <p className="tracking-heading text-sm font-semibold text-rose-700">
           Danger zone
         </p>
         <p className="text-xs text-muted-foreground">
@@ -49,7 +49,7 @@ export function CustomerDangerZone({
       </div>
       <Button
         variant="outline"
-        className="shrink-0 border-rose-300 text-rose-600 hover:bg-rose-100 hover:text-rose-700"
+        className="shrink-0 border-rose-line text-rose hover:bg-rose-tint hover:text-rose"
         onClick={() => setOpen(true)}
         disabled={busy}
       >

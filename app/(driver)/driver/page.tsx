@@ -35,7 +35,7 @@ export default function DriverHomePage() {
       {/* Greeting */}
       <div>
         <p className="text-sm text-muted-foreground">{greeting()},</p>
-        <h1 className="font-display text-2xl font-semibold tracking-tight text-navy">
+        <h1 className="text-2xl font-semibold tracking-tight text-tx-head">
           {firstName}
         </h1>
       </div>
@@ -54,31 +54,31 @@ export default function DriverHomePage() {
       {activeRide ? (
         <div>
           <div className="mb-2 flex items-center justify-between">
-            <h2 className="font-display text-sm font-semibold text-navy">Active trip</h2>
+            <h2 className="tracking-heading text-sm font-semibold text-tx-head">Active trip</h2>
             <RideStatusBadge stage={activeRide.stage} />
           </div>
-          <div className="relative overflow-hidden rounded-2xl bg-[linear-gradient(165deg,var(--ocean)_0%,var(--ocean-deep)_58%,var(--ocean-night)_100%)] p-5 shadow-card">
+          <div className="relative overflow-hidden rounded-2xl bg-[linear-gradient(165deg,var(--ocean)_0%,var(--ocean-deep)_58%,var(--ocean-night)_100%)] p-5 shadow-lift">
             <div className="bg-dot-grid pointer-events-none absolute inset-0 opacity-30 [mask-image:radial-gradient(120%_120%_at_20%_0%,black,transparent_75%)]" />
             <div className="relative z-10">
               <div className="flex items-center justify-between">
-                <span className="font-label text-[11px] font-semibold uppercase tracking-wider text-orange-light">
+                <span className="text-[11px] font-semibold uppercase tracking-wider text-coral">
                   {activeRide.ref}
                 </span>
                 <span className="inline-flex items-center gap-1.5 rounded-full bg-white/10 px-2.5 py-1 text-[11px] font-medium text-white ring-1 ring-inset ring-white/15">
-                  <Navigation className="size-3 text-orange-light" />
+                  <Navigation className="size-3 text-coral" />
                   {STAGE_META[activeRide.stage].label}
                 </span>
               </div>
 
               <div className="mt-4 space-y-2.5">
                 <div className="flex items-center gap-2.5 text-white">
-                  <Plane className="size-4 shrink-0 -rotate-45 text-orange-light" />
+                  <Plane className="size-4 shrink-0 -rotate-45 text-coral" />
                   <span className="text-sm font-medium">
                     {airportShort(activeRide.pickupAirport)} Airport · {activeRide.pickupPoint}
                   </span>
                 </div>
                 <div className="flex items-center gap-2.5 text-white">
-                  <MapPin className="size-4 shrink-0 text-orange-light" />
+                  <MapPin className="size-4 shrink-0 text-coral" />
                   <span className="text-sm font-medium">{activeRide.dropoff}</span>
                 </div>
               </div>
@@ -91,14 +91,14 @@ export default function DriverHomePage() {
                   </span>
                   <span>{activeRide.customerName}</span>
                 </div>
-                <span className="font-display text-lg font-bold text-white">
+                <span className="tracking-heading text-lg font-bold text-white">
                   {inr(activeRide.fare)}
                 </span>
               </div>
 
               <Button
                 render={<Link href={`/driver/rides/${activeRide.id}`} />}
-                className="mt-4 h-11 w-full rounded-xl bg-white text-brand-dark hover:bg-white/90 hover:text-brand-dark"
+                className="mt-4 w-full bg-white text-ocean-deep shadow-lift hover:bg-sky-tint hover:text-ocean-deep"
               >
                 Continue trip
                 <ArrowRight className="size-4" />
@@ -107,11 +107,11 @@ export default function DriverHomePage() {
           </div>
         </div>
       ) : (
-        <div className="rounded-2xl border border-dashed border-outline bg-neutral-soft/60 p-5 text-center">
-          <div className="mx-auto flex size-11 items-center justify-center rounded-xl bg-chip text-brand-dark">
+        <div className="rounded-2xl border border-dashed border-line-strong bg-sunk/60 p-5 text-center">
+          <div className="mx-auto flex size-11 items-center justify-center rounded-xl bg-sky-tint text-ocean-deep">
             <Car className="size-5" />
           </div>
-          <p className="mt-3 font-display text-sm font-semibold text-navy">No active trip</p>
+          <p className="mt-3 tracking-heading text-sm font-semibold text-tx-head">No active trip</p>
           <p className="mt-1 text-xs text-muted-foreground">
             {online
               ? "You're online — accept a ride from the Job Board to get started."
@@ -123,13 +123,13 @@ export default function DriverHomePage() {
       {/* Job board shortcut */}
       <Link
         href="/driver/jobs"
-        className="flex items-center gap-4 rounded-2xl bg-card p-4 ring-1 ring-foreground/10 shadow-card outline-none transition-shadow hover:shadow-md focus-visible:ring-2 focus-visible:ring-primary/40"
+        className="flex items-center gap-4 rounded-2xl bg-card p-4 ring-1 ring-foreground/10 shadow-lift outline-none transition-shadow hover:shadow-md focus-visible:ring-2 focus-visible:ring-primary/40"
       >
-        <div className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-orange/10 text-orange-dark">
+        <div className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-coral-deep/10 text-coral-press">
           <Car className="size-5" />
         </div>
         <div className="min-w-0 flex-1">
-          <p className="font-display text-sm font-semibold text-navy">
+          <p className="tracking-heading text-sm font-semibold text-tx-head">
             {jobs.length} rides available now
           </p>
           <p className="text-xs text-muted-foreground">
@@ -142,13 +142,13 @@ export default function DriverHomePage() {
       {/* Earnings shortcut */}
       <Link
         href="/driver/earnings"
-        className="flex items-center gap-4 rounded-2xl bg-card p-4 ring-1 ring-foreground/10 shadow-card outline-none transition-shadow hover:shadow-md focus-visible:ring-2 focus-visible:ring-primary/40"
+        className="flex items-center gap-4 rounded-2xl bg-card p-4 ring-1 ring-foreground/10 shadow-lift outline-none transition-shadow hover:shadow-md focus-visible:ring-2 focus-visible:ring-primary/40"
       >
-        <div className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-chip text-brand-dark">
+        <div className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-sky-tint text-ocean-deep">
           <Wallet className="size-5" />
         </div>
         <div className="min-w-0 flex-1">
-          <p className="font-display text-sm font-semibold text-navy">This week&apos;s earnings</p>
+          <p className="tracking-heading text-sm font-semibold text-tx-head">This week&apos;s earnings</p>
           <p className="text-xs text-muted-foreground">See your payouts & commission breakdown</p>
         </div>
         <ChevronRight className="size-5 shrink-0 text-muted-foreground" />

@@ -47,11 +47,11 @@ const ORDER_TONE: Record<OrderStatus, Tone> = {
 };
 
 const selectClass =
-  "h-10 w-full rounded-[10px] border border-input bg-neutral-soft px-3 text-sm text-foreground outline-none transition-[color,box-shadow,border-color] duration-150 focus-visible:border-brand focus-visible:ring-[3px] focus-visible:ring-brand/25 disabled:opacity-50";
+  "h-10 w-full rounded-[10px] border border-input bg-sunk px-3 text-base text-foreground outline-none transition-[color,box-shadow,border-color] duration-150 focus-visible:border-ocean focus-visible:ring-[3px] focus-visible:ring-ocean/25 disabled:opacity-50 sm:text-sm";
 
 function fieldLabel(text: string) {
   return (
-    <span className="font-label text-xs font-medium uppercase tracking-wider text-slate-600">
+    <span className="text-xs font-medium uppercase tracking-wider text-slate-600">
       {text}
     </span>
   );
@@ -189,21 +189,21 @@ export function OrderDetail({
     <div className="space-y-5">
       <Link
         href="/admin/orders"
-        className="inline-flex items-center gap-1.5 text-sm font-medium text-brand transition-colors hover:text-brand-dark"
+        className="inline-flex items-center gap-1.5 text-sm font-medium text-ocean transition-colors hover:text-ocean-deep"
       >
         <ArrowLeft className="size-4" />
         Back to orders
       </Link>
 
       {/* Header */}
-      <div className="flex flex-col gap-4 rounded-2xl border border-border bg-card p-5 shadow-card sm:flex-row sm:items-center sm:justify-between">
+      <div className="flex flex-col gap-4 rounded-2xl border border-border bg-card p-5 shadow-lift sm:flex-row sm:items-center sm:justify-between">
         <div className="flex items-center gap-3">
-          <div className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-chip text-brand-dark">
+          <div className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-sky-tint text-ocean-deep">
             <Plane className="size-5 -rotate-45" />
           </div>
           <div className="leading-tight">
             <div className="flex items-center gap-2">
-              <p className="font-display text-lg font-semibold text-navy">
+              <p className="tracking-heading text-lg font-semibold text-tx-head">
                 Order {order.order_number}
               </p>
               <StatusBadge tone={ORDER_TONE[order.status]}>
@@ -300,7 +300,7 @@ export function OrderDetail({
                 order.customer?.id ? (
                   <Link
                     href={`/admin/customers/${order.customer.id}`}
-                    className="text-brand hover:text-brand-dark"
+                    className="text-ocean hover:text-ocean-deep"
                   >
                     {order.customer.name || "View customer"}
                   </Link>
@@ -316,7 +316,7 @@ export function OrderDetail({
                 order.conversation_id ? (
                   <Link
                     href={`/admin/messages/${order.conversation_id}`}
-                    className="inline-flex items-center gap-1 text-brand hover:text-brand-dark"
+                    className="inline-flex items-center gap-1 text-ocean hover:text-ocean-deep"
                   >
                     <MessageSquare className="size-3.5" />
                     View chat
@@ -393,7 +393,7 @@ export function OrderDetail({
       <Dialog open={editOpen} onOpenChange={(o) => busy !== "edit" && setEditOpen(o)}>
         <DialogContent className="sm:max-w-lg">
           <DialogHeader>
-            <DialogTitle className="font-display">Edit order</DialogTitle>
+            <DialogTitle className="tracking-heading">Edit order</DialogTitle>
             <DialogDescription>
               Update trip and pricing details. Customer can&apos;t be changed here.
             </DialogDescription>
@@ -409,7 +409,6 @@ export function OrderDetail({
                   onChange={(e) => setRouteFrom(e.target.value)}
                   required
                   disabled={busy === "edit"}
-                  className="h-10 rounded-[10px] bg-neutral-soft"
                 />
               </div>
               <div className="space-y-2">
@@ -420,7 +419,6 @@ export function OrderDetail({
                   onChange={(e) => setRouteTo(e.target.value)}
                   required
                   disabled={busy === "edit"}
-                  className="h-10 rounded-[10px] bg-neutral-soft"
                 />
               </div>
             </div>
@@ -434,7 +432,6 @@ export function OrderDetail({
                   value={travelDate}
                   onChange={(e) => setTravelDate(e.target.value)}
                   disabled={busy === "edit"}
-                  className="h-10 rounded-[10px] bg-neutral-soft"
                 />
               </div>
               <div className="space-y-2">
@@ -445,7 +442,6 @@ export function OrderDetail({
                   value={returnDate}
                   onChange={(e) => setReturnDate(e.target.value)}
                   disabled={busy === "edit"}
-                  className="h-10 rounded-[10px] bg-neutral-soft"
                 />
               </div>
             </div>
@@ -460,7 +456,6 @@ export function OrderDetail({
                   value={passengers}
                   onChange={(e) => setPassengers(e.target.value)}
                   disabled={busy === "edit"}
-                  className="h-10 rounded-[10px] bg-neutral-soft"
                 />
               </div>
               <div className="space-y-2">
@@ -474,7 +469,6 @@ export function OrderDetail({
                   onChange={(e) => setSellingPrice(e.target.value)}
                   placeholder="0.00"
                   disabled={busy === "edit"}
-                  className="h-10 rounded-[10px] bg-neutral-soft"
                 />
               </div>
             </div>
@@ -491,7 +485,6 @@ export function OrderDetail({
                   onChange={(e) => setCostPrice(e.target.value)}
                   placeholder="0.00"
                   disabled={busy === "edit"}
-                  className="h-10 rounded-[10px] bg-neutral-soft"
                 />
               </div>
               <div className="space-y-2">
@@ -505,7 +498,6 @@ export function OrderDetail({
                   onChange={(e) => setCommission(e.target.value)}
                   placeholder="0.00"
                   disabled={busy === "edit"}
-                  className="h-10 rounded-[10px] bg-neutral-soft"
                 />
               </div>
             </div>
@@ -518,7 +510,6 @@ export function OrderDetail({
                 onChange={(e) => setNotes(e.target.value)}
                 rows={3}
                 disabled={busy === "edit"}
-                className="rounded-[10px] bg-neutral-soft"
               />
             </div>
 

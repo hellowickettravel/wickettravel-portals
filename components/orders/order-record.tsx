@@ -91,14 +91,14 @@ export function FlightDetailsCard({ order }: { order: Order }) {
 
       {order.passenger_names.length > 0 ? (
         <div className="mt-4 border-t border-border pt-4">
-          <p className="font-label text-xs font-medium uppercase tracking-wider text-slate-600">
+          <p className="text-xs font-medium uppercase tracking-wider text-slate-600">
             Passenger names
           </p>
           <div className="mt-2.5 flex flex-wrap gap-2">
             {order.passenger_names.map((name, i) => (
               <span
                 key={`${name}-${i}`}
-                className="inline-flex items-center gap-1.5 rounded-full bg-chip px-3 py-1 text-sm font-medium text-brand-dark"
+                className="inline-flex items-center gap-1.5 rounded-full bg-sky-tint px-3 py-1 text-sm font-medium text-ocean-deep"
               >
                 <Users className="size-3.5" />
                 {name}
@@ -144,7 +144,7 @@ export function PreOrderNoteCard({
         <div className="space-y-4">
           {note ? (
             <div className="flex gap-3">
-              <FileText className="mt-0.5 size-4 shrink-0 text-brand" />
+              <FileText className="mt-0.5 size-4 shrink-0 text-ocean" />
               <p className="whitespace-pre-wrap text-sm leading-relaxed text-foreground">
                 {note}
               </p>
@@ -153,7 +153,7 @@ export function PreOrderNoteCard({
 
           {attachments.length > 0 ? (
             <div className="space-y-2">
-              <p className="flex items-center gap-1.5 font-label text-xs font-medium uppercase tracking-wider text-slate-600">
+              <p className="flex items-center gap-1.5 text-xs font-medium uppercase tracking-wider text-slate-600">
                 <Paperclip className="size-3.5" />
                 {attachments.length} attachment{attachments.length !== 1 ? "s" : ""}
               </p>
@@ -165,7 +165,7 @@ export function PreOrderNoteCard({
                       href={att.url}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="group block overflow-hidden rounded-xl border border-border bg-neutral-soft"
+                      className="group block overflow-hidden rounded-xl border border-border bg-sunk"
                     >
                       {/* eslint-disable-next-line @next/next/no-img-element */}
                       <img
@@ -181,11 +181,11 @@ export function PreOrderNoteCard({
                       target="_blank"
                       rel="noopener noreferrer"
                       className={cn(
-                        "flex items-center gap-2.5 rounded-xl border border-border bg-neutral-soft px-3 py-2.5 text-sm transition-colors hover:bg-muted",
+                        "flex items-center gap-2.5 rounded-xl border border-border bg-sunk px-3 py-2.5 text-sm transition-colors hover:bg-muted",
                         !att.url && "pointer-events-none opacity-60"
                       )}
                     >
-                      <FileText className="size-5 shrink-0 text-brand" />
+                      <FileText className="size-5 shrink-0 text-ocean" />
                       <span className="min-w-0 flex-1 truncate text-foreground">
                         {att.file_name ?? "attachment"}
                       </span>

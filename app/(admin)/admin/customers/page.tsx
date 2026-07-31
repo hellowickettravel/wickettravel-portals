@@ -186,7 +186,7 @@ export default function AdminCustomersPage() {
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Search by name or phone…"
-            className="h-10 rounded-[10px] bg-card pl-9"
+            className="pl-9"
           />
         </div>
       </div>
@@ -202,10 +202,10 @@ export default function AdminCustomersPage() {
           </p>
         ) : all.length === 0 ? (
           <div className="flex flex-col items-center gap-2 px-6 py-14 text-center">
-            <div className="flex size-12 items-center justify-center rounded-2xl bg-chip text-brand-dark">
+            <div className="flex size-12 items-center justify-center rounded-2xl bg-sky-tint text-ocean-deep">
               <Contact className="size-6" />
             </div>
-            <p className="font-display text-base font-semibold text-foreground">
+            <p className="tracking-heading text-base font-semibold text-foreground">
               No customers yet
             </p>
             <p className="max-w-sm text-sm text-muted-foreground">
@@ -228,10 +228,10 @@ export default function AdminCustomersPage() {
                 visible.map((c) => (
                   <Link key={c.id} href={`/admin/customers/${c.id}`} className="block">
                     <MobileRecordCard
-                      title={<span className="text-navy">{c.name || "Unnamed"}</span>}
+                      title={<span className="text-tx-head">{c.name || "Unnamed"}</span>}
                       subtitle={c.wa_phone ?? "No phone"}
                       action={
-                        <span className="inline-flex items-center gap-0.5 text-xs font-medium text-brand">
+                        <span className="inline-flex items-center gap-0.5 text-xs font-medium text-ocean">
                           View
                           <ChevronRight className="size-4" />
                         </span>
@@ -273,10 +273,10 @@ export default function AdminCustomersPage() {
                       className="cursor-pointer"
                       onClick={() => router.push(`/admin/customers/${c.id}`)}
                     >
-                      <TableCell className="pl-6 font-medium text-navy">
+                      <TableCell className="pl-6 font-medium text-tx-head">
                         <Link
                           href={`/admin/customers/${c.id}`}
-                          className="hover:text-brand"
+                          className="hover:text-ocean"
                           onClick={(e) => e.stopPropagation()}
                         >
                           {c.name || "Unnamed"}
@@ -305,7 +305,7 @@ export default function AdminCustomersPage() {
                       >
                         <Link
                           href={`/admin/customers/${c.id}`}
-                          className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-card px-3 py-1.5 text-sm font-medium text-foreground transition-colors hover:border-brand hover:text-brand"
+                          className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-card px-3 py-1.5 text-sm font-medium text-foreground transition-colors hover:border-ocean hover:text-ocean"
                         >
                           <Eye className="size-4" />
                           View
@@ -342,7 +342,7 @@ export default function AdminCustomersPage() {
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle className="font-display">Add Customer</DialogTitle>
+            <DialogTitle className="tracking-heading">Add Customer</DialogTitle>
             <DialogDescription>
               Creates a portal login so the customer can sign in straight away.
             </DialogDescription>
@@ -350,7 +350,7 @@ export default function AdminCustomersPage() {
 
           <form onSubmit={handleCreate} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="cust-name" className="font-label text-xs font-medium uppercase tracking-wider text-slate-600">
+              <Label htmlFor="cust-name" className="text-xs font-medium uppercase tracking-wider text-slate-600">
                 Full name
               </Label>
               <Input
@@ -360,11 +360,10 @@ export default function AdminCustomersPage() {
                 placeholder="John Doe"
                 required
                 disabled={createMutation.isPending}
-                className="h-10 rounded-[10px] bg-neutral-soft"
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="cust-email" className="font-label text-xs font-medium uppercase tracking-wider text-slate-600">
+              <Label htmlFor="cust-email" className="text-xs font-medium uppercase tracking-wider text-slate-600">
                 Email
               </Label>
               <Input
@@ -375,11 +374,10 @@ export default function AdminCustomersPage() {
                 placeholder="john@example.com"
                 required
                 disabled={createMutation.isPending}
-                className="h-10 rounded-[10px] bg-neutral-soft"
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="cust-phone" className="font-label text-xs font-medium uppercase tracking-wider text-slate-600">
+              <Label htmlFor="cust-phone" className="text-xs font-medium uppercase tracking-wider text-slate-600">
                 Phone number <span className="font-normal normal-case tracking-normal text-muted-foreground">(optional)</span>
               </Label>
               <Input
@@ -389,11 +387,10 @@ export default function AdminCustomersPage() {
                 onChange={(e) => setWaPhone(e.target.value)}
                 placeholder="+44 7700 900000"
                 disabled={createMutation.isPending}
-                className="h-10 rounded-[10px] bg-neutral-soft"
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="cust-pass" className="font-label text-xs font-medium uppercase tracking-wider text-slate-600">
+              <Label htmlFor="cust-pass" className="text-xs font-medium uppercase tracking-wider text-slate-600">
                 Temporary password
               </Label>
               <div className="relative">
@@ -406,7 +403,7 @@ export default function AdminCustomersPage() {
                   required
                   minLength={8}
                   disabled={createMutation.isPending}
-                  className="h-10 rounded-[10px] bg-neutral-soft pr-10"
+                  className="pr-10"
                 />
                 <button
                   type="button"

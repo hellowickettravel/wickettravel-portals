@@ -20,7 +20,7 @@ export function UserCell({
   return (
     <div className="flex items-center gap-2.5">
       <Avatar className={cn(size === "sm" ? "size-7" : "size-8")}>
-        <AvatarFallback className="bg-chip text-[11px] font-semibold text-brand-dark">
+        <AvatarFallback className="bg-sky-tint text-[11px] font-semibold text-ocean-deep">
           {initialsOf(name)}
         </AvatarFallback>
       </Avatar>

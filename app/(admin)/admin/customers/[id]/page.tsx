@@ -34,20 +34,20 @@ export default async function AdminCustomerDetailPage({
     <div className="space-y-5">
       <Link
         href="/admin/customers"
-        className="inline-flex items-center gap-1.5 text-sm font-medium text-brand transition-colors hover:text-brand-dark"
+        className="inline-flex items-center gap-1.5 text-sm font-medium text-ocean transition-colors hover:text-ocean-deep"
       >
         <ArrowLeft className="size-4" />
         Back to customers
       </Link>
 
       {/* Header */}
-      <div className="flex items-center gap-3 rounded-2xl border border-border bg-card p-5 shadow-card">
-        <div className="flex size-12 shrink-0 items-center justify-center rounded-xl bg-chip text-brand-dark">
+      <div className="flex items-center gap-3 rounded-2xl border border-border bg-card p-5 shadow-lift">
+        <div className="flex size-12 shrink-0 items-center justify-center rounded-xl bg-sky-tint text-ocean-deep">
           <User className="size-6" />
         </div>
         <div className="leading-tight">
           <div className="flex items-center gap-2">
-            <p className="font-display text-lg font-semibold text-navy">
+            <p className="tracking-heading text-lg font-semibold text-tx-head">
               {customer.name || "Unnamed customer"}
             </p>
             <StatusBadge tone={customer.profile_id ? "green" : "slate"}>
@@ -72,13 +72,13 @@ export default async function AdminCustomerDetailPage({
               <li key={o.id}>
                 <Link
                   href={`/admin/orders/${o.id}`}
-                  className="flex items-center gap-4 px-5 py-3.5 transition-colors hover:bg-neutral-soft"
+                  className="flex items-center gap-4 px-5 py-3.5 transition-colors hover:bg-sunk"
                 >
-                  <div className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-chip text-brand-dark">
+                  <div className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-sky-tint text-ocean-deep">
                     <Plane className="size-4 -rotate-45" />
                   </div>
                   <div className="min-w-0 flex-1">
-                    <p className="truncate font-display text-sm font-semibold text-navy">
+                    <p className="truncate tracking-heading text-sm font-semibold text-tx-head">
                       {o.order_number}
                     </p>
                     <p className="truncate text-xs text-muted-foreground">
@@ -115,9 +115,9 @@ export default async function AdminCustomerDetailPage({
               <li key={c.id}>
                 <Link
                   href={`/admin/messages/${c.id}`}
-                  className="flex items-center gap-4 px-5 py-3.5 transition-colors hover:bg-neutral-soft"
+                  className="flex items-center gap-4 px-5 py-3.5 transition-colors hover:bg-sunk"
                 >
-                  <MessageSquare className="size-4 text-brand" />
+                  <MessageSquare className="size-4 text-ocean" />
                   <div className="min-w-0 flex-1">
                     <p className="text-sm font-medium text-foreground">
                       Conversation #{c.id.slice(0, 8)}

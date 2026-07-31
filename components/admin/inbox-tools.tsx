@@ -19,14 +19,14 @@ import {
 
 function fieldLabel(text: string) {
   return (
-    <span className="font-label text-xs font-medium uppercase tracking-wider text-slate-600">
+    <span className="text-xs font-medium uppercase tracking-wider text-slate-600">
       {text}
     </span>
   );
 }
 
 const selectClass =
-  "h-10 w-full rounded-[10px] border border-input bg-neutral-soft px-3 text-sm text-foreground outline-none transition-[color,box-shadow,border-color] duration-150 focus-visible:border-brand focus-visible:ring-[3px] focus-visible:ring-brand/25";
+  "h-10 w-full rounded-[10px] border border-input bg-sunk px-3 text-base text-foreground outline-none transition-[color,box-shadow,border-color] duration-150 focus-visible:border-ocean focus-visible:ring-[3px] focus-visible:ring-ocean/25 sm:text-sm";
 
 /**
  * Admin conversation-routing panel. Messaging is fully internal (Supabase
@@ -77,7 +77,7 @@ export function InboxTools() {
     <SectionCard
       title={
         <span className="inline-flex items-center gap-2">
-          <Route className="size-4 text-brand" />
+          <Route className="size-4 text-ocean" />
           Route a conversation
         </span>
       }
@@ -95,10 +95,10 @@ export function InboxTools() {
             employeeId: assignEmp,
           });
         }}
-        className="max-w-xl space-y-3 rounded-xl border border-border bg-neutral-soft/40 p-4"
+        className="max-w-xl space-y-3 rounded-xl border border-border bg-sunk/40 p-4"
       >
         <p className="flex items-center gap-2 text-sm font-semibold text-foreground">
-          <UserCheck className="size-4 text-brand" />
+          <UserCheck className="size-4 text-ocean" />
           Assign a conversation
         </p>
         <div className="space-y-1.5">

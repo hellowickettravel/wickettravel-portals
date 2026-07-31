@@ -50,21 +50,21 @@ export default async function CustomerOrderDetailPage({
     <div className="space-y-5 animate-in fade-in slide-in-from-bottom-2 duration-500 ease-out">
       <Link
         href="/customer/orders"
-        className="inline-flex items-center gap-1.5 text-sm font-medium text-brand transition-colors hover:text-brand-dark"
+        className="inline-flex items-center gap-1.5 text-sm font-medium text-ocean transition-colors hover:text-ocean-deep"
       >
         <ArrowLeft className="size-4" />
         Back to my orders
       </Link>
 
       {/* Header */}
-      <div className="flex flex-col gap-4 rounded-2xl border border-border bg-card p-5 shadow-card sm:flex-row sm:items-center sm:justify-between">
+      <div className="flex flex-col gap-4 rounded-2xl border border-border bg-card p-5 shadow-lift sm:flex-row sm:items-center sm:justify-between">
         <div className="flex items-center gap-3">
-          <div className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-chip text-brand-dark">
+          <div className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-sky-tint text-ocean-deep">
             <Plane className="size-5 -rotate-45" />
           </div>
           <div className="leading-tight">
             <div className="flex items-center gap-2">
-              <p className="font-display text-lg font-semibold text-navy">
+              <p className="tracking-heading text-lg font-semibold text-tx-head">
                 Order {order.order_number}
               </p>
               <StatusBadge tone={ORDER_TONE[order.status]}>
@@ -94,13 +94,13 @@ export default async function CustomerOrderDetailPage({
         <div className="space-y-5">
           <SectionCard title="Your quote">
             <div className="flex items-center gap-3">
-              <div className="flex size-11 items-center justify-center rounded-xl bg-chip text-brand-dark">
+              <div className="flex size-11 items-center justify-center rounded-xl bg-sky-tint text-ocean-deep">
                 <Ticket className="size-5" />
               </div>
               <div>
                 {order.selling_price != null ? (
                   <>
-                    <p className="font-display text-2xl font-semibold text-navy">
+                    <p className="tracking-heading text-2xl font-semibold text-tx-head">
                       {gbp(order.selling_price)}
                     </p>
                     <p className="text-xs text-muted-foreground">
@@ -109,7 +109,7 @@ export default async function CustomerOrderDetailPage({
                   </>
                 ) : (
                   <>
-                    <p className="font-display text-base font-semibold text-foreground">
+                    <p className="tracking-heading text-base font-semibold text-foreground">
                       Awaiting quote
                     </p>
                     <p className="text-xs text-muted-foreground">

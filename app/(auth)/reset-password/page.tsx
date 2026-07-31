@@ -119,7 +119,7 @@ export default function ResetPasswordPage() {
           {status === "verifying" ? (
             /* ---------- Verifying the recovery link ---------- */
             <div className="flex flex-col items-center gap-3 py-10 text-center">
-              <Loader2 className="size-6 animate-spin text-brand" />
+              <Loader2 className="size-6 animate-spin text-ocean" />
               <p className="text-sm text-slate-500">Verifying your reset link…</p>
             </div>
           ) : status === "invalid" ? (
@@ -128,7 +128,7 @@ export default function ResetPasswordPage() {
               <div className="mx-auto mb-5 flex size-14 items-center justify-center rounded-2xl bg-rose-50 text-rose-600">
                 <ShieldAlert className="size-7" />
               </div>
-              <h2 className="font-display text-[26px] font-semibold leading-tight tracking-tight text-navy">
+              <h2 className="text-[26px] font-semibold leading-tight tracking-tight text-tx-head">
                 Reset link invalid or expired
               </h2>
               <p className="mt-3 text-sm text-slate-500">
@@ -136,12 +136,13 @@ export default function ResetPasswordPage() {
                 be used once and expire after a short time. Please request a new
                 one.
               </p>
-              <Link
-                href="/login"
-                className="mt-7 inline-flex h-11 w-full items-center justify-center rounded-[10px] bg-primary text-sm font-semibold text-white shadow-sm shadow-orange/25 transition-all duration-150 hover:bg-orange-dark hover:shadow-md hover:shadow-orange/30 hover:-translate-y-px"
+              <Button
+                variant="accent"
+                className="mt-7 w-full"
+                render={<Link href="/login" />}
               >
                 Back to sign in
-              </Link>
+              </Button>
               <p className="mt-5 text-xs text-slate-500">
                 On the sign-in screen, use “Forgot password?” to get a fresh link.
               </p>
@@ -149,10 +150,10 @@ export default function ResetPasswordPage() {
           ) : (
             /* ---------- Valid recovery session → set new password ---------- */
             <>
-              <p className="font-label text-xs font-semibold uppercase tracking-[0.18em] text-brand">
+              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-ocean">
                 Reset password
               </p>
-              <h2 className="mt-2 font-display text-[28px] font-semibold leading-tight tracking-tight text-navy">
+              <h2 className="mt-2 text-[28px] font-semibold leading-tight tracking-tight text-tx-head">
                 Set a new password
               </h2>
               <p className="mt-2 text-sm text-slate-500">
@@ -163,7 +164,7 @@ export default function ResetPasswordPage() {
                 <div className="space-y-2">
                   <Label
                     htmlFor="password"
-                    className="font-label text-xs font-medium uppercase tracking-wider text-slate-600"
+                    className="text-xs font-medium uppercase tracking-wider text-slate-600"
                   >
                     New password
                   </Label>
@@ -176,7 +177,6 @@ export default function ResetPasswordPage() {
                     required
                     minLength={MIN_PASSWORD_LENGTH}
                     disabled={loading}
-                    className="h-11 rounded-[10px] bg-neutral-soft"
                   />
                   <PasswordStrength password={password} />
                 </div>
@@ -184,7 +184,7 @@ export default function ResetPasswordPage() {
                 <div className="space-y-2">
                   <Label
                     htmlFor="confirm"
-                    className="font-label text-xs font-medium uppercase tracking-wider text-slate-600"
+                    className="text-xs font-medium uppercase tracking-wider text-slate-600"
                   >
                     Confirm new password
                   </Label>
@@ -197,14 +197,14 @@ export default function ResetPasswordPage() {
                     required
                     minLength={MIN_PASSWORD_LENGTH}
                     disabled={loading}
-                    className="h-11 rounded-[10px] bg-neutral-soft"
                   />
                 </div>
 
                 <Button
                   type="submit"
                   disabled={loading}
-                  className="h-11 w-full rounded-[10px] bg-primary text-sm font-semibold text-white shadow-sm shadow-orange/25 transition-all duration-150 hover:bg-orange-dark hover:shadow-md hover:shadow-orange/30 hover:-translate-y-px"
+                  variant="accent"
+                  className="w-full"
                 >
                   {loading ? (
                     <>
@@ -221,7 +221,7 @@ export default function ResetPasswordPage() {
                 Back to{" "}
                 <Link
                   href="/login"
-                  className="font-medium text-brand transition-colors hover:text-brand-dark"
+                  className="font-medium text-ocean transition-colors hover:text-ocean-deep"
                 >
                   Sign in
                 </Link>

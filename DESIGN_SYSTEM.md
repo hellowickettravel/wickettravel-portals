@@ -48,6 +48,10 @@ Locked values. If a size isn't on this list, it doesn't go on a screen.
 | Button | 600 | 15 | −0.002em | per variant |
 | Form label | 600 | 13.5 | −0.002em | `#0A3A66` |
 
+**Tracking tokens** — `tracking-display` (−0.02em) · `tracking-heading` (−0.015em) ·
+`tracking-ui` (−0.002em, buttons/labels/field text) · `tracking-micro` (0.1em, Plex uppercase).
+Tailwind's own `tracking-tight`/`wide`/`wider` still exist; prefer these when you mean the system.
+
 **Text colours — five, never pure black**
 
 | Role | Hex | Token | Notes |
@@ -113,12 +117,16 @@ Every token exists both as a CSS variable (`var(--ocean)`) and a Tailwind utilit
 **Section rule** — alternate canvas → white → sky tint; never three of the same in a row.
 Ocean statement band once or twice per page. 1px `line` rule top and bottom whenever the background changes.
 
-### Legacy aliases
+### Retired names
 
-Screens not yet restyled still use the pre-2026 names. They now resolve to the locked
-palette, so nothing renders off-brand: `brand`→ocean, `navy`→ocean-deep, `navy-dark`→ocean-night,
-`navy-light`→ocean, `orange`→coral-deep, `orange-dark`→coral-press, `orange-light`→coral,
-`chip`→sky-tint, `neutral-soft`→sunk. **Do not use these in new code.**
+The pre-2026 aliases are gone — there is one vocabulary now. If you meet any of these in
+an old branch or a snippet, translate it: `brand`→`ocean`, `brand-dark`→`ocean-deep`,
+`navy`→`ocean-deep` (as text, `tx-head`), `navy-dark`→`ocean-night`, `navy-light`→`ocean`,
+`orange`→`coral-deep`, `orange-dark`→`coral-press`, `orange-light`→`coral`,
+`chip`→`sky-tint`, `neutral-soft`→`sunk`, `outline`→`line-strong`, `shadow-card`→`shadow-lift`,
+`font-display`→`tracking-heading`, `font-label`/`font-heading`→ nothing (the body face is
+already the only face). None of them resolve any more, so a stale one renders as no style
+at all rather than as the wrong colour.
 
 ---
 
@@ -197,7 +205,14 @@ Images take their container's radius — the clip carries through.
 **Icon chip** — `<IconChip tone="…">`: 42px, `rounded-icon`, hue at 9–16% background, 20px icon.
 Tones: `ocean` · `coral` · `amber` · `mint` · `indigo` · `rose` · `neutral`.
 
-*Exception:* `components/icons/google.tsx` keeps Google's four brand colours — it is a third-party mark, not an icon.
+**The only two places a hex may appear outside `globals.css`:**
+
+1. `components/icons/google.tsx` — Google's four brand colours, named in a local
+   `GOOGLE_BRAND` const. A third-party mark must be reproduced exactly, so it cannot be
+   mapped onto our palette. Nothing else may import it.
+2. `lib/design/brand.ts` — `BRAND.ocean` / `BRAND.coral`, for the few places that cannot
+   reach a CSS variable: hex shown to a user as literal copy (the admin Branding panel),
+   canvas/PDF output, outbound email. Never import it to style a DOM node.
 
 ---
 
@@ -238,7 +253,7 @@ no pointer events, no shadow.
 |---|---|
 | Height | 48px (`sm` select: 38px) |
 | Padding | 15px horizontal; textarea 13px vertical |
-| Text | 15.5px / 400 / `tx-body` |
+| Text | 15.5px / 400 / `tx-body` / `tracking-ui` — **16px below 640px**, see below |
 | Radius | `rounded-control` |
 | Border | 1px `line-strong` at rest — **always visible, never borderless** |
 | Inner shadow | `shadow-lift-in` — the field reads as a container |
@@ -249,6 +264,12 @@ no pointer events, no shadow.
 | Disabled | `sunk` fill, faint text, no shadow, not-allowed cursor |
 | Leading icon | 18px at 14px from the left; field padding becomes 42px (`<Input leadingIcon={…}>`) |
 | Textarea | min 96px, resize vertical only |
+
+**The one deviation from the scale.** iOS Safari zooms the whole viewport when you focus a
+field whose text is under 16px, and 15.5px lands just the wrong side of that line. So fields
+are `text-base sm:text-[15.5px]` — 16px on phones, the scale value from 640px up. A base rule
+in `globals.css` holds raw `<input>`/`<textarea>`/`<select>` at 16px on phones too, but a
+utility beats it, so any hand-styled field must restate `sm:text-sm` rather than plain `text-sm`.
 
 **`<Field>`** (`components/ui/field.tsx`) — label → hint → control → error, at the locked
 8px / 8px / 8px spacing. `<FieldGroup>` stacks fields 22px apart.

@@ -36,7 +36,7 @@ const ENQUIRIES_KEY = ["admin", "visa-enquiries", "list"] as const;
 const PAGE_SIZE = 12;
 
 const selectClass =
-  "h-10 rounded-[10px] border border-input bg-card px-3 text-sm text-foreground outline-none transition-colors focus-visible:border-brand focus-visible:ring-[3px] focus-visible:ring-brand/25";
+  "h-10 rounded-[10px] border border-input bg-card px-3 text-base text-foreground outline-none transition-colors focus-visible:border-ocean focus-visible:ring-[3px] focus-visible:ring-ocean/25 sm:text-sm";
 
 const STATUS_TABS: { label: string; value: "all" | VisaEnquiryStatus }[] = [
   { label: "All", value: "all" },
@@ -138,7 +138,7 @@ export default function AdminVisaQueriesPage() {
               onChange={(e) => setQuery(e.target.value)}
               aria-label="Search visa enquiries by name, email or reference"
               placeholder="Search name, email or reference…"
-              className="h-10 rounded-[10px] bg-card pl-9"
+              className="pl-9"
             />
           </div>
         </div>
@@ -156,10 +156,10 @@ export default function AdminVisaQueriesPage() {
           </p>
         ) : all.length === 0 ? (
           <div className="flex flex-col items-center gap-2 px-6 py-14 text-center">
-            <div className="flex size-12 items-center justify-center rounded-2xl bg-chip text-brand-dark">
+            <div className="flex size-12 items-center justify-center rounded-2xl bg-sky-tint text-ocean-deep">
               <Stamp className="size-6" />
             </div>
-            <p className="font-display text-base font-semibold text-foreground">
+            <p className="tracking-heading text-base font-semibold text-foreground">
               No visa enquiries yet
             </p>
             <p className="max-w-sm text-sm text-muted-foreground">
@@ -186,13 +186,13 @@ export default function AdminVisaQueriesPage() {
                     >
                       <MobileRecordCard
                         title={
-                          <span className="text-navy">
+                          <span className="text-tx-head">
                             {e.first_name} {e.last_name}
                           </span>
                         }
                         subtitle={e.reference_number}
                         action={
-                          <span className="inline-flex items-center gap-0.5 text-xs font-medium text-brand">
+                          <span className="inline-flex items-center gap-0.5 text-xs font-medium text-ocean">
                             View
                             <ChevronRight className="size-4" />
                           </span>
@@ -241,7 +241,7 @@ export default function AdminVisaQueriesPage() {
                         className="cursor-pointer"
                         onClick={() => router.push(`/admin/visa-queries/${e.id}`)}
                       >
-                        <TableCell className="pl-6 font-medium tabular-nums text-navy">
+                        <TableCell className="pl-6 font-medium tabular-nums text-tx-head">
                           {e.reference_number}
                         </TableCell>
                         <TableCell>
@@ -257,7 +257,7 @@ export default function AdminVisaQueriesPage() {
                         </TableCell>
                         <TableCell>
                           <span className="inline-flex items-center gap-1.5 text-sm text-muted-foreground">
-                            <contact.Icon className="size-4 text-brand" />
+                            <contact.Icon className="size-4 text-ocean" />
                             {contact.label}
                           </span>
                         </TableCell>
@@ -275,7 +275,7 @@ export default function AdminVisaQueriesPage() {
                         >
                           <Link
                             href={`/admin/visa-queries/${e.id}`}
-                            className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-card px-3 py-1.5 text-sm font-medium text-foreground transition-colors hover:border-brand hover:text-brand"
+                            className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-card px-3 py-1.5 text-sm font-medium text-foreground transition-colors hover:border-ocean hover:text-ocean"
                           >
                             <Eye className="size-4" />
                             View

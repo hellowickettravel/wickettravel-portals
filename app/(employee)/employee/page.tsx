@@ -67,7 +67,7 @@ export default async function EmployeeDashboardPage() {
   return (
     <div className="space-y-7 animate-in fade-in slide-in-from-bottom-2 duration-500 ease-out">
       <div>
-        <h1 className="font-display text-xl font-semibold tracking-tight text-navy sm:text-2xl">
+        <h1 className="text-xl font-semibold tracking-tight text-tx-head sm:text-2xl">
           Welcome back, {firstName}
         </h1>
         <p className="mt-1 text-sm text-muted-foreground">
@@ -88,7 +88,7 @@ export default async function EmployeeDashboardPage() {
         <SectionCard
           title="My Recent Conversations"
           action={
-            <Link href="/employee/messages" className="inline-flex items-center gap-1 text-sm font-medium text-brand transition-colors hover:text-brand-dark">
+            <Link href="/employee/messages" className="inline-flex items-center gap-1 text-sm font-medium text-ocean transition-colors hover:text-ocean-deep">
               Open inbox <ArrowRight className="size-4" />
             </Link>
           }
@@ -123,7 +123,7 @@ export default async function EmployeeDashboardPage() {
           title="My Recent Orders"
           flush
           action={
-            <Link href="/employee/orders" className="inline-flex items-center gap-1 px-6 text-sm font-medium text-brand transition-colors hover:text-brand-dark">
+            <Link href="/employee/orders" className="inline-flex items-center gap-1 px-6 text-sm font-medium text-ocean transition-colors hover:text-ocean-deep">
               View all <ArrowRight className="size-4" />
             </Link>
           }
@@ -145,7 +145,7 @@ export default async function EmployeeDashboardPage() {
               <TableBody>
                 {recentOrders.map((o) => (
                   <TableRow key={o.id}>
-                    <TableCell className="pl-6 font-medium text-navy">
+                    <TableCell className="pl-6 font-medium text-tx-head">
                       {o.customer?.name ?? "—"}
                     </TableCell>
                     <TableCell className="text-muted-foreground">

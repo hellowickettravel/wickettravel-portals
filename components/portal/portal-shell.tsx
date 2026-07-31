@@ -114,7 +114,7 @@ function NavLinks({
             className={cn(
               "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors",
               active
-                ? "bg-primary text-primary-foreground shadow-sm shadow-orange/30"
+                ? "bg-primary text-primary-foreground shadow-sm shadow-coral-deep/30"
                 : "text-sidebar-foreground/80 hover:bg-sidebar-accent hover:text-white"
             )}
           >
@@ -155,7 +155,7 @@ function SidebarBrand({
             <img src={logoUrl} alt="Logo" className="size-full object-cover" />
           </div>
           <div className="leading-tight">
-            <p className="font-heading text-base font-semibold text-white">
+            <p className="font-sans text-base font-semibold text-white">
               Wicket Travel
             </p>
             <p className="text-[11px] font-medium text-sidebar-foreground/70">
@@ -265,7 +265,7 @@ export function PortalShell({
             <DropdownMenu>
               <DropdownMenuTrigger className="flex items-center gap-3 rounded-full py-1 pl-1 pr-2 outline-none transition-colors hover:bg-muted focus-visible:ring-[3px] focus-visible:ring-primary/30">
                 <Avatar className="size-9">
-                  <AvatarFallback className="bg-chip text-sm font-semibold text-brand-dark">
+                  <AvatarFallback className="bg-sky-tint text-sm font-semibold text-ocean-deep">
                     {initialsOf(userName)}
                   </AvatarFallback>
                 </Avatar>

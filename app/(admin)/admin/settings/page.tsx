@@ -23,12 +23,13 @@ import {
 } from "@/lib/actions/notifications";
 import { uploadBrandingLogo } from "@/lib/storage";
 import { ADMIN_SETTINGS_KEY } from "@/lib/query-keys";
+import { BRAND } from "@/lib/design/brand";
 
 const PREFS_KEY = ["notification-prefs"] as const;
 
 function fieldLabel(text: string) {
   return (
-    <span className="font-label text-xs font-medium uppercase tracking-wider text-slate-600">
+    <span className="text-xs font-medium uppercase tracking-wider text-slate-600">
       {text}
     </span>
   );
@@ -210,23 +211,23 @@ export default function SettingsPage() {
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <div className="space-y-2">
                 <Label htmlFor="biz-name">{fieldLabel("Business name")}</Label>
-                <Input id="biz-name" value={name} onChange={(e) => setName(e.target.value)} className="h-10 rounded-[10px] bg-neutral-soft" />
+                <Input id="biz-name" value={name} onChange={(e) => setName(e.target.value)} />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="biz-email">{fieldLabel("Email")}</Label>
-                <Input id="biz-email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} className="h-10 rounded-[10px] bg-neutral-soft" />
+                <Input id="biz-email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="biz-phone">{fieldLabel("Phone")}</Label>
-                <Input id="biz-phone" value={phone} onChange={(e) => setPhone(e.target.value)} className="h-10 rounded-[10px] bg-neutral-soft" />
+                <Input id="biz-phone" value={phone} onChange={(e) => setPhone(e.target.value)} />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="biz-address">{fieldLabel("Address")}</Label>
-                <Input id="biz-address" value={address} onChange={(e) => setAddress(e.target.value)} className="h-10 rounded-[10px] bg-neutral-soft" />
+                <Input id="biz-address" value={address} onChange={(e) => setAddress(e.target.value)} />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="commission">{fieldLabel("Default commission (%)")}</Label>
-                <Input id="commission" type="number" value={commission} onChange={(e) => setCommission(e.target.value)} className="h-10 max-w-xs rounded-[10px] bg-neutral-soft" />
+                <Input id="commission" type="number" value={commission} onChange={(e) => setCommission(e.target.value)} className="max-w-xs" />
               </div>
             </div>
           )}
@@ -251,7 +252,7 @@ export default function SettingsPage() {
           <div className="space-y-2">
             {fieldLabel("Logo")}
             <div className="flex items-center gap-4">
-              <div className="flex size-20 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-border bg-neutral-soft">
+              <div className="flex size-20 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-border bg-sunk">
                 {logoUrl ? (
                   // eslint-disable-next-line @next/next/no-img-element
                   <img src={logoUrl} alt="Business logo" className="size-full object-cover" />
@@ -291,7 +292,7 @@ export default function SettingsPage() {
                     type="button"
                     variant="ghost"
                     size="sm"
-                    className="text-rose-600 hover:bg-rose-50 hover:text-rose-700"
+                    className="text-rose hover:bg-rose-tint hover:text-rose"
                     onClick={removeLogo}
                   >
                     <Trash2 className="size-4" />
@@ -304,14 +305,14 @@ export default function SettingsPage() {
           </div>
           <div className="space-y-2">
             {fieldLabel("Brand colours")}
-            <div className="flex items-center gap-3 rounded-xl border border-border bg-neutral-soft p-3">
+            <div className="flex items-center gap-3 rounded-xl border border-border bg-sunk p-3">
               <div className="flex items-center gap-2">
-                <div className="size-12 rounded-xl bg-navy shadow-sm ring-1 ring-black/5" />
-                <div className="size-12 rounded-xl bg-orange shadow-sm ring-1 ring-black/5" />
+                <div className="size-12 rounded-xl bg-ocean-deep shadow-sm ring-1 ring-black/5" />
+                <div className="size-12 rounded-xl bg-coral-deep shadow-sm ring-1 ring-black/5" />
               </div>
               <div>
-                <p className="font-display text-sm font-semibold text-foreground">
-                  #0F4C81 · #C0451F
+                <p className="tabular text-sm font-semibold tracking-heading text-foreground">
+                  {BRAND.ocean} · {BRAND.coral}
                 </p>
                 <p className="flex items-center gap-1 text-xs text-muted-foreground">
                   <Lock className="size-3" />

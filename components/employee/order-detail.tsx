@@ -53,7 +53,7 @@ const ORDER_TONE: Record<OrderStatus, Tone> = {
 
 function fieldLabel(text: string) {
   return (
-    <span className="font-label text-xs font-medium uppercase tracking-wider text-slate-600">
+    <span className="text-xs font-medium uppercase tracking-wider text-slate-600">
       {text}
     </span>
   );
@@ -185,21 +185,21 @@ export function EmployeeOrderDetail({
     <div className="space-y-5 animate-in fade-in slide-in-from-bottom-2 duration-500 ease-out">
       <Link
         href="/employee/orders"
-        className="inline-flex items-center gap-1.5 text-sm font-medium text-brand transition-colors hover:text-brand-dark"
+        className="inline-flex items-center gap-1.5 text-sm font-medium text-ocean transition-colors hover:text-ocean-deep"
       >
         <ArrowLeft className="size-4" />
         Back to orders
       </Link>
 
       {/* Header */}
-      <div className="flex flex-col gap-4 rounded-2xl border border-border bg-card p-5 shadow-card sm:flex-row sm:items-center sm:justify-between">
+      <div className="flex flex-col gap-4 rounded-2xl border border-border bg-card p-5 shadow-lift sm:flex-row sm:items-center sm:justify-between">
         <div className="flex items-center gap-3">
-          <div className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-chip text-brand-dark">
+          <div className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-sky-tint text-ocean-deep">
             <Plane className="size-5 -rotate-45" />
           </div>
           <div className="leading-tight">
             <div className="flex items-center gap-2">
-              <p className="font-display text-lg font-semibold text-navy">
+              <p className="tracking-heading text-lg font-semibold text-tx-head">
                 Order {order.order_number}
               </p>
               <StatusBadge tone={ORDER_TONE[order.status]}>
@@ -306,7 +306,7 @@ export function EmployeeOrderDetail({
                 order.conversation_id ? (
                   <Link
                     href={`/employee/messages?c=${order.conversation_id}`}
-                    className="inline-flex items-center gap-1 text-brand hover:text-brand-dark"
+                    className="inline-flex items-center gap-1 text-ocean hover:text-ocean-deep"
                   >
                     <MessageSquare className="size-3.5" />
                     View chat
@@ -356,7 +356,7 @@ export function EmployeeOrderDetail({
           <Dialog open={editOpen} onOpenChange={(o) => busy !== "edit" && setEditOpen(o)}>
             <DialogContent className="sm:max-w-lg">
               <DialogHeader>
-                <DialogTitle className="font-display">Edit order</DialogTitle>
+                <DialogTitle className="tracking-heading">Edit order</DialogTitle>
                 <DialogDescription>
                   Update trip and pricing details. Customer can&apos;t be changed here.
                 </DialogDescription>
@@ -372,7 +372,6 @@ export function EmployeeOrderDetail({
                       onChange={(e) => setRouteFrom(e.target.value)}
                       required
                       disabled={busy === "edit"}
-                      className="h-10 rounded-[10px] bg-neutral-soft"
                     />
                   </div>
                   <div className="space-y-2">
@@ -383,7 +382,6 @@ export function EmployeeOrderDetail({
                       onChange={(e) => setRouteTo(e.target.value)}
                       required
                       disabled={busy === "edit"}
-                      className="h-10 rounded-[10px] bg-neutral-soft"
                     />
                   </div>
                 </div>
@@ -397,7 +395,6 @@ export function EmployeeOrderDetail({
                       value={travelDate}
                       onChange={(e) => setTravelDate(e.target.value)}
                       disabled={busy === "edit"}
-                      className="h-10 rounded-[10px] bg-neutral-soft"
                     />
                   </div>
                   <div className="space-y-2">
@@ -408,7 +405,6 @@ export function EmployeeOrderDetail({
                       value={returnDate}
                       onChange={(e) => setReturnDate(e.target.value)}
                       disabled={busy === "edit"}
-                      className="h-10 rounded-[10px] bg-neutral-soft"
                     />
                   </div>
                 </div>
@@ -423,7 +419,6 @@ export function EmployeeOrderDetail({
                       value={passengers}
                       onChange={(e) => setPassengers(e.target.value)}
                       disabled={busy === "edit"}
-                      className="h-10 rounded-[10px] bg-neutral-soft"
                     />
                   </div>
                   <div className="space-y-2">
@@ -437,7 +432,6 @@ export function EmployeeOrderDetail({
                       onChange={(e) => setSellingPrice(e.target.value)}
                       placeholder="0.00"
                       disabled={busy === "edit"}
-                      className="h-10 rounded-[10px] bg-neutral-soft"
                     />
                   </div>
                 </div>
@@ -454,7 +448,6 @@ export function EmployeeOrderDetail({
                       onChange={(e) => setCostPrice(e.target.value)}
                       placeholder="0.00"
                       disabled={busy === "edit"}
-                      className="h-10 rounded-[10px] bg-neutral-soft"
                     />
                   </div>
                   <div className="space-y-2">
@@ -468,7 +461,6 @@ export function EmployeeOrderDetail({
                       onChange={(e) => setCommission(e.target.value)}
                       placeholder="0.00"
                       disabled={busy === "edit"}
-                      className="h-10 rounded-[10px] bg-neutral-soft"
                     />
                   </div>
                 </div>
@@ -481,7 +473,6 @@ export function EmployeeOrderDetail({
                     onChange={(e) => setNotes(e.target.value)}
                     rows={3}
                     disabled={busy === "edit"}
-                    className="rounded-[10px] bg-neutral-soft"
                   />
                 </div>
 

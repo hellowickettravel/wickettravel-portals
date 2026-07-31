@@ -28,10 +28,10 @@ export function AuthAside({
 
       {/* Centered messaging */}
       <div className="relative z-10 max-w-xl">
-        <p className="font-label text-xs font-semibold uppercase tracking-[0.22em] text-orange-light">
+        <p className="text-xs font-semibold uppercase tracking-[0.22em] text-coral">
           Travel Operations
         </p>
-        <h1 className="mt-5 max-w-md font-display text-4xl font-semibold leading-[1.15] tracking-tight text-balance text-white xl:text-5xl">
+        <h1 className="mt-5 max-w-md text-4xl font-semibold leading-[1.15] tracking-tight text-balance text-white xl:text-5xl">
           {headline}
         </h1>
         <p className="mt-5 max-w-md text-base leading-relaxed text-white/70">
@@ -42,7 +42,7 @@ export function AuthAside({
       {/* Bottom trust line */}
       <div className="relative z-10 flex max-w-md items-center gap-3">
         <div className="flex size-9 shrink-0 items-center justify-center rounded-full bg-white/10 ring-1 ring-inset ring-white/15">
-          <ShieldCheck className="size-4 text-orange-light" />
+          <ShieldCheck className="size-4 text-coral" />
         </div>
         <p className="text-[13px] leading-snug text-white/70">
           <span className="font-medium text-white/90">Secure sign-in.</span>{" "}

@@ -93,7 +93,7 @@ export default async function AdminDashboardPage() {
           action={
             <Link
               href="/admin/orders"
-              className="inline-flex items-center gap-1 text-sm font-medium text-brand transition-colors hover:text-brand-dark"
+              className="inline-flex items-center gap-1 text-sm font-medium text-ocean transition-colors hover:text-ocean-deep"
             >
               View all <ArrowRight className="size-4" />
             </Link>
@@ -117,8 +117,8 @@ export default async function AdminDashboardPage() {
               <TableBody>
                 {recentOrders.map((o) => (
                   <TableRow key={o.id}>
-                    <TableCell className="pl-6 font-medium text-navy">
-                      <Link href={`/admin/orders/${o.id}`} className="hover:text-brand">
+                    <TableCell className="pl-6 font-medium text-tx-head">
+                      <Link href={`/admin/orders/${o.id}`} className="hover:text-ocean">
                         #{o.id.slice(0, 8)}
                       </Link>
                     </TableCell>
@@ -151,14 +151,14 @@ export default async function AdminDashboardPage() {
                   <span
                     className={`mt-1.5 size-2 shrink-0 rounded-full ${
                       a.kind === "order"
-                        ? "bg-brand"
+                        ? "bg-ocean"
                         : a.kind === "message"
                           ? "bg-emerald-500"
                           : "bg-amber-500"
                     }`}
                   />
                   <Link href={a.link} className="group leading-snug">
-                    <p className="text-sm text-foreground group-hover:text-brand">
+                    <p className="text-sm text-foreground group-hover:text-ocean">
                       {a.title}
                     </p>
                     <p className="truncate text-xs text-muted-foreground">
@@ -175,34 +175,34 @@ export default async function AdminDashboardPage() {
       {/* Conversations overview */}
       <SectionCard title="Conversations overview">
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-          <div className="flex items-center gap-3 rounded-xl bg-neutral-soft p-4">
-            <div className="flex size-10 items-center justify-center rounded-xl bg-chip text-brand-dark">
+          <div className="flex items-center gap-3 rounded-xl bg-sunk p-4">
+            <div className="flex size-10 items-center justify-center rounded-xl bg-sky-tint text-ocean-deep">
               <Inbox className="size-5" />
             </div>
             <div>
-              <p className="font-display text-xl font-semibold text-foreground">
+              <p className="tracking-heading text-xl font-semibold text-foreground">
                 {conversationsCount}
               </p>
               <p className="text-xs text-muted-foreground">Total conversations</p>
             </div>
           </div>
-          <div className="flex items-center gap-3 rounded-xl bg-neutral-soft p-4">
+          <div className="flex items-center gap-3 rounded-xl bg-sunk p-4">
             <div className="flex size-10 items-center justify-center rounded-xl bg-emerald-50 text-emerald-600">
               <ShoppingBag className="size-5" />
             </div>
             <div>
-              <p className="font-display text-xl font-semibold text-foreground">
+              <p className="tracking-heading text-xl font-semibold text-foreground">
                 {orders.length}
               </p>
               <p className="text-xs text-muted-foreground">Total orders</p>
             </div>
           </div>
-          <div className="flex items-center gap-3 rounded-xl bg-neutral-soft p-4">
+          <div className="flex items-center gap-3 rounded-xl bg-sunk p-4">
             <div className="flex size-10 items-center justify-center rounded-xl bg-amber-50 text-amber-600">
               <TrendingUp className="size-5" />
             </div>
             <div>
-              <p className="font-display text-xl font-semibold text-foreground">
+              <p className="tracking-heading text-xl font-semibold text-foreground">
                 {gbp(orders.reduce((s, o) => s + (o.selling_price ?? 0), 0))}
               </p>
               <p className="text-xs text-muted-foreground">Total order value</p>

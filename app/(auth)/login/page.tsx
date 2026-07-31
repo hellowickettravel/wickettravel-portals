@@ -216,10 +216,10 @@ export default function LoginPage() {
             <BrandLogo className="h-8 w-auto" priority />
           </div>
 
-          <p className="font-label text-xs font-semibold uppercase tracking-[0.18em] text-brand">
+          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-ocean">
             Sign in
           </p>
-          <h2 className="mt-2 font-display text-[28px] font-semibold leading-tight tracking-tight text-navy">
+          <h2 className="mt-2 text-[28px] font-semibold leading-tight tracking-tight text-tx-head">
             Welcome back
           </h2>
           <p className="mt-2 text-sm text-slate-500">
@@ -227,7 +227,7 @@ export default function LoginPage() {
           </p>
 
           {redirectParam?.startsWith("/customer/book") ? (
-            <div className="mt-5 flex items-start gap-2.5 rounded-[10px] border border-outline bg-chip/60 px-3.5 py-3 text-sm text-brand-dark">
+            <div className="mt-5 flex items-start gap-2.5 rounded-[10px] border border-line-strong bg-sky-tint/60 px-3.5 py-3 text-sm text-ocean-deep">
               <Plane className="mt-0.5 size-4 shrink-0 -rotate-45" />
               <span>
                 Your booking details are saved. Sign in and we&apos;ll take you
@@ -240,7 +240,7 @@ export default function LoginPage() {
             <div className="space-y-2">
               <Label
                 htmlFor="email"
-                className="font-label text-xs font-medium uppercase tracking-wider text-slate-600"
+                className="text-xs font-medium uppercase tracking-wider text-slate-600"
               >
                 Email
               </Label>
@@ -253,14 +253,13 @@ export default function LoginPage() {
                 onChange={(e) => setEmail(e.target.value)}
                 required
                 disabled={loading}
-                className="h-11 rounded-[10px] bg-neutral-soft"
               />
             </div>
 
             <div className="space-y-2">
               <Label
                 htmlFor="password"
-                className="font-label text-xs font-medium uppercase tracking-wider text-slate-600"
+                className="text-xs font-medium uppercase tracking-wider text-slate-600"
               >
                 Password
               </Label>
@@ -272,14 +271,13 @@ export default function LoginPage() {
                 onChange={(e) => setPassword(e.target.value)}
                 required
                 disabled={loading}
-                className="h-11 rounded-[10px] bg-neutral-soft"
               />
               <div className="flex justify-end">
                 <button
                   type="button"
                   onClick={handleForgotPassword}
                   disabled={sendingReset || loading}
-                  className="text-xs font-medium text-brand transition-colors hover:text-brand-dark disabled:opacity-50"
+                  className="text-xs font-medium text-ocean transition-colors hover:text-ocean-deep disabled:opacity-50"
                 >
                   {sendingReset ? "Sending…" : "Forgot password?"}
                 </button>
@@ -289,7 +287,8 @@ export default function LoginPage() {
             <Button
               type="submit"
               disabled={loading}
-              className="h-11 w-full rounded-[10px] bg-primary text-sm font-semibold text-white shadow-sm shadow-orange/25 transition-all duration-150 hover:bg-orange-dark hover:shadow-md hover:shadow-orange/30 hover:-translate-y-px"
+              variant="accent"
+              className="w-full"
             >
               {loading ? (
                 <>
@@ -316,7 +315,7 @@ export default function LoginPage() {
                   ? `/signup?redirect=${encodeURIComponent(redirectParam)}`
                   : "/signup"
               }
-              className="font-medium text-brand transition-colors hover:text-brand-dark"
+              className="font-medium text-ocean transition-colors hover:text-ocean-deep"
             >
               Sign up
             </Link>

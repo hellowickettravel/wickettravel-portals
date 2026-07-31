@@ -29,7 +29,7 @@ export default function JobBoardPage() {
     <div className="space-y-5 animate-in fade-in slide-in-from-bottom-2 duration-500 ease-out">
       <div className="flex items-start justify-between gap-3">
         <div>
-          <h1 className="font-display text-xl font-semibold tracking-tight text-navy sm:text-2xl">
+          <h1 className="text-xl font-semibold tracking-tight text-tx-head sm:text-2xl">
             Job Board
           </h1>
           <p className="mt-1 text-sm text-muted-foreground">
@@ -66,15 +66,15 @@ export default function JobBoardPage() {
                 className={cn(
                   "inline-flex h-9 shrink-0 items-center gap-1.5 rounded-full px-3.5 text-sm font-medium outline-none transition-colors focus-visible:ring-2 focus-visible:ring-primary/40",
                   active
-                    ? "bg-primary text-primary-foreground shadow-sm shadow-orange/25"
-                    : "bg-card text-muted-foreground ring-1 ring-inset ring-outline hover:text-foreground"
+                    ? "bg-primary text-primary-foreground shadow-sm shadow-ocean/25"
+                    : "bg-card text-muted-foreground ring-1 ring-inset ring-line-strong hover:text-foreground"
                 )}
               >
                 {f.label}
                 <span
                   className={cn(
                     "rounded-full px-1.5 py-0.5 text-[10px] font-semibold",
-                    active ? "bg-white/20 text-white" : "bg-chip text-brand-dark"
+                    active ? "bg-white/20 text-white" : "bg-sky-tint text-ocean-deep"
                   )}
                 >
                   {count}
@@ -87,11 +87,11 @@ export default function JobBoardPage() {
 
       {/* Rides */}
       {filtered.length === 0 ? (
-        <div className="rounded-2xl border border-dashed border-outline bg-neutral-soft/60 px-6 py-14 text-center">
-          <div className="mx-auto flex size-12 items-center justify-center rounded-2xl bg-chip text-brand-dark">
+        <div className="rounded-2xl border border-dashed border-line-strong bg-sunk/60 px-6 py-14 text-center">
+          <div className="mx-auto flex size-12 items-center justify-center rounded-2xl bg-sky-tint text-ocean-deep">
             <Inbox className="size-6" />
           </div>
-          <p className="mt-3 font-display text-sm font-semibold text-navy">
+          <p className="mt-3 tracking-heading text-sm font-semibold text-tx-head">
             {jobs.length === 0 ? "No rides right now" : "No rides for this airport"}
           </p>
           <p className="mx-auto mt-1 max-w-xs text-xs text-muted-foreground">
