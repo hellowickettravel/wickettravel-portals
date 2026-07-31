@@ -24,7 +24,7 @@ export function ChatBackButton({
       onClick={onClick}
       aria-label={label}
       className={cn(
-        "-ml-1 inline-flex size-11 shrink-0 items-center justify-center rounded-control text-ocean outline-none transition-colors duration-150 ease-brand hover:bg-sky-tint focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-flame",
+        "-ml-1 inline-flex size-11 shrink-0 items-center justify-center rounded-control text-ocean outline-none transition-colors duration-150 ease-brand hover:bg-sand focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-flame",
         className
       )}
     >

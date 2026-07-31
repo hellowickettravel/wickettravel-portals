@@ -7,7 +7,7 @@ export default async function MessagesPage() {
   const { user } = await getUserAndProfile();
 
   return (
-    <div className="space-y-7">
+    <div className="space-y-8">
       <PageHeader
         eyebrow="Inbox"
         title="Messages"

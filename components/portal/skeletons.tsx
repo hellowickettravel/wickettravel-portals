@@ -11,14 +11,17 @@ import { cn } from "@/lib/utils";
  */
 
 /** A single stat card placeholder, matching <StatCard>'s anatomy exactly:
- *  42px chip → micro-label → 30px metric → caption, in the same 24/22 box. */
+ *  40px chip → micro-label → 34px Fraunces metric → caption, in the same
+ *  24/22 box. The heights are the rendered heights, not the font sizes, so
+ *  nothing jumps when the real number lands. No shadow — stat cards carry
+ *  none. */
 export function StatCardSkeleton() {
   return (
-    <div className="rounded-surface border border-line bg-surface px-6 py-[22px] shadow-lift">
-      <Skeleton className="size-[42px] rounded-icon" />
-      <Skeleton className="mt-[18px] h-3 w-24" />
-      <Skeleton className="mt-2.5 h-[26px] w-20" />
-      <Skeleton className="mt-2 h-3 w-28" />
+    <div className="rounded-surface border border-line bg-surface px-6 py-[22px]">
+      <Skeleton className="size-10 rounded-icon" />
+      <Skeleton className="mt-5 h-[15px] w-24" />
+      <Skeleton className="mt-2 h-[37px] w-20" />
+      <Skeleton className="mt-2 h-[21px] w-28" />
     </div>
   );
 }

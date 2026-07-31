@@ -117,7 +117,7 @@ export default function AdminParentsTicketsPage() {
   );
 
   return (
-    <div className="space-y-7">
+    <div className="space-y-8">
       <PageHeader
         eyebrow="Leads"
         title="Parents Tickets"

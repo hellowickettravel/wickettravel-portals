@@ -32,7 +32,7 @@ function ChoiceCard({
       data-slot="choice-card"
       className={cn(
         "group/choice relative flex cursor-pointer items-start gap-[11px] rounded-control border border-line-strong bg-surface px-[15px] py-[13px] transition-[border-color,background-color,box-shadow] duration-150 ease-brand",
-        "hover:border-line-hover hover:bg-sky-tint",
+        "hover:border-line-hover hover:bg-sand",
         "has-[:checked]:border-ocean has-[:checked]:bg-sky-tint has-[:checked]:shadow-[0_0_0_1px_var(--ocean)]",
         "has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-[3px] has-[:focus-visible]:outline-flame",
         "has-[:disabled]:cursor-not-allowed has-[:disabled]:bg-sunk has-[:disabled]:opacity-[.42] has-[:disabled]:hover:border-line-strong",

@@ -118,7 +118,7 @@ export default function AdminSupportPage() {
   );
 
   return (
-    <div className="space-y-7">
+    <div className="space-y-8">
       <PageHeader
         eyebrow="Support"
         title="Support Queries"

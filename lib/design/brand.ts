@@ -11,7 +11,7 @@
  */
 export const BRAND = {
   /** --ocean · the structure, and the strong secondary action */
-  ocean: "#0F4C81",
+  ocean: "#12547F",
   /** --flame · the primary action, one per view */
-  flame: "#D24417",
+  flame: "#C24310",
 } as const;

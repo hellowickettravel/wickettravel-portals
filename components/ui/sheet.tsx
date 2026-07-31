@@ -114,7 +114,7 @@ function SheetFooter({ className, ...props }: React.ComponentProps<"div">) {
   )
 }
 
-/** H3 — 600 · 19/26 · #0C3355. */
+/** H3 — 600 · 19/26 · #17293A. */
 function SheetTitle({ className, ...props }: SheetPrimitive.Title.Props) {
   return (
     <SheetPrimitive.Title

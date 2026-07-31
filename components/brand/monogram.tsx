@@ -1,14 +1,17 @@
 import { cn } from "@/lib/utils";
 
 /**
- * The Wicket Travel monogram — a 44px badge carrying "WT" in Hanken 700.
+ * The Wicket Travel monogram — a 44px flame badge carrying "WT" in Fraunces.
  *
- * Used where the full wordmark would be too wide or too quiet: the sidebar
- * rail and the auth screens. It takes `rounded-icon`, the same 11px the icon
- * chips use, so brand and iconography sit on one radius.
+ * This is the one place orange is *identity* rather than action. It reads as
+ * a mark, not a button: solid flame, serif letterforms, 12px radius to match
+ * the icon chips. Because it is a badge and the active nav item is a line
+ * icon, the two never read as the same kind of orange.
  *
- * `tone="light"` is the badge on an ocean surface; `tone="ocean"` is the badge
- * on a white one. Flat fill either way — no shadow, no gradient.
+ * The `tone` prop is kept so both surfaces stay on one mark — the badge is
+ * identical on the ocean rail and on white; only the ring around it changes,
+ * which is what keeps it legible against the deep rail without inventing a
+ * second logo.
  */
 export function Monogram({
   tone = "ocean",
@@ -22,8 +25,8 @@ export function Monogram({
       data-slot="monogram"
       aria-hidden
       className={cn(
-        "inline-flex size-11 shrink-0 items-center justify-center rounded-icon font-sans text-[14.5px] leading-none font-bold tracking-ui",
-        tone === "light" ? "bg-surface text-ocean" : "bg-ocean text-tx-invert",
+        "font-display inline-flex size-11 shrink-0 items-center justify-center rounded-icon bg-flame text-[17px] leading-none font-semibold text-tx-invert",
+        tone === "light" && "ring-1 ring-white/15",
         className
       )}
     >

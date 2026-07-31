@@ -165,7 +165,7 @@ export default function SignupPage() {
 
   return (
     <AuthShell
-      eyebrow="Wicket Travel"
+      eyebrow="Start here"
       headline="Tell us where. We'll find the fare."
       lede="One account, and the whole trip stops living in your inbox."
     >
@@ -190,7 +190,7 @@ export default function SignupPage() {
           >
             Go to sign in
           </Button>
-          <p className="mt-5 text-[13px] leading-[1.5] text-tx-faint">
+          <p className="mt-5 text-[13px] leading-[1.5] text-tx-muted">
             Nothing yet? Check your spam folder, or wait a minute and try again.
           </p>
         </>

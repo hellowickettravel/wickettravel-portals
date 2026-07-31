@@ -92,7 +92,7 @@ export default function AdminVisaQueriesPage() {
   );
 
   return (
-    <div className="space-y-7">
+    <div className="space-y-8">
       <PageHeader
         eyebrow="Enquiries"
         title="Visa Queries"

@@ -247,7 +247,7 @@ export default function OrdersPage() {
     {
       key: "created_by",
       header: "Created by",
-      // Ten columns don't fit a 1160px measure. This is the one worth dropping
+      // Ten columns don't fit a 1180px measure. This is the one worth dropping
       // first — it only ever says "Customer" or a colleague's name, it is still
       // in the mobile card, and the record itself is one click away. It comes
       // back on a genuinely wide screen.

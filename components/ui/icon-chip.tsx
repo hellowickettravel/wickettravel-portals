@@ -4,9 +4,9 @@ import { cva, type VariantProps } from "class-variance-authority"
 import { cn } from "@/lib/utils"
 
 /**
- * Icon chip — design system v2 §06.
+ * Icon chip — design system v3 §08.
  *
- * 40px square, 11px radius, a **flat** fill one step deeper than the hue's
+ * 40px square, 12px radius, a **flat** fill one step deeper than the hue's
  * tint, holding a 19px Lucide icon at 1.75 stroke. Solid, never an alpha
  * wash — so the chip still separates when it sits on a stat card painted in
  * that same hue. Chips carry meaning, not decoration: ocean for volume ·

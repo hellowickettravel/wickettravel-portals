@@ -6,7 +6,7 @@ import { cn } from "@/lib/utils"
 
 /**
  * Form label — design-system.html §09.
- * 600 · 13.5px · #0C3355 · sentence case. Sits 8px above its field.
+ * 700 · 13.5px · #17293A · sentence case. Sits 8px above its field.
  * Required is marked with a flame asterisk, never with "(required)".
  */
 function Label({
@@ -19,7 +19,7 @@ function Label({
     <label
       data-slot="label"
       className={cn(
-        "flex items-center gap-2 text-[13.5px] leading-none font-semibold tracking-[-0.002em] text-tx-head select-none group-data-[disabled=true]:pointer-events-none group-data-[disabled=true]:opacity-50 peer-disabled:cursor-not-allowed peer-disabled:opacity-50",
+        "flex items-center gap-2 text-[13.5px] leading-none font-bold text-tx-head select-none group-data-[disabled=true]:pointer-events-none group-data-[disabled=true]:opacity-50 peer-disabled:cursor-not-allowed peer-disabled:opacity-50",
         className
       )}
       {...props}

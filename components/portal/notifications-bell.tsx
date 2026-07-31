@@ -230,7 +230,7 @@ export function NotificationsBell({
                           {n.body}
                         </p>
                       ) : null}
-                      <p className="mt-0.5 font-micro text-tx-faint">
+                      <p className="mt-0.5 font-micro text-tx-muted">
                         {fmtRelative(n.created_at)}
                       </p>
                     </div>

@@ -74,7 +74,7 @@ export function QuotedMessage({
         onJump && "cursor-pointer",
         mine
           ? "bg-white/15 hover:bg-white/22"
-          : "bg-sunk hover:bg-sky-tint"
+          : "bg-sunk hover:bg-sand-deep"
       )}
     >
       <span

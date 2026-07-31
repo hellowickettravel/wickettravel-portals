@@ -130,7 +130,7 @@ function DialogFooter({
   )
 }
 
-/** H3 — 600 · 19/26 · #0C3355. */
+/** H3 — 600 · 19/26 · #17293A. */
 function DialogTitle({ className, ...props }: DialogPrimitive.Title.Props) {
   return (
     <DialogPrimitive.Title
@@ -144,7 +144,7 @@ function DialogTitle({ className, ...props }: DialogPrimitive.Title.Props) {
   )
 }
 
-/** Small — 400 · 14.5/23 · #6D7D8F. */
+/** Small — 400 · 14.5/23 · #606A78. */
 function DialogDescription({
   className,
   ...props

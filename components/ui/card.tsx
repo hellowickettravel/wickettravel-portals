@@ -3,10 +3,14 @@ import * as React from "react"
 import { cn } from "@/lib/utils"
 
 /**
- * Card — design system v2 §04 + §09.
+ * Card — design system v3 §04 + §09.
  *
- * #FFFFFF, 1px #E5EBF3, 14px radius, lift-1. Padding is 20–24px on desktop
- * and 18px on mobile; `size="sm"` is the portal-screen density.
+ * White, 1px warm line, 16px radius, lift-1. Padding is 22–26px on desktop
+ * and 20px on mobile; `size="sm"` is the portal-screen density.
+ *
+ * White on the sand canvas already reads as lifted, so the shadow here is
+ * doing very little work and is kept deliberately faint — the border is what
+ * defines the card.
  *
  * A card sitting inside a white <Section> keeps its border and drops its
  * shadow — otherwise it floats for no reason. That rule lives in globals.css
@@ -23,8 +27,8 @@ function Card({
       data-size={size}
       className={cn(
         "group/card flex flex-col gap-(--card-spacing) overflow-hidden rounded-surface border border-line bg-card py-(--card-spacing) text-sm text-card-foreground shadow-lift",
-        "[--card-px:18px] [--card-spacing:18px] md:[--card-px:24px] md:[--card-spacing:22px]",
-        "data-[size=sm]:[--card-px:16px] data-[size=sm]:[--card-spacing:16px] md:data-[size=sm]:[--card-px:20px] md:data-[size=sm]:[--card-spacing:18px]",
+        "[--card-px:20px] [--card-spacing:20px] md:[--card-px:26px] md:[--card-spacing:24px]",
+        "data-[size=sm]:[--card-px:18px] data-[size=sm]:[--card-spacing:18px] md:data-[size=sm]:[--card-px:22px] md:data-[size=sm]:[--card-spacing:20px]",
         "has-data-[slot=card-footer]:pb-0 has-[>img:first-child]:pt-0",
         className
       )}
@@ -46,7 +50,7 @@ function CardHeader({ className, ...props }: React.ComponentProps<"div">) {
   )
 }
 
-/** H3 card title — 600 · 16.5/23 · #0C3355. */
+/** H3 card title — 600 · 16.5/23 · #17293A. */
 function CardTitle({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
@@ -60,7 +64,7 @@ function CardTitle({ className, ...props }: React.ComponentProps<"div">) {
   )
 }
 
-/** Small — 400 · 14.5/23 · #6D7D8F. */
+/** Small — 400 · 14.5/23 · #606A78. */
 function CardDescription({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
@@ -99,7 +103,7 @@ function CardFooter({ className, ...props }: React.ComponentProps<"div">) {
     <div
       data-slot="card-footer"
       className={cn(
-        "flex items-center gap-3 border-t border-line-faint bg-sunk px-(--card-px) py-(--card-spacing)",
+        "flex items-center gap-3 border-t border-line-faint bg-sand px-(--card-px) py-(--card-spacing)",
         className
       )}
       {...props}

@@ -73,7 +73,9 @@ export default async function AdminCustomerDetailPage({
             </IconChip>
             <div className="min-w-0">
               <div className="flex flex-wrap items-center gap-3">
-                <h1 className="text-[25px] leading-[1.26] font-bold tracking-heading text-tx-head sm:text-[32px] sm:leading-[1.16] sm:tracking-[-0.015em]">
+                {/* Matches <PageHeader>'s h1 exactly — Fraunces comes from
+                    the base rule, so only size and weight are stated. */}
+                <h1 className="text-[27px] leading-[1.18] font-semibold text-tx-head sm:text-[36px] sm:leading-[1.1]">
                   {customer.name || "Unnamed customer"}
                 </h1>
                 <StatusBadge tone={customer.profile_id ? "green" : "slate"}>
@@ -157,7 +159,7 @@ export default async function AdminCustomerDetailPage({
                 <li key={c.id}>
                   <Link
                     href={`/admin/messages/${c.id}`}
-                    className="flex items-center gap-4 px-5 py-3.5 outline-none transition-colors duration-150 ease-brand hover:bg-sky-tint focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-flame"
+                    className="flex items-center gap-4 px-5 py-3.5 outline-none transition-colors duration-150 ease-brand hover:bg-sand focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-flame"
                   >
                     <IconChip tone="ocean" className="size-9 rounded-chip [&_svg]:size-4">
                       <MessageSquare />

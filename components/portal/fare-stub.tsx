@@ -79,14 +79,14 @@ export function FareStub({
         </div>
 
         {caption ? (
-          <p className="mt-1.5 text-[13.5px] leading-[1.5] text-tx-faint">{caption}</p>
+          <p className="mt-1.5 text-[13.5px] leading-[1.5] text-tx-muted">{caption}</p>
         ) : null}
 
         {meta.length > 0 ? (
           <dl className="mt-[18px] flex flex-wrap gap-x-[26px] gap-y-3 border-t border-line-faint pt-4">
             {meta.map((item) => (
               <div key={item.label}>
-                <dt className="font-micro text-tx-faint">{item.label}</dt>
+                <dt className="font-micro text-tx-muted">{item.label}</dt>
                 <dd className="mt-1 text-[14.5px] font-semibold text-tx-head">
                   {item.value}
                 </dd>
@@ -120,12 +120,12 @@ export function FareStub({
 
       {/* ---------- The tear-off ---------- */}
       <div className="flex flex-col justify-center p-6 min-[620px]:w-[152px] min-[620px]:shrink-0 min-[620px]:px-[26px]">
-        <span className="font-micro text-tx-faint">{fareLabel}</span>
+        <span className="font-micro text-tx-muted">{fareLabel}</span>
         <p className="tabular mt-1 text-[27px] leading-[1.15] font-bold tracking-[-0.02em] text-flame">
           {fare}
         </p>
         {fareNote ? (
-          <p className="mt-[3px] text-[12.5px] leading-[1.4] text-tx-faint">{fareNote}</p>
+          <p className="mt-[3px] text-[12.5px] leading-[1.4] text-tx-muted">{fareNote}</p>
         ) : null}
       </div>
     </div>

@@ -7,7 +7,7 @@ import { cn } from "@/lib/utils"
  *
  * Sections change by background, not by decoration: alternate canvas → white
  * → sky tint, with an ocean statement band once or twice per page. A 1px
- * #E5EBF3 rule top and bottom whenever the background changes.
+ * #E8E0D7 rule top and bottom whenever the background changes.
  *
  * Every fill is one flat colour — the ocean band is solid ocean ink, not a
  * gradient. `tone="white"` also drops the shadow from any <Card> inside it
@@ -41,12 +41,12 @@ function Section({
   )
 }
 
-/** 1160px max · 40px gutters desktop · 24px mobile. */
+/** 1180px max · 40px gutters desktop · 24px mobile. */
 function SectionWrap({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
       data-slot="section-wrap"
-      className={cn("mx-auto w-full max-w-[1160px] px-6 lg:px-10", className)}
+      className={cn("mx-auto w-full max-w-[1180px] px-6 lg:px-10", className)}
       {...props}
     />
   )

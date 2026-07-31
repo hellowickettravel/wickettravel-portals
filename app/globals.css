@@ -10,20 +10,22 @@
   --color-background: var(--background);
   --color-foreground: var(--foreground);
 
-  /* ── Fonts ────────────────────────────────────────────────
-     Hanken Grotesk everywhere · IBM Plex Mono 500 for codes,
-     references and uppercase micro-labels. Newsreader is retired
-     from the portal (v2 §09). */
-  --font-sans: var(--font-hanken);
+  /* ── Fonts (v3 §09) ───────────────────────────────────────
+     Manrope does all interface work. Fraunces is the brand voice and
+     appears ONLY at display sizes — page titles, stat metrics, auth
+     headlines, empty states. IBM Plex Mono 500 carries codes, refs and
+     uppercase micro-labels. Three faces, three jobs, no overlap. */
+  --font-sans: var(--font-manrope);
+  --font-display: var(--font-fraunces);
   --font-mono: var(--font-plex-mono);
 
   /* ── Tracking ─────────────────────────────────────────────
-     The scale tightens as type grows and opens as it shrinks.
-     These are the only letter-spacings the system uses. */
-  --tracking-display: -0.02em; /* 42px+ */
-  --tracking-heading: -0.015em; /* h1–h4 */
-  --tracking-ui: -0.002em; /* buttons, labels, field text */
-  --tracking-micro: 0.1em; /* Plex Mono uppercase */
+     Fraunces is drawn generously, so display type tightens harder than a
+     grotesque would. Manrope runs slightly open at UI sizes. */
+  --tracking-display: -0.022em; /* Fraunces, 28px+ */
+  --tracking-heading: -0.014em; /* h2–h4 in Manrope */
+  --tracking-ui: 0; /* Manrope is already even at 13–16px */
+  --tracking-micro: 0.11em; /* Plex Mono uppercase */
 
   /* ── Structure — blue ── */
   --color-ocean: var(--ocean);
@@ -63,6 +65,8 @@
   --color-canvas: var(--canvas);
   --color-surface: var(--surface);
   --color-sunk: var(--surface-sunk);
+  --color-sand: var(--sand);
+  --color-sand-deep: var(--sand-deep);
 
   /* ── Lines ── */
   --color-line: var(--line);
@@ -125,100 +129,121 @@
   --color-card-foreground: var(--card-foreground);
   --color-card: var(--card);
   /* Tailwind's own radius aliases are pinned onto the five system values, so a
-     stray `rounded-xl` from a shadcn primitive still lands on 14px rather than
-     inventing a sixth corner. There is no 16px anywhere. */
-  --radius-sm: var(--r-chip); /* 7 */
-  --radius-md: var(--r-control); /* 10 */
-  --radius-lg: var(--r-control); /* 10 */
-  --radius-xl: var(--r-surface); /* 14 */
-  --radius-2xl: var(--r-surface); /* 14 */
-  --radius-3xl: var(--r-surface-lg); /* 18 */
-  --radius-4xl: var(--r-surface-lg); /* 18 */
+     stray `rounded-xl` from a shadcn primitive still lands on a system corner
+     rather than inventing a sixth one. */
+  --radius-sm: var(--r-chip); /* 8 */
+  --radius-md: var(--r-control); /* 12 */
+  --radius-lg: var(--r-control); /* 12 */
+  --radius-xl: var(--r-surface); /* 16 */
+  --radius-2xl: var(--r-surface); /* 16 */
+  --radius-3xl: var(--r-surface-lg); /* 22 */
+  --radius-4xl: var(--r-surface-lg); /* 22 */
 }
 
 /* =========================================================
-   WICKET TRAVEL — DESIGN SYSTEM v2. LIGHT ONLY.
-   Source of truth: wicket-design-system-v2.html / DESIGN_SYSTEM.md
+   WICKET TRAVEL — DESIGN SYSTEM v3. LIGHT ONLY.
+   Source of truth: DESIGN_SYSTEM.md
 
-   Blue builds the room. Orange does the work.
+   Warm paper, deep ocean, one flame.
+   The room is warm sand; the structure is deep blue; a single orange
+   does the asking. Warmth comes from the NEUTRALS, not from tinting
+   everything orange — that is why the canvas is sand and not blue-grey.
+
    No gradients. No visible scrollbars. No asymmetric corners.
    ========================================================= */
 :root {
   color-scheme: light;
 
-  /* — structure: blue — */
-  --ocean: #0f4c81;
-  --ocean-deep: #0c3d69;
-  --ocean-ink: #0a3355;
-  --sky-tint: #edf4fb;
-  --sky-line: #d3e4f4;
+  /* — structure: blue. Deeper and richer than v2 so white type on the
+       rail rings out and the navy reads as considered, not corporate. — */
+  --ocean: #12547f;
+  --ocean-deep: #0d4166;
+  --ocean-ink: #082f4b; /* sidebar base */
+  --sky-tint: #ecf3f9;
+  --sky-line: #d2e3f1;
 
-  /* — action: orange. Flame is the PRIMARY action colour. — */
-  --flame: #d24417;
-  --flame-hover: #b63a11;
-  --flame-vivid: #f2622a; /* graphics only — fails AA for small text */
-  --flame-tint: #fff0ea;
-  --flame-line: #fad5c4;
+  /* — action: orange. Two roles, and they are not interchangeable.
+       `flame` is the accessible FILL — white on it clears 4.5:1, so it
+       is the only orange allowed under small text or as a button.
+       `flame-vivid` is the eye-catch, for graphics, icons on tints and
+       accents where nothing small sits on top. — */
+  --flame: #c24310;
+  --flame-hover: #a5380c;
+  --flame-vivid: #f0761c; /* graphics only — fails AA for small text */
+  --flame-tint: #fdf0e6;
+  --flame-line: #f6d6bc;
 
   /* — data: the hue is fixed by meaning, on every screen — */
-  --gold: #c97a0c; /* money */
-  --gold-tint: #fdf3e3;
-  --gold-line: #f2dfbc;
-  --jade: #0c7a6b; /* live, confirmed */
-  --jade-tint: #e3f3f0;
-  --jade-line: #c1e4dd;
-  --violet: #4a4fbf; /* waiting */
-  --violet-tint: #eeeffc;
-  --violet-line: #d8daf8;
-  --ruby: #b32f44; /* attention */
-  --ruby-tint: #fcedef;
-  --ruby-line: #f5d0d6;
+  --gold: #975f0a; /* money — dark enough to clear AA on its own tint */
+  --gold-tint: #fbf2df;
+  --gold-line: #eedcb4;
+  --jade: #0b6f5f; /* live, confirmed */
+  --jade-tint: #e2f1ee;
+  --jade-line: #bee0d8;
+  --violet: #4b4bb8; /* waiting */
+  --violet-tint: #ededfb;
+  --violet-line: #d6d6f5;
+  --ruby: #a82a3f; /* attention */
+  --ruby-tint: #fbebee;
+  --ruby-line: #f2cdd4;
 
   /* — icon-chip fills: one step deeper than the tint, so a chip still
        separates when it sits on a stat card painted in its own tint — */
-  --sky-chip: #dceaf7;
-  --flame-chip: #fbdcce;
-  --gold-chip: #f9e7c6;
-  --jade-chip: #cfe8e3;
-  --violet-chip: #e1e3fa;
-  --ruby-chip: #f7dade;
+  --sky-chip: #dbe9f5;
+  --flame-chip: #fbe2ce;
+  --gold-chip: #f6e6c4;
+  --jade-chip: #cde7e1;
+  --violet-chip: #e0e0f8;
+  --ruby-chip: #f6d8dd;
 
-  /* — surfaces — */
-  --canvas: #f5f8fc;
+  /* — surfaces: warm. This is the change that makes the product feel
+       calm instead of clinical. The canvas is sand, cards are pure
+       white, and the white therefore reads as *lifted* without needing
+       a shadow to say so. — */
+  --canvas: #faf7f3;
   --surface: #ffffff;
-  --surface-sunk: #f0f4f9;
+  --surface-sunk: #f3eee8;
+  --sand: #f6f1ea; /* banded sections, table heads */
+  --sand-deep: #ede5da; /* pressed / selected rows */
 
-  /* — lines: internal · card & section · interactive · hover — */
-  --line-faint: #eff3f8;
-  --line: #e5ebf3;
-  --line-strong: #d3dce7;
-  --line-hover: #c3d2e1;
+  /* — lines: warm-tinted to match the paper — */
+  --line-faint: #f1ebe4;
+  --line: #e8e0d7;
+  --line-strong: #d8ccbf;
+  --line-hover: #c6b7a7;
 
-  /* — text: four colours plus invert, never pure black — */
-  --tx-head: #0c3355;
-  --tx-body: #3a4a5c;
-  --tx-muted: #6d7d8f;
-  --tx-faint: #96a4b4;
+  /* — text: navy ink rather than grey, so type belongs to the brand.
+       `muted` is set at the darkest of the six tints it can land on, so a
+       stat label clears 4.5:1 on jade AND violet AND gold without a
+       per-tone override. `faint` is NON-TEXT ONLY — decorative icons,
+       separators, disabled glyphs. It does not clear AA at any size and
+       must never carry a placeholder or a label. — */
+  --tx-head: #17293a;
+  --tx-body: #4a5563;
+  --tx-muted: #606a78;
+  --tx-faint: #8b95a1;
   --tx-invert: #ffffff;
-  --tx-invert-2: #bbd2e6;
-  --tx-invert-3: #a9c5dd;
+  --tx-invert-2: #c5daea;
+  --tx-invert-3: #a7c3d9;
 
-  /* — radius: consistent per element type. No asymmetry. — */
-  --r-surface: 14px; /* cards, panels, stat cards, tables, images */
-  --r-surface-lg: 18px; /* modals, sidebar, hero and auth panels */
-  --r-control: 10px; /* buttons, inputs, selects, nav items */
-  --r-chip: 7px; /* badges and tags — never a pill */
-  --r-icon: 11px; /* icon chips and the monogram badge */
+  /* — radius: one value per element type, a touch softer than v2.
+       Larger corners read warmer; asymmetry is still banned. — */
+  --r-surface: 16px; /* cards, panels, stat cards, tables, images */
+  --r-surface-lg: 22px; /* modals, hero and auth panels */
+  --r-control: 12px; /* buttons, inputs, selects, nav items */
+  --r-chip: 8px; /* badges and tags — never a pill */
+  --r-icon: 12px; /* icon chips and the monogram badge */
 
-  /* — depth: soft, ocean-tinted. Never black shadows. — */
-  --lift-1: 0 1px 2px rgba(12, 51, 85, 0.05), 0 4px 12px rgba(12, 51, 85, 0.05);
-  --lift-2: 0 2px 6px rgba(12, 51, 85, 0.06), 0 12px 26px rgba(12, 51, 85, 0.09);
-  --lift-in: inset 0 1px 2px rgba(12, 51, 85, 0.05);
+  /* — depth: warm-tinted and soft. Shadows are brown-black, never blue
+       and never neutral black, or they punch a cold hole in the sand. — */
+  --lift-1: 0 1px 2px rgba(61, 43, 28, 0.04), 0 4px 14px rgba(61, 43, 28, 0.05);
+  --lift-2: 0 2px 8px rgba(61, 43, 28, 0.06), 0 16px 34px rgba(61, 43, 28, 0.1);
+  --lift-in: inset 0 1px 2px rgba(61, 43, 28, 0.05);
 
   --ease: cubic-bezier(0.22, 0.68, 0.28, 1);
 
-  /* Controls are 10px, so shadcn's radius scale starts there. */
-  --radius: 0.625rem;
+  /* Controls are 12px, so shadcn's radius scale starts there. */
+  --radius: 0.75rem;
 
   /* ── shadcn/ui tokens → the locked palette ── */
   --background: var(--canvas);
@@ -291,7 +316,7 @@
   body {
     background: var(--canvas);
     color: var(--tx-body);
-    font-family: var(--font-hanken), system-ui, -apple-system, sans-serif;
+    font-family: var(--font-manrope), system-ui, -apple-system, sans-serif;
     font-size: 16px;
     line-height: 1.68;
     font-weight: 400;
@@ -301,13 +326,25 @@
        unlike `hidden`. */
     overflow-x: clip;
   }
+  /* h2–h4 are interface headings and stay in Manrope. Only h1 — and the
+     handful of display slots that opt in with `font-display` — get
+     Fraunces, which is what keeps the serif an accent rather than a
+     costume the whole product wears. */
   h1,
   h2,
   h3,
   h4 {
     color: var(--tx-head);
-    font-family: var(--font-hanken), system-ui, sans-serif;
-    letter-spacing: -0.015em;
+    font-family: var(--font-manrope), system-ui, sans-serif;
+    letter-spacing: -0.014em;
+  }
+  h1 {
+    font-family: var(--font-fraunces), Georgia, serif;
+    font-optical-sizing: auto;
+    font-variation-settings:
+      "SOFT" 24,
+      "WONK" 0;
+    letter-spacing: -0.022em;
   }
   h5,
   h6 {
@@ -351,7 +388,7 @@
   .cn-toast {
     border-radius: var(--r-surface);
     box-shadow: var(--lift-2);
-    font-family: var(--font-hanken), system-ui, sans-serif;
+    font-family: var(--font-manrope), system-ui, sans-serif;
     font-size: 14.5px;
     line-height: 1.6;
     letter-spacing: -0.002em;
@@ -404,9 +441,40 @@
   font-family: var(--font-plex-mono), ui-monospace, monospace;
   font-size: 11px;
   font-weight: 500;
-  letter-spacing: 0.1em;
+  letter-spacing: 0.11em;
   text-transform: uppercase;
   line-height: 1.5;
+}
+
+/* ── The brand voice ──────────────────────────────────────
+   Fraunces, opted into explicitly. This belongs on display-size type
+   ONLY: page titles, stat metrics, auth headlines, empty-state
+   headings, big money. Never on a button, a label, a table cell or
+   anything under ~20px — the optical cut falls apart down there and it
+   starts to look like a wedding invitation.
+
+   SOFT rounds the terminals so the face reads warm rather than sharp;
+   WONK 0 keeps the tame single-storey forms instead of the quirky
+   alternates, which is what stops it feeling novelty. */
+@utility font-display {
+  font-family: var(--font-fraunces), Georgia, serif;
+  font-optical-sizing: auto;
+  font-variation-settings:
+    "SOFT" 24,
+    "WONK" 0;
+  letter-spacing: -0.022em;
+}
+
+/* Display type that also has to line up in a column — stat metrics,
+   fares, big money. Fraunces ships proportional figures by default. */
+@utility font-metric {
+  font-family: var(--font-fraunces), Georgia, serif;
+  font-optical-sizing: auto;
+  font-variation-settings:
+    "SOFT" 24,
+    "WONK" 0;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.022em;
 }
 
 /* Fares, metrics and every table column of numbers. */

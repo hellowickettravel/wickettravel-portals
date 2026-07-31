@@ -7,10 +7,14 @@ import { cn } from "@/lib/utils"
 /**
  * Table — the portal's data surface.
  *
- * Header row on #F0F4F9 with Plex Mono micro-labels, 1px #F0F4F9 dividers
- * between rows, 14px of vertical air in every cell, and a sky-tint hover so a
- * row reads as a target. Numbers are tabular wherever a column says so, which
- * is what keeps a fare column aligned on the decimal.
+ * Header row on `sand` with Plex Mono micro-labels, warm hairline dividers
+ * between rows, 16px of vertical air in every cell, and a warm hover so a row
+ * reads as a target. Numbers are tabular wherever a column says so, which is
+ * what keeps a fare column aligned on the decimal.
+ *
+ * Hover is `sand`, not a blue tint: rows are hovered constantly while
+ * scanning, and a cool wash on a warm canvas read as "selected" rather than
+ * "under the cursor". Selection keeps the blue, so the two stay distinct.
  *
  * The wrapper scrolls sideways on its own so the page never does — but a wide
  * table should still fall back to <MobileRecordCard> below md rather than ask
@@ -38,7 +42,7 @@ function TableHeader({ className, ...props }: React.ComponentProps<"thead">) {
   return (
     <thead
       data-slot="table-header"
-      className={cn("bg-sunk [&_tr]:border-b [&_tr]:border-line", className)}
+      className={cn("bg-sand [&_tr]:border-b [&_tr]:border-line", className)}
       {...props}
     />
   )
@@ -59,7 +63,7 @@ function TableFooter({ className, ...props }: React.ComponentProps<"tfoot">) {
     <tfoot
       data-slot="table-footer"
       className={cn(
-        "border-t border-line bg-sunk font-medium text-tx-head [&>tr]:last:border-b-0",
+        "border-t border-line bg-sand font-medium text-tx-head [&>tr]:last:border-b-0",
         className
       )}
       {...props}
@@ -72,7 +76,7 @@ function TableRow({ className, ...props }: React.ComponentProps<"tr">) {
     <tr
       data-slot="table-row"
       className={cn(
-        "border-b border-line-faint transition-colors duration-150 ease-brand hover:bg-sky-tint has-aria-expanded:bg-sky-tint data-[state=selected]:bg-sky-tint",
+        "border-b border-line-faint transition-colors duration-150 ease-brand hover:bg-sand has-aria-expanded:bg-sand data-[state=selected]:bg-sky-tint",
         className
       )}
       {...props}
@@ -94,7 +98,7 @@ function TableHead({
       data-slot="table-head"
       data-numeric={numeric ? true : undefined}
       className={cn(
-        "h-11 px-4 text-left align-middle font-micro whitespace-nowrap text-tx-muted [&:has([role=checkbox])]:pr-0",
+        "h-12 px-4 text-left align-middle font-micro whitespace-nowrap text-tx-muted [&:has([role=checkbox])]:pr-0",
         numeric && "tabular text-right",
         className
       )}
@@ -116,7 +120,7 @@ function TableCell({
       data-slot="table-cell"
       data-numeric={numeric ? true : undefined}
       className={cn(
-        "px-4 py-3.5 align-middle text-tx-body whitespace-nowrap [&:has([role=checkbox])]:pr-0",
+        "px-4 py-4 align-middle text-tx-body whitespace-nowrap [&:has([role=checkbox])]:pr-0",
         numeric && "tabular text-right",
         className
       )}

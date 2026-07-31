@@ -216,7 +216,7 @@ export default async function AnalyticsPage({
     : 0;
 
   return (
-    <div className="space-y-7">
+    <div className="space-y-8">
       <PageHeader
         eyebrow="Insights"
         title="Analytics"

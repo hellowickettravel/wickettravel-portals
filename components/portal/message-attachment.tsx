@@ -90,7 +90,7 @@ export function MessageAttachment({
         "mb-1 flex w-full max-w-[260px] items-center gap-2.5 rounded-chip border px-3 py-2 text-left text-[14.5px] outline-none transition-colors duration-150 ease-brand focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-flame",
         mine
           ? "border-white/25 bg-white/10 hover:bg-white/20"
-          : "border-line bg-sunk hover:bg-sky-tint"
+          : "border-line bg-sunk hover:bg-sand-deep"
       )}
     >
       <FileText className={cn("size-5 shrink-0", mine ? "text-tx-invert" : "text-ocean")} />

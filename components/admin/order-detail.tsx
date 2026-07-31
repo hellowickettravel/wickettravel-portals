@@ -270,7 +270,7 @@ export function OrderDetail({
               gbp(order.selling_price)
             ) : (
               /* A 27px flame em dash reads as a mistake. Say what's true. */
-              <span className="text-[19px] font-semibold text-tx-faint">
+              <span className="text-[19px] font-semibold text-tx-muted">
                 Not priced
               </span>
             )

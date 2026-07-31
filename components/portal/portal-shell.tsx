@@ -135,8 +135,13 @@ function pageTitleFor(pathname: string, navItems: NavItem[], fallback: string) {
 }
 
 /* ══════════════════════════════════════════════════════════════════
-   SIDEBAR — 272px of solid ocean. Plex Mono group headers, 44px
-   rows, and one solid white pill marking where you are.
+   SIDEBAR — 280px of deep ocean ink.
+
+   The v2 rail packed 44px rows onto 4px gaps under a 9px label, which
+   is what made it read as a wall of text rather than a set of choices.
+   The rhythm here is deliberately looser: 48px rows on 6px gaps, 28px
+   between groups, and a label big enough to actually function as one.
+   Nothing was removed — it just breathes.
    ══════════════════════════════════════════════════════════════════ */
 
 function NavLinks({
@@ -149,15 +154,15 @@ function NavLinks({
   onNavigate?: () => void;
 }) {
   return (
-    <nav className="no-bar flex-1 overflow-y-auto px-3 pt-4 pb-4">
+    <nav className="no-bar flex-1 overflow-y-auto px-4 pt-6 pb-6">
       {groupNav(navItems).map((group, i) => (
-        <div key={group.label ?? `group-${i}`} className={cn(i > 0 && "mt-6")}>
+        <div key={group.label ?? `group-${i}`} className={cn(i > 0 && "mt-7")}>
           {group.label ? (
-            <p className="px-3 pb-[7px] pt-3.5 font-mono text-[9px] leading-none font-medium tracking-[0.17em] text-white/46 uppercase">
+            <p className="px-3.5 pb-3 font-mono text-[10px] leading-none font-medium tracking-[0.15em] text-white/45 uppercase">
               {group.label}
             </p>
           ) : null}
-          <div className="space-y-1">
+          <div className="space-y-1.5">
             {group.items.map((item) => {
               const active = isActive(pathname, item);
               const Icon = ICONS[item.icon];
@@ -168,10 +173,10 @@ function NavLinks({
                   onClick={onNavigate}
                   aria-current={active ? "page" : undefined}
                   className={cn(
-                    "flex h-11 items-center gap-3 rounded-control px-[13px] text-[15px] tracking-ui outline-none transition-colors duration-150 ease-brand focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-flame [&_svg]:size-[19px] [&_svg]:shrink-0",
+                    "flex h-12 items-center gap-3.5 rounded-control px-3.5 text-[14.5px] outline-none transition-colors duration-150 ease-brand focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-flame-vivid [&_svg]:size-[19px] [&_svg]:shrink-0",
                     active
-                      ? "bg-surface font-semibold text-ocean [&_svg]:text-flame"
-                      : "font-medium text-white/85 hover:bg-white/10 hover:text-white"
+                      ? "bg-surface font-bold text-ocean-deep [&_svg]:text-flame"
+                      : "font-medium text-white/80 hover:bg-white/[0.09] hover:text-white"
                   )}
                 >
                   <Icon />
@@ -179,8 +184,10 @@ function NavLinks({
                   {item.badge ? (
                     <span
                       className={cn(
-                        "inline-flex min-w-[22px] items-center justify-center rounded-chip px-1.5 py-0.5 text-[11px] leading-none font-semibold tabular",
-                        active ? "bg-sky-tint text-ocean" : "bg-white/18 text-white"
+                        "tabular inline-flex min-w-[22px] items-center justify-center rounded-chip px-1.5 py-0.5 text-[11px] leading-none font-bold",
+                        active
+                          ? "bg-flame text-tx-invert"
+                          : "bg-white/16 text-white"
                       )}
                     >
                       {item.badge > 99 ? "99+" : item.badge}
@@ -204,7 +211,9 @@ function SidebarBrand({
   logoUrl?: string | null;
 }) {
   return (
-    <div className="flex items-center gap-3 px-5 pt-5">
+    /* The hairline gives the rail a head, so the first nav group starts
+       against something instead of floating near the logo. */
+    <div className="flex items-center gap-3.5 border-b border-white/10 px-5 pt-6 pb-6">
       {logoUrl ? (
         <span className="inline-flex size-11 shrink-0 items-center justify-center overflow-hidden rounded-icon bg-surface">
           {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -214,10 +223,10 @@ function SidebarBrand({
         <Monogram tone="light" />
       )}
       <span className="min-w-0 leading-tight">
-        <span className="block truncate text-[16.5px] font-bold tracking-heading text-white">
+        <span className="font-display block truncate text-[19px] font-semibold text-white">
           Wicket Travel
         </span>
-        <span className="mt-[3px] block font-mono text-[9px] leading-none font-medium tracking-[0.16em] text-white/58 uppercase">
+        <span className="mt-1 block font-mono text-[9.5px] leading-none font-medium tracking-[0.15em] text-white/55 uppercase">
           {portalLabel}
         </span>
       </span>
@@ -228,12 +237,12 @@ function SidebarBrand({
 /** Pinned sign-out, behind the hairline at the foot of the rail. */
 function SidebarSignOut({ onNavigate }: { onNavigate?: () => void }) {
   return (
-    <div className="mt-auto border-t border-white/15 px-3 py-3">
+    <div className="mt-auto border-t border-white/10 px-4 py-4">
       <form action={signOut}>
         <button
           type="submit"
           onClick={onNavigate}
-          className="flex h-11 w-full items-center gap-3 rounded-control px-[13px] text-[15px] font-medium tracking-ui text-white/85 outline-none transition-colors duration-150 ease-brand hover:bg-white/10 hover:text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-flame [&_svg]:size-[19px] [&_svg]:shrink-0"
+          className="flex h-12 w-full cursor-pointer items-center gap-3.5 rounded-control px-3.5 text-[14.5px] font-medium text-white/80 outline-none transition-colors duration-150 ease-brand hover:bg-white/[0.09] hover:text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-flame-vivid [&_svg]:size-[19px] [&_svg]:shrink-0"
         >
           <LogOut />
           Sign out
@@ -258,7 +267,7 @@ function SidebarRail({
   onNavigate?: () => void;
 }) {
   return (
-    <div className="flex h-full flex-col bg-ocean">
+    <div className="flex h-full flex-col bg-ocean-ink">
       <SidebarBrand portalLabel={portalLabel} logoUrl={logoUrl} />
       <NavLinks navItems={navItems} pathname={pathname} onNavigate={onNavigate} />
       <SidebarSignOut onNavigate={onNavigate} />
@@ -301,13 +310,13 @@ export function PortalShell({
           tab order. This is the way past them. */}
       <a
         href="#portal-content"
-        className="sr-only focus:not-sr-only focus:fixed focus:top-3 focus:left-3 focus:z-50 focus:inline-flex focus:h-[42px] focus:items-center focus:rounded-control focus:bg-flame focus:px-[18px] focus:text-[15px] focus:font-semibold focus:text-tx-invert focus:outline-2 focus:outline-offset-2 focus:outline-flame"
+        className="sr-only focus:not-sr-only focus:fixed focus:top-3 focus:left-3 focus:z-50 focus:inline-flex focus:h-11 focus:items-center focus:rounded-control focus:bg-flame focus:px-[18px] focus:text-[15px] focus:font-semibold focus:text-tx-invert focus:outline-2 focus:outline-offset-2 focus:outline-flame"
       >
         Skip to content
       </a>
 
       {/* ---------- Desktop rail ---------- */}
-      <aside className="sticky top-0 hidden h-dvh w-[272px] shrink-0 md:block">
+      <aside className="sticky top-0 hidden h-dvh w-[280px] shrink-0 md:block">
         <SidebarRail
           navItems={navItems}
           pathname={pathname}
@@ -319,7 +328,7 @@ export function PortalShell({
       {/* ---------- Main column ---------- */}
       <div className="flex min-w-0 flex-1 flex-col">
         <header className="sticky top-0 z-40 border-b border-line bg-surface">
-          <div className="flex h-[72px] items-center gap-2 px-6 lg:px-10">
+          <div className="flex h-[76px] items-center gap-2 px-6 lg:px-10">
             {/* Mobile: hamburger → slide-in drawer */}
             <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
               <SheetTrigger
@@ -333,7 +342,7 @@ export function PortalShell({
                 showCloseButton={false}
                 /* The variant-scoped width has to be beaten on its own terms —
                    <SheetContent> ships `data-[side=left]:w-3/4`. */
-                className="gap-0 border-r-0 p-0 data-[side=left]:w-[272px] data-[side=left]:max-w-[84vw]"
+                className="gap-0 border-r-0 p-0 data-[side=left]:w-[280px] data-[side=left]:max-w-[86vw]"
               >
                 <SheetTitle className="sr-only">Navigation</SheetTitle>
                 <SheetClose
@@ -357,7 +366,10 @@ export function PortalShell({
               in <PageHeader>, where it can carry an eyebrow and a lede. Two
               32px titles twenty pixels apart would just shout twice.
             */}
-            <p className="min-w-0 flex-1 truncate text-[19px] leading-[1.36] font-bold tracking-heading text-tx-head sm:text-[21px]">
+            {/* Deliberately Manrope, not Fraunces. The screen's real <h1>
+                in <PageHeader> is the serif one; if this were too, the two
+                would compete twenty pixels apart. */}
+            <p className="min-w-0 flex-1 truncate text-[17px] leading-[1.36] font-bold tracking-heading text-tx-head sm:text-[18.5px]">
               {title}
             </p>
 
@@ -421,9 +433,9 @@ export function PortalShell({
         <main
           id="portal-content"
           tabIndex={-1}
-          className="flex-1 px-6 py-8 outline-none lg:px-10 lg:py-10"
+          className="flex-1 px-6 py-9 outline-none lg:px-10 lg:py-12"
         >
-          <div className="mx-auto w-full max-w-[1160px]">{children}</div>
+          <div className="mx-auto w-full max-w-[1180px]">{children}</div>
         </main>
       </div>
     </div>

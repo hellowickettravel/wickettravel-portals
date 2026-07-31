@@ -7,7 +7,7 @@ import { cn } from "@/lib/utils"
 /**
  * Badge — design system v2 §04.
  *
- * 7px radius, 12.5px at 600, 1px border in a darker tint of the same hue.
+ * 8px radius, 12.5px at 600, 1px border in a darker tint of the same hue.
  * Squared like a printed label — NEVER a pill. A 6px dot only where a live
  * state matters (pass `dot`).
  *
@@ -16,7 +16,7 @@ import { cn } from "@/lib/utils"
  * flame featured.
  */
 const badgeVariants = cva(
-  "group/badge inline-flex w-fit shrink-0 items-center justify-center gap-1.5 rounded-chip border px-[11px] py-[5px] text-[12.5px] leading-[1.35] font-semibold tracking-[-0.002em] whitespace-nowrap transition-colors duration-150 ease-brand focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-flame [&>svg]:pointer-events-none [&>svg]:size-3.5 [&>svg]:[stroke-width:1.75]",
+  "group/badge inline-flex w-fit shrink-0 items-center justify-center gap-1.5 rounded-chip border px-[11px] py-[5px] text-[12.5px] leading-[1.35] font-semibold whitespace-nowrap transition-colors duration-150 ease-brand focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-flame [&>svg]:pointer-events-none [&>svg]:size-3.5 [&>svg]:[stroke-width:1.75]",
   {
     variants: {
       variant: {

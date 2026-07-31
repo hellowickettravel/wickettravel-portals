@@ -193,14 +193,14 @@ export default function SettingsPage() {
   const logoUrl = settings?.logo_url ?? null;
 
   return (
-    <div className="space-y-7">
+    <div className="space-y-8">
       <PageHeader
         eyebrow="Configuration"
         title="Settings"
         subtitle="Manage your business profile, branding and preferences."
       />
 
-      <form onSubmit={save} className="space-y-7">
+      <form onSubmit={save} className="space-y-8">
         <SectionCard title="Business profile" description="Used across invoices and customer messages.">
           {isLoading ? (
             <div className="flex items-center gap-2 py-6 text-sm text-muted-foreground">

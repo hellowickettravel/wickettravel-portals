@@ -62,7 +62,7 @@ export function MobileRecordCard({
         <dl className="mt-4 grid grid-cols-2 gap-x-4 gap-y-3 border-t border-line-faint pt-4">
           {fields.map((f) => (
             <div key={f.label} className={cn("min-w-0", f.wide && "col-span-2")}>
-              <dt className="font-micro text-tx-faint">{f.label}</dt>
+              <dt className="font-micro text-tx-muted">{f.label}</dt>
               <dd
                 className={cn(
                   "mt-1 truncate text-[14.5px] text-tx-body",

@@ -1,16 +1,28 @@
 import type { Metadata } from "next";
-import { Hanken_Grotesk, IBM_Plex_Mono } from "next/font/google";
+import { Fraunces, Manrope, IBM_Plex_Mono } from "next/font/google";
 import { Toaster } from "@/components/ui/sonner";
 import { Providers } from "./providers";
 import "./globals.css";
 
-// Two faces (design system v2 §09). Hanken Grotesk does all the work —
-// headings, body, UI. Weights stop at 700. Newsreader is retired from the
-// portal; it belongs on the marketing site only, if at all.
-const hanken = Hanken_Grotesk({
-  variable: "--font-hanken",
+// ── Three faces (design system v3 §09) ────────────────────────────────
+// Fraunces is the brand voice: a warm optical serif used ONLY at display
+// sizes — page titles, stat metrics, auth headlines, empty states. It is
+// what stops this reading like a generic dashboard. `opsz` is pinned high
+// so the cut stays the display cut rather than the text cut, and SOFT
+// rounds the terminals a little so it feels warm rather than severe.
+const fraunces = Fraunces({
+  variable: "--font-fraunces",
   subsets: ["latin"],
-  weight: ["400", "500", "600", "700"],
+  axes: ["SOFT", "WONK", "opsz"],
+  display: "swap",
+});
+
+// Manrope does every piece of interface work: body, labels, buttons, table
+// text, nav. Warm, semi-geometric, and unusually even at 13–15px, which is
+// where a portal actually lives.
+const manrope = Manrope({
+  variable: "--font-manrope",
+  subsets: ["latin"],
   display: "swap",
 });
 
@@ -49,7 +61,7 @@ export default function RootLayout({
   return (
     <html lang="en" className="h-full">
       <body
-        className={`${hanken.variable} ${plexMono.variable} min-h-full font-sans antialiased`}
+        className={`${manrope.variable} ${fraunces.variable} ${plexMono.variable} min-h-full font-sans antialiased`}
       >
         {/* Hoisted to <head> by React 19 — warms the Supabase TLS connection. */}
         {supabaseOrigin ? (

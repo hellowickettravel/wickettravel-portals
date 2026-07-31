@@ -6,11 +6,11 @@ import { cn } from "@/lib/utils";
 import { IconChip } from "@/components/ui/icon-chip";
 
 /**
- * Stat card — design system v2 §06, "Flat tint, matching border, one anatomy".
+ * Stat card — design system v3 §15, "Flat tint, matching border, one anatomy".
  *
- * Icon chip (40px) → Plex Mono micro-label → 29px tabular metric → caption,
- * in a 20/22 box at 14px radius. Every card on every screen is that shape,
- * that padding, that radius.
+ * Icon chip (40px) → Plex Mono micro-label → 34px Fraunces tabular metric →
+ * caption, in a 24/22 box at 16px radius. Every card on every screen is that
+ * shape, that padding, that radius.
  *
  * The background is a **solid tint** with a 1px border one step darker in the
  * same family. No gradient, and **no shadow** — the border does the work, and
@@ -25,7 +25,7 @@ import { IconChip } from "@/components/ui/icon-chip";
  *   ruby    attention — cancelled, failed, overdue
  *   flame   featured
  */
-const statCardVariants = cva("rounded-surface border px-[22px] py-5", {
+const statCardVariants = cva("rounded-surface border px-6 py-[22px]", {
   variants: {
     tone: {
       ocean: "border-sky-line bg-sky-tint",
@@ -70,14 +70,19 @@ export function StatCard({
         <Icon />
       </IconChip>
 
-      <p className="mt-4 font-micro text-[10px] text-tx-faint">{label}</p>
+      {/* Muted, not faint — this label has to be readable on a tint, and
+          `tx-faint` does not clear AA at 10px. */}
+      <p className="mt-5 font-micro text-[10px] text-tx-muted">{label}</p>
 
-      <p className="tabular mt-1.5 text-[29px] leading-[1.15] font-bold tracking-[-0.022em] text-tx-head">
+      {/* The metric is Fraunces. A stat card is the one place in a data-dense
+          screen where display type belongs: it is big, it is the point of the
+          card, and it is what makes the dashboard feel authored. */}
+      <p className="font-metric mt-2 text-[34px] leading-[1.1] font-semibold text-tx-head">
         {value}
       </p>
 
       {trend ? (
-        <p className="mt-1 flex flex-wrap items-center gap-x-1.5 text-[13.5px] text-tx-muted">
+        <p className="mt-2 flex flex-wrap items-center gap-x-1.5 text-[13.5px] text-tx-muted">
           <span
             className={cn(
               "inline-flex items-center gap-1 font-semibold",
@@ -96,7 +101,7 @@ export function StatCard({
           {hint ?? "vs last month"}
         </p>
       ) : hint ? (
-        <p className="mt-1 text-[13.5px] text-tx-muted">{hint}</p>
+        <p className="mt-2 text-[13.5px] text-tx-muted">{hint}</p>
       ) : null}
     </div>
   );

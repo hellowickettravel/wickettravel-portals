@@ -136,7 +136,9 @@ export default async function AdminDashboardPage() {
         <div className="flex flex-wrap items-end justify-between gap-3">
           <div>
             <p className="font-micro text-flame">Latest five</p>
-            <h2 className="mt-2 text-[25px] leading-[1.26] font-bold tracking-[-0.01em] text-tx-head">
+            {/* Manrope, and a clear step below the 36px Fraunces <h1> — a
+                25px section heading was competing with the page title. */}
+            <h2 className="mt-2 text-[21px] leading-[1.3] font-bold tracking-heading text-tx-head">
               Recent orders
             </h2>
           </div>
@@ -192,7 +194,7 @@ export default async function AdminDashboardPage() {
                           <p className="text-[14.5px] font-medium text-tx-body transition-colors duration-150 ease-brand group-hover:text-ocean">
                             {a.title}
                           </p>
-                          <p className="truncate text-[13px] text-tx-faint">
+                          <p className="truncate text-[13px] text-tx-muted">
                             {a.detail} · {fmtRelative(a.at)}
                           </p>
                         </div>
@@ -221,8 +223,8 @@ export default async function AdminDashboardPage() {
                 key={row.label}
                 className="flex items-baseline justify-between gap-4 rounded-chip border border-sky-line bg-surface px-4 py-3"
               >
-                <span className="font-micro text-tx-faint">{row.label}</span>
-                <span className="tabular text-[19px] font-bold tracking-[-0.005em] text-tx-head">
+                <span className="font-micro text-tx-muted">{row.label}</span>
+                <span className="font-metric text-[21px] font-semibold text-tx-head">
                   {row.value}
                 </span>
               </div>

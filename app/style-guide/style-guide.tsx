@@ -149,27 +149,27 @@ export function StyleGuide() {
       <header className="bg-ocean-ink py-16">
         <SectionWrap>
           <span className="font-micro text-flame-vivid">
-            Wicket Travel · Design System · v2
+            Wicket Travel · Design System · v3
           </span>
-          <h1 className="mt-4 max-w-[20ch] text-[clamp(30px,4.6vw,42px)] leading-[1.14] font-bold tracking-[-0.02em] text-tx-invert">
-            Solid, compact, and the orange you can actually see.
+          <h1 className="mt-4 max-w-[20ch] text-[clamp(32px,4.8vw,46px)] leading-[1.1] font-semibold tracking-[-0.022em] text-tx-invert">
+            Warm paper, deep ocean, one flame.
           </h1>
           <p className="mt-[18px] max-w-[56ch] text-[17px] leading-[1.65] text-tx-invert-2">
-            v1 shipped three mistakes: gradients, an asymmetric corner, and an
-            accent so muted it vanished. All three are corrected here. This
-            version replaces v1 entirely.
+            v2 was correct and completely anonymous: a cold blue-grey canvas and
+            a UI face with no point of view. v3 keeps the discipline, warms the
+            paper, and gives the product a voice. It replaces v2 entirely.
           </p>
           <div className="mt-9 flex flex-wrap gap-x-11 gap-y-4 border-t border-tx-invert/15 pt-[22px] text-[13.5px] text-tx-invert-3">
             <div>
               Type
               <b className="mt-[3px] block text-[15px] font-semibold text-tx-invert">
-                Hanken Grotesk · IBM Plex Mono
+                Manrope · Fraunces · IBM Plex Mono
               </b>
             </div>
             <div>
               Primary action
               <b className="mt-[3px] block text-[15px] font-semibold text-tx-invert">
-                Flame #D24417
+                Flame #C24310
               </b>
             </div>
             <div>
@@ -188,79 +188,91 @@ export function StyleGuide() {
           <SectionHead
             eyebrow="01 — Corrections"
             title="What was wrong, and what replaces it"
-            lede="These are not preferences. They are defects in v1 that made finished screens look cheap."
+            lede="These are not preferences. They are the things that made v2 read as competent and forgettable."
           />
           <div className="grid gap-[18px] md:grid-cols-2">
             <Panel className="overflow-hidden">
               <div className="bg-ruby-tint px-[18px] py-[11px] font-mono text-[10px] tracking-[0.1em] text-ruby uppercase">
-                Remove — v1
+                Remove — v2
               </div>
               <ul className="list-disc space-y-2.5 py-[22px] pr-6 pl-10 text-[14.5px] leading-[1.6] text-tx-muted">
                 <li>
-                  <b className="font-semibold text-tx-body">Gradient sidebar</b> —
-                  a colour fading into another colour reads as a template.
-                </li>
-                <li>
-                  <b className="font-semibold text-tx-body">Gradient stat cards</b>{" "}
-                  — tint fading to white made every card look washed.
+                  <b className="font-semibold text-tx-body">
+                    The cold canvas (#F5F8FC)
+                  </b>{" "}
+                  — a blue-grey room reads clinical, never welcoming.
                 </li>
                 <li>
                   <b className="font-semibold text-tx-body">
-                    The clipped corner (5/18/18/18)
+                    One anonymous UI face
                   </b>{" "}
-                  — intended as a signature, reads as a rendering glitch.
-                </li>
-                <li>
-                  <b className="font-semibold text-tx-body">Accent #C0451F</b> —
-                  brown, muted, and invisible on screen.
+                  — competent, and identical to every other dashboard.
                 </li>
                 <li>
                   <b className="font-semibold text-tx-body">
-                    46px buttons at 22px padding
+                    44px nav rows on 4px gaps
                   </b>{" "}
-                  — wide and heavy.
+                  — the rail read as a wall of text, not a set of choices.
                 </li>
                 <li>
-                  <b className="font-semibold text-tx-body">Visible scrollbars</b>{" "}
-                  inside the sidebar and panels.
+                  <b className="font-semibold text-tx-body">9px group labels</b> —
+                  too small to function as a label at all.
+                </li>
+                <li>
+                  <b className="font-semibold text-tx-body">
+                    A muted grey that failed AA
+                  </b>{" "}
+                  on six of its own tints.
+                </li>
+                <li>
+                  <b className="font-semibold text-tx-body">
+                    Blue hover on every row
+                  </b>{" "}
+                  — read as &ldquo;selected&rdquo;, not &ldquo;under the cursor&rdquo;.
                 </li>
               </ul>
             </Panel>
 
             <Panel className="overflow-hidden">
               <div className="bg-jade-tint px-[18px] py-[11px] font-mono text-[10px] tracking-[0.1em] text-jade uppercase">
-                Adopt — v2
+                Adopt — v3
               </div>
               <ul className="list-disc space-y-2.5 py-[22px] pr-6 pl-10 text-[14.5px] leading-[1.6] text-tx-muted">
                 <li>
-                  <b className="font-semibold text-tx-body">Solid fills only.</b>{" "}
-                  No gradient anywhere in the product, ever.
+                  <b className="font-semibold text-tx-body">
+                    A warm sand canvas (#FAF7F3)
+                  </b>{" "}
+                  — white cards now read as lifted without a shadow saying so.
                 </li>
                 <li>
-                  <b className="font-semibold text-tx-body">Solid tint cards</b>{" "}
-                  with a matching 1px border — flat, crisp, confident.
+                  <b className="font-semibold text-tx-body">
+                    Fraunces for display, Manrope for UI
+                  </b>{" "}
+                  — a serif at title size is what gives the product a voice.
+                </li>
+                <li>
+                  <b className="font-semibold text-tx-body">
+                    48px nav rows on 6px gaps
+                  </b>{" "}
+                  — nothing was removed from the rail; it simply breathes.
                 </li>
                 <li>
                   <b className="font-semibold text-tx-body">
                     One radius per element type
                   </b>{" "}
-                  — 14 cards, 18 large, 10 controls, 11 icon chips, 7 badges.
-                </li>
-                <li>
-                  <b className="font-semibold text-tx-body">Flame #D24417</b> —
-                  vivid, warm, and now the primary action colour.
+                  — 16 cards, 22 large, 12 controls, 12 icon chips, 8 badges.
                 </li>
                 <li>
                   <b className="font-semibold text-tx-body">
-                    42px buttons at 18px padding
+                    Every pairing verified at 4.5:1
                   </b>{" "}
-                  — compact and purposeful.
+                  — muted grey is set at the darkest tint it can land on.
                 </li>
                 <li>
                   <b className="font-semibold text-tx-body">
-                    No scrollbar is ever visible
+                    Solid fills only, no visible scrollbar
                   </b>{" "}
-                  inside the app. Hard rule.
+                  — both carried forward from v2. Hard rules.
                 </li>
               </ul>
             </Panel>
@@ -333,7 +345,7 @@ export function StyleGuide() {
             <Swatch
               name="Ocean"
               token="bg-ocean"
-              hex="#0F4C81"
+              hex="#12547F"
               className="bg-ocean"
               note="Sidebar, headings, links, structure. Solid — never a gradient."
               contrast="8.9:1 on white ✓ AAA"
@@ -341,7 +353,7 @@ export function StyleGuide() {
             <Swatch
               name="Ocean ink"
               token="bg-ocean-ink"
-              hex="#0A3355"
+              hex="#082F4B"
               className="bg-ocean-ink"
               note="Statement bands, footers, code surfaces, heading colour."
               contrast="13.1:1 on white ✓ AAA"
@@ -349,7 +361,7 @@ export function StyleGuide() {
             <Swatch
               name="Flame"
               token="bg-flame"
-              hex="#D24417"
+              hex="#C24310"
               className="bg-flame"
               note="Primary action. Buttons, active nav icons, eyebrows, key numbers."
               contrast="4.6:1 on white ✓ AA"
@@ -357,7 +369,7 @@ export function StyleGuide() {
             <Swatch
               name="Flame vivid"
               token="bg-flame-vivid"
-              hex="#F2622A"
+              hex="#F0761C"
               className="bg-flame-vivid"
               note="Icons and graphics only, where small-text contrast doesn’t apply."
               contrast="Graphics only"
@@ -365,16 +377,16 @@ export function StyleGuide() {
             <Swatch
               name="Sky tint"
               token="bg-sky-tint"
-              hex="#EDF4FB"
+              hex="#ECF3F9"
               className="bg-sky-tint ring-1 ring-sky-line ring-inset"
               note="Tint sections, ocean stat cards, hover states. Border #D3E4F4."
             />
             <Swatch
               name="Canvas"
               token="bg-canvas"
-              hex="#F5F8FC"
+              hex="#FAF7F3"
               className="bg-canvas ring-1 ring-line ring-inset"
-              note="Page background. Surface #FFFFFF · sunk #F0F4F9 · line #E5EBF3."
+              note="Page background. Surface #FFFFFF · sunk #F3EEE8 · line #E8E0D7."
             />
           </div>
 
@@ -382,7 +394,7 @@ export function StyleGuide() {
             <Swatch
               name="Gold — money"
               token="bg-gold"
-              hex="#C97A0C"
+              hex="#975F0A"
               className="bg-gold"
               note="Revenue, commission, fares."
               contrast="4.8:1 ✓ AA"
@@ -390,7 +402,7 @@ export function StyleGuide() {
             <Swatch
               name="Violet — waiting"
               token="bg-violet"
-              hex="#4A4FBF"
+              hex="#4B4BB8"
               className="bg-violet"
               note="Pending, queued, awaiting reply."
               contrast="6.5:1 ✓ AA"
@@ -398,7 +410,7 @@ export function StyleGuide() {
             <Swatch
               name="Jade — live"
               token="bg-jade"
-              hex="#0C7A6B"
+              hex="#0B6F5F"
               className="bg-jade"
               note="Confirmed, online, completed."
               contrast="5.1:1 ✓ AA"
@@ -406,7 +418,7 @@ export function StyleGuide() {
             <Swatch
               name="Ruby — attention"
               token="bg-ruby"
-              hex="#B32F44"
+              hex="#A82A3F"
               className="bg-ruby"
               note="Cancelled, failed, overdue."
               contrast="6.1:1 ✓ AA"
@@ -433,11 +445,11 @@ export function StyleGuide() {
           />
           <div className="grid gap-[18px] md:grid-cols-2">
             <Panel className="overflow-hidden">
-              <Spec k="14px" v="rounded-surface — cards, panels, stat cards, table containers, images" />
-              <Spec k="18px" v="rounded-surface-lg — modals, the sidebar, hero panels, auth panels" />
-              <Spec k="10px" v="rounded-control — buttons, inputs, selects, nav items" />
-              <Spec k="11px" v="rounded-icon — icon chips and the monogram badge" />
-              <Spec k="7px" v="rounded-chip — badges and tags. Squared, never a pill." />
+              <Spec k="16px" v="rounded-surface — cards, panels, stat cards, table containers, images" />
+              <Spec k="22px" v="rounded-surface-lg — modals, the sidebar, hero panels, auth panels" />
+              <Spec k="12px" v="rounded-control — buttons, inputs, selects, nav items" />
+              <Spec k="12px" v="rounded-icon — icon chips and the monogram badge" />
+              <Spec k="8px" v="rounded-chip — badges and tags. Squared, never a pill." />
               <Spec k="Circle" v="rounded-full — avatars and status dots only" />
               <Spec k="Banned" v="Asymmetric radii · 16px on everything · pill buttons · pill eyebrows" />
             </Panel>
@@ -472,7 +484,7 @@ export function StyleGuide() {
           <SectionHead
             eyebrow="05 — Type & spacing"
             title="Two faces, one scale"
-            lede="Hanken Grotesk carried v1 well — the problem was never the type. Newsreader is retired from the portal."
+            lede="Manrope does every piece of interface work. Fraunces is the brand voice and appears only at display sizes — page titles, stat metrics, auth headlines."
           />
           <Panel className="mb-[18px] px-[26px] py-1.5">
             <Row label="H1 · page">
@@ -518,11 +530,11 @@ export function StyleGuide() {
 
           <div className="grid gap-[18px] md:grid-cols-2">
             <Panel className="overflow-hidden">
-              <Spec k="Face" v="Hanken Grotesk 400 / 500 / 600 / 700 · IBM Plex Mono 500 for codes and micro-labels" />
-              <Spec k="H1 page" v="700 · 30/35 · −.018em · #0C3355" />
-              <Spec k="H2 section" v="700 · 24/30 · −.014em" />
-              <Spec k="Body" v="400 · 16/27 · #3A4A5C" />
-              <Spec k="Small" v="400 · 14.5/23 · #6D7D8F" />
+              <Spec k="Face" v="Manrope 400–800 for UI · Fraunces 600/700 for display only · IBM Plex Mono 500 for codes and micro-labels" />
+              <Spec k="H1 page" v="Fraunces 600 · 36/40 · −.022em · #17293A" />
+              <Spec k="H2 section" v="Manrope 700 · 21/27 · −.014em" />
+              <Spec k="Body" v="400 · 16/27 · #4A5563" />
+              <Spec k="Small" v="400 · 14.5/23 · #606A78" />
               <Spec k="Metric" v="700 · 29/33 · tabular numerals" />
               <Spec k="Micro-label" v="Plex Mono 500 · 10–11px · .1em · uppercase" />
             </Panel>
@@ -533,7 +545,7 @@ export function StyleGuide() {
               <Spec k="Grid gap" v="18px" />
               <Spec k="Eyebrow → H1" v="10px · H1 → lede 12px · header → content 28px" />
               <Spec k="Label → input" v="7px · field → field 20px" />
-              <Spec k="Table cell" v="13px vertical · 18px horizontal · header row #F0F4F9" />
+              <Spec k="Table cell" v="13px vertical · 18px horizontal · header row #F3EEE8" />
             </Panel>
           </div>
         </SectionWrap>
@@ -582,13 +594,13 @@ export function StyleGuide() {
             <Spec k="Background" v="Flat tint of the metric’s hue. Border 1px in the same family, one step darker." />
             <Spec k="Shadow" v="None. The border does the work." />
             <Spec k="Order" v="Icon chip 40px → Plex Mono label → 29px 700 tabular number → 13.5px caption" />
-            <Spec k="Padding" v="20px 22px · radius 14px · grid gap 18px" />
+            <Spec k="Padding" v="22px 24px · radius 16px · grid gap 20px" />
             <Spec k="Hue by meaning" v="Ocean volume · gold money · violet waiting · jade live · ruby attention. Fixed on every screen." />
             <Spec k="Never" v="Two numbers in one card · a gradient · a sparkline with a fill · a different padding from its neighbour" />
           </Panel>
 
           <h3 className="mt-10 mb-4 text-[16.5px] font-semibold text-tx-head">
-            Icon chips — 40px, 11px radius, flat fill, 19px Lucide at 1.75
+            Icon chips — 40px, 12px radius, flat fill, 19px Lucide at 1.75
           </h3>
           <div className="flex flex-wrap gap-3">
             <IconChip tone="ocean" title="Volume">
@@ -622,7 +634,7 @@ export function StyleGuide() {
           <SectionHead
             eyebrow="07 — Buttons"
             title="Compact, and flame leads"
-            lede="42px with 18px padding — enough presence, no bulk. The main action on a screen is flame; ocean is the strong secondary."
+            lede="44px with 18px padding — enough presence, no bulk. The main action on a screen is flame; ocean is the strong secondary."
           />
           <div className="grid gap-[18px] md:grid-cols-2">
             <Card>
@@ -657,13 +669,13 @@ export function StyleGuide() {
               </CardContent>
             </Card>
             <Panel className="overflow-hidden">
-              <Spec k="Height" v="36 small · 42 default · 48 large" />
+              <Spec k="Height" v="38 small · 44 default · 50 large" />
               <Spec k="Padding" v="14 / 18 / 22px horizontal. Buttons never stretch to fill a container." />
-              <Spec k="Type" v="600 · 15px · no uppercase, no letterspacing" />
-              <Spec k="Radius" v="10px" />
-              <Spec k="Primary" v="Flame #D24417, white text — the main action, one per view" />
+              <Spec k="Type" v="Manrope 700 · 15px · no uppercase, no letterspacing" />
+              <Spec k="Radius" v="12px" />
+              <Spec k="Primary" v="Flame #C24310, white text — the main action, one per view" />
               <Spec k="Ocean" v="Strong secondary — navigation-style actions" />
-              <Spec k="Secondary" v="White, 1px #D3DCE7, ocean hover" />
+              <Spec k="Secondary" v="White, 1px #D8CCBF, warm sand hover" />
               <Spec k="Icon" v="17px at 1.75 stroke, 8px gap, leading side" />
               <Spec k="Hover" v="Darken one step only. No lift, no shadow — buttons carry none." />
             </Panel>
@@ -677,7 +689,7 @@ export function StyleGuide() {
           <SectionHead
             eyebrow="08 — Form fields"
             title="The part people actually use"
-            lede="46px tall, 14px padding, a border that is always visible at rest, and error copy that says what to do next."
+            lede="48px tall, 14px padding, a warm sand fill so the field is visible on white, and error copy that says what to do next."
           />
           <div className="grid gap-[18px] md:grid-cols-2">
             <Card>
@@ -735,14 +747,14 @@ export function StyleGuide() {
               </CardContent>
             </Card>
             <Panel className="overflow-hidden">
-              <Spec k="Height" v="46px form · 36px compact (filter bars only). Two heights, and only two." />
+              <Spec k="Height" v="48px form · 38px compact (filter bars only). Two heights, and only two." />
               <Spec k="Padding" v="14px horizontal · textarea 13px vertical" />
-              <Spec k="Text" v="15.5px / 400 / #3A4A5C — held at 16px below 640px so iOS doesn’t zoom" />
-              <Spec k="Radius" v="10px" />
-              <Spec k="Border" v="1px #D3DCE7 at rest — always visible, never borderless" />
+              <Spec k="Text" v="15.5px / 400 / #4A5563 — held at 16px below 640px so iOS doesn’t zoom" />
+              <Spec k="Radius" v="12px" />
+              <Spec k="Border" v="1px #D8CCBF at rest — always visible, never borderless" />
               <Spec k="Focus" v="Border → ocean, plus a 3px ocean ring at 13%" />
               <Spec k="Error" v="aria-invalid → ruby border + 3px ruby ring at 10%, message 7px below" />
-              <Spec k="Label" v="600 · 13.5px · #0C3355 · sentence case. Required marked with a flame asterisk." />
+              <Spec k="Label" v="600 · 13.5px · #17293A · sentence case. Required marked with a flame asterisk." />
               <Spec k="Rhythm" v="Label → input 7px · field → field 20px" />
             </Panel>
           </div>
@@ -755,7 +767,7 @@ export function StyleGuide() {
           <SectionHead
             eyebrow="09 — Badges"
             title="Squared, not pills"
-            lede="7px radius, 12.5px at 600, a 1px border a step darker than the fill. The hue is the meaning, on every screen."
+            lede="8px radius, 12.5px at 600, a 1px border a step darker than the fill. The hue is the meaning, on every screen."
           />
           <div className="grid gap-[18px] md:grid-cols-2">
             <Card>
@@ -778,7 +790,7 @@ export function StyleGuide() {
               </CardContent>
             </Card>
             <Panel className="overflow-hidden">
-              <Spec k="Radius" v="7px — squared like a printed label. Never a pill." />
+              <Spec k="Radius" v="8px — squared like a printed label. Never a pill." />
               <Spec k="Type" v="12.5px · 600 · tracking −.002em" />
               <Spec k="Padding" v="5px 11px · 6px gap" />
               <Spec k="Border" v="1px in a darker tint of the same hue" />
@@ -795,7 +807,7 @@ export function StyleGuide() {
           <SectionHead
             eyebrow="10 — Cards, panels, sections"
             title="Built from the same parts"
-            lede="A card is white on a 1px line at 14px radius. A panel is the same surface without the scaffolding. A section changes by background, never by decoration."
+            lede="A card is white on a 1px line at 16px radius. A panel is the same surface without the scaffolding. A section changes by background, never by decoration."
           />
           <div className="grid gap-[18px] md:grid-cols-2">
             <Card>
@@ -806,7 +818,7 @@ export function StyleGuide() {
                 </CardDescription>
               </CardHeader>
               <CardContent className="text-[14.5px] leading-[1.68] text-tx-body">
-                The card is the default surface: white, 1px #E5EBF3, 14px radius,
+                The card is the default surface: white, 1px #E8E0D7, 16px radius,
                 lift-1. Padding is 24/22 on desktop and 18 on mobile.
               </CardContent>
               <CardFooter>
@@ -824,7 +836,7 @@ export function StyleGuide() {
               <Spec k="Panel" v="The same surface, for tables and lists that manage their own padding" />
               <Spec k="Section" v="canvas → white → sky tint, alternating; an ocean-ink band once or twice per page" />
               <Spec k="White section" v="A card inside one keeps its border and drops its shadow" />
-              <Spec k="Wrap" v="1160px max · 40px gutters desktop · 24px mobile" />
+              <Spec k="Wrap" v="1180px max · 40px gutters desktop · 24px mobile" />
               <Spec k="Depth" v="lift-1 resting · lift-2 on hover (+2px rise). Cards rise; buttons never do." />
             </Panel>
           </div>
@@ -927,7 +939,7 @@ export function StyleGuide() {
                 </>,
                 <>
                   <b className="font-semibold text-tx-body">Type follows the scale</b>{" "}
-                  and body sits at #3A4A5C, 1.68 line-height.
+                  and body sits at #4A5563, 1.68 line-height.
                 </>,
                 <>
                   <b className="font-semibold text-tx-body">Tables stack into cards</b>{" "}
@@ -943,20 +955,20 @@ export function StyleGuide() {
       <footer className="bg-ocean-ink py-11 text-[14px] leading-[1.7] text-tx-invert-3">
         <SectionWrap>
           <b className="font-semibold text-tx-invert">
-            Wicket Travel — Design System v2 · replaces v1
+            Wicket Travel — Design System v3 · replaces v2
           </b>
           <p className="mt-2.5">
-            Ocean #0F4C81 · Ocean ink #0A3355 ·{" "}
+            Ocean #12547F · Ocean ink #082F4B ·{" "}
             <b className="font-semibold text-tx-invert">
-              Flame #D24417 (primary action)
+              Flame #C24310 (primary action)
             </b>{" "}
-            · Gold #C97A0C · Jade #0C7A6B · Violet #4A4FBF · Ruby #B32F44
+            · Gold #975F0A · Jade #0B6F5F · Violet #4B4BB8 · Ruby #A82A3F
             <br />
-            Canvas #F5F8FC · Sky tint #EDF4FB · Lines #E5EBF3 / #D3DCE7 · Text
-            #0C3355 / #3A4A5C / #6D7D8F / #96A4B4
+            Canvas #FAF7F3 · Sky tint #ECF3F9 · Lines #E8E0D7 / #D8CCBF · Text
+            #17293A / #4A5563 / #606A78 / #8B95A1
             <br />
-            Radius 14 cards · 18 large · 10 controls · 11 icon chips · 7 badges ·
-            Hanken Grotesk + IBM Plex Mono · Lucide 1.75
+            Radius 16 cards · 22 large · 12 controls · 12 icon chips · 8 badges ·
+            Manrope + Fraunces + IBM Plex Mono · Lucide 1.75
             <br />
             <b className="font-semibold text-tx-invert">
               No gradients. No visible scrollbars. No asymmetric corners.

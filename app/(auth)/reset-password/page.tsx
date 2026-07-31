@@ -114,7 +114,7 @@ export default function ResetPasswordPage() {
 
   return (
     <AuthShell
-      eyebrow="Wicket Travel"
+      eyebrow="Account recovery"
       headline="A new password, and you're back in."
       lede="Reset links are single-use, which is exactly why they're safe."
     >
@@ -146,7 +146,7 @@ export default function ResetPasswordPage() {
           >
             Back to sign in
           </Button>
-          <p className="mt-5 text-[13px] leading-[1.5] text-tx-faint">
+          <p className="mt-5 text-[13px] leading-[1.5] text-tx-muted">
             Use “Forgot password?” there to send yourself a new link.
           </p>
         </>

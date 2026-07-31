@@ -7,7 +7,7 @@ import { cn } from "@/lib/utils";
  */
 export function AuthFooter({ className }: { className?: string }) {
   return (
-    <p className={cn("text-[13px] leading-[1.5] text-tx-faint", className)}>
+    <p className={cn("text-[13px] leading-[1.5] text-tx-muted", className)}>
       © 2026 Wicket Travel. All rights reserved.
     </p>
   );

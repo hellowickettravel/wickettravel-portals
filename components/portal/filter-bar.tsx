@@ -138,7 +138,7 @@ function FilterChips({
               <span
                 className={cn(
                   "tabular text-[12px] font-semibold",
-                  active ? "text-ocean" : "text-tx-faint"
+                  active ? "text-ocean" : "text-tx-muted"
                 )}
               >
                 {option.count}
