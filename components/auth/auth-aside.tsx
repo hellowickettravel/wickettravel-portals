@@ -15,11 +15,11 @@ export function AuthAside({
   supporting = "Run your flight desk from a single shared workspace — conversations, orders and your team, all in one calm place.",
 }: AuthAsideProps) {
   return (
-    <section className="relative hidden overflow-hidden bg-[linear-gradient(150deg,#1e3a5f_0%,#152c49_55%,#1e3a5f_100%)] lg:flex lg:flex-col lg:justify-between lg:p-12 xl:p-16">
+    <section className="relative hidden overflow-hidden bg-[linear-gradient(165deg,var(--ocean)_0%,var(--ocean-deep)_58%,var(--ocean-night)_100%)] lg:flex lg:flex-col lg:justify-between lg:p-12 xl:p-16">
       {/* Texture: faint dot-grid + soft radial glows (navy depth + orange accent) */}
       <div className="bg-dot-grid pointer-events-none absolute inset-0 opacity-60 [mask-image:radial-gradient(120%_120%_at_30%_0%,black,transparent_75%)]" />
-      <div className="pointer-events-none absolute -right-24 -top-24 size-[420px] rounded-full bg-[radial-gradient(circle,rgba(249,115,22,0.22),transparent_70%)] blur-2xl" />
-      <div className="pointer-events-none absolute -bottom-32 -left-20 size-[360px] rounded-full bg-[radial-gradient(circle,rgba(44,82,130,0.55),transparent_70%)] blur-2xl" />
+      <div className="pointer-events-none absolute -right-24 -top-24 size-[420px] rounded-full bg-[radial-gradient(circle,rgba(255,111,77,0.34),transparent_70%)] blur-2xl" />
+      <div className="pointer-events-none absolute -bottom-32 -left-20 size-[360px] rounded-full bg-[radial-gradient(circle,rgba(15,76,129,0.55),transparent_70%)] blur-2xl" />
 
       {/* Brand lockup */}
       <div className="relative z-10">

@@ -25,12 +25,12 @@ export function MapPlaceholder({
       aria-label={`Map preview from ${from} to ${to}. Live tracking coming soon.`}
     >
       {/* Map-ish backdrop */}
-      <div className="absolute inset-0 bg-[linear-gradient(135deg,#eef3f9_0%,#e3ecf5_100%)]" />
+      <div className="absolute inset-0 bg-[linear-gradient(135deg,var(--sky-tint)_0%,var(--surface-sunk)_100%)]" />
       <div
         className="absolute inset-0 opacity-[0.5]"
         style={{
           backgroundImage:
-            "linear-gradient(#c9d8e8 1px, transparent 1px), linear-gradient(90deg, #c9d8e8 1px, transparent 1px)",
+            "linear-gradient(var(--line-hover) 1px, transparent 1px), linear-gradient(90deg, var(--line-hover) 1px, transparent 1px)",
           backgroundSize: "28px 28px",
         }}
       />
@@ -39,7 +39,7 @@ export function MapPlaceholder({
         <path
           d="M 15% 78% C 40% 60%, 55% 40%, 82% 24%"
           fill="none"
-          stroke="#f97316"
+          stroke="var(--coral-deep)"
           strokeWidth="3"
           strokeLinecap="round"
           strokeDasharray="2 9"

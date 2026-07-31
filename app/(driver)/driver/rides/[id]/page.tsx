@@ -242,7 +242,7 @@ export default function RideDetailPage({ params }: { params: Promise<{ id: strin
                   const wasFinal = ride.stage === "enroute";
                   advanceStage(ride.id);
                   if (wasFinal) {
-                    toast.success("Trip completed 🎉", {
+                    toast.success("Trip completed", {
                       description: `You earned ${inr(net)}.`,
                     });
                     router.push("/driver/rides");

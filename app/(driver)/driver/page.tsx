@@ -36,7 +36,7 @@ export default function DriverHomePage() {
       <div>
         <p className="text-sm text-muted-foreground">{greeting()},</p>
         <h1 className="font-display text-2xl font-semibold tracking-tight text-navy">
-          {firstName} 👋
+          {firstName}
         </h1>
       </div>
 
@@ -57,7 +57,7 @@ export default function DriverHomePage() {
             <h2 className="font-display text-sm font-semibold text-navy">Active trip</h2>
             <RideStatusBadge stage={activeRide.stage} />
           </div>
-          <div className="relative overflow-hidden rounded-2xl bg-[linear-gradient(120deg,#1e3a5f_0%,#152c49_60%,#2c5282_100%)] p-5 shadow-card">
+          <div className="relative overflow-hidden rounded-2xl bg-[linear-gradient(165deg,var(--ocean)_0%,var(--ocean-deep)_58%,var(--ocean-night)_100%)] p-5 shadow-card">
             <div className="bg-dot-grid pointer-events-none absolute inset-0 opacity-30 [mask-image:radial-gradient(120%_120%_at_20%_0%,black,transparent_75%)]" />
             <div className="relative z-10">
               <div className="flex items-center justify-between">

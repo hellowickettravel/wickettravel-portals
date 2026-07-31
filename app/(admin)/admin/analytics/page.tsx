@@ -186,10 +186,10 @@ export default async function AnalyticsPage({
   }));
 
   const statusData = [
-    { label: "New", value: orders.filter((o) => o.status === "new").length, color: "#1E3A5F" },
-    { label: "In progress", value: orders.filter((o) => o.status === "in_progress").length, color: "#F97316" },
-    { label: "Completed", value: orders.filter((o) => o.status === "completed").length, color: "#10B981" },
-    { label: "Cancelled", value: orders.filter((o) => o.status === "cancelled").length, color: "#F43F5E" },
+    { label: "New", value: orders.filter((o) => o.status === "new").length, color: "var(--ocean)" },
+    { label: "In progress", value: orders.filter((o) => o.status === "in_progress").length, color: "var(--amber)" },
+    { label: "Completed", value: orders.filter((o) => o.status === "completed").length, color: "var(--mint)" },
+    { label: "Cancelled", value: orders.filter((o) => o.status === "cancelled").length, color: "var(--rose)" },
   ];
 
   const closedByEmployee = new Map<string, number>();

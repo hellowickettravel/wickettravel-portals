@@ -2,6 +2,16 @@ import * as React from "react"
 
 import { cn } from "@/lib/utils"
 
+/**
+ * Card — design-system.html §05.
+ *
+ * #FFFFFF, 1px #E7EDF5, the clipped corner, lift-1. Padding is 26/28 on
+ * desktop and 20/22 on mobile; `size="sm"` is the portal-screen density.
+ *
+ * A card sitting inside a white <Section> keeps its border and drops its
+ * shadow — otherwise it floats for no reason. That rule lives in globals.css
+ * as `[data-section-tone="white"] [data-slot="card"]`.
+ */
 function Card({
   className,
   size = "default",
@@ -12,7 +22,10 @@ function Card({
       data-slot="card"
       data-size={size}
       className={cn(
-        "group/card flex flex-col gap-(--card-spacing) overflow-hidden rounded-xl bg-card py-(--card-spacing) text-sm text-card-foreground ring-1 ring-foreground/10 [--card-spacing:--spacing(4)] has-data-[slot=card-footer]:pb-0 has-[>img:first-child]:pt-0 data-[size=sm]:[--card-spacing:--spacing(3)] data-[size=sm]:has-data-[slot=card-footer]:pb-0 *:[img:first-child]:rounded-t-xl *:[img:last-child]:rounded-b-xl",
+        "group/card flex flex-col gap-(--card-spacing) overflow-hidden rounded-surface border border-line bg-card py-(--card-spacing) text-sm text-card-foreground shadow-lift",
+        "[--card-px:22px] [--card-spacing:20px] md:[--card-px:28px] md:[--card-spacing:26px]",
+        "data-[size=sm]:[--card-px:18px] data-[size=sm]:[--card-spacing:16px] md:data-[size=sm]:[--card-px:20px] md:data-[size=sm]:[--card-spacing:20px]",
+        "has-data-[slot=card-footer]:pb-0 has-[>img:first-child]:pt-0",
         className
       )}
       {...props}
@@ -25,7 +38,7 @@ function CardHeader({ className, ...props }: React.ComponentProps<"div">) {
     <div
       data-slot="card-header"
       className={cn(
-        "group/card-header @container/card-header grid auto-rows-min items-start gap-1 rounded-t-xl px-(--card-spacing) has-data-[slot=card-action]:grid-cols-[1fr_auto] has-data-[slot=card-description]:grid-rows-[auto_auto] [.border-b]:pb-(--card-spacing)",
+        "group/card-header @container/card-header grid auto-rows-min items-start gap-2.5 px-(--card-px) has-data-[slot=card-action]:grid-cols-[1fr_auto] has-data-[slot=card-description]:grid-rows-[auto_auto] [.border-b]:pb-(--card-spacing)",
         className
       )}
       {...props}
@@ -33,12 +46,13 @@ function CardHeader({ className, ...props }: React.ComponentProps<"div">) {
   )
 }
 
+/** H4 — 600 · 16.5/23 · #0A3A66. */
 function CardTitle({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
       data-slot="card-title"
       className={cn(
-        "font-heading text-base leading-snug font-medium group-data-[size=sm]/card:text-sm",
+        "text-[16.5px] leading-[1.42] font-semibold text-tx-head group-data-[size=sm]/card:text-[15px]",
         className
       )}
       {...props}
@@ -46,11 +60,12 @@ function CardTitle({ className, ...props }: React.ComponentProps<"div">) {
   )
 }
 
+/** Small — 400 · 14.5/23 · #6B7C8E. */
 function CardDescription({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
       data-slot="card-description"
-      className={cn("text-sm text-muted-foreground", className)}
+      className={cn("text-[14.5px] leading-[1.6] text-tx-muted", className)}
       {...props}
     />
   )
@@ -73,7 +88,7 @@ function CardContent({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
       data-slot="card-content"
-      className={cn("px-(--card-spacing)", className)}
+      className={cn("px-(--card-px)", className)}
       {...props}
     />
   )
@@ -84,7 +99,7 @@ function CardFooter({ className, ...props }: React.ComponentProps<"div">) {
     <div
       data-slot="card-footer"
       className={cn(
-        "flex items-center rounded-b-xl border-t bg-muted/50 p-(--card-spacing)",
+        "flex items-center gap-3 border-t border-line-faint bg-sunk px-(--card-px) py-(--card-spacing)",
         className
       )}
       {...props}

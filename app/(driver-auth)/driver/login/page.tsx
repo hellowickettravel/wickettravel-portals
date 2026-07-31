@@ -26,9 +26,9 @@ export default function DriverLoginPage() {
   return (
     <main className="grid min-h-dvh lg:grid-cols-[1.1fr_1fr]">
       {/* Brand / hero — hidden on phones */}
-      <section className="relative hidden overflow-hidden bg-[linear-gradient(150deg,#1e3a5f_0%,#152c49_55%,#1e3a5f_100%)] lg:flex lg:flex-col lg:justify-between lg:p-12 xl:p-16">
+      <section className="relative hidden overflow-hidden bg-[linear-gradient(165deg,var(--ocean)_0%,var(--ocean-deep)_58%,var(--ocean-night)_100%)] lg:flex lg:flex-col lg:justify-between lg:p-12 xl:p-16">
         <div className="bg-dot-grid pointer-events-none absolute inset-0 opacity-60 [mask-image:radial-gradient(120%_120%_at_30%_0%,black,transparent_75%)]" />
-        <div className="pointer-events-none absolute -right-24 -top-24 size-[420px] rounded-full bg-[radial-gradient(circle,rgba(249,115,22,0.22),transparent_70%)] blur-2xl" />
+        <div className="pointer-events-none absolute -right-24 -top-24 size-[420px] rounded-full bg-[radial-gradient(circle,rgba(255,111,77,0.34),transparent_70%)] blur-2xl" />
 
         <div className="relative z-10">
           <BrandLogo variant="white" className="h-9 w-auto" priority />

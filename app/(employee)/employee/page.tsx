@@ -68,7 +68,7 @@ export default async function EmployeeDashboardPage() {
     <div className="space-y-7 animate-in fade-in slide-in-from-bottom-2 duration-500 ease-out">
       <div>
         <h1 className="font-display text-xl font-semibold tracking-tight text-navy sm:text-2xl">
-          Welcome back, {firstName} 👋
+          Welcome back, {firstName}
         </h1>
         <p className="mt-1 text-sm text-muted-foreground">
           Here&apos;s what&apos;s on your plate today.

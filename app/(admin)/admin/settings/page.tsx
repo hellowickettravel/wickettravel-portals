@@ -311,11 +311,11 @@ export default function SettingsPage() {
               </div>
               <div>
                 <p className="font-display text-sm font-semibold text-foreground">
-                  #1E3A5F · #F97316
+                  #0F4C81 · #C0451F
                 </p>
                 <p className="flex items-center gap-1 text-xs text-muted-foreground">
                   <Lock className="size-3" />
-                  Wicket Travel Navy &amp; Orange · locked by the design system
+                  Wicket Travel Ocean &amp; Coral · locked by the design system
                 </p>
               </div>
             </div>

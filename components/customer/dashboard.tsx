@@ -74,7 +74,7 @@ export function CustomerDashboard({ firstName }: { firstName: string }) {
     <div className="space-y-7 animate-in fade-in slide-in-from-bottom-2 duration-500 ease-out">
       <div>
         <h1 className="font-display text-xl font-semibold tracking-tight text-navy sm:text-2xl">
-          Welcome back, {firstName} 👋
+          Welcome back, {firstName}
         </h1>
         <p className="mt-1 text-sm text-muted-foreground">
           Here&apos;s what&apos;s happening with your trips.
@@ -88,7 +88,7 @@ export function CustomerDashboard({ firstName }: { firstName: string }) {
       </div>
 
       {/* CTA */}
-      <div className="relative overflow-hidden rounded-2xl bg-[linear-gradient(120deg,#1e3a5f_0%,#152c49_55%,#2c5282_100%)] p-7 shadow-card md:p-8">
+      <div className="relative overflow-hidden rounded-2xl bg-[linear-gradient(165deg,var(--ocean)_0%,var(--ocean-deep)_58%,var(--ocean-night)_100%)] p-7 shadow-card md:p-8">
         <div className="bg-dot-grid pointer-events-none absolute inset-0 opacity-40 [mask-image:radial-gradient(120%_120%_at_20%_0%,black,transparent_75%)]" />
         <div className="relative z-10 flex flex-col items-start justify-between gap-5 md:flex-row md:items-center">
           <div className="max-w-md">
