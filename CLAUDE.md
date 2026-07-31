@@ -28,18 +28,18 @@ A custom "Shared Team Inbox + Orders CRM + Admin panel" for a UK-based flight-ti
 - /employee — employee portal (the heart: 2-pane chat inbox, create order from chat)
 - /customer — customer portal: place/track orders, chat with the team in real time
 
-## Design system (Navy + Orange — matches the public homepage)
-- Brand / primary = NAVY: #1E3A5F, primary-dark #152C49, primary-light #2C5282
-- Action / accent = ORANGE: #F97316, accent-dark #EA580C, accent-light #FB923C
-- Bg #F8FAFC, surface #FFFFFF, neutral #F1F5F9
-- Chip #E8EEF5, outline #DDE7EF
-- Status badges: keep semantic green/amber/red/blue (blue tone = navy family), harmonized with the theme; bg+text pairs with a 5px dot
-- FONT: Plus Jakarta Sans everywhere (headings + body + labels), loaded via next/font; hierarchy comes from weights
-- Design language: navy is the brand surface (sidebar, headers, headings, primary surfaces); orange is the prominent action color (primary buttons, active nav pill, key highlights, CTAs, important badges, focus rings). Both clearly present, premium modern-SaaS look.
-- Contrast rule: orange is for FILLED surfaces / graphical accents (white text ON orange, dots, rings, active pills) — never for small text on a light bg (fails WCAG AA). Accent TEXT uses the navy `brand` token.
-- Token source of truth: CSS variables in `app/globals.css` (`:root`) surfaced via `@theme inline`. Consume tokens (`bg-primary`, `text-navy`, `text-brand`, `bg-chip`, `bg-sidebar`, `text-orange`, etc.) — never hardcode hex.
-- Rounded 14–16px cards, soft shadows, modern SaaS look
-- Portal shell: ~260px navy sidebar, active nav = solid ORANGE pill, content max ~1152px
+## Design system
+**`DESIGN_SYSTEM.md` at the repo root is the working source of truth for code**, extracted
+from `design-system.html` (the visual specimen, live at `/style-guide`). Read it before
+touching anything visual. The essentials:
+
+- **Light mode only.** There is no dark theme and no `.dark` block.
+- **Ocean is the brand** — `#0F4C81` primary / `#0A3A66` deep / `#082F55` night. **Coral is the accent** — `#C0451F`, one per view, maximum.
+- **Typefaces:** Hanken Grotesk everywhere · Newsreader italic for one editorial line per page · IBM Plex Mono 500 for codes and uppercase micro-labels. Plus Jakarta Sans, Inter and Poppins are retired.
+- **The clipped corner:** surfaces `5px 18px 18px 18px`, controls 8px, badges 6px, icon chips 12px. No uniform-16px radius, no pill buttons.
+- **Token source of truth:** CSS variables in `app/globals.css` (`:root`), surfaced via `@theme inline`. Consume tokens (`bg-ocean`, `text-tx-head`, `bg-sky-tint`, `border-line`…) — **never hardcode a hex.** The only two exceptions are documented in §7 of DESIGN_SYSTEM.md.
+- **Portal shell:** 272px ocean-gradient sidebar, active nav = solid WHITE pill with a coral icon, 72px white topbar with no brand colour in it, content max 1160px.
+- Anything not in DESIGN_SYSTEM.md is not in the system. Don't invent a value — pick the nearest one on the scale.
 
 ## Messaging (internal realtime)
 - All messaging is internal: admin ⇄ employee ⇄ customer, over Supabase Realtime between logged-in roles. No WhatsApp, no external messaging API, no mock/simulate layer.

@@ -9,9 +9,13 @@ import {
 } from "@/lib/security/password";
 
 /**
- * Live password requirement checklist + strength meter for the signup form.
- * Renders nothing until the user starts typing. Reads the shared policy in
+ * Live password requirement checklist + strength meter.
+ *
+ * Renders nothing until the user starts typing, and reads the shared policy in
  * lib/security/password.ts so the UI and the validation gate can never drift.
+ *
+ * The meter uses the data hues by meaning rather than a red-to-green ramp:
+ * rose is attention, amber is partway, ocean is fine, mint is confirmed.
  */
 export function PasswordStrength({ password }: { password: string }) {
   if (!password) return null;
@@ -21,60 +25,56 @@ export function PasswordStrength({ password }: { password: string }) {
 
   const barTone =
     tone === "weak"
-      ? "bg-red-500"
+      ? "bg-rose"
       : tone === "fair"
-        ? "bg-amber-500"
+        ? "bg-amber"
         : tone === "good"
           ? "bg-ocean"
-          : "bg-emerald-500";
+          : "bg-mint";
+
+  const labelTone =
+    tone === "weak"
+      ? "text-rose"
+      : tone === "fair"
+        ? "text-amber-deep"
+        : tone === "good"
+          ? "text-ocean"
+          : "text-mint";
 
   return (
-    <div className="mt-2.5 space-y-2.5">
+    <div className="mt-3 space-y-3">
       {/* Strength meter */}
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-3">
         <div className="flex h-1.5 flex-1 gap-1">
           {[0, 1, 2, 3].map((i) => (
             <div
               key={i}
               className={cn(
-                "h-full flex-1 rounded-full transition-colors",
+                "h-full flex-1 rounded-chip transition-colors duration-150 ease-brand",
                 i < score ? barTone : "bg-line-strong"
               )}
             />
           ))}
         </div>
-        <span
-          className={cn(
-            "text-[11px] font-semibold uppercase tracking-wider",
-            tone === "weak"
-              ? "text-red-600"
-              : tone === "fair"
-                ? "text-amber-600"
-                : tone === "good"
-                  ? "text-ocean"
-                  : "text-emerald-600"
-          )}
-        >
-          {label}
-        </span>
+        <span className={cn("font-micro", labelTone)}>{label}</span>
       </div>
 
       {/* Requirement checklist */}
-      <ul className="space-y-1">
+      <ul className="space-y-1.5">
         {PASSWORD_RULES.map((rule) => {
           const ok = passed[rule.id];
           return (
             <li
               key={rule.id}
               className={cn(
-                "flex items-center gap-1.5 text-xs transition-colors",
-                ok ? "text-emerald-600" : "text-slate-500"
+                "flex items-center gap-2 text-[13px] leading-[1.5] transition-colors duration-150 ease-brand",
+                ok ? "text-mint" : "text-tx-muted"
               )}
             >
               {ok ? (
-                <Check className="size-3.5 shrink-0" />
+                <Check className="size-4 shrink-0" />
               ) : (
-                <X className="size-3.5 shrink-0 text-slate-400" />
+                <X className="size-4 shrink-0 text-tx-faint" />
               )}
               {rule.label}
             </li>

@@ -193,20 +193,30 @@ function SelectScrollDownButton({
 /**
  * NativeSelect — the same 48px field as <Input>, around a real <select>.
  * Use it wherever a plain form control is enough; <Select> is for rich,
- * searchable or icon-bearing menus.
+ * searchable or icon-bearing menus. `size="sm"` gives the 38px filter-bar
+ * height that <SelectTrigger> and <Button> also answer to.
  */
 function NativeSelect({
   className,
+  size = "default",
   children,
   ...props
-}: React.ComponentProps<"select">) {
+}: Omit<React.ComponentProps<"select">, "size"> & {
+  size?: "default" | "sm"
+}) {
+  const compact = size === "sm"
   return (
-    <div data-slot="native-select-wrapper" className="relative">
+    <div
+      data-slot="native-select-wrapper"
+      className={cn("relative", compact ? "w-fit" : "w-full")}
+    >
       <select
         data-slot="native-select"
+        data-size={size}
         className={cn(
           fieldClassName,
-          "h-12 cursor-pointer appearance-none py-0 pr-10 pl-[15px]",
+          "cursor-pointer appearance-none py-0",
+          compact ? "h-[38px] pr-9 pl-3 sm:text-sm" : "h-12 pr-10 pl-[15px]",
           className
         )}
         {...props}
@@ -215,7 +225,10 @@ function NativeSelect({
       </select>
       <ChevronDownIcon
         aria-hidden
-        className="pointer-events-none absolute top-1/2 right-[15px] size-[18px] -translate-y-1/2 text-tx-faint"
+        className={cn(
+          "pointer-events-none absolute top-1/2 -translate-y-1/2 text-tx-faint",
+          compact ? "right-3 size-4" : "right-[15px] size-[18px]"
+        )}
       />
     </div>
   )

@@ -32,7 +32,8 @@ const Toaster = ({ ...props }: ToasterProps) => {
           "--normal-bg": "var(--surface)",
           "--normal-text": "var(--tx-body)",
           "--normal-border": "var(--line)",
-          "--border-radius": "var(--r-control)",
+          // A toast is a popup surface, so it takes the clipped corner.
+          "--border-radius": "var(--r-surface)",
         } as React.CSSProperties
       }
       toastOptions={{

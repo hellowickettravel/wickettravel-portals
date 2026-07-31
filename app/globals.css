@@ -323,6 +323,58 @@
   [data-section-tone="white"] [data-slot="panel"] {
     box-shadow: none;
   }
+
+  /* ── Toast ────────────────────────────────────────────────
+     Sonner renders into its own portal outside the component tree, so its
+     skin lives here rather than in a className. A toast is a popup surface:
+     the clipped corner, lift-2, and the same five text colours as everything
+     else. The icon takes the hue of what it is telling you. */
+  .cn-toast {
+    border-radius: var(--r-surface);
+    box-shadow: var(--lift-2);
+    font-family: var(--font-hanken), system-ui, sans-serif;
+    font-size: 14.5px;
+    line-height: 1.6;
+    letter-spacing: -0.002em;
+  }
+  .cn-toast [data-title] {
+    color: var(--tx-head);
+    font-weight: 600;
+  }
+  .cn-toast [data-description] {
+    color: var(--tx-muted);
+  }
+  .cn-toast[data-type="success"] [data-icon] {
+    color: var(--mint);
+  }
+  .cn-toast[data-type="error"] [data-icon] {
+    color: var(--rose);
+  }
+  .cn-toast[data-type="warning"] [data-icon] {
+    color: var(--amber-deep);
+  }
+  .cn-toast[data-type="info"] [data-icon],
+  .cn-toast[data-type="loading"] [data-icon] {
+    color: var(--ocean);
+  }
+  /* The toast's own action reads as a compact secondary button. */
+  .cn-toast [data-button] {
+    border: 1px solid var(--line-strong);
+    border-radius: var(--r-control);
+    background: var(--surface);
+    color: var(--ocean-deep);
+    font-size: 13px;
+    font-weight: 600;
+    height: 32px;
+    padding: 0 12px;
+    transition:
+      background-color 150ms var(--ease),
+      border-color 150ms var(--ease);
+  }
+  .cn-toast [data-button]:hover {
+    border-color: var(--ocean);
+    background: var(--sky-tint);
+  }
 }
 
 /* Type-scale helpers ───────────────────────────────────────

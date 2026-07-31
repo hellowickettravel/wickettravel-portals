@@ -6,9 +6,12 @@ import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 
 /**
- * Password field with an accessible show/hide eye toggle. Drop-in replacement
- * for <Input type="password" />. Works on desktop and mobile (it's a real
- * button, not hover-only).
+ * Password field with an accessible show/hide toggle. Drop-in replacement for
+ * <Input type="password" />, so it inherits the field spec exactly — 48px,
+ * visible border, inner shadow, ocean focus ring.
+ *
+ * The toggle is a real button rather than a hover affordance, because half the
+ * people using this are on a phone.
  */
 export function PasswordInput({
   className,
@@ -24,7 +27,7 @@ export function PasswordInput({
       <Input
         id={inputId}
         type={show ? "text" : "password"}
-        className={cn("pr-10", className)}
+        className={cn("pr-12", className)}
         {...props}
       />
       <button
@@ -33,9 +36,13 @@ export function PasswordInput({
         aria-label={show ? "Hide password" : "Show password"}
         aria-pressed={show}
         tabIndex={-1}
-        className="absolute right-2 top-1/2 -translate-y-1/2 rounded-md p-1 text-muted-foreground transition-colors hover:text-foreground"
+        className="absolute top-1/2 right-1.5 inline-flex size-9 -translate-y-1/2 items-center justify-center rounded-chip text-tx-faint outline-none transition-colors duration-150 ease-brand hover:bg-sunk hover:text-tx-body"
       >
-        {show ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
+        {show ? (
+          <EyeOff className="size-[18px]" />
+        ) : (
+          <Eye className="size-[18px]" />
+        )}
       </button>
     </div>
   );

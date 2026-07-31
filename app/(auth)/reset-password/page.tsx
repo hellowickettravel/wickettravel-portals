@@ -3,22 +3,25 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { Loader2, ShieldAlert } from "lucide-react";
-import { BrandLogo } from "@/components/brand/brand-logo";
 import { toast } from "sonner";
 import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
-import { Label } from "@/components/ui/label";
+import { Field, FieldGroup } from "@/components/ui/field";
+import { IconChip } from "@/components/ui/icon-chip";
 import { PasswordInput } from "@/components/portal/password-input";
 import { PasswordStrength } from "@/components/auth/password-strength";
-import { AuthAside } from "@/components/auth/auth-aside";
-import { AuthFooter } from "@/components/auth/auth-footer";
+import { AuthShell, AuthHeading } from "@/components/auth/auth-shell";
 import { checkPassword, MIN_PASSWORD_LENGTH } from "@/lib/security/password";
 
 type RecoveryStatus = "verifying" | "ready" | "invalid";
 
+/** Which field, if any, the last submit attempt tripped on. */
+type FieldErrors = Partial<Record<"password" | "confirm", string>>;
+
 export default function ResetPasswordPage() {
   const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState("");
+  const [errors, setErrors] = useState<FieldErrors>({});
   const [loading, setLoading] = useState(false);
   const [status, setStatus] = useState<RecoveryStatus>("verifying");
 
@@ -73,14 +76,20 @@ export default function ResetPasswordPage() {
 
     if (status !== "ready") return;
 
+    setErrors({});
+
     const pw = checkPassword(password);
     if (!pw.ok) {
+      setErrors({
+        password: pw.firstError ?? "Meet every requirement listed below.",
+      });
       toast.error("Choose a stronger password", {
         description: pw.firstError ?? "Meet all the password requirements.",
       });
       return;
     }
     if (password !== confirm) {
+      setErrors({ confirm: "Re-type the same password to confirm it." });
       toast.error("Passwords don't match");
       return;
     }
@@ -104,134 +113,122 @@ export default function ResetPasswordPage() {
   }
 
   return (
-    <main className="grid min-h-dvh lg:grid-cols-[1.2fr_1fr]">
-      <AuthAside
-        headline="Reset your password securely."
-        supporting="Choose a new password to get back into your Wicket Travel workspace."
-      />
-
-      <section className="relative flex items-center justify-center bg-white px-6 py-12 sm:px-10">
-        <div className="w-full max-w-sm">
-          <div className="mb-10 lg:hidden">
-            <BrandLogo className="h-8 w-auto" priority />
-          </div>
-
-          {status === "verifying" ? (
-            /* ---------- Verifying the recovery link ---------- */
-            <div className="flex flex-col items-center gap-3 py-10 text-center">
-              <Loader2 className="size-6 animate-spin text-ocean" />
-              <p className="text-sm text-slate-500">Verifying your reset link…</p>
-            </div>
-          ) : status === "invalid" ? (
-            /* ---------- Invalid / expired link ---------- */
-            <div className="text-center">
-              <div className="mx-auto mb-5 flex size-14 items-center justify-center rounded-2xl bg-rose-50 text-rose-600">
-                <ShieldAlert className="size-7" />
-              </div>
-              <h2 className="text-[26px] font-semibold leading-tight tracking-tight text-tx-head">
-                Reset link invalid or expired
-              </h2>
-              <p className="mt-3 text-sm text-slate-500">
-                This password reset link is no longer valid. Reset links can only
-                be used once and expire after a short time. Please request a new
-                one.
-              </p>
-              <Button
-                variant="accent"
-                className="mt-7 w-full"
-                render={<Link href="/login" />}
-              >
-                Back to sign in
-              </Button>
-              <p className="mt-5 text-xs text-slate-500">
-                On the sign-in screen, use “Forgot password?” to get a fresh link.
-              </p>
-            </div>
-          ) : (
-            /* ---------- Valid recovery session → set new password ---------- */
-            <>
-              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-ocean">
-                Reset password
-              </p>
-              <h2 className="mt-2 text-[28px] font-semibold leading-tight tracking-tight text-tx-head">
-                Set a new password
-              </h2>
-              <p className="mt-2 text-sm text-slate-500">
-                Enter and confirm your new password below.
-              </p>
-
-              <form onSubmit={handleSubmit} className="mt-8 space-y-5">
-                <div className="space-y-2">
-                  <Label
-                    htmlFor="password"
-                    className="text-xs font-medium uppercase tracking-wider text-slate-600"
-                  >
-                    New password
-                  </Label>
-                  <PasswordInput
-                    id="password"
-                    autoComplete="new-password"
-                    placeholder="At least 8 characters"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    required
-                    minLength={MIN_PASSWORD_LENGTH}
-                    disabled={loading}
-                  />
-                  <PasswordStrength password={password} />
-                </div>
-
-                <div className="space-y-2">
-                  <Label
-                    htmlFor="confirm"
-                    className="text-xs font-medium uppercase tracking-wider text-slate-600"
-                  >
-                    Confirm new password
-                  </Label>
-                  <PasswordInput
-                    id="confirm"
-                    autoComplete="new-password"
-                    placeholder="Re-enter your password"
-                    value={confirm}
-                    onChange={(e) => setConfirm(e.target.value)}
-                    required
-                    minLength={MIN_PASSWORD_LENGTH}
-                    disabled={loading}
-                  />
-                </div>
-
-                <Button
-                  type="submit"
-                  disabled={loading}
-                  variant="accent"
-                  className="w-full"
-                >
-                  {loading ? (
-                    <>
-                      <Loader2 className="size-4 animate-spin" />
-                      Updating…
-                    </>
-                  ) : (
-                    "Update password"
-                  )}
-                </Button>
-              </form>
-
-              <p className="mt-6 text-center text-sm text-slate-500">
-                Back to{" "}
-                <Link
-                  href="/login"
-                  className="font-medium text-ocean transition-colors hover:text-ocean-deep"
-                >
-                  Sign in
-                </Link>
-              </p>
-            </>
-          )}
+    <AuthShell
+      eyebrow="Wicket Travel"
+      headline="A new password, and you're back in."
+      editorial="Reset links are single-use, which is exactly why they're safe."
+    >
+      {status === "verifying" ? (
+        /* ---------- Verifying the recovery link ---------- */
+        <div className="flex flex-col items-start gap-3 py-6">
+          <Loader2 className="size-6 animate-spin text-ocean" />
+          <p className="text-[14.5px] leading-[1.6] text-tx-muted">
+            Checking your reset link…
+          </p>
         </div>
+      ) : status === "invalid" ? (
+        /* ---------- Invalid / expired link ---------- */
+        <>
+          <IconChip tone="rose">
+            <ShieldAlert />
+          </IconChip>
+          <h1 className="mt-5 text-[25px] leading-[1.26] font-bold tracking-heading text-tx-head">
+            That link has expired
+          </h1>
+          <p className="mt-3.5 text-[14.5px] leading-[1.6] text-tx-muted">
+            Reset links work once and only for a short while. Request a fresh
+            one from the sign-in screen and it will land in your inbox.
+          </p>
+          <Button
+            variant="accent"
+            className="mt-8 w-full"
+            render={<Link href="/login" />}
+          >
+            Back to sign in
+          </Button>
+          <p className="mt-5 text-[13px] leading-[1.5] text-tx-faint">
+            Use “Forgot password?” there to send yourself a new link.
+          </p>
+        </>
+      ) : (
+        /* ---------- Valid recovery session → set new password ---------- */
+        <>
+          <AuthHeading
+            eyebrow="Reset password"
+            title="Set a new password"
+            lede="Choose something you haven't used here before."
+          />
 
-        <AuthFooter />
-      </section>
-    </main>
+          <form onSubmit={handleSubmit}>
+            <FieldGroup>
+              <Field
+                label="New password"
+                htmlFor="password"
+                required
+                error={errors.password}
+              >
+                <PasswordInput
+                  id="password"
+                  autoComplete="new-password"
+                  placeholder="At least 8 characters"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  aria-invalid={errors.password ? true : undefined}
+                  required
+                  minLength={MIN_PASSWORD_LENGTH}
+                  disabled={loading}
+                />
+                <PasswordStrength password={password} />
+              </Field>
+
+              <Field
+                label="Confirm new password"
+                htmlFor="confirm"
+                required
+                error={errors.confirm}
+              >
+                <PasswordInput
+                  id="confirm"
+                  autoComplete="new-password"
+                  placeholder="Re-enter your password"
+                  value={confirm}
+                  onChange={(e) => setConfirm(e.target.value)}
+                  aria-invalid={errors.confirm ? true : undefined}
+                  required
+                  minLength={MIN_PASSWORD_LENGTH}
+                  disabled={loading}
+                />
+              </Field>
+            </FieldGroup>
+
+            <Button
+              type="submit"
+              disabled={loading}
+              variant="accent"
+              className="mt-8 w-full"
+            >
+              {loading ? (
+                <>
+                  <Loader2 className="animate-spin" />
+                  Updating…
+                </>
+              ) : (
+                "Update password"
+              )}
+            </Button>
+          </form>
+
+          <p className="mt-6 text-[14.5px] leading-[1.6] text-tx-muted">
+            Remembered it?{" "}
+            <Link
+              href="/login"
+              className="font-semibold text-ocean underline-offset-[3px] transition-colors duration-150 ease-brand hover:underline"
+            >
+              Sign in
+            </Link>
+          </p>
+        </>
+      )}
+    </AuthShell>
   );
 }

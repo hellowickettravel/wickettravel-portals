@@ -15,10 +15,10 @@ import { PortalShell, type NavItem } from "@/components/portal/portal-shell";
 // only line of defence.
 const NAV: (NavItem & { section: EmployeeSection })[] = [
   { label: "Dashboard", href: "/employee", icon: "LayoutDashboard", exact: true, section: "dashboard" },
-  { label: "Messages", href: "/employee/messages", icon: "MessageSquare", section: "messages" },
-  { label: "Orders", href: "/employee/orders", icon: "ShoppingBag", section: "orders" },
-  { label: "Support", href: "/employee/support", icon: "LifeBuoy", section: "support" },
-  { label: "Settings", href: "/employee/settings", icon: "Settings", section: "settings" },
+  { label: "Messages", href: "/employee/messages", icon: "MessageSquare", section: "messages", group: "Work" },
+  { label: "Orders", href: "/employee/orders", icon: "ShoppingBag", section: "orders", group: "Work" },
+  { label: "Support", href: "/employee/support", icon: "LifeBuoy", section: "support", group: "Account" },
+  { label: "Settings", href: "/employee/settings", icon: "Settings", section: "settings", group: "Account" },
 ];
 
 export default async function EmployeeLayout({
@@ -51,7 +51,7 @@ export default async function EmployeeLayout({
   return (
     <PortalShell
       navItems={navItems}
-      portalLabel="Employee Portal"
+      portalLabel="Employee portal"
       userName={userName}
       roleLabel="Employee"
       userId={user.id}

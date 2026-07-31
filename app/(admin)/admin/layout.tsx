@@ -5,29 +5,40 @@ import { countNewVisaEnquiries } from "@/lib/actions/visa";
 import { countNewParentTickets } from "@/lib/actions/parents-tickets";
 import { PortalShell, type NavItem } from "@/components/portal/portal-shell";
 
+/**
+ * Admin nav, in five blocks: where you land, the day's work, the two enquiry
+ * queues, the people behind them, and the account. Consecutive items sharing a
+ * `group` render under one Plex Mono header in the rail.
+ */
 function buildNav(newVisaCount: number, newParentTicketCount: number): NavItem[] {
   return [
     { label: "Dashboard", href: "/admin", icon: "LayoutDashboard", exact: true },
-    { label: "Employees", href: "/admin/employees", icon: "Users" },
-    { label: "Customers", href: "/admin/customers", icon: "Contact" },
-    { label: "Orders", href: "/admin/orders", icon: "ShoppingBag" },
-    { label: "Transactions", href: "/admin/transactions", icon: "Receipt" },
-    { label: "Messages", href: "/admin/messages", icon: "MessageSquare" },
+
+    { label: "Orders", href: "/admin/orders", icon: "ShoppingBag", group: "Work" },
+    { label: "Transactions", href: "/admin/transactions", icon: "Receipt", group: "Work" },
+    { label: "Messages", href: "/admin/messages", icon: "MessageSquare", group: "Work" },
+
     {
       label: "Visa Queries",
       href: "/admin/visa-queries",
       icon: "Stamp",
       badge: newVisaCount,
+      group: "Enquiries",
     },
     {
       label: "Parents Tickets",
       href: "/admin/parents-tickets",
       icon: "HeartHandshake",
       badge: newParentTicketCount,
+      group: "Enquiries",
     },
-    { label: "Analytics", href: "/admin/analytics", icon: "BarChart3" },
-    { label: "Support", href: "/admin/support", icon: "LifeBuoy" },
-    { label: "Settings", href: "/admin/settings", icon: "Settings" },
+
+    { label: "Employees", href: "/admin/employees", icon: "Users", group: "People" },
+    { label: "Customers", href: "/admin/customers", icon: "Contact", group: "People" },
+
+    { label: "Analytics", href: "/admin/analytics", icon: "BarChart3", group: "Account" },
+    { label: "Support", href: "/admin/support", icon: "LifeBuoy", group: "Account" },
+    { label: "Settings", href: "/admin/settings", icon: "Settings", group: "Account" },
   ];
 }
 
@@ -60,7 +71,7 @@ export default async function AdminLayout({
   return (
     <PortalShell
       navItems={buildNav(newVisaCount, newParentTicketCount)}
-      portalLabel="Admin Panel"
+      portalLabel="Admin portal"
       userName={userName}
       roleLabel="Administrator"
       userId={user.id}

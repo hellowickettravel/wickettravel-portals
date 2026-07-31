@@ -271,6 +271,11 @@ are `text-base sm:text-[15.5px]` — 16px on phones, the scale value from 640px 
 in `globals.css` holds raw `<input>`/`<textarea>`/`<select>` at 16px on phones too, but a
 utility beats it, so any hand-styled field must restate `sm:text-sm` rather than plain `text-sm`.
 
+**Two heights, and only two.** 48px is the form field. 38px is the compact one — a filter
+bar, never a form — and every control answers to the same prop: `<Input size="sm">`,
+`<NativeSelect size="sm">`, `<SelectTrigger size="sm">`, `<Button size="sm">`. That is what
+lets a filter row line up without anyone nudging a margin.
+
 **`<Field>`** (`components/ui/field.tsx`) — label → hint → control → error, at the locked
 8px / 8px / 8px spacing. `<FieldGroup>` stacks fields 22px apart.
 
@@ -337,7 +342,70 @@ Marketing pages breathe; portal screens tighten to 72px sections and 20px card p
 
 ---
 
-## 14. Ship checklist
+## 14. Portal shell — `components/portal/portal-shell.tsx`
+
+Admin and employee share one shell. The rail owns the brand; nothing above the content
+does.
+
+### Sidebar — 272px
+
+| Part | Spec |
+|---|---|
+| Surface | `linear-gradient(180deg, ocean 0%, ocean-deep 44%, ocean-night 100%)` |
+| Brand | 46px `<Monogram tone="light">`, brand name at 16.5/700, portal name below as a `font-micro` label at white 48% |
+| Group header | Plex Mono 9.5px · 0.17em · uppercase · white 48% |
+| Nav row | 46px tall · `rounded-icon` (12px) · 20px Lucide at 1.75 · 13px gap · white 86% |
+| Hover | white 9% |
+| **Active** | solid white pill · `ocean-deep` label · **coral-deep icon** · `shadow-lift` |
+| Count | `rounded-chip`, tabular; white 14% idle, `sky-tint`/`ocean` on the active pill |
+| Foot | 1px white-12% rule, then sign out on the same 46px row |
+
+Nav is grouped by giving consecutive `NavItem`s the same `group` string. An item with no
+group sits at the top with no header — that is where the dashboard lives.
+
+### Topbar — 72px
+
+Sticky, `surface`, one 1px `line` rule underneath, and **no brand colour** — icon controls
+are `tx-muted` on a `sunk` hover, and the unread count is `rose`, which is a data hue, not
+the brand. Controls are 46px square on `rounded-icon`. The avatar is the one circle in the
+system.
+
+The title on the left is **wayfinding, not the page's heading**: it is derived from the nav
+registry (longest matching href, so `/admin/orders/7343490` still reads "Orders") and
+rendered as a `<p>` at 19–21px. The screen's real `<h1>` stays in `<PageHeader>`, where it
+can carry an eyebrow and a lede. Two 32px titles twenty pixels apart shout twice.
+
+### Mobile
+
+Below `md` the rail becomes a left drawer: 272px, a 260ms `ease-brand` slide, an
+`ocean-night/32` scrim fading with it, body scroll locked, dismissed by the X, the scrim or
+Esc. Focus trapping and the scroll lock come from Base UI, not from us. Every target in it
+is at least 44px.
+
+---
+
+## 15. Screen patterns
+
+Built once so screens inherit them instead of each inventing its own.
+
+| Pattern | Where | Notes |
+|---|---|---|
+| `<PageHeader eyebrow title subtitle actions>` | `components/admin/page-header.tsx` | Eyebrow → H1 → lede → action, at 12/14. H1 steps to the H2 size below 640px. |
+| `<FilterBar>` + `FilterSearch` `FilterChips` `FilterSelect` | `components/portal/filter-bar.tsx` | One 38px row that wraps rather than scrolls. Selected chip is a white surface on a `sunk` track — sky tint would vanish against it. |
+| `<DataTable columns rows>` | `components/portal/data-table.tsx` | One column definition, two renderings: a real table from `md`, `<MobileRecordCard>`s below it. Loading, empty and error are states of the component, not branches each screen rewrites. |
+| `<EmptyState>` · `<ErrorState>` | `components/portal/states.tsx` | Icon chip, H4, one line, at most one action. |
+| `<Pagination page pageSize total>` | `components/portal/pagination.tsx` | Previous/next plus a tabular range, on the panel footer. |
+| Skeletons | `components/portal/skeletons.tsx` | Same surface, radius and rhythm as the real thing, so nothing jumps. |
+| `<Dialog>` | `components/ui/dialog.tsx` | `rounded-surface-lg`, `shadow-lift-lg`, `ocean-night/32` scrim, 260ms entrance. |
+| Toast | `.cn-toast` in `globals.css` | Sonner portals outside the tree, so its skin lives in CSS. Popup surface: clipped corner, lift-2, icon in the hue of what it says. |
+
+**Table anatomy** — header row on `sunk` with Plex Mono micro-labels, 1px `line-faint`
+dividers, 14px of vertical air per cell, `sky-tint` row hover, and `numeric` on any column
+of money, counts or dates so the numerals go tabular.
+
+---
+
+## 16. Ship checklist
 
 **Never again**
 
@@ -367,11 +435,13 @@ Marketing pages breathe; portal screens tighten to 72px sections and 20px card p
 
 ---
 
-## 15. Order of work
+## 17. Order of work
 
 1. ✅ Tokens, fonts and base CSS
 2. ✅ Primitives — button, input, textarea, select, field, choice, badge, icon chip, card, panel, section
-3. ⏳ Composites — fare stub, stat card
-4. ⏳ Screens, one at a time
+3. ✅ Shell + shared furniture — sidebar, topbar, drawer, page header, filter bar, data table, states, modal, toast, pagination
+4. ✅ Auth screens
+5. ⏳ Composites — fare stub, stat card
+6. ⏳ Screens, one at a time — adopting `<DataTable>`, `<FilterBar>` and the state components as each is reached
 
 Restyling screens before the primitives exist leaves the old values alive in a hundred places.

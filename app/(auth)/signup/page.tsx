@@ -3,28 +3,33 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { Plane, Loader2, MailCheck } from "lucide-react";
-import { BrandLogo } from "@/components/brand/brand-logo";
 import { toast } from "sonner";
 import { createClient } from "@/lib/supabase/client";
 import { guardSignup, recordSignup } from "@/lib/actions/auth-guard";
 import { checkPassword } from "@/lib/security/password";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { Field, FieldGroup } from "@/components/ui/field";
+import { IconChip } from "@/components/ui/icon-chip";
 import { PasswordInput } from "@/components/portal/password-input";
 import { PasswordStrength } from "@/components/auth/password-strength";
-import { AuthAside } from "@/components/auth/auth-aside";
+import { AuthShell, AuthHeading } from "@/components/auth/auth-shell";
 import { GoogleButton } from "@/components/auth/google-button";
 import { OrDivider } from "@/components/auth/or-divider";
-import { AuthFooter } from "@/components/auth/auth-footer";
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+/** Which field, if any, the last submit attempt tripped on. */
+type FieldErrors = Partial<
+  Record<"fullName" | "email" | "password" | "confirm", string>
+>;
 
 export default function SignupPage() {
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState("");
+  const [errors, setErrors] = useState<FieldErrors>({});
   const [loading, setLoading] = useState(false);
   const [sentTo, setSentTo] = useState<string | null>(null);
   // A guest who started the booking wizard arrives with ?redirect= — keep it
@@ -49,22 +54,34 @@ export default function SignupPage() {
     const name = fullName.trim();
     const cleanEmail = email.trim();
 
+    // Same gates as before, now also reported against the field they belong
+    // to. The copy says what to do next, never "invalid input".
+    setErrors({});
+
     if (!name) {
+      setErrors({
+        fullName: "Add your full name so we know who we're booking for.",
+      });
       toast.error("Enter your full name");
       return;
     }
     if (!EMAIL_RE.test(cleanEmail)) {
+      setErrors({ email: "Use the format you@example.com so we can reach you." });
       toast.error("Enter a valid email address");
       return;
     }
     const pw = checkPassword(password);
     if (!pw.ok) {
+      setErrors({
+        password: pw.firstError ?? "Meet every requirement listed below.",
+      });
       toast.error("Choose a stronger password", {
         description: pw.firstError ?? "Meet all the password requirements.",
       });
       return;
     }
     if (password !== confirm) {
+      setErrors({ confirm: "Re-type the same password to confirm it." });
       toast.error("Passwords don't match");
       return;
     }
@@ -147,182 +164,162 @@ export default function SignupPage() {
   }
 
   return (
-    <main className="grid min-h-dvh lg:grid-cols-[1.2fr_1fr]">
-      <AuthAside
-        headline="Book and track every flight in one place."
-        supporting="Create your Wicket Travel account to manage bookings and chat with our team — all from one simple dashboard."
-      />
+    <AuthShell
+      eyebrow="Wicket Travel"
+      headline="Tell us where. We'll find the fare."
+      editorial="One account, and the whole trip stops living in your inbox."
+    >
+      {sentTo ? (
+        /* ---------- Check-your-email confirmation ---------- */
+        <>
+          <IconChip tone="ocean">
+            <MailCheck />
+          </IconChip>
+          <h1 className="mt-5 text-[25px] leading-[1.26] font-bold tracking-heading text-tx-head">
+            Check your email
+          </h1>
+          <p className="mt-3.5 text-[14.5px] leading-[1.6] text-tx-muted">
+            We sent a verification link to{" "}
+            <span className="font-semibold text-tx-head">{sentTo}</span>. Open
+            it to activate your account, then sign in.
+          </p>
+          <Button
+            variant="accent"
+            className="mt-8 w-full"
+            render={<Link href={loginHref} />}
+          >
+            Go to sign in
+          </Button>
+          <p className="mt-5 text-[13px] leading-[1.5] text-tx-faint">
+            Nothing yet? Check your spam folder, or wait a minute and try again.
+          </p>
+        </>
+      ) : (
+        /* ---------- Sign-up form ---------- */
+        <>
+          <AuthHeading
+            eyebrow="Sign up"
+            title="Create your account"
+            lede="Book and track your flights with Wicket Travel."
+          />
 
-      {/* ===================== RIGHT / FORM PANEL ===================== */}
-      <section className="relative flex items-center justify-center bg-white px-6 py-12 sm:px-10">
-        <div className="w-full max-w-sm animate-in fade-in slide-in-from-bottom-2 duration-500 ease-out">
-          {/* Mobile brand */}
-          <div className="mb-10 lg:hidden">
-            <BrandLogo className="h-8 w-auto" priority />
+          {resumingBooking ? (
+            <div className="mb-8 flex items-start gap-3 rounded-surface border border-sky-line bg-sky-tint px-4 py-3.5 text-[14.5px] leading-[1.6] text-ocean-deep">
+              <Plane className="mt-0.5 size-[18px] shrink-0 -rotate-45" />
+              <span>
+                Your booking details are saved. Create your free account and
+                we&apos;ll take you straight back to place the order.
+              </span>
+            </div>
+          ) : null}
+
+          <form onSubmit={handleSubmit}>
+            <FieldGroup>
+              <Field
+                label="Full name"
+                htmlFor="fullName"
+                required
+                error={errors.fullName}
+              >
+                <Input
+                  id="fullName"
+                  type="text"
+                  autoComplete="name"
+                  placeholder="Jane Traveller"
+                  value={fullName}
+                  onChange={(e) => setFullName(e.target.value)}
+                  aria-invalid={errors.fullName ? true : undefined}
+                  required
+                  disabled={loading}
+                />
+              </Field>
+
+              <Field label="Email" htmlFor="email" required error={errors.email}>
+                <Input
+                  id="email"
+                  type="email"
+                  autoComplete="email"
+                  placeholder="you@example.com"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  aria-invalid={errors.email ? true : undefined}
+                  required
+                  disabled={loading}
+                />
+              </Field>
+
+              <Field
+                label="Password"
+                htmlFor="password"
+                required
+                error={errors.password}
+              >
+                <PasswordInput
+                  id="password"
+                  autoComplete="new-password"
+                  placeholder="At least 8 characters"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  aria-invalid={errors.password ? true : undefined}
+                  required
+                  disabled={loading}
+                />
+                <PasswordStrength password={password} />
+              </Field>
+
+              <Field
+                label="Confirm password"
+                htmlFor="confirm"
+                required
+                error={errors.confirm}
+              >
+                <PasswordInput
+                  id="confirm"
+                  autoComplete="new-password"
+                  placeholder="Re-enter your password"
+                  value={confirm}
+                  onChange={(e) => setConfirm(e.target.value)}
+                  aria-invalid={errors.confirm ? true : undefined}
+                  required
+                  disabled={loading}
+                />
+              </Field>
+            </FieldGroup>
+
+            <Button
+              type="submit"
+              disabled={loading}
+              variant="accent"
+              className="mt-8 w-full"
+            >
+              {loading ? (
+                <>
+                  <Loader2 className="animate-spin" />
+                  Creating account…
+                </>
+              ) : (
+                "Create account"
+              )}
+            </Button>
+          </form>
+
+          <div className="my-6">
+            <OrDivider />
           </div>
 
-          {sentTo ? (
-            /* ---------- Check-your-email confirmation ---------- */
-            <div className="text-center">
-              <div className="mx-auto mb-5 flex size-14 items-center justify-center rounded-2xl bg-sky-tint text-ocean-deep">
-                <MailCheck className="size-7" />
-              </div>
-              <h2 className="text-[26px] font-semibold leading-tight tracking-tight text-tx-head">
-                Check your email
-              </h2>
-              <p className="mt-3 text-sm text-slate-500">
-                We sent a verification link to{" "}
-                <span className="font-medium text-foreground">{sentTo}</span>.
-                Click it to activate your account, then sign in.
-              </p>
-              <Button
-                variant="accent"
-                className="mt-7 w-full"
-                render={<Link href={loginHref} />}
-              >
-                Go to sign in
-              </Button>
-              <p className="mt-5 text-xs text-slate-500">
-                Didn&apos;t get it? Check spam, or wait a minute and try again.
-              </p>
-            </div>
-          ) : (
-            /* ---------- Sign-up form ---------- */
-            <>
-              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-ocean">
-                Sign up
-              </p>
-              <h2 className="mt-2 text-[28px] font-semibold leading-tight tracking-tight text-tx-head">
-                Create your account
-              </h2>
-              <p className="mt-2 text-sm text-slate-500">
-                Book and track your flights with Wicket Travel.
-              </p>
+          <GoogleButton />
 
-              {resumingBooking ? (
-                <div className="mt-5 flex items-start gap-2.5 rounded-[10px] border border-line-strong bg-sky-tint/60 px-3.5 py-3 text-sm text-ocean-deep">
-                  <Plane className="mt-0.5 size-4 shrink-0 -rotate-45" />
-                  <span>
-                    Your booking details are saved. Create your free account
-                    and we&apos;ll take you straight back to place the order.
-                  </span>
-                </div>
-              ) : null}
-
-              <form onSubmit={handleSubmit} className="mt-8 space-y-5">
-                <div className="space-y-2">
-                  <Label
-                    htmlFor="fullName"
-                    className="text-xs font-medium uppercase tracking-wider text-slate-600"
-                  >
-                    Full name
-                  </Label>
-                  <Input
-                    id="fullName"
-                    type="text"
-                    autoComplete="name"
-                    placeholder="Jane Traveller"
-                    value={fullName}
-                    onChange={(e) => setFullName(e.target.value)}
-                    required
-                    disabled={loading}
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label
-                    htmlFor="email"
-                    className="text-xs font-medium uppercase tracking-wider text-slate-600"
-                  >
-                    Email
-                  </Label>
-                  <Input
-                    id="email"
-                    type="email"
-                    autoComplete="email"
-                    placeholder="you@example.com"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    required
-                    disabled={loading}
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label
-                    htmlFor="password"
-                    className="text-xs font-medium uppercase tracking-wider text-slate-600"
-                  >
-                    Password
-                  </Label>
-                  <PasswordInput
-                    id="password"
-                    autoComplete="new-password"
-                    placeholder="At least 8 characters"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    required
-                    disabled={loading}
-                  />
-                  <PasswordStrength password={password} />
-                </div>
-
-                <div className="space-y-2">
-                  <Label
-                    htmlFor="confirm"
-                    className="text-xs font-medium uppercase tracking-wider text-slate-600"
-                  >
-                    Confirm password
-                  </Label>
-                  <PasswordInput
-                    id="confirm"
-                    autoComplete="new-password"
-                    placeholder="Re-enter your password"
-                    value={confirm}
-                    onChange={(e) => setConfirm(e.target.value)}
-                    required
-                    disabled={loading}
-                  />
-                </div>
-
-                <Button
-                  type="submit"
-                  disabled={loading}
-                  variant="accent"
-                  className="w-full"
-                >
-                  {loading ? (
-                    <>
-                      <Loader2 className="size-4 animate-spin" />
-                      Creating account…
-                    </>
-                  ) : (
-                    "Create account"
-                  )}
-                </Button>
-              </form>
-
-              <div className="my-6">
-                <OrDivider />
-              </div>
-
-              <GoogleButton />
-
-              <p className="mt-6 text-center text-sm text-slate-500">
-                Already have an account?{" "}
-                <Link
-                  href={loginHref}
-                  className="font-medium text-ocean transition-colors hover:text-ocean-deep"
-                >
-                  Sign in
-                </Link>
-              </p>
-            </>
-          )}
-        </div>
-
-        <AuthFooter />
-      </section>
-    </main>
+          <p className="mt-6 text-[14.5px] leading-[1.6] text-tx-muted">
+            Already have an account?{" "}
+            <Link
+              href={loginHref}
+              className="font-semibold text-ocean underline-offset-[3px] transition-colors duration-150 ease-brand hover:underline"
+            >
+              Sign in
+            </Link>
+          </p>
+        </>
+      )}
+    </AuthShell>
   );
 }

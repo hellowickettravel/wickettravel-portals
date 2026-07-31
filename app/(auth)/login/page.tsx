@@ -9,13 +9,11 @@ import { guardLogin, recordLogin } from "@/lib/actions/auth-guard";
 import { safeInternalPath } from "@/lib/security/redirect";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { Field, FieldGroup } from "@/components/ui/field";
 import { PasswordInput } from "@/components/portal/password-input";
-import { AuthAside } from "@/components/auth/auth-aside";
+import { AuthShell, AuthHeading } from "@/components/auth/auth-shell";
 import { GoogleButton } from "@/components/auth/google-button";
 import { OrDivider } from "@/components/auth/or-divider";
-import { AuthFooter } from "@/components/auth/auth-footer";
-import { BrandLogo } from "@/components/brand/brand-logo";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
@@ -205,125 +203,102 @@ export default function LoginPage() {
   }
 
   return (
-    <main className="grid min-h-dvh lg:grid-cols-[1.2fr_1fr]">
-      <AuthAside />
+    <AuthShell
+      eyebrow="Wicket Travel"
+      headline="Every fare, every message, one desk."
+      editorial="The booking and the conversation about it, finally in the same place."
+    >
+      <AuthHeading
+        eyebrow="Sign in"
+        title="Welcome back"
+        lede="Pick up your chats and orders where you left them."
+      />
 
-      {/* ===================== RIGHT / FORM PANEL ===================== */}
-      <section className="relative flex items-center justify-center bg-white px-6 py-12 sm:px-10">
-        <div className="w-full max-w-sm animate-in fade-in slide-in-from-bottom-2 duration-500 ease-out">
-          {/* Mobile brand (left panel hidden on small screens) */}
-          <div className="mb-10 lg:hidden">
-            <BrandLogo className="h-8 w-auto" priority />
-          </div>
-
-          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-ocean">
-            Sign in
-          </p>
-          <h2 className="mt-2 text-[28px] font-semibold leading-tight tracking-tight text-tx-head">
-            Welcome back
-          </h2>
-          <p className="mt-2 text-sm text-slate-500">
-            Sign in to manage chats and orders.
-          </p>
-
-          {redirectParam?.startsWith("/customer/book") ? (
-            <div className="mt-5 flex items-start gap-2.5 rounded-[10px] border border-line-strong bg-sky-tint/60 px-3.5 py-3 text-sm text-ocean-deep">
-              <Plane className="mt-0.5 size-4 shrink-0 -rotate-45" />
-              <span>
-                Your booking details are saved. Sign in and we&apos;ll take you
-                straight back to place the order.
-              </span>
-            </div>
-          ) : null}
-
-          <form onSubmit={handleSubmit} className="mt-8 space-y-5">
-            <div className="space-y-2">
-              <Label
-                htmlFor="email"
-                className="text-xs font-medium uppercase tracking-wider text-slate-600"
-              >
-                Email
-              </Label>
-              <Input
-                id="email"
-                type="email"
-                autoComplete="email"
-                placeholder="you@wicket.co.uk"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-                disabled={loading}
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label
-                htmlFor="password"
-                className="text-xs font-medium uppercase tracking-wider text-slate-600"
-              >
-                Password
-              </Label>
-              <PasswordInput
-                id="password"
-                autoComplete="current-password"
-                placeholder="••••••••"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-                disabled={loading}
-              />
-              <div className="flex justify-end">
-                <button
-                  type="button"
-                  onClick={handleForgotPassword}
-                  disabled={sendingReset || loading}
-                  className="text-xs font-medium text-ocean transition-colors hover:text-ocean-deep disabled:opacity-50"
-                >
-                  {sendingReset ? "Sending…" : "Forgot password?"}
-                </button>
-              </div>
-            </div>
-
-            <Button
-              type="submit"
-              disabled={loading}
-              variant="accent"
-              className="w-full"
-            >
-              {loading ? (
-                <>
-                  <Loader2 className="size-4 animate-spin" />
-                  Signing in…
-                </>
-              ) : (
-                "Sign in"
-              )}
-            </Button>
-          </form>
-
-          <div className="my-6">
-            <OrDivider />
-          </div>
-
-          <GoogleButton />
-
-          <p className="mt-6 text-center text-sm text-slate-500">
-            Don&apos;t have an account?{" "}
-            <Link
-              href={
-                redirectParam
-                  ? `/signup?redirect=${encodeURIComponent(redirectParam)}`
-                  : "/signup"
-              }
-              className="font-medium text-ocean transition-colors hover:text-ocean-deep"
-            >
-              Sign up
-            </Link>
-          </p>
+      {redirectParam?.startsWith("/customer/book") ? (
+        <div className="mb-8 flex items-start gap-3 rounded-surface border border-sky-line bg-sky-tint px-4 py-3.5 text-[14.5px] leading-[1.6] text-ocean-deep">
+          <Plane className="mt-0.5 size-[18px] shrink-0 -rotate-45" />
+          <span>
+            Your booking details are saved. Sign in and we&apos;ll take you
+            straight back to place the order.
+          </span>
         </div>
+      ) : null}
 
-        <AuthFooter />
-      </section>
-    </main>
+      <form onSubmit={handleSubmit}>
+        <FieldGroup>
+          <Field label="Email" htmlFor="email">
+            <Input
+              id="email"
+              type="email"
+              autoComplete="email"
+              placeholder="you@wicket.co.uk"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+              disabled={loading}
+            />
+          </Field>
+
+          <Field label="Password" htmlFor="password">
+            <PasswordInput
+              id="password"
+              autoComplete="current-password"
+              placeholder="Your password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+              disabled={loading}
+            />
+            <div className="mt-2 flex justify-end">
+              <Button
+                type="button"
+                variant="link"
+                onClick={handleForgotPassword}
+                disabled={sendingReset || loading}
+                className="text-[13px]"
+              >
+                {sendingReset ? "Sending…" : "Forgot password?"}
+              </Button>
+            </div>
+          </Field>
+        </FieldGroup>
+
+        <Button
+          type="submit"
+          disabled={loading}
+          variant="accent"
+          className="mt-8 w-full"
+        >
+          {loading ? (
+            <>
+              <Loader2 className="animate-spin" />
+              Signing in…
+            </>
+          ) : (
+            "Sign in"
+          )}
+        </Button>
+      </form>
+
+      <div className="my-6">
+        <OrDivider />
+      </div>
+
+      <GoogleButton />
+
+      <p className="mt-6 text-[14.5px] leading-[1.6] text-tx-muted">
+        Don&apos;t have an account?{" "}
+        <Link
+          href={
+            redirectParam
+              ? `/signup?redirect=${encodeURIComponent(redirectParam)}`
+              : "/signup"
+          }
+          className="font-semibold text-ocean underline-offset-[3px] transition-colors duration-150 ease-brand hover:underline"
+        >
+          Sign up
+        </Link>
+      </p>
+    </AuthShell>
   );
 }

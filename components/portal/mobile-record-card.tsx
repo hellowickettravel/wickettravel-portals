@@ -6,13 +6,19 @@ export type MobileField = {
   value: ReactNode;
   /** Span the full width of the 2-col grid (e.g. a long route). */
   wide?: boolean;
+  /** Tabular numerals — fares, counts, references. */
+  numeric?: boolean;
 };
 
 /**
- * Mobile (<md) stacked-card representation of a single data-table row. Used as
- * the responsive alternative to wide tables so the page never scrolls
- * sideways. Render a list of these inside a `md:hidden` wrapper and keep the
- * real <Table> inside `hidden md:block`.
+ * Mobile (<md) stacked-card representation of a single data-table row.
+ *
+ * A table on a phone is either a sideways scroll or a squeeze; this is
+ * neither. Same surface and density as <Card size="sm">, with the column
+ * names demoted to Plex Mono micro-labels so the values carry the row.
+ *
+ * Render a list of these inside a `md:hidden` wrapper and keep the real
+ * <Table> inside `hidden md:block` — or let <DataTable> do both for you.
  */
 export function MobileRecordCard({
   title,
@@ -20,36 +26,51 @@ export function MobileRecordCard({
   badge,
   action,
   fields,
+  className,
 }: {
   title: ReactNode;
   subtitle?: ReactNode;
   badge?: ReactNode;
   action?: ReactNode;
   fields: MobileField[];
+  className?: string;
 }) {
   return (
-    <div className="rounded-2xl border border-border bg-card p-4 shadow-sm">
+    <div
+      data-slot="mobile-record-card"
+      className={cn(
+        "rounded-surface border border-line bg-surface p-[18px] shadow-lift transition-colors duration-150 ease-brand",
+        className
+      )}
+    >
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0 flex-1">
-          <div className="font-medium text-foreground">{title}</div>
+          <div className="text-[15px] leading-[1.4] font-semibold text-tx-head">
+            {title}
+          </div>
           {subtitle ? (
-            <div className="mt-0.5 text-xs text-muted-foreground">{subtitle}</div>
+            <div className="mt-0.5 text-[13px] text-tx-muted">{subtitle}</div>
           ) : null}
         </div>
-        <div className="flex shrink-0 items-center gap-1.5">
+        <div className="flex shrink-0 items-center gap-2">
           {badge}
           {action}
         </div>
       </div>
 
       {fields.length > 0 ? (
-        <dl className="mt-3.5 grid grid-cols-2 gap-x-4 gap-y-3 border-t border-border/70 pt-3.5">
+        <dl className="mt-4 grid grid-cols-2 gap-x-4 gap-y-3 border-t border-line-faint pt-4">
           {fields.map((f) => (
             <div key={f.label} className={cn("min-w-0", f.wide && "col-span-2")}>
-              <dt className="text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
-                {f.label}
-              </dt>
-              <dd className="mt-0.5 truncate text-sm text-foreground">{f.value}</dd>
+              <dt className="font-micro text-tx-faint">{f.label}</dt>
+              <dd
+                className={cn(
+                  "mt-1 truncate text-[14.5px] text-tx-body",
+                  f.numeric && "tabular"
+                )}
+              >
+                {f.value}
+              </dd>
             </div>
           ))}
         </dl>

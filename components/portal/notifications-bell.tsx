@@ -21,6 +21,7 @@ import {
   DropdownMenuContent,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { IconChip } from "@/components/ui/icon-chip";
 import { createClient } from "@/lib/supabase/client";
 import {
   listMyNotifications,
@@ -148,25 +149,28 @@ export function NotificationsBell({
     <DropdownMenu>
       <DropdownMenuTrigger
         aria-label={unread > 0 ? `Notifications, ${unread} unread` : "Notifications"}
-        className="relative inline-flex size-9 items-center justify-center rounded-full text-muted-foreground outline-none transition-colors hover:bg-muted hover:text-foreground focus-visible:ring-[3px] focus-visible:ring-ocean/25"
+        className="relative inline-flex size-[46px] shrink-0 items-center justify-center rounded-icon text-tx-muted outline-none transition-colors duration-150 ease-brand hover:bg-sunk hover:text-tx-head focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-coral-deep"
       >
-        <Bell className="size-[18px]" />
+        <Bell className="size-5" />
         {unread > 0 ? (
-          <span className="absolute -right-0.5 -top-0.5 inline-flex min-w-4 items-center justify-center rounded-full bg-destructive px-1 text-[10px] font-semibold leading-4 text-white">
+          /* Rose means attention — the topbar carries no brand colour. */
+          <span className="absolute top-1.5 right-1.5 inline-flex min-w-[17px] items-center justify-center rounded-chip bg-rose px-1 py-px text-[10px] leading-[1.4] font-semibold tabular text-tx-invert">
             {unread > 9 ? "9+" : unread}
           </span>
         ) : null}
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-80 p-0">
-        <div className="flex items-center justify-between border-b border-border px-3.5 py-2.5">
-          <p className="text-sm font-semibold text-foreground">Notifications</p>
+        <div className="flex items-center justify-between border-b border-line px-4 py-3">
+          <p className="text-[14.5px] font-semibold text-tx-head">
+            Notifications
+          </p>
           {unread > 0 ? (
             <button
               type="button"
               onClick={() => readAllMutation.mutate()}
-              className="inline-flex items-center gap-1 text-xs font-medium text-ocean transition-colors hover:text-ocean-deep"
+              className="inline-flex items-center gap-1.5 text-[13px] font-medium text-ocean transition-colors duration-150 ease-brand hover:text-ocean-deep"
             >
-              <CheckCheck className="size-3.5" />
+              <CheckCheck className="size-4" />
               Mark all read
             </button>
           ) : null}
@@ -174,13 +178,15 @@ export function NotificationsBell({
 
         {items.length === 0 ? (
           <div className="flex flex-col items-center justify-center gap-2 px-4 py-9 text-center">
-            <div className="flex size-10 items-center justify-center rounded-full bg-sky-tint text-ocean-deep">
-              <Bell className="size-5" />
-            </div>
-            <p className="text-sm font-medium text-foreground">
+            <IconChip tone="neutral">
+              <Bell />
+            </IconChip>
+            <p className="mt-2 text-[14.5px] font-semibold text-tx-head">
               No new notifications
             </p>
-            <p className="text-xs text-muted-foreground">You&apos;re all caught up.</p>
+            <p className="text-[13px] text-tx-muted">
+              You&apos;re all caught up.
+            </p>
           </div>
         ) : (
           <ul className="max-h-96 overflow-y-auto py-1">
@@ -203,28 +209,28 @@ export function NotificationsBell({
                       openNotification(n.id, n.is_read, n.type, n.link)
                     }
                     className={cn(
-                      "flex w-full items-start gap-3 px-3.5 py-2.5 text-left transition-colors hover:bg-sunk",
-                      !n.is_read && "bg-sky-tint/40"
+                      "flex w-full items-start gap-3 px-4 py-3 text-left transition-colors duration-150 ease-brand hover:bg-sunk",
+                      !n.is_read && "bg-sky-tint/60"
                     )}
                   >
-                    <div className="mt-0.5 flex size-8 shrink-0 items-center justify-center rounded-lg bg-sky-tint text-ocean-deep">
+                    <div className="mt-0.5 flex size-8 shrink-0 items-center justify-center rounded-icon bg-sky-tint text-ocean [&_svg]:[stroke-width:1.75]">
                       <Icon className="size-4" />
                     </div>
                     <div className="min-w-0 flex-1">
                       <div className="flex items-center justify-between gap-2">
-                        <p className="truncate text-sm font-medium text-foreground">
+                        <p className="truncate text-[14.5px] font-medium text-tx-head">
                           {titleLine}
                         </p>
                         {!n.is_read ? (
-                          <span className="size-2 shrink-0 rounded-full bg-primary" />
+                          <span className="size-2 shrink-0 rounded-full bg-ocean" />
                         ) : null}
                       </div>
                       {n.body ? (
-                        <p className="truncate text-xs text-muted-foreground">
+                        <p className="truncate text-[13px] text-tx-muted">
                           {n.body}
                         </p>
                       ) : null}
-                      <p className="mt-0.5 text-[11px] text-muted-foreground">
+                      <p className="mt-0.5 font-micro text-tx-faint">
                         {fmtRelative(n.created_at)}
                       </p>
                     </div>
@@ -237,10 +243,10 @@ export function NotificationsBell({
 
         <Link
           href={notificationsHref}
-          className="flex items-center justify-center gap-1.5 border-t border-border px-3.5 py-2.5 text-sm font-medium text-ocean outline-none transition-colors hover:bg-sunk focus-visible:bg-sunk"
+          className="flex items-center justify-center gap-1.5 border-t border-line px-4 py-3 text-[14.5px] font-medium text-ocean outline-none transition-colors duration-150 ease-brand hover:bg-sunk focus-visible:bg-sunk"
         >
           View all notifications
-          <ArrowRight className="size-3.5" />
+          <ArrowRight className="size-4" />
         </Link>
       </DropdownMenuContent>
     </DropdownMenu>

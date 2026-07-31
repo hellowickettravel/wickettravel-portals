@@ -41,15 +41,15 @@ export function GoogleButton({
   return (
     <Button
       type="button"
-      variant="outline"
+      variant="secondary"
       onClick={handleGoogle}
       disabled={loading}
-      className="h-11 w-full rounded-[10px] border-border bg-white text-sm font-medium text-foreground shadow-sm transition-colors hover:bg-muted"
+      className="w-full"
     >
       {loading ? (
-        <Loader2 className="size-4 animate-spin" />
+        <Loader2 className="animate-spin" />
       ) : (
-        <GoogleIcon className="size-4" />
+        <GoogleIcon className="size-[18px]" />
       )}
       {label}
     </Button>

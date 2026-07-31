@@ -7,6 +7,17 @@ import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { XIcon } from "lucide-react"
 
+/**
+ * Dialog / modal — design-system.html §04, §05, §13.
+ *
+ * The clipped corner at its larger radius (6/24/24/24), lift-2, and an
+ * ocean-tinted scrim rather than black. It enters as an entrance, not a
+ * micro-interaction: 260ms, a 10px rise and a fade, once.
+ *
+ * Focus trapping, Esc-to-close, backdrop dismissal, scroll lock and the
+ * aria wiring all come from Base UI — this file is the skin, not the
+ * behaviour. Reduced motion neutralises the movement globally.
+ */
 function Dialog({ ...props }: DialogPrimitive.Root.Props) {
   return <DialogPrimitive.Root data-slot="dialog" {...props} />
 }
@@ -23,6 +34,7 @@ function DialogClose({ ...props }: DialogPrimitive.Close.Props) {
   return <DialogPrimitive.Close data-slot="dialog-close" {...props} />
 }
 
+/** Scrim — ocean night at 32%. Never black, never blurred. */
 function DialogOverlay({
   className,
   ...props
@@ -31,7 +43,7 @@ function DialogOverlay({
     <DialogPrimitive.Backdrop
       data-slot="dialog-overlay"
       className={cn(
-        "fixed inset-0 isolate z-50 bg-black/10 duration-100 supports-backdrop-filter:backdrop-blur-xs data-open:animate-in data-open:fade-in-0 data-closed:animate-out data-closed:fade-out-0",
+        "fixed inset-0 isolate z-50 bg-ocean-night/32 transition-opacity duration-[260ms] ease-brand data-ending-style:opacity-0 data-starting-style:opacity-0",
         className
       )}
       {...props}
@@ -53,7 +65,8 @@ function DialogContent({
       <DialogPrimitive.Popup
         data-slot="dialog-content"
         className={cn(
-          "fixed top-1/2 left-1/2 z-50 grid w-full max-w-[calc(100%-2rem)] -translate-x-1/2 -translate-y-1/2 gap-4 rounded-xl bg-popover p-4 text-sm text-popover-foreground ring-1 ring-foreground/10 duration-100 outline-none sm:max-w-sm data-open:animate-in data-open:fade-in-0 data-open:zoom-in-95 data-closed:animate-out data-closed:fade-out-0 data-closed:zoom-out-95",
+          "fixed top-1/2 left-1/2 z-50 grid w-full max-w-[calc(100%-2rem)] -translate-x-1/2 -translate-y-1/2 gap-5 rounded-surface-lg border border-line bg-surface p-6 text-sm text-tx-body shadow-lift-lg outline-none sm:max-w-md",
+          "transition-[opacity,transform] duration-[260ms] ease-brand data-ending-style:opacity-0 data-starting-style:translate-y-[calc(-50%+10px)] data-starting-style:opacity-0",
           className
         )}
         {...props}
@@ -65,13 +78,12 @@ function DialogContent({
             render={
               <Button
                 variant="ghost"
-                className="absolute top-2 right-2"
+                className="absolute top-3.5 right-3.5 text-tx-muted hover:text-tx-head"
                 size="icon-sm"
               />
             }
           >
-            <XIcon
-            />
+            <XIcon />
             <span className="sr-only">Close</span>
           </DialogPrimitive.Close>
         )}
@@ -84,12 +96,13 @@ function DialogHeader({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
       data-slot="dialog-header"
-      className={cn("flex flex-col gap-2", className)}
+      className={cn("flex flex-col gap-2.5 pr-8", className)}
       {...props}
     />
   )
 }
 
+/** Footer sits on `sunk` with a hairline above it, like a card's. */
 function DialogFooter({
   className,
   showCloseButton = false,
@@ -102,14 +115,14 @@ function DialogFooter({
     <div
       data-slot="dialog-footer"
       className={cn(
-        "-mx-4 -mb-4 flex flex-col-reverse gap-2 rounded-b-xl border-t bg-muted/50 p-4 sm:flex-row sm:justify-end",
+        "-mx-6 -mb-6 flex flex-col-reverse gap-3 border-t border-line-faint bg-sunk px-6 py-5 sm:flex-row sm:justify-end",
         className
       )}
       {...props}
     >
       {children}
       {showCloseButton && (
-        <DialogPrimitive.Close render={<Button variant="outline" />}>
+        <DialogPrimitive.Close render={<Button variant="secondary" />}>
           Close
         </DialogPrimitive.Close>
       )}
@@ -117,12 +130,13 @@ function DialogFooter({
   )
 }
 
+/** H3 — 600 · 19/26 · #0A3A66. */
 function DialogTitle({ className, ...props }: DialogPrimitive.Title.Props) {
   return (
     <DialogPrimitive.Title
       data-slot="dialog-title"
       className={cn(
-        "font-sans text-base leading-none font-medium",
+        "font-sans text-[19px] leading-[1.36] font-semibold tracking-[-0.005em] text-tx-head",
         className
       )}
       {...props}
@@ -130,6 +144,7 @@ function DialogTitle({ className, ...props }: DialogPrimitive.Title.Props) {
   )
 }
 
+/** Small — 400 · 14.5/23 · #6B7C8E. */
 function DialogDescription({
   className,
   ...props
@@ -138,7 +153,7 @@ function DialogDescription({
     <DialogPrimitive.Description
       data-slot="dialog-description"
       className={cn(
-        "text-sm text-muted-foreground *:[a]:underline *:[a]:underline-offset-3 *:[a]:hover:text-foreground",
+        "text-[14.5px] leading-[1.6] text-tx-muted *:[a]:underline *:[a]:underline-offset-[3px] *:[a]:hover:text-ocean",
         className
       )}
       {...props}
