@@ -4,7 +4,7 @@ import { useState } from "react";
 import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { createClient } from "@/lib/supabase/client";
-import { Button } from "@/components/ui/button";
+import { AuthSecondary } from "@/components/auth/auth-submit";
 import { GoogleIcon } from "@/components/icons/google";
 
 export function GoogleButton({
@@ -39,19 +39,13 @@ export function GoogleButton({
   }
 
   return (
-    <Button
-      type="button"
-      variant="secondary"
-      onClick={handleGoogle}
-      disabled={loading}
-      className="w-full"
-    >
+    <AuthSecondary onClick={handleGoogle} disabled={loading}>
       {loading ? (
-        <Loader2 className="animate-spin" />
+        <Loader2 className="size-[18px] animate-spin" />
       ) : (
         <GoogleIcon className="size-[18px]" />
       )}
       {label}
-    </Button>
+    </AuthSecondary>
   );
 }

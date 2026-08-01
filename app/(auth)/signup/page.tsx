@@ -2,18 +2,22 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { Plane, Loader2, MailCheck } from "lucide-react";
+import { Plane, MailCheck } from "lucide-react";
 import { toast } from "sonner";
 import { createClient } from "@/lib/supabase/client";
 import { guardSignup, recordSignup } from "@/lib/actions/auth-guard";
 import { checkPassword } from "@/lib/security/password";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Field, FieldGroup } from "@/components/ui/field";
 import { IconChip } from "@/components/ui/icon-chip";
-import { PasswordInput } from "@/components/portal/password-input";
 import { PasswordStrength } from "@/components/auth/password-strength";
 import { AuthShell, AuthHeading } from "@/components/auth/auth-shell";
+import {
+  AuthField,
+  AuthFieldGroup,
+  AuthInput,
+  AuthPasswordInput,
+} from "@/components/auth/auth-field";
+import { AuthSubmit, authSecondaryClassName } from "@/components/auth/auth-submit";
+import { cn } from "@/lib/utils";
 import { GoogleButton } from "@/components/auth/google-button";
 import { OrDivider } from "@/components/auth/or-divider";
 
@@ -165,31 +169,26 @@ export default function SignupPage() {
 
   return (
     <AuthShell
-      eyebrow="Start here"
+      eyebrow="Wicket Travel Portal"
       headline="Tell us where. We'll find the fare."
-      lede="One account, and the whole trip stops living in your inbox."
     >
       {sentTo ? (
         /* ---------- Check-your-email confirmation ---------- */
         <>
-          <IconChip tone="marine">
+          <IconChip tone="marine" className="size-12 [&_svg]:size-6">
             <MailCheck />
           </IconChip>
-          <h1 className="font-serif-display mt-4 text-[24px] leading-[1.2] text-tx-head">
+          <h1 className="font-display mt-6 text-[32px] text-tx-head sm:text-[36px]">
             Check your email
           </h1>
-          <p className="mt-3.5 text-[14.5px] leading-[1.6] text-tx-muted">
+          <p className="mt-3 text-[15.5px] leading-[1.6] text-tx-muted">
             We sent a verification link to{" "}
-            <span className="font-semibold text-tx-head">{sentTo}</span>. Open
-            it to activate your account, then sign in.
+            <span className="font-bold text-tx-head">{sentTo}</span>. Open it to
+            activate your account, then sign in.
           </p>
-          <Button
-            variant="accent"
-            className="mt-8 w-full"
-            render={<Link href={loginHref} />}
-          >
+          <Link href={loginHref} className={cn(authSecondaryClassName, "mt-8")}>
             Go to sign in
-          </Button>
+          </Link>
           <p className="mt-5 text-[13px] leading-[1.5] text-tx-muted">
             Nothing yet? Check your spam folder, or wait a minute and try again.
           </p>
@@ -204,7 +203,7 @@ export default function SignupPage() {
           />
 
           {resumingBooking ? (
-            <div className="mb-8 flex items-start gap-3 rounded-card border border-marine-line bg-marine-tint px-4 py-3.5 text-[14.5px] leading-[1.6] text-marine-deep">
+            <div className="mb-7 flex items-start gap-3 rounded-card border border-marine-line bg-marine-tint px-4 py-3.5 text-[14px] leading-[1.6] text-marine-ink">
               <Plane className="mt-0.5 size-[18px] shrink-0 -rotate-45" />
               <span>
                 Your booking details are saved. Create your free account and
@@ -214,14 +213,13 @@ export default function SignupPage() {
           ) : null}
 
           <form onSubmit={handleSubmit}>
-            <FieldGroup>
-              <Field
+            <AuthFieldGroup>
+              <AuthField
                 label="Full name"
                 htmlFor="fullName"
-                required
                 error={errors.fullName}
               >
-                <Input
+                <AuthInput
                   id="fullName"
                   type="text"
                   autoComplete="name"
@@ -229,13 +227,14 @@ export default function SignupPage() {
                   value={fullName}
                   onChange={(e) => setFullName(e.target.value)}
                   aria-invalid={errors.fullName ? true : undefined}
+                  aria-describedby={errors.fullName ? "fullName-error" : undefined}
                   required
                   disabled={loading}
                 />
-              </Field>
+              </AuthField>
 
-              <Field label="Email" htmlFor="email" required error={errors.email}>
-                <Input
+              <AuthField label="Email address" htmlFor="email" error={errors.email}>
+                <AuthInput
                   id="email"
                   type="email"
                   autoComplete="email"
@@ -243,77 +242,70 @@ export default function SignupPage() {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   aria-invalid={errors.email ? true : undefined}
+                  aria-describedby={errors.email ? "email-error" : undefined}
                   required
                   disabled={loading}
                 />
-              </Field>
+              </AuthField>
 
-              <Field
+              <AuthField
                 label="Password"
                 htmlFor="password"
-                required
                 error={errors.password}
               >
-                <PasswordInput
+                <AuthPasswordInput
                   id="password"
                   autoComplete="new-password"
                   placeholder="At least 8 characters"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   aria-invalid={errors.password ? true : undefined}
+                  aria-describedby={errors.password ? "password-error" : undefined}
                   required
                   disabled={loading}
                 />
                 <PasswordStrength password={password} />
-              </Field>
+              </AuthField>
 
-              <Field
+              <AuthField
                 label="Confirm password"
                 htmlFor="confirm"
-                required
                 error={errors.confirm}
               >
-                <PasswordInput
+                <AuthPasswordInput
                   id="confirm"
                   autoComplete="new-password"
                   placeholder="Re-enter your password"
                   value={confirm}
                   onChange={(e) => setConfirm(e.target.value)}
                   aria-invalid={errors.confirm ? true : undefined}
+                  aria-describedby={errors.confirm ? "confirm-error" : undefined}
                   required
                   disabled={loading}
                 />
-              </Field>
-            </FieldGroup>
+              </AuthField>
+            </AuthFieldGroup>
 
-            <Button
-              type="submit"
-              disabled={loading}
-              variant="accent"
-              className="mt-8 w-full"
+            <AuthSubmit
+              loading={loading}
+              loadingLabel="Creating account…"
+              className="mt-8"
             >
-              {loading ? (
-                <>
-                  <Loader2 className="animate-spin" />
-                  Creating account…
-                </>
-              ) : (
-                "Create account"
-              )}
-            </Button>
+              Create account
+            </AuthSubmit>
           </form>
 
-          <div className="my-6">
+          <div className="my-7">
             <OrDivider />
           </div>
 
-          <GoogleButton />
+          <GoogleButton label="Sign up with Google" />
 
-          <p className="mt-6 text-[14.5px] leading-[1.6] text-tx-muted">
+          <p className="mt-7 text-[14px] leading-[1.6] text-tx-muted">
             Already have an account?{" "}
             <Link
               href={loginHref}
-              className="font-semibold text-marine underline-offset-[3px] transition-colors duration-150 ease-brand hover:underline"
+              className="font-bold text-marine-ink underline-offset-[3px] transition-colors duration-150 ease-brand hover:underline"
             >
               Sign in
             </Link>

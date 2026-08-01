@@ -5,13 +5,17 @@ import Link from "next/link";
 import { Loader2, ShieldAlert } from "lucide-react";
 import { toast } from "sonner";
 import { createClient } from "@/lib/supabase/client";
-import { Button } from "@/components/ui/button";
-import { Field, FieldGroup } from "@/components/ui/field";
 import { IconChip } from "@/components/ui/icon-chip";
-import { PasswordInput } from "@/components/portal/password-input";
 import { PasswordStrength } from "@/components/auth/password-strength";
 import { AuthShell, AuthHeading } from "@/components/auth/auth-shell";
+import {
+  AuthField,
+  AuthFieldGroup,
+  AuthPasswordInput,
+} from "@/components/auth/auth-field";
+import { AuthSubmit, authSecondaryClassName } from "@/components/auth/auth-submit";
 import { checkPassword, MIN_PASSWORD_LENGTH } from "@/lib/security/password";
+import { cn } from "@/lib/utils";
 
 type RecoveryStatus = "verifying" | "ready" | "invalid";
 
@@ -114,38 +118,33 @@ export default function ResetPasswordPage() {
 
   return (
     <AuthShell
-      eyebrow="Account recovery"
+      eyebrow="Wicket Travel Portal"
       headline="A new password, and you're back in."
-      lede="Reset links are single-use, which is exactly why they're safe."
     >
       {status === "verifying" ? (
         /* ---------- Verifying the recovery link ---------- */
         <div className="flex flex-col items-start gap-3 py-6">
           <Loader2 className="size-6 animate-spin text-marine" />
-          <p className="text-[14.5px] leading-[1.6] text-tx-muted">
+          <p className="text-[15.5px] leading-[1.6] text-tx-muted">
             Checking your reset link…
           </p>
         </div>
       ) : status === "invalid" ? (
         /* ---------- Invalid / expired link ---------- */
         <>
-          <IconChip tone="ruby">
+          <IconChip tone="ruby" className="size-12 [&_svg]:size-6">
             <ShieldAlert />
           </IconChip>
-          <h1 className="font-serif-display mt-4 text-[24px] leading-[1.2] text-tx-head">
+          <h1 className="font-display mt-6 text-[32px] text-tx-head sm:text-[36px]">
             That link has expired
           </h1>
-          <p className="mt-3.5 text-[14.5px] leading-[1.6] text-tx-muted">
+          <p className="mt-3 text-[15.5px] leading-[1.6] text-tx-muted">
             Reset links work once and only for a short while. Request a fresh
             one from the sign-in screen and it will land in your inbox.
           </p>
-          <Button
-            variant="accent"
-            className="mt-8 w-full"
-            render={<Link href="/login" />}
-          >
+          <Link href="/login" className={cn(authSecondaryClassName, "mt-8")}>
             Back to sign in
-          </Button>
+          </Link>
           <p className="mt-5 text-[13px] leading-[1.5] text-tx-muted">
             Use “Forgot password?” there to send yourself a new link.
           </p>
@@ -160,69 +159,61 @@ export default function ResetPasswordPage() {
           />
 
           <form onSubmit={handleSubmit}>
-            <FieldGroup>
-              <Field
+            <AuthFieldGroup>
+              <AuthField
                 label="New password"
                 htmlFor="password"
-                required
                 error={errors.password}
               >
-                <PasswordInput
+                <AuthPasswordInput
                   id="password"
                   autoComplete="new-password"
                   placeholder="At least 8 characters"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   aria-invalid={errors.password ? true : undefined}
+                  aria-describedby={errors.password ? "password-error" : undefined}
                   required
                   minLength={MIN_PASSWORD_LENGTH}
                   disabled={loading}
                 />
                 <PasswordStrength password={password} />
-              </Field>
+              </AuthField>
 
-              <Field
+              <AuthField
                 label="Confirm new password"
                 htmlFor="confirm"
-                required
                 error={errors.confirm}
               >
-                <PasswordInput
+                <AuthPasswordInput
                   id="confirm"
                   autoComplete="new-password"
                   placeholder="Re-enter your password"
                   value={confirm}
                   onChange={(e) => setConfirm(e.target.value)}
                   aria-invalid={errors.confirm ? true : undefined}
+                  aria-describedby={errors.confirm ? "confirm-error" : undefined}
                   required
                   minLength={MIN_PASSWORD_LENGTH}
                   disabled={loading}
                 />
-              </Field>
-            </FieldGroup>
+              </AuthField>
+            </AuthFieldGroup>
 
-            <Button
-              type="submit"
-              disabled={loading}
-              variant="accent"
-              className="mt-8 w-full"
+            <AuthSubmit
+              loading={loading}
+              loadingLabel="Updating…"
+              className="mt-8"
             >
-              {loading ? (
-                <>
-                  <Loader2 className="animate-spin" />
-                  Updating…
-                </>
-              ) : (
-                "Update password"
-              )}
-            </Button>
+              Update password
+            </AuthSubmit>
           </form>
 
-          <p className="mt-6 text-[14.5px] leading-[1.6] text-tx-muted">
+          <p className="mt-7 text-[14px] leading-[1.6] text-tx-muted">
             Remembered it?{" "}
             <Link
               href="/login"
-              className="font-semibold text-marine underline-offset-[3px] transition-colors duration-150 ease-brand hover:underline"
+              className="font-bold text-marine-ink underline-offset-[3px] transition-colors duration-150 ease-brand hover:underline"
             >
               Sign in
             </Link>

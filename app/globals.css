@@ -11,16 +11,16 @@
   --color-background: var(--background);
   --color-foreground: var(--foreground);
 
-  /* ── Faces (v4 §1) ────────────────────────────────────────
-     Inter does everything. Source Serif 4 appears on the three auth
-     headlines and nowhere else. Plex Mono carries codes only — order
-     numbers, PNRs, airport codes — never labels or headings. */
-  --font-sans: var(--font-inter);
-  --font-serif: var(--font-source-serif);
+  /* ── Faces (v5 §1) ────────────────────────────────────────
+     Figtree does everything. There is NO serif in this product — the one
+     that used to sit on the auth headlines is gone. Plex Mono carries
+     codes only — order numbers, PNRs, airport codes — never labels or
+     headings. */
+  --font-sans: var(--font-figtree);
   --font-mono: var(--font-plex-mono);
 
   /* ── Tracking ─────────────────────────────────────────────
-     Inter needs negative tracking as it gets bigger and slightly positive
+     Figtree needs negative tracking as it gets bigger and slightly positive
      tracking as it gets smaller. These are the only four values. */
   --tracking-display: -0.021em; /* 28px+ */
   --tracking-heading: -0.013em; /* 18–27px */
@@ -94,17 +94,21 @@
   --color-tx-rail: var(--tx-rail);
   --color-tx-rail-dim: var(--tx-rail-dim);
 
-  /* ── Radius (v4 §4) — soft: 10 controls, 16 cards, 8 chips ── */
+  /* ── Radius (v5 §4) — soft: 12 controls, 16 cards, 8 chips ── */
   --radius-control: var(--r-control);
+  --radius-field: var(--r-field);
   --radius-card: var(--r-card);
   --radius-panel: var(--r-panel);
   --radius-chip: var(--r-chip);
   --radius-icon: var(--r-icon);
 
-  /* ── Depth (v4 §5) — border + a whisper on cards ── */
+  /* ── Depth (v5 §5) — border + a whisper on cards ── */
   --shadow-card: var(--elev-card);
   --shadow-pop: var(--elev-pop);
   --shadow-deep: var(--elev-deep);
+  /* The one glow in the system: a coral-tinted bloom under the primary
+     action, so the single ask on the page sits slightly off the paper. */
+  --shadow-action: var(--elev-action);
 
   /* ── Motion (v4 §13) ── */
   --ease-brand: var(--ease);
@@ -217,14 +221,17 @@
   --ruby-line: #f2cdd4;
   --ruby-chip: #f7d9de;
 
-  /* — surfaces: neutral paper. Cards are pure white and therefore read as
-       lifted without needing a shadow to say so; the shadow only confirms
-       it. `field` is the filled-input rest state. — */
-  --canvas: #f6f7f9;
+  /* — surfaces: WARM paper, not neutral. This is the single change that
+       makes the product stop reading as a cold admin tool.
+       A blush-warmed page has no cold white to clash with the deep marine
+       or the coral, so nothing on it fights anything else, and long
+       sessions stop being tiring. Cards are pure white and therefore read
+       as lifted against it. `field` is the filled-input rest state. — */
+  --canvas: #fbf6f1;
   --surface: #ffffff;
-  --surface-2: #f1f3f6; /* table heads, banded sections */
-  --surface-3: #e8ebef; /* pressed / selected */
-  --field: #f2f4f7; /* filled input, rest */
+  --surface-2: #f5ede5; /* table heads, banded sections */
+  --surface-3: #ede3d9; /* pressed / selected */
+  --field: #f7f1eb; /* filled input, rest */
   --rail: #0c4a6e; /* the sidebar — solid marine */
   --rail-deep: #072f47;
   /* Coral is too dark to read as an accent ON the rail — #c4401c lands at
@@ -243,26 +250,33 @@
        that identifies a control, so it must clear 3:1 (WCAG 1.4.11).
        A filled field alone cannot do that — #f2f4f7 on white is 1.05:1 —
        so filled fields carry this border as well as their fill. — */
-  --line-faint: #eef0f3;
-  --line: #e2e6eb;
-  --line-strong: #cfd5dd;
-  --line-hover: #b4bdc8;
-  --field-border: #868d96;
+  --line-faint: #f3ece4;
+  --line: #eae1d7;
+  --line-strong: #d8ccc0;
+  --line-hover: #c0b2a3;
+  /* Pinned at the LIGHTEST value that still clears 3:1 on white, on the
+     canvas and on its own fill. The reference this is modelled on has no
+     field border at all, which reads beautifully and identifies nothing;
+     this is the quietest border that still satisfies 1.4.11. */
+  --field-border: #94897e;
 
-  /* — text. `muted` is pinned at the darkest value that still clears
-       4.5:1 on the canvas AND on all six tints, so a label never needs a
-       per-tone override. `faint` is NON-TEXT ONLY — decorative glyphs,
-       separators, disabled icons. It carries no label, ever. — */
-  --tx-head: #101b28;
-  --tx-body: #3c4959;
-  --tx-muted: #5c6b7c;
-  --tx-faint: #8794a3;
+  /* — text: warm, never neutral grey. The ramp sits on the same hue as the
+       paper, so type reads as ink on that paper rather than as black
+       pasted onto it. `muted` is pinned at the darkest value that still
+       clears 4.5:1 on the canvas AND on all six tints, so a label never
+       needs a per-tone override. `faint` is NON-TEXT ONLY — decorative
+       glyphs, separators, disabled icons. It carries no label, ever. — */
+  --tx-head: #231d18;
+  --tx-body: #4c433b;
+  --tx-muted: #6f6459;
+  --tx-faint: #9c9086;
   --tx-invert: #ffffff;
   --tx-rail: #ffffff; /* type on the marine rail */
   --tx-rail-dim: #b7d3e6;
 
   /* — radius: soft. One value per element type; no asymmetry, ever. — */
-  --r-control: 10px; /* buttons, inputs, selects, nav rows */
+  --r-control: 12px; /* buttons, inputs, selects, nav rows */
+  --r-field: 16px; /* the tall 56px auth fields only */
   --r-card: 16px; /* cards, panels, tables */
   --r-panel: 20px; /* modals, drawers, auth panels */
   --r-chip: 8px; /* badges and tags */
@@ -270,9 +284,14 @@
 
   /* — depth: a whisper on cards, real shadow only on things that float.
        Warm-tinted, never neutral black, or it punches a cold hole. — */
-  --elev-card: 0 1px 2px rgba(16, 27, 40, 0.04), 0 2px 8px rgba(16, 27, 40, 0.04);
-  --elev-pop: 0 4px 12px rgba(16, 27, 40, 0.08), 0 12px 28px rgba(16, 27, 40, 0.08);
-  --elev-deep: 0 8px 24px rgba(16, 27, 40, 0.12), 0 24px 56px rgba(16, 27, 40, 0.16);
+  --elev-card: 0 1px 2px rgba(45, 32, 22, 0.04), 0 2px 8px rgba(45, 32, 22, 0.05);
+  --elev-pop: 0 4px 12px rgba(45, 32, 22, 0.08), 0 12px 28px rgba(45, 32, 22, 0.09);
+  --elev-deep: 0 8px 24px rgba(45, 32, 22, 0.12), 0 24px 56px rgba(45, 32, 22, 0.16);
+  /* The primary action's bloom. Tinted with the button's own coral rather
+     than with black, so it reads as the button glowing rather than as the
+     button casting a shadow — that is the whole difference between this
+     and a generic drop shadow. */
+  --elev-action: 0 2px 6px rgba(196, 64, 28, 0.16), 0 10px 24px rgba(196, 64, 28, 0.22);
 
   --ease: cubic-bezier(0.22, 0.68, 0.28, 1);
 
@@ -363,21 +382,23 @@
   --ruby-line: #47222b;
   --ruby-chip: #391b22;
 
-  --canvas: #0e151c;
-  --surface: #161f29;
-  --surface-2: #1d2833;
-  --surface-3: #26333f;
-  --field: #1d2833;
+  /* The dark paper warms too — a hair of red in the blacks, so the same
+     warm type ramp sits on it without turning grey-blue. */
+  --canvas: #151110;
+  --surface: #201b19;
+  --surface-2: #2a2321;
+  --surface-3: #362e2a;
+  --field: #2a2321;
   --rail: #0a1621;
   --rail-deep: #060e16;
   --rail-accent: #f4734a;
   --coral-on-rail: #ffb499;
 
-  --line-faint: #1b2530;
-  --line: #26323e;
-  --line-strong: #35434f;
-  --line-hover: #485866;
-  --field-border: #6e7c8a;
+  --line-faint: #261f1d;
+  --line: #332b28;
+  --line-strong: #453b36;
+  --line-hover: #5a4d47;
+  --field-border: #8a7b73;
 
   /* Marine cannot go lighter without dropping white below AA on marine
      buttons, and at #1a76a8 it lands at 2.99:1 on the sunk surface — just
@@ -385,10 +406,10 @@
      value rather than borrowing the fill. */
   --ring: #6cb8e2;
 
-  --tx-head: #eef2f6;
-  --tx-body: #bac5d1;
-  --tx-muted: #909dab;
-  --tx-faint: #6b7887;
+  --tx-head: #f5f0ec;
+  --tx-body: #cdc2ba;
+  --tx-muted: #a2958c;
+  --tx-faint: #7d716a;
   --tx-invert: #ffffff; /* still white — coral and marine stay fills */
   --tx-rail: #ffffff;
   --tx-rail-dim: #8ba3b8;
@@ -398,6 +419,7 @@
   --elev-card: 0 1px 2px rgba(0, 0, 0, 0.3);
   --elev-pop: 0 4px 12px rgba(0, 0, 0, 0.4), 0 12px 28px rgba(0, 0, 0, 0.3);
   --elev-deep: 0 8px 24px rgba(0, 0, 0, 0.5), 0 24px 56px rgba(0, 0, 0, 0.4);
+  --elev-action: 0 2px 6px rgba(196, 64, 28, 0.3), 0 10px 24px rgba(196, 64, 28, 0.32);
 }
 
 @layer base {
@@ -425,7 +447,7 @@
   body {
     background: var(--canvas);
     color: var(--tx-body);
-    font-family: var(--font-inter), system-ui, -apple-system, sans-serif;
+    font-family: var(--font-figtree), system-ui, -apple-system, sans-serif;
     /* Compact density (v4 §2). 14px base is the single change that makes
        the whole product stop feeling magnified. */
     font-size: 14px;
@@ -441,8 +463,9 @@
       color 180ms var(--ease);
   }
 
-  /* Every heading is Inter. The serif is opted into explicitly, on three
-     auth screens, via `font-serif` — it is never inherited. */
+  /* Every heading is Figtree. There is no second face — a display serif
+     read as decorative rather than as confident, which is the opposite of
+     what the front door needs. */
   h1,
   h2,
   h3,
@@ -450,7 +473,7 @@
   h5,
   h6 {
     color: var(--tx-head);
-    font-family: var(--font-inter), system-ui, sans-serif;
+    font-family: var(--font-figtree), system-ui, sans-serif;
     font-weight: 600;
     letter-spacing: -0.013em;
   }
@@ -496,7 +519,7 @@
   .cn-toast {
     border-radius: var(--r-card);
     box-shadow: var(--elev-pop);
-    font-family: var(--font-inter), system-ui, sans-serif;
+    font-family: var(--font-figtree), system-ui, sans-serif;
     font-size: 13.5px;
     line-height: 1.55;
     letter-spacing: -0.005em;
@@ -544,23 +567,22 @@
    Sizes not on the scale don't go on a screen. */
 
 /* Uppercase micro-label — eyebrows, stat labels, table heads, nav
-   section headers. Inter, not mono: mono at 11px uppercase reads as a
+   section headers. Figtree, not mono: mono at 11px uppercase reads as a
    code, and these are labels. */
 @utility font-micro {
   font-size: 11px;
-  font-weight: 600;
-  letter-spacing: 0.06em;
+  font-weight: 700;
+  letter-spacing: 0.09em;
   text-transform: uppercase;
   line-height: 1.45;
 }
 
-/* The one serif moment: login, signup and password-reset headlines.
-   Nothing else in the product may use this. */
-@utility font-serif-display {
-  font-family: var(--font-source-serif), Georgia, serif;
-  font-optical-sizing: auto;
-  font-weight: 600;
-  letter-spacing: -0.018em;
+/* The auth headline — Figtree at 800. The one place the product raises
+   its voice, and it does it with weight rather than with a second face. */
+@utility font-display {
+  font-weight: 800;
+  letter-spacing: -0.028em;
+  line-height: 1.08;
 }
 
 /* Codes only — order numbers, PNRs, airport codes. */

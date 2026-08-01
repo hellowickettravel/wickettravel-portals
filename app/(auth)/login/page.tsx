@@ -2,16 +2,19 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { Plane, Loader2 } from "lucide-react";
+import { Plane } from "lucide-react";
 import { toast } from "sonner";
 import { createClient } from "@/lib/supabase/client";
 import { guardLogin, recordLogin } from "@/lib/actions/auth-guard";
 import { safeInternalPath } from "@/lib/security/redirect";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Field, FieldGroup } from "@/components/ui/field";
-import { PasswordInput } from "@/components/portal/password-input";
 import { AuthShell, AuthHeading } from "@/components/auth/auth-shell";
+import {
+  AuthField,
+  AuthFieldGroup,
+  AuthInput,
+  AuthPasswordInput,
+} from "@/components/auth/auth-field";
+import { AuthSubmit } from "@/components/auth/auth-submit";
 import { GoogleButton } from "@/components/auth/google-button";
 import { OrDivider } from "@/components/auth/or-divider";
 
@@ -204,18 +207,17 @@ export default function LoginPage() {
 
   return (
     <AuthShell
-      eyebrow="The travel desk"
+      eyebrow="Wicket Travel Portal"
       headline="Every fare, every message, one desk."
-      lede="The booking and the conversation about it, finally in the same place."
     >
       <AuthHeading
-        eyebrow="Sign in"
+        eyebrow="Admin portal"
         title="Welcome back"
-        lede="Pick up your chats and orders where you left them."
+        lede="Sign in to pick up your orders and chats where you left them."
       />
 
       {redirectParam?.startsWith("/customer/book") ? (
-        <div className="mb-8 flex items-start gap-3 rounded-card border border-marine-line bg-marine-tint px-4 py-3.5 text-[14.5px] leading-[1.6] text-marine-deep">
+        <div className="mb-7 flex items-start gap-3 rounded-card border border-marine-line bg-marine-tint px-4 py-3.5 text-[14px] leading-[1.6] text-marine-ink">
           <Plane className="mt-0.5 size-[18px] shrink-0 -rotate-45" />
           <span>
             Your booking details are saved. Sign in and we&apos;ll take you
@@ -225,9 +227,9 @@ export default function LoginPage() {
       ) : null}
 
       <form onSubmit={handleSubmit}>
-        <FieldGroup>
-          <Field label="Email" htmlFor="email">
-            <Input
+        <AuthFieldGroup>
+          <AuthField label="Email address" htmlFor="email">
+            <AuthInput
               id="email"
               type="email"
               autoComplete="email"
@@ -237,10 +239,23 @@ export default function LoginPage() {
               required
               disabled={loading}
             />
-          </Field>
+          </AuthField>
 
-          <Field label="Password" htmlFor="password">
-            <PasswordInput
+          <AuthField
+            label="Password"
+            htmlFor="password"
+            hint={
+              <button
+                type="button"
+                onClick={handleForgotPassword}
+                disabled={sendingReset || loading}
+                className="cursor-pointer rounded-chip text-[12.5px] font-semibold text-marine-ink underline-offset-[3px] outline-none transition-colors duration-150 ease-brand hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring disabled:cursor-not-allowed disabled:opacity-55"
+              >
+                {sendingReset ? "Sending…" : "Forgot password?"}
+              </button>
+            }
+          >
+            <AuthPasswordInput
               id="password"
               autoComplete="current-password"
               placeholder="Your password"
@@ -249,44 +264,25 @@ export default function LoginPage() {
               required
               disabled={loading}
             />
-            <div className="mt-2 flex justify-end">
-              <Button
-                type="button"
-                variant="link"
-                onClick={handleForgotPassword}
-                disabled={sendingReset || loading}
-                className="text-[13px]"
-              >
-                {sendingReset ? "Sending…" : "Forgot password?"}
-              </Button>
-            </div>
-          </Field>
-        </FieldGroup>
+          </AuthField>
+        </AuthFieldGroup>
 
-        <Button
-          type="submit"
-          disabled={loading}
-          variant="accent"
-          className="mt-8 w-full"
+        <AuthSubmit
+          loading={loading}
+          loadingLabel="Signing in…"
+          className="mt-8"
         >
-          {loading ? (
-            <>
-              <Loader2 className="animate-spin" />
-              Signing in…
-            </>
-          ) : (
-            "Sign in"
-          )}
-        </Button>
+          Sign in
+        </AuthSubmit>
       </form>
 
-      <div className="my-6">
+      <div className="my-7">
         <OrDivider />
       </div>
 
       <GoogleButton />
 
-      <p className="mt-6 text-[14.5px] leading-[1.6] text-tx-muted">
+      <p className="mt-7 text-[14px] leading-[1.6] text-tx-muted">
         Don&apos;t have an account?{" "}
         <Link
           href={
@@ -294,7 +290,7 @@ export default function LoginPage() {
               ? `/signup?redirect=${encodeURIComponent(redirectParam)}`
               : "/signup"
           }
-          className="font-semibold text-marine underline-offset-[3px] transition-colors duration-150 ease-brand hover:underline"
+          className="font-bold text-marine-ink underline-offset-[3px] transition-colors duration-150 ease-brand hover:underline"
         >
           Sign up
         </Link>

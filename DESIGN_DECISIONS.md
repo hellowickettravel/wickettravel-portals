@@ -1,4 +1,4 @@
-# Design system v4 — the decisions
+# Design system — the decisions
 
 Every choice below was made by the product owner, one question at a time.
 This file is the **specification**; `DESIGN_SYSTEM.md` (still v3 at time of
@@ -7,7 +7,56 @@ implements the foundations.
 
 Where I overrode a choice, the reason is stated inline and marked **[AA]**.
 Those overrides are not preferences — each one is a measured contrast
-failure. `scripts/contrast` logic lives in the QA notes at the bottom.
+failure. Run `node scripts/contrast-audit.mjs` after ANY token change.
+
+---
+
+## 0. v5 — the reference pass
+
+v4 was answered question-by-question and got the *structure* right, but the
+result still read as a cold admin tool. The owner then supplied two
+screenshots of a login screen they had shipped elsewhere and asked for that
+feel: `assets/focus-the-vibe-…png` and `assets/refrence-for-fonts.png`, plus
+`assets/login-page-feedback.png` — their own red/yellow markup on the v4
+login, which is the clearest statement of what was wrong.
+
+The reference was measured rather than eyeballed (PIL sampling + a Playwright
+render-and-diff for the face). What it actually does:
+
+| Measured | Value |
+|---|---|
+| Split | **42 / 58** — the brand panel is the NARROWER half |
+| Brand panel | **flat** `#B00D33`. No art, no gradient, no feature list |
+| Paper | `#FFF6F8` — **brand-tinted, never white** |
+| Field fill | `#FBEFF4` — one step deeper than the paper, **16px radius**, 56px tall |
+| Action | `#E30D3B` — a *second, more saturated* brand value. **Full pill**, 56px |
+| Glow | a real brand-tinted bloom under the button, ~25px falloff |
+| Neutrals | `#33292E` / `#5C4D54` / `#9C8B93` — **every one hue-shifted to the brand.** No cold grey anywhere |
+| Face | **Figtree** — identified by pixel IoU against 20 candidates: Figtree 800 scored 0.857, next best 0.771 |
+
+The transferable idea is the last row. The reference feels like a brand and
+doesn't tire the eye because *the paper and the whole neutral ramp carry the
+brand hue*, so nothing on screen is a cold white or a neutral black fighting
+a saturated colour.
+
+**Applied to Wicket** — same structure, Wicket's own palette:
+
+- **Marine stays the panel**, coral becomes the vivid action. Two brand
+  values with the reference's two jobs.
+- **The paper warms toward the coral**, not the marine: a blue-tinted page
+  reads clinical, and warmth was the whole point. Canvas `#FBF6F1`.
+- **The neutral ramp is warm**: `#231D18` / `#4C433B` / `#6F6459` / `#9C9086`.
+- **Figtree replaces Inter**, and the display serif is deleted outright —
+  the owner red-boxed it. One face for the entire product.
+- Radius: controls 10 → **12**; the tall auth field gets **16**.
+- **`--elev-action`**, a coral-tinted bloom, is the only glow in the system.
+
+**[AA] The field keeps a border.** The reference has none — its field is
+1.03:1 against its page, which cannot identify a control under WCAG 1.4.11.
+`--field-border` is pinned at `#94897E`, the *lightest* value that still
+clears 3:1 on white, on the canvas and on its own fill. This is the one place
+the screen deliberately departs from the reference. Focus earns it back: the
+border goes marine behind a 3px ring, far louder than the reference's.
 
 ---
 
@@ -16,10 +65,11 @@ failure. `scripts/contrast` logic lives in the QA notes at the bottom.
 | Decision | Value |
 |---|---|
 | Density | **Compact.** 14px base · 32/36/42px controls · 40px nav rows · 1440px content |
-| Typeface | **Inter** everywhere. **Source Serif 4** on login/signup/reset headlines ONLY. IBM Plex Mono for codes only (order refs, PNRs, airport codes) |
-| Radius | **Soft** — 10px controls · 16px cards · 20px panels/modals · 8px chips |
+| Typeface | **Figtree** everywhere — 800 for the auth headline. IBM Plex Mono for codes only (order refs, PNRs, airport codes). **No serif in the product.** |
+| Radius | **Soft** — 12px controls · 16px cards and tall fields · 20px panels/modals · 8px chips · full pill for the auth submit only |
 | Brand | **Marine `#12628F`** / deep `#0C4A6E` · **Coral** accent |
-| Depth | Border **+ a whisper of shadow** on cards. Real shadow only on things that float |
+| Paper | **Warm.** Canvas `#FBF6F1`, and the whole neutral ramp is hue-shifted to match |
+| Depth | Border **+ a whisper of shadow** on cards. Real shadow only on things that float. One coral bloom, under the primary action |
 | Motion | **Moderate** — rise-and-fade on load, staggered cards, colour-only hover |
 | Themes | **Light AND dark**, both shipped |
 | Responsive | **Full, down to 390px** |
@@ -39,18 +89,29 @@ grows to ≥44px below 640px.
 
 ---
 
-## 2. Auth screens — DONE
+## 2. Auth screens — DONE (rebuilt to the reference in v5)
 
-- **Split, brand left / form right.** Asymmetric grid `1.05fr / 1fr`.
-- **Boarding-pass line-art** behind the marine panel — boarding pass, passport
-  stamp, baggage tag, flight arc. Drawn as SVG (`components/auth/boarding-pass-art.tsx`),
-  white at 8–11%, pushed to the corners. Nothing runs under type.
-- **Footer at the bottom of the FORM column**, sharing the card's 420px measure
-  and left edge, behind a hairline. (This was the reported bug: it was centred
-  in a column whose card was not.)
-- **Source Serif 4** headline at 30px.
+- **Split, brand left / form right, `42fr / 58fr`.** The panel is the
+  narrower half: it holds four short things, while the form carries the
+  whole interaction and benefits from the air.
+- **Flat marine panel.** No artwork — the boarding-pass SVG is deleted, and
+  so is the three-item proof list (the owner red-boxed it). Four things
+  only, on the panel's three anchors: micro-label top-left, lockup +
+  statement centred, domain bottom-left. The restraint is the design.
+- **No card around the form.** Fields are filled and the paper is warm, so
+  the column already reads as one object; boxing it drew a second frame
+  inside a screen already split down the middle.
+- **Figtree 800 headline at 40px** (36 below `sm`).
+- **Uppercase micro labels above 56px filled fields** — `components/auth/auth-field.tsx`.
+- **Full-pill coral submit with the coral bloom** — `components/auth/auth-submit.tsx`.
+  The only pill and the only glow in the product; both are load-bearing
+  because this page has no card, no shadow and no other saturated colour.
+- **Footer travels WITH the form**, inside the centred 440px column behind a
+  hairline, sharing its left edge. Pinned to the bottom of the viewport (v4)
+  it drifted from what it belongs to and read as debris — that was the
+  original reported bug and this is the second, better fix.
 - **[scope] Privacy/Terms links omitted** — `/privacy` and `/terms` do not
-  exist. The layout leaves room; add the routes, then add the links.
+  exist. The measure leaves room; add the routes, then add the links.
 
 ---
 
@@ -158,12 +219,19 @@ Layout: **stat cards → wide chart + narrow live feed → recent orders table.*
 
 ## QA method
 
-- **Contrast**: a script parses `:root` and `.dark` out of `app/globals.css`,
-  resolves `var()` chains, and asserts 58 pairs × 2 themes against 4.5:1 (text)
-  or 3:1 (non-text). Re-run it after ANY token change.
+- **Contrast**: `node scripts/contrast-audit.mjs` parses `:root` and `.dark`
+  out of `app/globals.css`, resolves `var()` chains, and asserts 90 pairs ×
+  2 themes against 4.5:1 (text) or 3:1 (non-text). Re-run it after ANY token
+  change. It exists because eyeballing does not work — the first run of the
+  v4 palette had ten failures in it, every one of which looked fine.
 - **Visual**: Playwright against `next start -p 3100` with a service-role QA
   admin, screenshotting 1440 light, 1440 dark, 1440 collapsed-rail, and 390.
   Asserts `scrollWidth - clientWidth === 0` and captures console errors.
   **Always `next build` before shooting** — `next start` serves the last build,
   and stale artefacts have produced false results twice on this project.
+  **And check the port is actually free first** (`ss -ltnp | grep 3100`): a
+  server left running from before a rebuild keeps answering with chunk names
+  the rebuild invalidated, which shows up as a wall of MIME-type console
+  errors and Times New Roman in the screenshots. Note that `pkill -f "next
+  start"` matches its own command line and kills the shell — kill the PID.
 - **Clean up QA rows** (delete the QA auth user) when finished.
