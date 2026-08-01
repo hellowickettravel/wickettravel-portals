@@ -60,7 +60,7 @@ export default async function AdminCustomerDetailPage({
         <div className="space-y-5">
           <Link
             href="/admin/customers"
-            className="inline-flex items-center gap-1.5 rounded-chip text-[14.5px] font-semibold text-ocean underline-offset-[3px] outline-none transition-colors duration-150 ease-brand hover:text-ocean-deep hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-flame"
+            className="inline-flex items-center gap-1.5 rounded-chip text-[14.5px] font-semibold text-marine underline-offset-[3px] outline-none transition-colors duration-150 ease-brand hover:text-marine-deep hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-coral"
           >
             <ArrowLeft className="size-4" />
             Back to customers
@@ -68,14 +68,14 @@ export default async function AdminCustomerDetailPage({
 
           {/* Who this is */}
           <div className="flex flex-wrap items-start gap-4">
-            <IconChip tone="ocean" className="size-[54px] [&_svg]:size-6">
+            <IconChip tone="marine" className="size-[54px] [&_svg]:size-6">
               <User />
             </IconChip>
             <div className="min-w-0">
               <div className="flex flex-wrap items-center gap-3">
                 {/* Matches <PageHeader>'s h1 exactly — Fraunces comes from
                     the base rule, so only size and weight are stated. */}
-                <h1 className="text-[27px] leading-[1.18] font-semibold text-tx-head sm:text-[36px] sm:leading-[1.1]">
+                <h1 className="text-[22px] leading-[1.2] font-semibold text-tx-head sm:text-[24px]">
                   {customer.name || "Unnamed customer"}
                 </h1>
                 <StatusBadge tone={customer.profile_id ? "green" : "slate"}>
@@ -102,7 +102,7 @@ export default async function AdminCustomerDetailPage({
 
         <div className="grid grid-cols-1 gap-5 sm:grid-cols-3">
           <StatCard
-            tone="ocean"
+            tone="marine"
             icon={Plane}
             label="Orders"
             value={num(orders.length)}
@@ -159,9 +159,9 @@ export default async function AdminCustomerDetailPage({
                 <li key={c.id}>
                   <Link
                     href={`/admin/messages/${c.id}`}
-                    className="flex items-center gap-4 px-5 py-3.5 outline-none transition-colors duration-150 ease-brand hover:bg-sand focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-flame"
+                    className="flex items-center gap-4 px-5 py-3.5 outline-none transition-colors duration-150 ease-brand hover:bg-sunk focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-coral"
                   >
-                    <IconChip tone="ocean" className="size-9 rounded-chip [&_svg]:size-4">
+                    <IconChip tone="marine" className="size-9 rounded-chip [&_svg]:size-4">
                       <MessageSquare />
                     </IconChip>
                     <div className="min-w-0 flex-1">

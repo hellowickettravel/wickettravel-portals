@@ -48,7 +48,7 @@ export function RideCard({
         {showStatus ? (
           <RideStatusBadge stage={ride.stage} />
         ) : (
-          <span className="inline-flex items-center gap-1 rounded-chip bg-sky-tint px-2.5 py-1 text-xs font-medium text-ocean">
+          <span className="inline-flex items-center gap-1 rounded-chip bg-marine-tint px-2.5 py-1 text-xs font-medium text-marine">
             {ride.vehicleType}
           </span>
         )}
@@ -57,7 +57,7 @@ export function RideCard({
       {/* Route */}
       <div className="mt-3 space-y-2">
         <div className="flex items-start gap-2.5">
-          <span className="mt-0.5 flex size-6 shrink-0 items-center justify-center rounded-control bg-ocean/10 text-ocean">
+          <span className="mt-0.5 flex size-6 shrink-0 items-center justify-center rounded-control bg-marine/10 text-marine">
             <Plane className="size-3.5 -rotate-45" />
           </span>
           <div className="min-w-0">
@@ -72,7 +72,7 @@ export function RideCard({
         </div>
         <div className="ml-3 h-3 border-l border-dashed border-line-strong" />
         <div className="flex items-start gap-2.5">
-          <span className="mt-0.5 flex size-6 shrink-0 items-center justify-center rounded-control bg-flame/10 text-flame-hover">
+          <span className="mt-0.5 flex size-6 shrink-0 items-center justify-center rounded-control bg-coral/10 text-coral-hover">
             <MapPin className="size-3.5" />
           </span>
           <div className="min-w-0">
@@ -114,7 +114,7 @@ export function RideCard({
           <p className="text-[11px] text-muted-foreground">You earn {inr(net)} after fee</p>
         </div>
         {href ? (
-          <span className="inline-flex items-center gap-1 text-sm font-medium text-ocean">
+          <span className="inline-flex items-center gap-1 text-sm font-medium text-marine">
             Details <ArrowRight className="size-4" />
           </span>
         ) : null}
@@ -125,14 +125,14 @@ export function RideCard({
   return (
     <div
       className={cn(
-        "rounded-surface bg-card p-4 border border-line shadow-lift transition-shadow",
+        "rounded-card bg-card p-4 border border-line shadow-card transition-shadow",
         className
       )}
     >
       {href ? (
         <Link
           href={href}
-          className="block rounded-control outline-none focus-visible:ring-2 focus-visible:ring-ocean/40"
+          className="block rounded-control outline-none focus-visible:ring-2 focus-visible:ring-marine/40"
         >
           {body}
         </Link>

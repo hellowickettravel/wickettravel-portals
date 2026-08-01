@@ -92,9 +92,9 @@ function DesktopSidebar({ pathname }: { pathname: string }) {
               key={item.href}
               href={item.href}
               className={cn(
-                "flex h-11 items-center gap-3 rounded-control px-[13px] text-[15px] font-medium outline-none transition-colors duration-150 ease-brand focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-flame",
+                "flex h-11 items-center gap-3 rounded-control px-[13px] text-[15px] font-medium outline-none transition-colors duration-150 ease-brand focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-coral",
                 active
-                  ? "bg-surface font-semibold text-ocean [&_svg]:text-flame"
+                  ? "bg-surface font-semibold text-marine [&_svg]:text-coral"
                   : "text-white/85 hover:bg-white/10 hover:text-white"
               )}
             >
@@ -109,7 +109,7 @@ function DesktopSidebar({ pathname }: { pathname: string }) {
         <form action={signOut}>
           <button
             type="submit"
-            className="flex h-11 w-full items-center gap-3 rounded-control px-[13px] text-[15px] font-medium text-white/85 outline-none transition-colors duration-150 ease-brand hover:bg-white/10 hover:text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-flame"
+            className="flex h-11 w-full items-center gap-3 rounded-control px-[13px] text-[15px] font-medium text-white/85 outline-none transition-colors duration-150 ease-brand hover:bg-white/10 hover:text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-coral"
           >
             <LogOut className="size-[19px]" />
             Sign out
@@ -141,12 +141,12 @@ function MobileTabBar({ pathname }: { pathname: string }) {
       <Link
         href={href}
         className={cn(
-          "flex min-h-[44px] flex-1 flex-col items-center justify-center gap-0.5 rounded-control py-1.5 text-[11px] font-medium outline-none transition-colors focus-visible:ring-2 focus-visible:ring-ocean/40",
-          active ? "text-flame" : "text-muted-foreground"
+          "flex min-h-[44px] flex-1 flex-col items-center justify-center gap-0.5 rounded-control py-1.5 text-[11px] font-medium outline-none transition-colors focus-visible:ring-2 focus-visible:ring-marine/40",
+          active ? "text-coral" : "text-muted-foreground"
         )}
         aria-current={active ? "page" : undefined}
       >
-        <Icon className={cn("size-[22px]", active && "fill-flame/10")} />
+        <Icon className={cn("size-[22px]", active && "fill-coral/10")} />
         {label}
       </Link>
     );
@@ -169,7 +169,7 @@ function MobileTabBar({ pathname }: { pathname: string }) {
             aria-label={TABS.center.label}
             aria-current={bookActive ? "page" : undefined}
             className={cn(
-              "-mt-6 flex size-14 flex-col items-center justify-center rounded-icon bg-flame text-tx-invert outline-none ring-4 ring-white transition-transform active:scale-95 focus-visible:ring-flame/50"
+              "-mt-6 flex size-14 flex-col items-center justify-center rounded-icon bg-coral text-tx-invert outline-none ring-4 ring-white transition-transform active:scale-95 focus-visible:ring-coral/50"
             )}
           >
             <CenterIcon className="size-6 -rotate-45" />
@@ -212,9 +212,9 @@ export function CustomerShell({
           <div className="flex items-center gap-1">
             <NotificationsBell userId={userId} portal="customer" />
             <DropdownMenu>
-              <DropdownMenuTrigger className="flex items-center gap-2.5 rounded-control py-1 pl-1 pr-2 outline-none transition-colors hover:bg-sunk focus-visible:ring-[3px] focus-visible:ring-ocean/30">
+              <DropdownMenuTrigger className="flex items-center gap-2.5 rounded-control py-1 pl-1 pr-2 outline-none transition-colors hover:bg-sunk focus-visible:ring-[3px] focus-visible:ring-marine/30">
                 <Avatar className="size-9">
-                  <AvatarFallback className="bg-sky-tint text-sm font-semibold text-ocean-deep">
+                  <AvatarFallback className="bg-marine-tint text-sm font-semibold text-marine-deep">
                     {initialsOf(userName)}
                   </AvatarFallback>
                 </Avatar>

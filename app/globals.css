@@ -2,61 +2,67 @@
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
 
-/* Light only. `dark:` utilities are scoped to a `.dark` ancestor that is never
-   rendered, so OS dark mode can never flip the app. Do not add a .dark block. */
+/* Dark mode is a `.dark` class on <html>, set before first paint by the
+   inline script in app/layout.tsx. It is a real, shipped theme — not a
+   stub — so every token below is defined twice. */
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
 
-  /* ── Fonts (v3 §09) ───────────────────────────────────────
-     Manrope does all interface work. Fraunces is the brand voice and
-     appears ONLY at display sizes — page titles, stat metrics, auth
-     headlines, empty states. IBM Plex Mono 500 carries codes, refs and
-     uppercase micro-labels. Three faces, three jobs, no overlap. */
-  --font-sans: var(--font-manrope);
-  --font-display: var(--font-fraunces);
+  /* ── Faces (v4 §1) ────────────────────────────────────────
+     Inter does everything. Source Serif 4 appears on the three auth
+     headlines and nowhere else. Plex Mono carries codes only — order
+     numbers, PNRs, airport codes — never labels or headings. */
+  --font-sans: var(--font-inter);
+  --font-serif: var(--font-source-serif);
   --font-mono: var(--font-plex-mono);
 
   /* ── Tracking ─────────────────────────────────────────────
-     Fraunces is drawn generously, so display type tightens harder than a
-     grotesque would. Manrope runs slightly open at UI sizes. */
-  --tracking-display: -0.022em; /* Fraunces, 28px+ */
-  --tracking-heading: -0.014em; /* h2–h4 in Manrope */
-  --tracking-ui: 0; /* Manrope is already even at 13–16px */
-  --tracking-micro: 0.11em; /* Plex Mono uppercase */
+     Inter needs negative tracking as it gets bigger and slightly positive
+     tracking as it gets smaller. These are the only four values. */
+  --tracking-display: -0.021em; /* 28px+ */
+  --tracking-heading: -0.013em; /* 18–27px */
+  --tracking-ui: -0.005em; /* 13–17px */
+  --tracking-micro: 0.06em; /* uppercase micro-labels */
 
-  /* ── Structure — blue ── */
-  --color-ocean: var(--ocean);
-  --color-ocean-deep: var(--ocean-deep);
-  --color-ocean-ink: var(--ocean-ink);
-  --color-sky-tint: var(--sky-tint);
-  --color-sky-line: var(--sky-line);
-  --color-sky-chip: var(--sky-chip);
+  /* ── Brand: marine ── */
+  --color-marine: var(--marine);
+  --color-marine-deep: var(--marine-deep);
+  --color-marine-ink: var(--marine-ink);
+  --color-marine-tint: var(--marine-tint);
+  --color-marine-line: var(--marine-line);
+  --color-marine-chip: var(--marine-chip);
 
-  /* ── Action — orange ── */
-  --color-flame: var(--flame);
-  --color-flame-hover: var(--flame-hover);
-  --color-flame-vivid: var(--flame-vivid);
-  --color-flame-tint: var(--flame-tint);
-  --color-flame-line: var(--flame-line);
-  --color-flame-chip: var(--flame-chip);
+  /* ── Accent: coral ── */
+  --color-coral: var(--coral);
+  --color-coral-hover: var(--coral-hover);
+  --color-coral-press: var(--coral-press);
+  --color-coral-ink: var(--coral-ink);
+  --color-coral-vivid: var(--coral-vivid);
+  --color-coral-tint: var(--coral-tint);
+  --color-coral-line: var(--coral-line);
+  --color-coral-chip: var(--coral-chip);
 
-  /* ── Data hues ── */
+  /* ── Data hues — the hue is fixed by meaning ── */
   --color-gold: var(--gold);
+  --color-gold-ink: var(--gold-ink);
   --color-gold-tint: var(--gold-tint);
   --color-gold-line: var(--gold-line);
   --color-gold-chip: var(--gold-chip);
   --color-jade: var(--jade);
+  --color-jade-ink: var(--jade-ink);
   --color-jade-tint: var(--jade-tint);
   --color-jade-line: var(--jade-line);
   --color-jade-chip: var(--jade-chip);
   --color-violet: var(--violet);
+  --color-violet-ink: var(--violet-ink);
   --color-violet-tint: var(--violet-tint);
   --color-violet-line: var(--violet-line);
   --color-violet-chip: var(--violet-chip);
   --color-ruby: var(--ruby);
+  --color-ruby-ink: var(--ruby-ink);
   --color-ruby-tint: var(--ruby-tint);
   --color-ruby-line: var(--ruby-line);
   --color-ruby-chip: var(--ruby-chip);
@@ -64,15 +70,20 @@
   /* ── Surfaces ── */
   --color-canvas: var(--canvas);
   --color-surface: var(--surface);
-  --color-sunk: var(--surface-sunk);
-  --color-sand: var(--sand);
-  --color-sand-deep: var(--sand-deep);
+  --color-sunk: var(--surface-2);
+  --color-pressed: var(--surface-3);
+  --color-field: var(--field);
+  --color-rail: var(--rail);
+  --color-rail-deep: var(--rail-deep);
+  --color-rail-accent: var(--rail-accent);
+  --color-coral-on-rail: var(--coral-on-rail);
 
   /* ── Lines ── */
   --color-line: var(--line);
   --color-line-strong: var(--line-strong);
   --color-line-faint: var(--line-faint);
   --color-line-hover: var(--line-hover);
+  --color-field-border: var(--field-border);
 
   /* ── Text ── */
   --color-tx-head: var(--tx-head);
@@ -80,23 +91,29 @@
   --color-tx-muted: var(--tx-muted);
   --color-tx-faint: var(--tx-faint);
   --color-tx-invert: var(--tx-invert);
-  --color-tx-invert-2: var(--tx-invert-2);
-  --color-tx-invert-3: var(--tx-invert-3);
+  --color-tx-rail: var(--tx-rail);
+  --color-tx-rail-dim: var(--tx-rail-dim);
 
-  /* ── Radius: one value per element type, no asymmetry ── */
-  --radius-surface: var(--r-surface);
-  --radius-surface-lg: var(--r-surface-lg);
+  /* ── Radius (v4 §4) — soft: 10 controls, 16 cards, 8 chips ── */
   --radius-control: var(--r-control);
+  --radius-card: var(--r-card);
+  --radius-panel: var(--r-panel);
   --radius-chip: var(--r-chip);
   --radius-icon: var(--r-icon);
 
-  /* ── Depth ── */
-  --shadow-lift: var(--lift-1);
-  --shadow-lift-lg: var(--lift-2);
-  --shadow-lift-in: var(--lift-in);
+  /* ── Depth (v4 §5) — border + a whisper on cards ── */
+  --shadow-card: var(--elev-card);
+  --shadow-pop: var(--elev-pop);
+  --shadow-deep: var(--elev-deep);
 
-  /* ── Motion ── */
+  /* ── Motion (v4 §13) ── */
   --ease-brand: var(--ease);
+
+  /* ── Layout constants (v4 §14) ── */
+  --spacing-rail: 240px;
+  --spacing-rail-collapsed: 56px;
+  --spacing-topbar: 56px;
+  --spacing-content: 1440px;
 
   /* ── shadcn/ui theme surface ── */
   --color-sidebar-ring: var(--sidebar-ring);
@@ -128,166 +145,259 @@
   --color-popover: var(--popover);
   --color-card-foreground: var(--card-foreground);
   --color-card: var(--card);
-  /* Tailwind's own radius aliases are pinned onto the five system values, so a
-     stray `rounded-xl` from a shadcn primitive still lands on a system corner
-     rather than inventing a sixth one. */
+  /* Tailwind's own radius aliases pinned onto the system values, so a stray
+     `rounded-xl` from a shadcn primitive lands on a system corner. */
   --radius-sm: var(--r-chip); /* 8 */
-  --radius-md: var(--r-control); /* 12 */
-  --radius-lg: var(--r-control); /* 12 */
-  --radius-xl: var(--r-surface); /* 16 */
-  --radius-2xl: var(--r-surface); /* 16 */
-  --radius-3xl: var(--r-surface-lg); /* 22 */
-  --radius-4xl: var(--r-surface-lg); /* 22 */
+  --radius-md: var(--r-control); /* 10 */
+  --radius-lg: var(--r-control); /* 10 */
+  --radius-xl: var(--r-card); /* 16 */
+  --radius-2xl: var(--r-card); /* 16 */
+  --radius-3xl: var(--r-panel); /* 20 */
+  --radius-4xl: var(--r-panel); /* 20 */
 }
 
 /* =========================================================
-   WICKET TRAVEL — DESIGN SYSTEM v3. LIGHT ONLY.
+   WICKET TRAVEL — DESIGN SYSTEM v4
    Source of truth: DESIGN_SYSTEM.md
 
-   Warm paper, deep ocean, one flame.
-   The room is warm sand; the structure is deep blue; a single orange
-   does the asking. Warmth comes from the NEUTRALS, not from tinting
-   everything orange — that is why the canvas is sand and not blue-grey.
+   Marine and coral, on clean paper.
+   Deep marine is the structure. One coral is the ask. The paper stays
+   neutral so both of them read true — warmth comes from the accent and
+   from the warm-tinted shadows, not from tinting the whole room.
 
-   No gradients. No visible scrollbars. No asymmetric corners.
+   Compact density. No gradients. No visible scrollbars.
+   Ships light AND dark; every token below is defined in both.
    ========================================================= */
 :root {
   color-scheme: light;
 
-  /* — structure: blue. Deeper and richer than v2 so white type on the
-       rail rings out and the navy reads as considered, not corporate. — */
-  --ocean: #12547f;
-  --ocean-deep: #0d4166;
-  --ocean-ink: #082f4b; /* sidebar base */
-  --sky-tint: #ecf3f9;
-  --sky-line: #d2e3f1;
+  /* — brand: marine. #12628F carries white at 6.6:1, so it is safe as a
+       sidebar, a button and a chart series all at once. — */
+  --marine: #12628f;
+  --marine-deep: #0c4a6e;
+  --marine-ink: #0c4a6e; /* marine used as type/icon on a light surface */
+  --marine-tint: #e8f1f7;
+  --marine-line: #c9deec;
+  --marine-chip: #d6e7f2;
 
-  /* — action: orange. Two roles, and they are not interchangeable.
-       `flame` is the accessible FILL — white on it clears 4.5:1, so it
-       is the only orange allowed under small text or as a button.
-       `flame-vivid` is the eye-catch, for graphics, icons on tints and
-       accents where nothing small sits on top. — */
-  --flame: #c24310;
-  --flame-hover: #a5380c;
-  --flame-vivid: #f0761c; /* graphics only — fails AA for small text */
-  --flame-tint: #fdf0e6;
-  --flame-line: #f6d6bc;
+  /* — accent: coral. Two roles that are NOT interchangeable.
+       `coral` is the accessible FILL: white on it clears 4.5:1, so it is
+       the only coral allowed under a button label.
+       `coral-vivid` is the brighter brand orange — it clears 3:1, which
+       makes it legal for edge bars, dots, icons and chart marks, and
+       illegal for small text. — */
+  --coral: #c4401c;
+  --coral-hover: #a83614;
+  --coral-press: #8f2d10;
+  --coral-ink: #b23a14; /* coral as type on a light surface */
+  --coral-vivid: #e2542c; /* graphics only — fails AA for small text */
+  --coral-tint: #fdede7;
+  --coral-line: #f7cfc0;
+  --coral-chip: #fadcd0;
 
-  /* — data: the hue is fixed by meaning, on every screen — */
-  --gold: #975f0a; /* money — dark enough to clear AA on its own tint */
-  --gold-tint: #fbf2df;
-  --gold-line: #eedcb4;
-  --jade: #0b6f5f; /* live, confirmed */
-  --jade-tint: #e2f1ee;
+  /* — data: fixed by meaning, on every screen, forever — */
+  --gold: #b07d18; /* money */
+  --gold-ink: #8a5e08;
+  --gold-tint: #fbf3e2;
+  --gold-line: #eddcb8;
+  --gold-chip: #f5e5c6;
+  --jade: #0f8a72; /* live, confirmed */
+  --jade-ink: #0a6553;
+  --jade-tint: #e4f2ef;
   --jade-line: #bee0d8;
-  --violet: #4b4bb8; /* waiting */
-  --violet-tint: #ededfb;
+  --jade-chip: #cfe8e2;
+  --violet: #5a58cc; /* waiting */
+  --violet-ink: #4543ab;
+  --violet-tint: #eeeefb;
   --violet-line: #d6d6f5;
-  --ruby: #a82a3f; /* attention */
-  --ruby-tint: #fbebee;
+  --violet-chip: #e2e2f8;
+  --ruby: #c33049; /* attention */
+  --ruby-ink: #9e2338;
+  --ruby-tint: #fceef0;
   --ruby-line: #f2cdd4;
+  --ruby-chip: #f7d9de;
 
-  /* — icon-chip fills: one step deeper than the tint, so a chip still
-       separates when it sits on a stat card painted in its own tint — */
-  --sky-chip: #dbe9f5;
-  --flame-chip: #fbe2ce;
-  --gold-chip: #f6e6c4;
-  --jade-chip: #cde7e1;
-  --violet-chip: #e0e0f8;
-  --ruby-chip: #f6d8dd;
-
-  /* — surfaces: warm. This is the change that makes the product feel
-       calm instead of clinical. The canvas is sand, cards are pure
-       white, and the white therefore reads as *lifted* without needing
-       a shadow to say so. — */
-  --canvas: #faf7f3;
+  /* — surfaces: neutral paper. Cards are pure white and therefore read as
+       lifted without needing a shadow to say so; the shadow only confirms
+       it. `field` is the filled-input rest state. — */
+  --canvas: #f6f7f9;
   --surface: #ffffff;
-  --surface-sunk: #f3eee8;
-  --sand: #f6f1ea; /* banded sections, table heads */
-  --sand-deep: #ede5da; /* pressed / selected rows */
+  --surface-2: #f1f3f6; /* table heads, banded sections */
+  --surface-3: #e8ebef; /* pressed / selected */
+  --field: #f2f4f7; /* filled input, rest */
+  --rail: #0c4a6e; /* the sidebar — solid marine */
+  --rail-deep: #072f47;
+  /* Coral is too dark to read as an accent ON the rail — #c4401c lands at
+     2.5:1 there. The active-nav edge bar therefore uses the vivid coral,
+     which clears the 3:1 required of a non-text indicator. */
+  --rail-accent: #f4734a;
+  /* Coral used as TYPE on the rail. Neither #c4401c (1.9:1) nor the vivid
+     #e2542c (2.5:1) nor even the edge-bar #f4734a (3.3:1) clears the 4.5:1
+     an 11px eyebrow owes on deep marine, so text on the rail gets its own
+     value. It is pale by necessity, and it is the only coral allowed to
+     carry words on a marine ground. */
+  --coral-on-rail: #ffb499;
 
-  /* — lines: warm-tinted to match the paper — */
-  --line-faint: #f1ebe4;
-  --line: #e8e0d7;
-  --line-strong: #d8ccbf;
-  --line-hover: #c6b7a7;
+  /* — lines. `line*` are decorative separators and carry no contrast
+       requirement. `field-border` is different: it is the visual boundary
+       that identifies a control, so it must clear 3:1 (WCAG 1.4.11).
+       A filled field alone cannot do that — #f2f4f7 on white is 1.05:1 —
+       so filled fields carry this border as well as their fill. — */
+  --line-faint: #eef0f3;
+  --line: #e2e6eb;
+  --line-strong: #cfd5dd;
+  --line-hover: #b4bdc8;
+  --field-border: #868d96;
 
-  /* — text: navy ink rather than grey, so type belongs to the brand.
-       `muted` is set at the darkest of the six tints it can land on, so a
-       stat label clears 4.5:1 on jade AND violet AND gold without a
-       per-tone override. `faint` is NON-TEXT ONLY — decorative icons,
-       separators, disabled glyphs. It does not clear AA at any size and
-       must never carry a placeholder or a label. — */
-  --tx-head: #17293a;
-  --tx-body: #4a5563;
-  --tx-muted: #606a78;
-  --tx-faint: #8b95a1;
+  /* — text. `muted` is pinned at the darkest value that still clears
+       4.5:1 on the canvas AND on all six tints, so a label never needs a
+       per-tone override. `faint` is NON-TEXT ONLY — decorative glyphs,
+       separators, disabled icons. It carries no label, ever. — */
+  --tx-head: #101b28;
+  --tx-body: #3c4959;
+  --tx-muted: #5c6b7c;
+  --tx-faint: #8794a3;
   --tx-invert: #ffffff;
-  --tx-invert-2: #c5daea;
-  --tx-invert-3: #a7c3d9;
+  --tx-rail: #ffffff; /* type on the marine rail */
+  --tx-rail-dim: #b7d3e6;
 
-  /* — radius: one value per element type, a touch softer than v2.
-       Larger corners read warmer; asymmetry is still banned. — */
-  --r-surface: 16px; /* cards, panels, stat cards, tables, images */
-  --r-surface-lg: 22px; /* modals, hero and auth panels */
-  --r-control: 12px; /* buttons, inputs, selects, nav items */
-  --r-chip: 8px; /* badges and tags — never a pill */
-  --r-icon: 12px; /* icon chips and the monogram badge */
+  /* — radius: soft. One value per element type; no asymmetry, ever. — */
+  --r-control: 10px; /* buttons, inputs, selects, nav rows */
+  --r-card: 16px; /* cards, panels, tables */
+  --r-panel: 20px; /* modals, drawers, auth panels */
+  --r-chip: 8px; /* badges and tags */
+  --r-icon: 10px; /* icon chips */
 
-  /* — depth: warm-tinted and soft. Shadows are brown-black, never blue
-       and never neutral black, or they punch a cold hole in the sand. — */
-  --lift-1: 0 1px 2px rgba(61, 43, 28, 0.04), 0 4px 14px rgba(61, 43, 28, 0.05);
-  --lift-2: 0 2px 8px rgba(61, 43, 28, 0.06), 0 16px 34px rgba(61, 43, 28, 0.1);
-  --lift-in: inset 0 1px 2px rgba(61, 43, 28, 0.05);
+  /* — depth: a whisper on cards, real shadow only on things that float.
+       Warm-tinted, never neutral black, or it punches a cold hole. — */
+  --elev-card: 0 1px 2px rgba(16, 27, 40, 0.04), 0 2px 8px rgba(16, 27, 40, 0.04);
+  --elev-pop: 0 4px 12px rgba(16, 27, 40, 0.08), 0 12px 28px rgba(16, 27, 40, 0.08);
+  --elev-deep: 0 8px 24px rgba(16, 27, 40, 0.12), 0 24px 56px rgba(16, 27, 40, 0.16);
 
   --ease: cubic-bezier(0.22, 0.68, 0.28, 1);
 
-  /* Controls are 12px, so shadcn's radius scale starts there. */
-  --radius: 0.75rem;
+  /* Controls are 10px, so shadcn's radius scale starts there. */
+  --radius: 0.625rem;
 
-  /* ── shadcn/ui tokens → the locked palette ── */
+  /* ── shadcn/ui tokens → the palette ── */
   --background: var(--canvas);
   --foreground: var(--tx-body);
-
   --card: var(--surface);
   --card-foreground: var(--tx-body);
   --popover: var(--surface);
   --popover-foreground: var(--tx-body);
-
-  /* primary = FLAME — the main action on a screen */
-  --primary: var(--flame);
+  --primary: var(--coral);
   --primary-foreground: var(--tx-invert);
-
-  --secondary: var(--sky-tint);
-  --secondary-foreground: var(--ocean-deep);
-
-  --muted: var(--surface-sunk);
+  --secondary: var(--marine-tint);
+  --secondary-foreground: var(--marine-ink);
+  --muted: var(--surface-2);
   --muted-foreground: var(--tx-muted);
-
-  --accent: var(--sky-tint);
-  --accent-foreground: var(--ocean-deep);
-
+  --accent: var(--marine-tint);
+  --accent-foreground: var(--marine-ink);
   --destructive: var(--ruby);
-
   --border: var(--line);
-  --input: var(--line-strong);
-  --ring: var(--ocean);
-
-  --chart-1: var(--ocean);
-  --chart-2: var(--flame);
+  --input: var(--field-border);
+  --ring: #12628f;
+  --chart-1: var(--marine);
+  --chart-2: var(--coral-vivid);
   --chart-3: var(--gold);
   --chart-4: var(--jade);
   --chart-5: var(--violet);
-
-  /* Solid ocean rail for the portal shells — no gradient. */
-  --sidebar: var(--ocean);
-  --sidebar-foreground: var(--tx-invert-2);
-  --sidebar-primary: var(--flame); /* the flame icon on the active pill */
+  --sidebar: var(--rail);
+  --sidebar-foreground: var(--tx-rail-dim);
+  --sidebar-primary: var(--coral-vivid);
   --sidebar-primary-foreground: var(--tx-invert);
-  --sidebar-accent: var(--ocean-deep); /* hover row */
-  --sidebar-accent-foreground: var(--tx-invert);
-  --sidebar-border: var(--ocean-deep);
-  --sidebar-ring: var(--flame);
+  --sidebar-accent: var(--rail-deep);
+  --sidebar-accent-foreground: var(--tx-rail);
+  --sidebar-border: var(--rail-deep);
+  --sidebar-ring: var(--coral-vivid);
+}
+
+/* =========================================================
+   DARK
+   Not an inversion. The paper goes to a deep blue-black, the brand
+   colours that were fills stay fills, and every colour that was used as
+   TYPE lightens — a `-text` token is the only thing that flips direction.
+   ========================================================= */
+.dark {
+  color-scheme: dark;
+
+  --marine: #1a76a8;
+  --marine-deep: #12628f;
+  --marine-ink: #6cb8e2; /* lightened: marine as type on a dark surface */
+  --marine-tint: #14293a;
+  --marine-line: #1f3b52;
+  --marine-chip: #1a3446;
+
+  /* Coral fills do NOT lighten in dark. Every value light enough to feel
+     "dark mode correct" (#d24a20 → 4.43:1) drops white text below AA, so
+     the fill and its hover keep their light-mode values and only the
+     TYPE colour flips. Hover still darkens, in both themes. */
+  --coral: #c4401c;
+  --coral-hover: #a83614;
+  --coral-press: #8f2d10;
+  --coral-ink: #ff9068; /* lightened */
+  --coral-vivid: #f4734a;
+  --coral-tint: #2e1a13;
+  --coral-line: #4a2718;
+  --coral-chip: #3a2016;
+
+  --gold: #c68f1f;
+  --gold-ink: #e5b458;
+  --gold-tint: #2a2213;
+  --gold-line: #443519;
+  --gold-chip: #362b16;
+  --jade: #14a086;
+  --jade-ink: #4fc9b0;
+  --jade-tint: #10241f;
+  --jade-line: #1a3b33;
+  --jade-chip: #153029;
+  --violet: #7472dd; /* lightened — it is only ever a dot or an icon */
+  --violet-ink: #a3a1ef;
+  --violet-tint: #1c1b30;
+  --violet-line: #2e2d4d;
+  --violet-chip: #26253f;
+  --ruby: #c33049; /* held, like coral: it carries white on destructive */
+  --ruby-ink: #f08599;
+  --ruby-tint: #2c151a;
+  --ruby-line: #47222b;
+  --ruby-chip: #391b22;
+
+  --canvas: #0e151c;
+  --surface: #161f29;
+  --surface-2: #1d2833;
+  --surface-3: #26333f;
+  --field: #1d2833;
+  --rail: #0a1621;
+  --rail-deep: #060e16;
+  --rail-accent: #f4734a;
+  --coral-on-rail: #ffb499;
+
+  --line-faint: #1b2530;
+  --line: #26323e;
+  --line-strong: #35434f;
+  --line-hover: #485866;
+  --field-border: #6e7c8a;
+
+  /* Marine cannot go lighter without dropping white below AA on marine
+     buttons, and at #1a76a8 it lands at 2.99:1 on the sunk surface — just
+     under the 3:1 a focus ring owes. The ring therefore gets its own
+     value rather than borrowing the fill. */
+  --ring: #6cb8e2;
+
+  --tx-head: #eef2f6;
+  --tx-body: #bac5d1;
+  --tx-muted: #909dab;
+  --tx-faint: #6b7887;
+  --tx-invert: #ffffff; /* still white — coral and marine stay fills */
+  --tx-rail: #ffffff;
+  --tx-rail-dim: #8ba3b8;
+
+  /* Shadows do almost nothing on a dark canvas; separation comes from the
+     surface stepping lighter. Keep them, but shallow. */
+  --elev-card: 0 1px 2px rgba(0, 0, 0, 0.3);
+  --elev-pop: 0 4px 12px rgba(0, 0, 0, 0.4), 0 12px 28px rgba(0, 0, 0, 0.3);
+  --elev-deep: 0 8px 24px rgba(0, 0, 0, 0.5), 0 24px 56px rgba(0, 0, 0, 0.4);
 }
 
 @layer base {
@@ -296,9 +406,9 @@
   }
 
   /* ── No scrollbar is ever visible inside the app ──────────
-     v2 §02, and it is a hard rule. The document's own page scrollbar on
-     <html> is the single exception, so everything *below* the root scrolls
-     silently: sidebar, chat thread, modal body, table region, drawer. */
+     The document's own scrollbar on <html> is the single exception, so
+     everything below the root scrolls silently: rail, thread, drawer,
+     modal body, table region. */
   *:not(html):not(body) {
     scrollbar-width: none;
     -ms-overflow-style: none;
@@ -310,51 +420,46 @@
   }
 
   html {
-    color-scheme: light;
     -webkit-text-size-adjust: 100%;
   }
   body {
     background: var(--canvas);
     color: var(--tx-body);
-    font-family: var(--font-manrope), system-ui, -apple-system, sans-serif;
-    font-size: 16px;
-    line-height: 1.68;
+    font-family: var(--font-inter), system-ui, -apple-system, sans-serif;
+    /* Compact density (v4 §2). 14px base is the single change that makes
+       the whole product stop feeling magnified. */
+    font-size: 14px;
+    line-height: 1.6;
     font-weight: 400;
+    letter-spacing: -0.005em;
     -webkit-font-smoothing: antialiased;
-    /* Safety net: the page itself must never scroll sideways on mobile —
-       only opted-in elements scroll. `clip` keeps position: sticky working,
-       unlike `hidden`. */
+    /* The page itself must never scroll sideways — only opted-in elements
+       scroll. `clip` keeps position: sticky working, unlike `hidden`. */
     overflow-x: clip;
+    transition:
+      background-color 180ms var(--ease),
+      color 180ms var(--ease);
   }
-  /* h2–h4 are interface headings and stay in Manrope. Only h1 — and the
-     handful of display slots that opt in with `font-display` — get
-     Fraunces, which is what keeps the serif an accent rather than a
-     costume the whole product wears. */
+
+  /* Every heading is Inter. The serif is opted into explicitly, on three
+     auth screens, via `font-serif` — it is never inherited. */
   h1,
   h2,
   h3,
-  h4 {
-    color: var(--tx-head);
-    font-family: var(--font-manrope), system-ui, sans-serif;
-    letter-spacing: -0.014em;
-  }
-  h1 {
-    font-family: var(--font-fraunces), Georgia, serif;
-    font-optical-sizing: auto;
-    font-variation-settings:
-      "SOFT" 24,
-      "WONK" 0;
-    letter-spacing: -0.022em;
-  }
+  h4,
   h5,
   h6 {
     color: var(--tx-head);
+    font-family: var(--font-inter), system-ui, sans-serif;
+    font-weight: 600;
+    letter-spacing: -0.013em;
+  }
+  h1 {
+    letter-spacing: -0.021em;
   }
 
-  /* iOS Safari zooms the whole viewport when you focus a field whose text is
-     under 16px. Fields sit at 15.5px on the scale, so hold every control at
-     16px on phone widths. A utility still wins over this, which is why
-     `fieldClassName` and the screens' own select classes restate it. */
+  /* iOS Safari zooms the viewport when you focus a field under 16px. At
+     compact density controls sit at 14px, so hold them at 16px on phones. */
   @media (width < 40rem) {
     input,
     textarea,
@@ -363,35 +468,38 @@
     }
   }
 
-  /* One icon family, one weight (v2 ship checklist).
-     Lucide ships stroke-width="2" as a presentation attribute; this rule wins
-     over it, so every icon in the product is 1.75 without per-call-site props.
-     Sizes: 16 inline · 17 buttons · 19 nav & chips · 22 page headers. */
+  /* One icon family, one weight. Lucide ships stroke-width="2" as a
+     presentation attribute; this rule wins over it, so every icon is 1.75
+     without per-call-site props. Sizes: 15 inline · 16 buttons · 18 nav. */
   svg.lucide {
     stroke-width: 1.75;
+  }
+
+  /* Selection picks up the brand rather than the browser default. */
+  ::selection {
+    background: var(--marine-chip);
+    color: var(--tx-head);
   }
 }
 
 @layer components {
-  /* A card sitting on a white section keeps its border but drops its shadow —
-     otherwise it floats for no reason. */
+  /* A card sitting on a white section keeps its border but drops its
+     shadow — otherwise it floats for no reason. */
   [data-section-tone="white"] [data-slot="card"],
   [data-section-tone="white"] [data-slot="panel"] {
     box-shadow: none;
   }
 
   /* ── Toast ────────────────────────────────────────────────
-     Sonner renders into its own portal outside the component tree, so its
-     skin lives here rather than in a className. A toast is a popup surface:
-     14px radius, lift-2, and the same text colours as everything else. The
-     icon takes the hue of what it is telling you. */
+     Sonner portals outside the component tree, so its skin lives here.
+     Bottom-right, card radius, pop elevation, hue by meaning. */
   .cn-toast {
-    border-radius: var(--r-surface);
-    box-shadow: var(--lift-2);
-    font-family: var(--font-manrope), system-ui, sans-serif;
-    font-size: 14.5px;
-    line-height: 1.6;
-    letter-spacing: -0.002em;
+    border-radius: var(--r-card);
+    box-shadow: var(--elev-pop);
+    font-family: var(--font-inter), system-ui, sans-serif;
+    font-size: 13.5px;
+    line-height: 1.55;
+    letter-spacing: -0.005em;
   }
   .cn-toast [data-title] {
     color: var(--tx-head);
@@ -411,79 +519,66 @@
   }
   .cn-toast[data-type="info"] [data-icon],
   .cn-toast[data-type="loading"] [data-icon] {
-    color: var(--ocean);
+    color: var(--marine);
   }
-  /* The toast's own action reads as a compact secondary button. */
   .cn-toast [data-button] {
     border: 1px solid var(--line-strong);
     border-radius: var(--r-control);
     background: var(--surface);
     color: var(--tx-head);
-    font-size: 13px;
+    font-size: 12.5px;
     font-weight: 600;
-    height: 32px;
-    padding: 0 12px;
+    height: 30px;
+    padding: 0 11px;
     transition:
       background-color 150ms var(--ease),
       border-color 150ms var(--ease);
   }
   .cn-toast [data-button]:hover {
-    border-color: var(--ocean);
-    background: var(--sky-tint);
+    border-color: var(--line-hover);
+    background: var(--surface-2);
   }
 }
 
-/* Type-scale helpers ───────────────────────────────────────
+/* ── Type helpers ─────────────────────────────────────────
    Sizes not on the scale don't go on a screen. */
 
-/* Plex Mono uppercase micro-label — eyebrows, stat labels, refs. */
+/* Uppercase micro-label — eyebrows, stat labels, table heads, nav
+   section headers. Inter, not mono: mono at 11px uppercase reads as a
+   code, and these are labels. */
 @utility font-micro {
-  font-family: var(--font-plex-mono), ui-monospace, monospace;
   font-size: 11px;
-  font-weight: 500;
-  letter-spacing: 0.11em;
+  font-weight: 600;
+  letter-spacing: 0.06em;
   text-transform: uppercase;
-  line-height: 1.5;
+  line-height: 1.45;
 }
 
-/* ── The brand voice ──────────────────────────────────────
-   Fraunces, opted into explicitly. This belongs on display-size type
-   ONLY: page titles, stat metrics, auth headlines, empty-state
-   headings, big money. Never on a button, a label, a table cell or
-   anything under ~20px — the optical cut falls apart down there and it
-   starts to look like a wedding invitation.
-
-   SOFT rounds the terminals so the face reads warm rather than sharp;
-   WONK 0 keeps the tame single-storey forms instead of the quirky
-   alternates, which is what stops it feeling novelty. */
-@utility font-display {
-  font-family: var(--font-fraunces), Georgia, serif;
+/* The one serif moment: login, signup and password-reset headlines.
+   Nothing else in the product may use this. */
+@utility font-serif-display {
+  font-family: var(--font-source-serif), Georgia, serif;
   font-optical-sizing: auto;
-  font-variation-settings:
-    "SOFT" 24,
-    "WONK" 0;
-  letter-spacing: -0.022em;
+  font-weight: 600;
+  letter-spacing: -0.018em;
 }
 
-/* Display type that also has to line up in a column — stat metrics,
-   fares, big money. Fraunces ships proportional figures by default. */
-@utility font-metric {
-  font-family: var(--font-fraunces), Georgia, serif;
-  font-optical-sizing: auto;
-  font-variation-settings:
-    "SOFT" 24,
-    "WONK" 0;
+/* Codes only — order numbers, PNRs, airport codes. */
+@utility font-code {
+  font-family: var(--font-plex-mono), ui-monospace, monospace;
+  font-weight: 500;
+  letter-spacing: 0;
   font-variant-numeric: tabular-nums;
-  letter-spacing: -0.022em;
 }
 
-/* Fares, metrics and every table column of numbers. */
+/* Metrics, fares and every table column of numbers. Inter's tabular
+   figures are well drawn, so numbers no longer need a separate face. */
 @utility tabular {
   font-variant-numeric: tabular-nums;
 }
 
-/* Explicit opt-in for a silent scroll area. The global rule above already
-   covers everything below <html>; this states the intent at the call site. */
+/* Explicit opt-in for a silent scroll area — states the intent at the
+   call site; the global rule above already enforces it. */
 @utility no-bar {
   scrollbar-width: none;
   -ms-overflow-style: none;
@@ -494,7 +589,47 @@
   }
 }
 
-/* Accessibility: honour reduced-motion — neutralise entrance animations,
+/* ── Motion (v4 §13) — "moderate" ─────────────────────────
+   Content rises and fades as it lands; hover is colour only. Cards in a
+   grid stagger via an inline --i custom property. */
+@keyframes wt-rise {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@utility rise {
+  animation: wt-rise 260ms var(--ease) both;
+}
+
+@utility rise-stagger {
+  animation: wt-rise 260ms var(--ease) both;
+  animation-delay: calc(var(--i, 0) * 40ms);
+}
+
+/* The navigation progress bar (v4 §13). */
+@keyframes wt-progress {
+  0% {
+    transform: translateX(-100%);
+  }
+  50% {
+    transform: translateX(-30%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+/* Skeleton shimmer is deliberately absent — skeletons are flat, because
+   a screen full of moving gradients is noisier than one that is simply
+   waiting. See DESIGN_SYSTEM.md §13. */
+
+/* Accessibility: honour reduced-motion. Neutralise entrances,
    transitions and transforms for users who ask for less movement. */
 @media (prefers-reduced-motion: reduce) {
   *,

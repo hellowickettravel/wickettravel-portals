@@ -85,7 +85,7 @@ function headerLabel<T>(column: DataColumn<T>): string {
  *
  * Above `md` it is a real table on a panel: a `sunk` header row of Plex Mono
  * micro-labels, hairline dividers, 14px of vertical air, tabular numerals
- * wherever a column says `numeric`, and a sky-tint row hover. Below `md` the
+ * wherever a column says `numeric`, and a marine-tint row hover. Below `md` the
  * same columns stack into cards, because a table on a phone is either a
  * sideways scroll or an unreadable squeeze.
  *
@@ -135,7 +135,7 @@ export function DataTable<T>({
           {Array.from({ length: 3 }).map((_, i) => (
             <div
               key={i}
-              className="rounded-surface border border-line bg-surface p-[18px] shadow-lift"
+              className="rounded-card border border-line bg-surface p-[18px] shadow-card"
             >
               <Skeleton className="h-4 w-32" />
               <Skeleton className="mt-2 h-3 w-24" />
@@ -246,7 +246,7 @@ export function DataTable<T>({
               <Link
                 key={getRowKey(row)}
                 href={rowHref(row)}
-                className="block rounded-surface outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-flame"
+                className="block rounded-card outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-coral"
               >
                 {card}
               </Link>
@@ -258,7 +258,7 @@ export function DataTable<T>({
                 key={getRowKey(row)}
                 type="button"
                 onClick={() => onRowClick(row)}
-                className="block w-full rounded-surface text-left outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-flame"
+                className="block w-full rounded-card text-left outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-coral"
               >
                 {card}
               </button>
@@ -314,7 +314,7 @@ export function DataTable<T>({
                       {i === 0 && rowHref ? (
                         <Link
                           href={rowHref(row)}
-                          className="rounded-chip outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-flame"
+                          className="rounded-chip outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-coral"
                         >
                           {content}
                         </Link>
@@ -334,7 +334,7 @@ export function DataTable<T>({
 
       {/* Pagination keeps its own surface once the table has become cards. */}
       {footer ? (
-        <div className="mt-3 overflow-hidden rounded-surface border border-line shadow-lift md:hidden">
+        <div className="mt-3 overflow-hidden rounded-card border border-line shadow-card md:hidden">
           {footer}
         </div>
       ) : null}

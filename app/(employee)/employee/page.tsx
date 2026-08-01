@@ -88,7 +88,7 @@ export default async function EmployeeDashboardPage() {
         <SectionCard
           title="My Recent Conversations"
           action={
-            <Link href="/employee/messages" className="inline-flex items-center gap-1 text-sm font-medium text-ocean transition-colors hover:text-ocean-deep">
+            <Link href="/employee/messages" className="inline-flex items-center gap-1 text-sm font-medium text-marine transition-colors hover:text-marine-deep">
               Open inbox <ArrowRight className="size-4" />
             </Link>
           }
@@ -106,7 +106,7 @@ export default async function EmployeeDashboardPage() {
                     {c.preview ?? "No messages yet"}
                   </span>
                   {c.unreadCount > 0 ? (
-                    <span className="inline-flex min-w-5 items-center justify-center rounded-chip bg-ocean px-1.5 py-0.5 text-xs font-semibold text-tx-invert">
+                    <span className="inline-flex min-w-5 items-center justify-center rounded-chip bg-marine px-1.5 py-0.5 text-xs font-semibold text-tx-invert">
                       {c.unreadCount}
                     </span>
                   ) : null}
@@ -123,7 +123,7 @@ export default async function EmployeeDashboardPage() {
           title="My Recent Orders"
           flush
           action={
-            <Link href="/employee/orders" className="inline-flex items-center gap-1 px-6 text-sm font-medium text-ocean transition-colors hover:text-ocean-deep">
+            <Link href="/employee/orders" className="inline-flex items-center gap-1 px-6 text-sm font-medium text-marine transition-colors hover:text-marine-deep">
               View all <ArrowRight className="size-4" />
             </Link>
           }

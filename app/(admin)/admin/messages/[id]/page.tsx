@@ -33,13 +33,13 @@ export default async function AdminConversationPage({
     <div className="space-y-5">
       <Link
         href="/admin/messages"
-        className="inline-flex items-center gap-1.5 text-sm font-medium text-ocean transition-colors hover:text-ocean-deep"
+        className="inline-flex items-center gap-1.5 text-sm font-medium text-marine transition-colors hover:text-marine-deep"
       >
         <ArrowLeft className="size-4" />
         Back to messages
       </Link>
 
-      <div className="overflow-hidden rounded-surface border border-border bg-card shadow-lift">
+      <div className="overflow-hidden rounded-card border border-border bg-card shadow-card">
         {/* Header */}
         <div className="flex items-center justify-between gap-3 border-b border-border px-5 py-4">
           <div className="leading-tight">
@@ -87,9 +87,9 @@ export default async function AdminConversationPage({
                     ) : null}
                     <div
                       className={cn(
-                        "rounded-surface px-3.5 py-2 text-sm",
+                        "rounded-card px-3.5 py-2 text-sm",
                         outgoing
-                          ? "bg-ocean text-tx-invert"
+                          ? "bg-marine text-tx-invert"
                           : "border border-line bg-surface text-tx-body"
                       )}
                     >
@@ -112,7 +112,7 @@ export default async function AdminConversationPage({
 
         <div className="border-t border-border bg-muted/40 px-5 py-3 text-center text-xs text-muted-foreground">
           Read-only snapshot.{" "}
-          <Link href="/admin/messages" className="font-medium text-ocean hover:text-ocean-deep">
+          <Link href="/admin/messages" className="font-medium text-marine hover:text-marine-deep">
             Open the inbox
           </Link>{" "}
           to reply or send attachments.

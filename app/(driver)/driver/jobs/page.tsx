@@ -39,7 +39,7 @@ export default function JobBoardPage() {
       </div>
 
       {!online ? (
-        <div className="flex items-center gap-3 rounded-surface border border-gold-line bg-gold-tint px-4 py-3">
+        <div className="flex items-center gap-3 rounded-card border border-gold-line bg-gold-tint px-4 py-3">
           <WifiOff className="size-4 shrink-0 text-gold" />
           <p className="flex-1 text-xs text-gold">
             You&apos;re offline — go online to accept new rides.
@@ -64,9 +64,9 @@ export default function JobBoardPage() {
                 onClick={() => setFilter(f.value)}
                 aria-pressed={active}
                 className={cn(
-                  "inline-flex h-9 shrink-0 items-center gap-1.5 rounded-control px-3.5 text-sm font-medium outline-none transition-colors focus-visible:ring-2 focus-visible:ring-ocean/40",
+                  "inline-flex h-9 shrink-0 items-center gap-1.5 rounded-control px-3.5 text-sm font-medium outline-none transition-colors focus-visible:ring-2 focus-visible:ring-marine/40",
                   active
-                    ? "bg-ocean text-tx-invert"
+                    ? "bg-marine text-tx-invert"
                     : "bg-card text-muted-foreground ring-1 ring-inset ring-line-strong hover:text-foreground"
                 )}
               >
@@ -74,7 +74,7 @@ export default function JobBoardPage() {
                 <span
                   className={cn(
                     "rounded-chip px-1.5 py-0.5 text-[10px] font-semibold",
-                    active ? "bg-white/20 text-white" : "bg-sky-tint text-ocean-deep"
+                    active ? "bg-white/20 text-white" : "bg-marine-tint text-marine-deep"
                   )}
                 >
                   {count}
@@ -87,8 +87,8 @@ export default function JobBoardPage() {
 
       {/* Rides */}
       {filtered.length === 0 ? (
-        <div className="rounded-surface border border-dashed border-line-strong bg-sunk/60 px-6 py-14 text-center">
-          <div className="mx-auto flex size-12 items-center justify-center rounded-surface bg-sky-tint text-ocean-deep">
+        <div className="rounded-card border border-dashed border-line-strong bg-sunk/60 px-6 py-14 text-center">
+          <div className="mx-auto flex size-12 items-center justify-center rounded-card bg-marine-tint text-marine-deep">
             <Inbox className="size-6" />
           </div>
           <p className="mt-3 tracking-heading text-sm font-semibold text-tx-head">

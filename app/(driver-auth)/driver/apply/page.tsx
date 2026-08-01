@@ -88,7 +88,7 @@ export default function DriverApplyPage() {
         <div className="animate-in fade-in slide-in-from-bottom-2 duration-500 ease-out">
           {/* Intro */}
           <div className="mb-8">
-            <div className="inline-flex items-center gap-1.5 rounded-chip bg-sky-tint px-2.5 py-1 text-xs font-medium text-ocean">
+            <div className="inline-flex items-center gap-1.5 rounded-chip bg-marine-tint px-2.5 py-1 text-xs font-medium text-marine">
               <Car className="size-3.5" />
               Become a Partner
             </div>
@@ -131,7 +131,7 @@ export default function DriverApplyPage() {
               <div className="space-y-4">
                 <div className="space-y-2">
                   <Label className="text-xs font-medium uppercase tracking-wider text-tx-muted">
-                    Vehicle type <span className="text-flame-hover">*</span>
+                    Vehicle type <span className="text-coral-hover">*</span>
                   </Label>
                   <div className="grid grid-cols-3 gap-2">
                     {VEHICLE_TYPES.map((t) => {
@@ -143,9 +143,9 @@ export default function DriverApplyPage() {
                           onClick={() => setVehicleType(t)}
                           aria-pressed={active}
                           className={cn(
-                            "flex min-h-[44px] items-center justify-center rounded-surface px-2 py-2.5 text-center text-sm font-medium outline-none transition-colors focus-visible:ring-2 focus-visible:ring-ocean/40",
+                            "flex min-h-[44px] items-center justify-center rounded-card px-2 py-2.5 text-center text-sm font-medium outline-none transition-colors focus-visible:ring-2 focus-visible:ring-marine/40",
                             active
-                              ? "bg-ocean text-tx-invert"
+                              ? "bg-marine text-tx-invert"
                               : "bg-white text-muted-foreground ring-1 ring-inset ring-line-strong hover:text-foreground"
                           )}
                         >
@@ -178,7 +178,7 @@ export default function DriverApplyPage() {
               <div className="space-y-4">
                 <div className="space-y-2">
                   <Label className="text-xs font-medium uppercase tracking-wider text-tx-muted">
-                    Airports you cover <span className="text-flame-hover">*</span>
+                    Airports you cover <span className="text-coral-hover">*</span>
                   </Label>
                   <div className="space-y-2">
                     {AIRPORTS.map((a) => {
@@ -190,16 +190,16 @@ export default function DriverApplyPage() {
                           onClick={() => toggleAirport(a.code)}
                           aria-pressed={active}
                           className={cn(
-                            "flex w-full items-center gap-3 rounded-surface px-4 py-3 text-left outline-none transition-colors focus-visible:ring-2 focus-visible:ring-ocean/40",
+                            "flex w-full items-center gap-3 rounded-card px-4 py-3 text-left outline-none transition-colors focus-visible:ring-2 focus-visible:ring-marine/40",
                             active
-                              ? "bg-sky-tint ring-1 ring-inset ring-ocean/30"
+                              ? "bg-marine-tint ring-1 ring-inset ring-marine/30"
                               : "bg-white ring-1 ring-inset ring-line-strong hover:bg-sunk"
                           )}
                         >
                           <span
                             className={cn(
                               "flex size-5 shrink-0 items-center justify-center rounded-control transition-colors",
-                              active ? "bg-ocean text-white" : "ring-1 ring-inset ring-line-strong"
+                              active ? "bg-marine text-white" : "ring-1 ring-inset ring-line-strong"
                             )}
                           >
                             {active ? <Check className="size-3.5" /> : null}
@@ -238,16 +238,16 @@ export default function DriverApplyPage() {
                     <label
                       key={doc.key}
                       className={cn(
-                        "flex cursor-pointer items-center gap-3 rounded-surface border border-dashed px-4 py-3.5 outline-none transition-colors",
+                        "flex cursor-pointer items-center gap-3 rounded-card border border-dashed px-4 py-3.5 outline-none transition-colors",
                         name
                           ? "border-jade-line bg-jade-tint/60"
-                          : "border-line-strong bg-white hover:border-ocean/40 hover:bg-sunk"
+                          : "border-line-strong bg-white hover:border-marine/40 hover:bg-sunk"
                       )}
                     >
                       <span
                         className={cn(
-                          "flex size-10 shrink-0 items-center justify-center rounded-surface",
-                          name ? "bg-jade/15 text-jade" : "bg-sky-tint text-ocean-deep"
+                          "flex size-10 shrink-0 items-center justify-center rounded-card",
+                          name ? "bg-jade/15 text-jade" : "bg-marine-tint text-marine-deep"
                         )}
                       >
                         {name ? <CircleCheck className="size-5" /> : <Upload className="size-5" />}
@@ -303,7 +303,7 @@ function SubmittedState({ name, onLogin }: { name: string; onLogin: () => void }
       </header>
       <div className="flex flex-1 items-center justify-center px-6 py-12">
         <div className="w-full max-w-md text-center animate-in fade-in zoom-in-95 duration-500 ease-out">
-          <div className="mx-auto flex size-20 items-center justify-center rounded-surface-lg bg-jade-tint ring-1 ring-jade-line">
+          <div className="mx-auto flex size-20 items-center justify-center rounded-panel bg-jade-tint ring-1 ring-jade-line">
             <CircleCheck className="size-10 text-jade" />
           </div>
           <h1 className="mt-6 text-2xl font-semibold tracking-tight text-tx-head">
@@ -317,7 +317,7 @@ function SubmittedState({ name, onLogin }: { name: string; onLogin: () => void }
           </p>
 
           {/* Timeline */}
-          <div className="mt-8 space-y-3 rounded-surface bg-card p-5 text-left border border-line shadow-lift">
+          <div className="mt-8 space-y-3 rounded-card bg-card p-5 text-left border border-line shadow-card">
             <TimelineRow icon={CircleCheck} tone="done" title="Application received" sub="We've got your details" />
             <TimelineRow icon={Clock3} tone="current" title="Under review" sub="Verifying documents & vehicle" />
             <TimelineRow icon={ShieldCheck} tone="upcoming" title="Approved & activated" sub="You'll get a call + SMS" />
@@ -394,9 +394,9 @@ function FormSection({
   children: React.ReactNode;
 }) {
   return (
-    <section className="rounded-surface bg-card p-5 border border-line shadow-lift sm:p-6">
+    <section className="rounded-card bg-card p-5 border border-line shadow-card sm:p-6">
       <div className="mb-4 flex items-center gap-3">
-        <span className="flex size-9 items-center justify-center rounded-surface bg-ocean/10 text-ocean">
+        <span className="flex size-9 items-center justify-center rounded-card bg-marine/10 text-marine">
           <Icon className="size-[18px]" />
         </span>
         <div>
@@ -425,7 +425,7 @@ function Field({
   return (
     <div className="space-y-2">
       <Label htmlFor={htmlFor} className="text-xs font-medium uppercase tracking-wider text-tx-muted">
-        {label} {required ? <span className="text-flame-hover">*</span> : null}
+        {label} {required ? <span className="text-coral-hover">*</span> : null}
       </Label>
       {children}
     </div>

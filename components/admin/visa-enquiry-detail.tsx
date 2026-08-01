@@ -38,7 +38,7 @@ import { fmtDate, fmtRelative } from "@/lib/format";
 import { cn } from "@/lib/utils";
 
 const selectClass =
-  "h-10 rounded-control border border-input bg-card px-3 text-base text-foreground outline-none transition-colors focus-visible:border-ocean focus-visible:ring-[3px] focus-visible:ring-ocean/25 sm:text-sm";
+  "h-10 rounded-control border border-input bg-card px-3 text-base text-foreground outline-none transition-colors focus-visible:border-marine focus-visible:ring-[3px] focus-visible:ring-marine/25 sm:text-sm";
 
 /** One label/value pair inside a section's definition grid. */
 function Field({
@@ -157,16 +157,16 @@ export function VisaEnquiryDetail({ detail }: { detail: Detail }) {
     <div className="space-y-5">
       <Link
         href="/admin/visa-queries"
-        className="inline-flex items-center gap-1.5 text-sm font-medium text-ocean transition-colors hover:text-ocean-deep"
+        className="inline-flex items-center gap-1.5 text-sm font-medium text-marine transition-colors hover:text-marine-deep"
       >
         <ArrowLeft className="size-4" />
         Back to visa queries
       </Link>
 
       {/* Header */}
-      <div className="flex flex-col gap-4 rounded-surface border border-border bg-card p-5 shadow-lift sm:flex-row sm:items-center sm:justify-between">
+      <div className="flex flex-col gap-4 rounded-card border border-border bg-card p-5 shadow-card sm:flex-row sm:items-center sm:justify-between">
         <div className="flex items-center gap-3">
-          <div className="flex size-11 shrink-0 items-center justify-center rounded-surface bg-sky-tint text-ocean-deep">
+          <div className="flex size-11 shrink-0 items-center justify-center rounded-card bg-marine-tint text-marine-deep">
             <Stamp className="size-5" />
           </div>
           <div className="leading-tight">
@@ -216,11 +216,11 @@ export function VisaEnquiryDetail({ detail }: { detail: Detail }) {
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div className="space-y-1 text-sm">
             <p className="flex items-center gap-2 text-foreground">
-              <Mail className="size-4 text-ocean" />
+              <Mail className="size-4 text-marine" />
               {enquiry.email}
             </p>
             <p className="flex items-center gap-2 text-foreground">
-              <Phone className="size-4 text-ocean" />
+              <Phone className="size-4 text-marine" />
               {enquiry.phone}
             </p>
           </div>
@@ -230,7 +230,7 @@ export function VisaEnquiryDetail({ detail }: { detail: Detail }) {
               return (
                 <span key={method} className="inline-flex items-center gap-1.5">
                   <Button
-                    variant={isPreferred ? "ocean" : "outline"}
+                    variant={isPreferred ? "marine" : "outline"}
                     size="lg"
                     render={
                       <a
@@ -360,7 +360,7 @@ export function VisaEnquiryDetail({ detail }: { detail: Detail }) {
           description="Uploaded with the application. Links are private, short-lived signed URLs."
         >
           {enquiry.additional_notes ? (
-            <div className="mb-4 rounded-surface bg-sunk p-3.5 text-sm text-foreground">
+            <div className="mb-4 rounded-card bg-sunk p-3.5 text-sm text-foreground">
               <p className="mb-1 text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
                 Applicant’s note
               </p>
@@ -378,9 +378,9 @@ export function VisaEnquiryDetail({ detail }: { detail: Detail }) {
               {documents.map((doc) => (
                 <li
                   key={doc.url}
-                  className="flex items-center gap-3 rounded-surface border border-border bg-card p-3"
+                  className="flex items-center gap-3 rounded-card border border-border bg-card p-3"
                 >
-                  <div className="flex size-9 shrink-0 items-center justify-center rounded-control bg-sky-tint text-ocean-deep">
+                  <div className="flex size-9 shrink-0 items-center justify-center rounded-control bg-marine-tint text-marine-deep">
                     <FileText className="size-4" />
                   </div>
                   <div className="min-w-0 flex-1">
@@ -433,7 +433,7 @@ export function VisaEnquiryDetail({ detail }: { detail: Detail }) {
                 {notes.map((note) => (
                   <li
                     key={note.id}
-                    className="rounded-surface bg-sunk p-3.5"
+                    className="rounded-card bg-sunk p-3.5"
                   >
                     <p className="whitespace-pre-wrap break-words text-sm text-foreground">
                       {note.body}

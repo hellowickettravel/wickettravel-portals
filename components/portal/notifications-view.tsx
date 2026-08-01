@@ -176,7 +176,7 @@ export function NotificationsView({
   return (
     <div className="space-y-6">
       <div className="flex flex-col gap-1">
-        <p className="text-[11px] font-semibold uppercase tracking-wide text-ocean">
+        <p className="text-[11px] font-semibold uppercase tracking-wide text-marine">
           Activity
         </p>
         <div className="flex flex-wrap items-center justify-between gap-3">
@@ -193,7 +193,7 @@ export function NotificationsView({
               type="button"
               onClick={() => readAllMutation.mutate()}
               disabled={readAllMutation.isPending}
-              className="inline-flex items-center gap-1.5 rounded-control border border-border bg-card px-3 py-2 text-sm font-medium text-foreground transition-colors hover:border-ocean hover:text-ocean disabled:opacity-50"
+              className="inline-flex items-center gap-1.5 rounded-control border border-border bg-card px-3 py-2 text-sm font-medium text-foreground transition-colors hover:border-marine hover:text-marine disabled:opacity-50"
             >
               <CheckCheck className="size-4" />
               Mark all read
@@ -203,7 +203,7 @@ export function NotificationsView({
       </div>
 
       {/* Filters */}
-      <div className="inline-flex items-center gap-1 rounded-surface bg-muted p-1">
+      <div className="inline-flex items-center gap-1 rounded-card bg-muted p-1">
         {TABS.map((t) => (
           <button
             key={t.value}
@@ -211,7 +211,7 @@ export function NotificationsView({
             className={cn(
               "inline-flex items-center gap-1.5 rounded-control px-3.5 py-1.5 text-sm font-medium transition-colors",
               filter === t.value
-                ? "bg-ocean text-tx-invert"
+                ? "bg-marine text-tx-invert"
                 : "text-muted-foreground hover:text-foreground"
             )}
           >
@@ -221,7 +221,7 @@ export function NotificationsView({
                 "inline-flex min-w-5 items-center justify-center rounded-chip px-1.5 py-0.5 text-[11px] font-semibold tabular-nums leading-none",
                 filter === t.value
                   ? "bg-white/25 text-white"
-                  : "bg-sky-tint text-ocean-deep"
+                  : "bg-marine-tint text-marine-deep"
               )}
             >
               {t.count}
@@ -231,7 +231,7 @@ export function NotificationsView({
       </div>
 
       {/* List */}
-      <div className="overflow-hidden rounded-surface border border-border bg-card shadow-lift">
+      <div className="overflow-hidden rounded-card border border-border bg-card shadow-card">
         {isLoading ? (
           <div className="flex items-center justify-center gap-2 px-6 py-16 text-sm text-muted-foreground">
             <RefreshCw className="size-4 animate-spin" />
@@ -239,7 +239,7 @@ export function NotificationsView({
           </div>
         ) : visible.length === 0 ? (
           <div className="flex flex-col items-center gap-2 px-6 py-16 text-center">
-            <div className="flex size-12 items-center justify-center rounded-surface bg-sky-tint text-ocean-deep">
+            <div className="flex size-12 items-center justify-center rounded-card bg-marine-tint text-marine-deep">
               <Inbox className="size-6" />
             </div>
             <p className="tracking-heading text-base font-semibold text-foreground">
@@ -270,7 +270,7 @@ export function NotificationsView({
                   key={n.id}
                   className={cn(
                     "flex items-start gap-3 px-4 py-3.5 transition-colors hover:bg-sunk sm:px-5",
-                    !n.is_read && "bg-sky-tint/40"
+                    !n.is_read && "bg-marine-tint/40"
                   )}
                 >
                   <button
@@ -280,7 +280,7 @@ export function NotificationsView({
                     }
                     className="flex min-w-0 flex-1 items-start gap-3 text-left outline-none"
                   >
-                    <div className="mt-0.5 flex size-9 shrink-0 items-center justify-center rounded-control bg-sky-tint text-ocean-deep">
+                    <div className="mt-0.5 flex size-9 shrink-0 items-center justify-center rounded-control bg-marine-tint text-marine-deep">
                       <Icon className="size-[18px]" />
                     </div>
                     <div className="min-w-0 flex-1">
@@ -289,7 +289,7 @@ export function NotificationsView({
                           {titleLine}
                         </p>
                         {!n.is_read ? (
-                          <span className="size-2 shrink-0 rounded-full bg-ocean" />
+                          <span className="size-2 shrink-0 rounded-full bg-marine" />
                         ) : null}
                       </div>
                       {n.body ? (
@@ -310,7 +310,7 @@ export function NotificationsView({
                       starMutation.mutate({ id: n.id, starred: !n.is_starred })
                     }
                     className={cn(
-                      "mt-0.5 inline-flex size-8 shrink-0 items-center justify-center rounded-chip outline-none transition-colors hover:bg-sunk focus-visible:ring-2 focus-visible:ring-ocean/40",
+                      "mt-0.5 inline-flex size-8 shrink-0 items-center justify-center rounded-chip outline-none transition-colors hover:bg-sunk focus-visible:ring-2 focus-visible:ring-marine/40",
                       n.is_starred
                         ? "text-gold hover:text-gold"
                         : "text-muted-foreground hover:text-foreground"

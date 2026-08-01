@@ -116,8 +116,8 @@ export function OrderInbox({
     const el = document.getElementById(`omsg-${id}`);
     if (el) {
       el.scrollIntoView({ behavior: "smooth", block: "center" });
-      el.classList.add("ring-2", "ring-ocean/50");
-      setTimeout(() => el.classList.remove("ring-2", "ring-ocean/50"), 1200);
+      el.classList.add("ring-2", "ring-marine/50");
+      setTimeout(() => el.classList.remove("ring-2", "ring-marine/50"), 1200);
     }
   }
 
@@ -331,11 +331,11 @@ export function OrderInbox({
                       <div
                         id={`omsg-${m.id}`}
                         className={cn(
-                          "rounded-surface px-3.5 py-2.5 text-[14.5px] leading-[1.6] transition-colors duration-150 ease-brand",
+                          "rounded-card px-3.5 py-2.5 text-[14.5px] leading-[1.6] transition-colors duration-150 ease-brand",
                           // Flat fills, one radius. The side tells you who spoke.
                           mine
-                            ? "bg-ocean text-tx-invert"
-                            : "rounded-surface border border-line bg-surface text-tx-body"
+                            ? "bg-marine text-tx-invert"
+                            : "rounded-card border border-line bg-surface text-tx-body"
                         )}
                       >
                         {quoted ? (
@@ -352,7 +352,7 @@ export function OrderInbox({
                         <span
                           className={cn(
                             "tabular mt-1 block text-right text-[12.5px]",
-                            mine ? "text-tx-invert-3" : "text-tx-muted"
+                            mine ? "text-tx-rail-dim" : "text-tx-muted"
                           )}
                         >
                           {fmtClock(m.created_at)}
@@ -385,7 +385,7 @@ export function OrderInbox({
                     className="size-10 shrink-0 rounded-chip object-cover"
                   />
                 ) : (
-                  <IconChip tone="ocean" className="size-10 [&_svg]:size-[18px]">
+                  <IconChip tone="marine" className="size-10 [&_svg]:size-[18px]">
                     <FileText />
                   </IconChip>
                 )}
@@ -397,7 +397,7 @@ export function OrderInbox({
                   aria-label="Remove attachment"
                   onClick={() => setPendingFile(null)}
                   disabled={uploading}
-                  className="inline-flex size-9 shrink-0 items-center justify-center rounded-chip text-tx-faint outline-none transition-colors duration-150 ease-brand hover:bg-surface hover:text-tx-head focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-flame disabled:opacity-50"
+                  className="inline-flex size-9 shrink-0 items-center justify-center rounded-chip text-tx-faint outline-none transition-colors duration-150 ease-brand hover:bg-surface hover:text-tx-head focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-coral disabled:opacity-50"
                 >
                   <X className="size-4" />
                 </button>
@@ -417,7 +417,7 @@ export function OrderInbox({
                 size="icon"
                 aria-label="Attach file"
                 disabled={uploading}
-                className="shrink-0 text-tx-muted hover:text-ocean"
+                className="shrink-0 text-tx-muted hover:text-marine"
                 onClick={() => fileRef.current?.click()}
               >
                 <Paperclip />

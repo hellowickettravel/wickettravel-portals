@@ -51,7 +51,7 @@ function Row({ label, children }: { label: string; children: React.ReactNode }) 
 function Spec({ k, v }: { k: string; v: React.ReactNode }) {
   return (
     <div className="flex flex-wrap items-baseline gap-x-[18px] gap-y-1 border-t border-line-faint px-[22px] py-[15px] first:border-t-0">
-      <span className="w-[158px] shrink-0 font-mono text-[10.5px] tracking-[0.07em] text-ocean uppercase">
+      <span className="w-[158px] shrink-0 font-mono text-[10.5px] tracking-[0.07em] text-marine uppercase">
         {k}
       </span>
       <span className="min-w-[210px] flex-1 text-[14.5px] leading-[1.6] text-tx-body">
@@ -77,7 +77,7 @@ function Swatch({
   contrast?: string;
 }) {
   return (
-    <div className="overflow-hidden rounded-surface border border-line bg-surface shadow-lift">
+    <div className="overflow-hidden rounded-card border border-line bg-surface shadow-card">
       <div className={`relative h-[78px] ${className}`}>
         <span className="absolute bottom-3 left-3.5 rounded-chip bg-surface px-2 py-1 font-mono text-[10.5px] tracking-[0.07em] text-tx-head">
           {hex}
@@ -94,7 +94,7 @@ function Swatch({
           </small>
         ) : null}
         {contrast ? (
-          <span className="mt-2.5 inline-block rounded-chip bg-sky-tint px-2 py-1 font-mono text-[10px] tracking-[0.06em] text-ocean">
+          <span className="mt-2.5 inline-block rounded-chip bg-marine-tint px-2 py-1 font-mono text-[10px] tracking-[0.06em] text-marine">
             {contrast}
           </span>
         ) : null}
@@ -145,21 +145,21 @@ function Checklist({
 export function StyleGuide() {
   return (
     <main className="min-h-screen bg-canvas">
-      {/* MASTHEAD — a solid ocean-ink band. No gradient. */}
-      <header className="bg-ocean-ink py-16">
+      {/* MASTHEAD — a solid rail band. No gradient. */}
+      <header className="bg-rail py-16">
         <SectionWrap>
-          <span className="font-micro text-flame-vivid">
+          <span className="font-micro text-coral-vivid">
             Wicket Travel · Design System · v3
           </span>
           <h1 className="mt-4 max-w-[20ch] text-[clamp(32px,4.8vw,46px)] leading-[1.1] font-semibold tracking-[-0.022em] text-tx-invert">
-            Warm paper, deep ocean, one flame.
+            Warm paper, deep marine, one coral.
           </h1>
-          <p className="mt-[18px] max-w-[56ch] text-[17px] leading-[1.65] text-tx-invert-2">
+          <p className="mt-[18px] max-w-[56ch] text-[17px] leading-[1.65] text-tx-rail-dim">
             v2 was correct and completely anonymous: a cold blue-grey canvas and
             a UI face with no point of view. v3 keeps the discipline, warms the
             paper, and gives the product a voice. It replaces v2 entirely.
           </p>
-          <div className="mt-9 flex flex-wrap gap-x-11 gap-y-4 border-t border-tx-invert/15 pt-[22px] text-[13.5px] text-tx-invert-3">
+          <div className="mt-9 flex flex-wrap gap-x-11 gap-y-4 border-t border-tx-invert/15 pt-[22px] text-[13.5px] text-tx-rail-dim">
             <div>
               Type
               <b className="mt-[3px] block text-[15px] font-semibold text-tx-invert">
@@ -240,7 +240,7 @@ export function StyleGuide() {
               <ul className="list-disc space-y-2.5 py-[22px] pr-6 pl-10 text-[14.5px] leading-[1.6] text-tx-muted">
                 <li>
                   <b className="font-semibold text-tx-body">
-                    A warm sand canvas (#FAF7F3)
+                    A warm sunk canvas (#FAF7F3)
                   </b>{" "}
                   — white cards now read as lifted without a shadow saying so.
                 </li>
@@ -301,12 +301,12 @@ export function StyleGuide() {
               k="Enforcement"
               v={
                 <>
-                  <code className="font-mono text-[13px] text-ocean">
+                  <code className="font-mono text-[13px] text-marine">
                     *:not(html):not(body)
                   </code>{" "}
                   in globals.css hides the bar on every element below the root,
                   so the browser&apos;s own page scrollbar is the only one left.
-                  The <code className="font-mono text-[13px] text-ocean">no-bar</code>{" "}
+                  The <code className="font-mono text-[13px] text-marine">no-bar</code>{" "}
                   utility states the same intent at a call site.
                 </>
               }
@@ -324,8 +324,8 @@ export function StyleGuide() {
               v="Native scrollbars, custom styled scrollbars, scroll arrows, “scroll for more” cues, nested scroll inside a card"
             />
           </Panel>
-          <div className="mt-[22px] rounded-surface border border-flame-line bg-flame-tint px-6 py-5 text-[14.5px] leading-[1.6] text-tx-body">
-            <b className="font-semibold text-flame">Test for it:</b> open every
+          <div className="mt-[22px] rounded-card border border-coral-line bg-coral-tint px-6 py-5 text-[14.5px] leading-[1.6] text-tx-body">
+            <b className="font-semibold text-coral">Test for it:</b> open every
             screen at 1280px and at 375px. If a track or thumb appears anywhere
             other than the browser&apos;s own page scrollbar, it is a bug — not a
             styling choice.
@@ -344,42 +344,42 @@ export function StyleGuide() {
           <div className="grid gap-[18px] sm:grid-cols-2 lg:grid-cols-3">
             <Swatch
               name="Ocean"
-              token="bg-ocean"
+              token="bg-marine"
               hex="#12547F"
-              className="bg-ocean"
+              className="bg-marine"
               note="Sidebar, headings, links, structure. Solid — never a gradient."
               contrast="8.9:1 on white ✓ AAA"
             />
             <Swatch
               name="Ocean ink"
-              token="bg-ocean-ink"
+              token="bg-rail"
               hex="#082F4B"
-              className="bg-ocean-ink"
+              className="bg-rail"
               note="Statement bands, footers, code surfaces, heading colour."
               contrast="13.1:1 on white ✓ AAA"
             />
             <Swatch
               name="Flame"
-              token="bg-flame"
+              token="bg-coral"
               hex="#C24310"
-              className="bg-flame"
+              className="bg-coral"
               note="Primary action. Buttons, active nav icons, eyebrows, key numbers."
               contrast="4.6:1 on white ✓ AA"
             />
             <Swatch
               name="Flame vivid"
-              token="bg-flame-vivid"
+              token="bg-coral-vivid"
               hex="#F0761C"
-              className="bg-flame-vivid"
+              className="bg-coral-vivid"
               note="Icons and graphics only, where small-text contrast doesn’t apply."
               contrast="Graphics only"
             />
             <Swatch
               name="Sky tint"
-              token="bg-sky-tint"
+              token="bg-marine-tint"
               hex="#ECF3F9"
-              className="bg-sky-tint ring-1 ring-sky-line ring-inset"
-              note="Tint sections, ocean stat cards, hover states. Border #D3E4F4."
+              className="bg-marine-tint ring-1 ring-marine-line ring-inset"
+              note="Tint sections, marine stat cards, hover states. Border #D3E4F4."
             />
             <Swatch
               name="Canvas"
@@ -425,8 +425,8 @@ export function StyleGuide() {
             />
           </div>
 
-          <div className="mt-[22px] rounded-surface border border-flame-line bg-flame-tint px-6 py-5 text-[14.5px] leading-[1.6] text-tx-body">
-            <b className="font-semibold text-flame">Fill rule:</b> every
+          <div className="mt-[22px] rounded-card border border-coral-line bg-coral-tint px-6 py-5 text-[14.5px] leading-[1.6] text-tx-body">
+            <b className="font-semibold text-coral">Fill rule:</b> every
             background in the product is a single flat colour. No
             linear-gradient, no radial-gradient, no colour fading to white, no
             tinted overlays. If a surface needs separation, it gets a 1px border
@@ -445,8 +445,8 @@ export function StyleGuide() {
           />
           <div className="grid gap-[18px] md:grid-cols-2">
             <Panel className="overflow-hidden">
-              <Spec k="16px" v="rounded-surface — cards, panels, stat cards, table containers, images" />
-              <Spec k="22px" v="rounded-surface-lg — modals, the sidebar, hero panels, auth panels" />
+              <Spec k="16px" v="rounded-card — cards, panels, stat cards, table containers, images" />
+              <Spec k="22px" v="rounded-panel — modals, the sidebar, hero panels, auth panels" />
               <Spec k="12px" v="rounded-control — buttons, inputs, selects, nav items" />
               <Spec k="12px" v="rounded-icon — icon chips and the monogram badge" />
               <Spec k="8px" v="rounded-chip — badges and tags. Squared, never a pill." />
@@ -455,8 +455,8 @@ export function StyleGuide() {
             </Panel>
             <div className="grid grid-cols-2 gap-[18px] sm:grid-cols-3 md:grid-cols-2 lg:grid-cols-3">
               {[
-                { label: "surface", cls: "rounded-surface", px: "14" },
-                { label: "surface-lg", cls: "rounded-surface-lg", px: "18" },
+                { label: "surface", cls: "rounded-card", px: "14" },
+                { label: "surface-lg", cls: "rounded-panel", px: "18" },
                 { label: "control", cls: "rounded-control", px: "10" },
                 { label: "icon", cls: "rounded-icon", px: "11" },
                 { label: "chip", cls: "rounded-chip", px: "7" },
@@ -464,7 +464,7 @@ export function StyleGuide() {
               ].map((r) => (
                 <div key={r.label} className="text-center">
                   <div
-                    className={`mb-2.5 flex h-[78px] items-center justify-center border border-ocean bg-sky-tint text-[15px] font-bold text-ocean ${r.cls}`}
+                    className={`mb-2.5 flex h-[78px] items-center justify-center border border-marine bg-marine-tint text-[15px] font-bold text-marine ${r.cls}`}
                   >
                     {r.px}
                   </div>
@@ -519,7 +519,7 @@ export function StyleGuide() {
               </span>
             </Row>
             <Row label="Micro-label">
-              <span className="font-micro text-flame">Open orders</span>
+              <span className="font-micro text-coral">Open orders</span>
             </Row>
             <Row label="Mono code">
               <span className="font-mono text-[15px] tracking-[0.02em] text-tx-head">
@@ -575,7 +575,7 @@ export function StyleGuide() {
               hint="From completed orders"
             />
             <StatCard
-              tone="ocean"
+              tone="marine"
               label="Conversations"
               value="12"
               icon={MessageCircle}
@@ -603,7 +603,7 @@ export function StyleGuide() {
             Icon chips — 40px, 12px radius, flat fill, 19px Lucide at 1.75
           </h3>
           <div className="flex flex-wrap gap-3">
-            <IconChip tone="ocean" title="Volume">
+            <IconChip tone="marine" title="Volume">
               <Plane />
             </IconChip>
             <IconChip tone="gold" title="Money">
@@ -618,7 +618,7 @@ export function StyleGuide() {
             <IconChip tone="ruby" title="Attention">
               <X />
             </IconChip>
-            <IconChip tone="flame" title="Featured">
+            <IconChip tone="coral" title="Featured">
               <Send />
             </IconChip>
             <IconChip tone="neutral" title="Neutral">
@@ -633,8 +633,8 @@ export function StyleGuide() {
         <SectionWrap>
           <SectionHead
             eyebrow="07 — Buttons"
-            title="Compact, and flame leads"
-            lede="44px with 18px padding — enough presence, no bulk. The main action on a screen is flame; ocean is the strong secondary."
+            title="Compact, and coral leads"
+            lede="44px with 18px padding — enough presence, no bulk. The main action on a screen is coral; marine is the strong secondary."
           />
           <div className="grid gap-[18px] md:grid-cols-2">
             <Card>
@@ -644,7 +644,7 @@ export function StyleGuide() {
                     <Plus />
                     New order
                   </Button>
-                  <Button variant="ocean">View all orders</Button>
+                  <Button variant="marine">View all orders</Button>
                   <Button variant="secondary">
                     <Download />
                     Export CSV
@@ -663,7 +663,7 @@ export function StyleGuide() {
                   </Button>
                   <Button disabled>Disabled</Button>
                   <span className="text-[14.5px] text-tx-muted">
-                    Focus: 2px flame ring, 2px offset
+                    Focus: 2px coral ring, 2px offset
                   </span>
                 </div>
               </CardContent>
@@ -675,7 +675,7 @@ export function StyleGuide() {
               <Spec k="Radius" v="12px" />
               <Spec k="Primary" v="Flame #C24310, white text — the main action, one per view" />
               <Spec k="Ocean" v="Strong secondary — navigation-style actions" />
-              <Spec k="Secondary" v="White, 1px #D8CCBF, warm sand hover" />
+              <Spec k="Secondary" v="White, 1px #D8CCBF, warm sunk hover" />
               <Spec k="Icon" v="17px at 1.75 stroke, 8px gap, leading side" />
               <Spec k="Hover" v="Darken one step only. No lift, no shadow — buttons carry none." />
             </Panel>
@@ -689,7 +689,7 @@ export function StyleGuide() {
           <SectionHead
             eyebrow="08 — Form fields"
             title="The part people actually use"
-            lede="48px tall, 14px padding, a warm sand fill so the field is visible on white, and error copy that says what to do next."
+            lede="48px tall, 14px padding, a warm sunk fill so the field is visible on white, and error copy that says what to do next."
           />
           <div className="grid gap-[18px] md:grid-cols-2">
             <Card>
@@ -752,9 +752,9 @@ export function StyleGuide() {
               <Spec k="Text" v="15.5px / 400 / #4A5563 — held at 16px below 640px so iOS doesn’t zoom" />
               <Spec k="Radius" v="12px" />
               <Spec k="Border" v="1px #D8CCBF at rest — always visible, never borderless" />
-              <Spec k="Focus" v="Border → ocean, plus a 3px ocean ring at 13%" />
+              <Spec k="Focus" v="Border → marine, plus a 3px marine ring at 13%" />
               <Spec k="Error" v="aria-invalid → ruby border + 3px ruby ring at 10%, message 7px below" />
-              <Spec k="Label" v="600 · 13.5px · #17293A · sentence case. Required marked with a flame asterisk." />
+              <Spec k="Label" v="600 · 13.5px · #17293A · sentence case. Required marked with a coral asterisk." />
               <Spec k="Rhythm" v="Label → input 7px · field → field 20px" />
             </Panel>
           </div>
@@ -780,7 +780,7 @@ export function StyleGuide() {
                   <Badge variant="jade">Completed</Badge>
                   <Badge variant="violet">Awaiting reply</Badge>
                   <Badge variant="ruby">Cancelled</Badge>
-                  <Badge variant="flame">Featured</Badge>
+                  <Badge variant="coral">Featured</Badge>
                   <Badge variant="neutral">Draft</Badge>
                 </div>
                 <div className="flex flex-wrap gap-2.5">
@@ -795,7 +795,7 @@ export function StyleGuide() {
               <Spec k="Padding" v="5px 11px · 6px gap" />
               <Spec k="Border" v="1px in a darker tint of the same hue" />
               <Spec k="Dot" v="6px, in the badge’s own hue, only where a live state matters" />
-              <Spec k="Meaning" v="sky new · gold in progress · violet awaiting · jade completed · ruby cancelled · flame featured" />
+              <Spec k="Meaning" v="sky new · gold in progress · violet awaiting · jade completed · ruby cancelled · coral featured" />
             </Panel>
           </div>
         </SectionWrap>
@@ -832,9 +832,9 @@ export function StyleGuide() {
               </CardFooter>
             </Card>
             <Panel className="overflow-hidden">
-              <Spec k="Card" v="bg-surface · border-line · rounded-surface · shadow-lift" />
+              <Spec k="Card" v="bg-surface · border-line · rounded-card · shadow-card" />
               <Spec k="Panel" v="The same surface, for tables and lists that manage their own padding" />
-              <Spec k="Section" v="canvas → white → sky tint, alternating; an ocean-ink band once or twice per page" />
+              <Spec k="Section" v="canvas → white → sky tint, alternating; an rail band once or twice per page" />
               <Spec k="White section" v="A card inside one keeps its border and drops its shadow" />
               <Spec k="Wrap" v="1180px max · 40px gutters desktop · 24px mobile" />
               <Spec k="Depth" v="lift-1 resting · lift-2 on hover (+2px rise). Cards rise; buttons never do." />
@@ -872,7 +872,7 @@ export function StyleGuide() {
                 </>,
                 <>
                   <b className="font-semibold text-tx-body">
-                    The screen has no flame on it
+                    The screen has no coral on it
                   </b>{" "}
                   — the brand accent must appear at least once.
                 </>,
@@ -923,7 +923,7 @@ export function StyleGuide() {
                 </>,
                 <>
                   <b className="font-semibold text-tx-body">
-                    The primary action is flame
+                    The primary action is coral
                   </b>{" "}
                   and there is exactly one per view.
                 </>,
@@ -952,7 +952,7 @@ export function StyleGuide() {
       </Section>
 
       {/* FOOTER */}
-      <footer className="bg-ocean-ink py-11 text-[14px] leading-[1.7] text-tx-invert-3">
+      <footer className="bg-rail py-11 text-[14px] leading-[1.7] text-tx-rail-dim">
         <SectionWrap>
           <b className="font-semibold text-tx-invert">
             Wicket Travel — Design System v3 · replaces v2

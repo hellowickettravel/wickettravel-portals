@@ -39,7 +39,7 @@ export function MobileRecordCard({
     <div
       data-slot="mobile-record-card"
       className={cn(
-        "rounded-surface border border-line bg-surface p-[18px] shadow-lift transition-colors duration-150 ease-brand",
+        "rounded-card border border-line bg-surface p-[18px] shadow-card transition-colors duration-150 ease-brand",
         className
       )}
     >

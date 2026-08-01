@@ -1,23 +1,22 @@
 import { cn } from "@/lib/utils";
 
 /**
- * The Wicket Travel monogram — a 44px flame badge carrying "WT" in Fraunces.
+ * The Wicket Travel monogram — a 32px coral badge carrying "WT".
  *
- * This is the one place orange is *identity* rather than action. It reads as
- * a mark, not a button: solid flame, serif letterforms, 12px radius to match
- * the icon chips. Because it is a badge and the active nav item is a line
- * icon, the two never read as the same kind of orange.
+ * This is the one place orange is *identity* rather than action. It uses
+ * `coral`, the accessible fill, not `coral-vivid`: the letterforms are small
+ * white text on the badge, so it owes 4.5:1 like any other label.
  *
- * The `tone` prop is kept so both surfaces stay on one mark — the badge is
- * identical on the ocean rail and on white; only the ring around it changes,
- * which is what keeps it legible against the deep rail without inventing a
- * second logo.
+ * The `tone` prop keeps both surfaces on one mark — the badge is identical
+ * on the marine rail and on white; only the ring around it changes, which is
+ * what keeps it legible against the deep rail without inventing a second
+ * logo.
  */
 export function Monogram({
-  tone = "ocean",
+  tone = "marine",
   className,
 }: {
-  tone?: "light" | "ocean";
+  tone?: "light" | "marine";
   className?: string;
 }) {
   return (
@@ -25,7 +24,7 @@ export function Monogram({
       data-slot="monogram"
       aria-hidden
       className={cn(
-        "font-display inline-flex size-11 shrink-0 items-center justify-center rounded-icon bg-flame text-[17px] leading-none font-semibold text-tx-invert",
+        "inline-flex size-8 shrink-0 items-center justify-center rounded-icon bg-coral text-[12px] leading-none font-bold tracking-[0.01em] text-tx-invert",
         tone === "light" && "ring-1 ring-white/15",
         className
       )}

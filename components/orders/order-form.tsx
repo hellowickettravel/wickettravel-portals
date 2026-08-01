@@ -79,13 +79,13 @@ export type OrderFormConversation = {
 export type OrderFormRole = "admin" | "employee" | "customer";
 
 const selectClass =
-  "h-11 w-full rounded-control border border-input bg-sunk px-3 text-base text-foreground outline-none transition-[color,box-shadow,border-color] duration-150 focus-visible:border-ocean focus-visible:ring-[3px] focus-visible:ring-ocean/25 disabled:opacity-50 sm:text-sm";
+  "h-11 w-full rounded-control border border-input bg-sunk px-3 text-base text-foreground outline-none transition-[color,box-shadow,border-color] duration-150 focus-visible:border-marine focus-visible:ring-[3px] focus-visible:ring-marine/25 disabled:opacity-50 sm:text-sm";
 
 function fieldLabel(text: string, required?: boolean) {
   return (
     <span className="text-xs font-medium uppercase tracking-wider text-tx-muted">
       {text}
-      {required ? <span className="ml-0.5 text-flame">*</span> : null}
+      {required ? <span className="ml-0.5 text-coral">*</span> : null}
     </span>
   );
 }
@@ -121,7 +121,7 @@ function Stepper({
         aria-label={`Fewer ${label}`}
         onClick={() => onChange(Math.max(min, value - 1))}
         disabled={disabled || value <= min}
-        className="flex size-11 cursor-pointer items-center justify-center rounded-control border border-border bg-white text-foreground outline-none transition-colors hover:bg-muted focus-visible:ring-2 focus-visible:ring-ocean/40 disabled:cursor-default disabled:opacity-40"
+        className="flex size-11 cursor-pointer items-center justify-center rounded-control border border-border bg-white text-foreground outline-none transition-colors hover:bg-muted focus-visible:ring-2 focus-visible:ring-marine/40 disabled:cursor-default disabled:opacity-40"
       >
         <Minus className="size-4" />
       </button>
@@ -133,7 +133,7 @@ function Stepper({
         aria-label={`More ${label}`}
         onClick={() => onChange(Math.min(max, value + 1))}
         disabled={disabled || value >= max}
-        className="flex size-11 cursor-pointer items-center justify-center rounded-control border border-border bg-white text-foreground outline-none transition-colors hover:bg-muted focus-visible:ring-2 focus-visible:ring-ocean/40 disabled:cursor-default disabled:opacity-40"
+        className="flex size-11 cursor-pointer items-center justify-center rounded-control border border-border bg-white text-foreground outline-none transition-colors hover:bg-muted focus-visible:ring-2 focus-visible:ring-marine/40 disabled:cursor-default disabled:opacity-40"
       >
         <Plus className="size-4" />
       </button>
@@ -170,7 +170,7 @@ function StepIndicator({
                 disabled={!done}
                 aria-current={current ? "step" : undefined}
                 className={cn(
-                  "group flex min-w-0 flex-1 flex-col items-center gap-1.5 rounded-surface px-1 py-1.5 text-center outline-none focus-visible:ring-2 focus-visible:ring-ocean/40",
+                  "group flex min-w-0 flex-1 flex-col items-center gap-1.5 rounded-card px-1 py-1.5 text-center outline-none focus-visible:ring-2 focus-visible:ring-marine/40",
                   done && "cursor-pointer"
                 )}
               >
@@ -178,9 +178,9 @@ function StepIndicator({
                   className={cn(
                     "flex size-9 items-center justify-center rounded-icon text-sm font-semibold transition-colors duration-200",
                     current
-                      ? "bg-ocean text-tx-invert ring-4 ring-flame/15"
+                      ? "bg-marine text-tx-invert ring-4 ring-coral/15"
                       : done
-                        ? "bg-ocean-deep text-white group-hover:bg-ocean-deep"
+                        ? "bg-marine-deep text-white group-hover:bg-marine-deep"
                         : "bg-muted text-muted-foreground"
                   )}
                 >
@@ -205,7 +205,7 @@ function StepIndicator({
                   aria-hidden
                   className={cn(
                     "mt-[17px] h-0.5 w-4 shrink-0 rounded-full transition-colors duration-300 sm:w-10",
-                    s.n < step ? "bg-ocean-deep" : "bg-border"
+                    s.n < step ? "bg-marine-deep" : "bg-border"
                   )}
                 />
               ) : null}
@@ -851,7 +851,7 @@ export function OrderForm({
       {!isGuest ? (
         <Link
           href={backHref}
-          className="inline-flex items-center gap-1.5 text-sm font-medium text-ocean transition-colors hover:text-ocean-deep"
+          className="inline-flex items-center gap-1.5 text-sm font-medium text-marine transition-colors hover:text-marine-deep"
         >
           <ArrowLeft className="size-4" />
           Back to orders
@@ -864,25 +864,25 @@ export function OrderForm({
 
       {/* Trip summary chip — keeps the essentials visible past Step 1 */}
       {step > 1 && routeFrom && routeTo ? (
-        <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5 rounded-surface border border-line-strong bg-sky-tint/60 px-4 py-2.5 text-sm text-ocean-deep animate-in fade-in slide-in-from-top-1 motion-reduce:animate-none">
+        <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5 rounded-card border border-line-strong bg-marine-tint/60 px-4 py-2.5 text-sm text-marine-deep animate-in fade-in slide-in-from-top-1 motion-reduce:animate-none">
           <span className="inline-flex items-center gap-1.5 font-semibold">
             <Plane className="size-4 -rotate-45" />
             {routeFrom} → {routeTo}
           </span>
-          <span aria-hidden className="hidden size-1 rounded-full bg-ocean/40 sm:block" />
+          <span aria-hidden className="hidden size-1 rounded-full bg-marine/40 sm:block" />
           <span className="inline-flex items-center gap-1.5">
             <CalendarDays className="size-3.5" />
             {fmtDate(depart)}
             {ret ? ` – ${fmtDate(ret)}` : ""}
           </span>
-          <span aria-hidden className="hidden size-1 rounded-full bg-ocean/40 sm:block" />
+          <span aria-hidden className="hidden size-1 rounded-full bg-marine/40 sm:block" />
           <span className="inline-flex items-center gap-1.5">
             <Users className="size-3.5" />
             {travellerSummary}
           </span>
           {cabin ? (
             <>
-              <span aria-hidden className="hidden size-1 rounded-full bg-ocean/40 sm:block" />
+              <span aria-hidden className="hidden size-1 rounded-full bg-marine/40 sm:block" />
               <span className="inline-flex items-center gap-1.5">
                 <Armchair className="size-3.5" />
                 {cabinLabel(cabin)}
@@ -891,7 +891,7 @@ export function OrderForm({
           ) : null}
           {airline !== ANY_AIRLINE ? (
             <>
-              <span aria-hidden className="hidden size-1 rounded-full bg-ocean/40 sm:block" />
+              <span aria-hidden className="hidden size-1 rounded-full bg-marine/40 sm:block" />
               <span>{airline}</span>
             </>
           ) : null}
@@ -1046,17 +1046,17 @@ export function OrderForm({
                           type="button"
                           onClick={() => setTripType(t.value)}
                           className={cn(
-                            "flex cursor-pointer items-center gap-3 rounded-icon border px-4 py-3 text-left outline-none transition-all focus-visible:ring-[3px] focus-visible:ring-ocean/25",
+                            "flex cursor-pointer items-center gap-3 rounded-icon border px-4 py-3 text-left outline-none transition-all focus-visible:ring-[3px] focus-visible:ring-marine/25",
                             active
-                              ? "border-ocean bg-sky-tint/60"
-                              : "border-border bg-sunk hover:border-ocean/40"
+                              ? "border-marine bg-marine-tint/60"
+                              : "border-border bg-sunk hover:border-marine/40"
                           )}
                         >
                           <span
                             className={cn(
                               "flex size-9 items-center justify-center rounded-control transition-colors",
                               active
-                                ? "bg-ocean text-tx-invert"
+                                ? "bg-marine text-tx-invert"
                                 : "bg-white text-muted-foreground"
                             )}
                           >
@@ -1074,7 +1074,7 @@ export function OrderForm({
                             className={cn(
                               "ml-auto flex size-5 items-center justify-center rounded-full border transition-colors",
                               active
-                                ? "border-ocean bg-ocean text-white"
+                                ? "border-marine bg-marine text-white"
                                 : "border-border bg-white"
                             )}
                           >
@@ -1098,10 +1098,10 @@ export function OrderForm({
                           type="button"
                           onClick={() => setCabin(c.value)}
                           className={cn(
-                            "min-h-11 cursor-pointer rounded-control border px-4 py-2 text-sm font-medium outline-none transition-all focus-visible:ring-[3px] focus-visible:ring-ocean/25",
+                            "min-h-11 cursor-pointer rounded-control border px-4 py-2 text-sm font-medium outline-none transition-all focus-visible:ring-[3px] focus-visible:ring-marine/25",
                             active
-                              ? "border-ocean bg-ocean text-tx-invert"
-                              : "border-border bg-sunk text-muted-foreground hover:border-ocean/40 hover:text-foreground"
+                              ? "border-marine bg-marine text-tx-invert"
+                              : "border-border bg-sunk text-muted-foreground hover:border-marine/40 hover:text-foreground"
                           )}
                         >
                           {c.label}
@@ -1219,7 +1219,7 @@ export function OrderForm({
           <div key="step-2" className={stepAnim} role="group" aria-label="Step 2: flight check">
             <SectionCard>
               <div className="flex flex-col gap-4 sm:flex-row">
-                <div className="flex size-11 shrink-0 items-center justify-center rounded-surface bg-sky-tint text-ocean-deep">
+                <div className="flex size-11 shrink-0 items-center justify-center rounded-card bg-marine-tint text-marine-deep">
                   <ShieldCheck className="size-5" />
                 </div>
                 <div className="space-y-1">
@@ -1259,17 +1259,17 @@ export function OrderForm({
                       type="button"
                       onClick={() => setGateChoice(opt.value)}
                       className={cn(
-                        "flex cursor-pointer items-center gap-3 rounded-icon border px-4 py-3.5 text-left outline-none transition-all focus-visible:ring-[3px] focus-visible:ring-ocean/25",
+                        "flex cursor-pointer items-center gap-3 rounded-icon border px-4 py-3.5 text-left outline-none transition-all focus-visible:ring-[3px] focus-visible:ring-marine/25",
                         active
-                          ? "border-ocean bg-sky-tint/60"
-                          : "border-border bg-sunk hover:border-ocean/40"
+                          ? "border-marine bg-marine-tint/60"
+                          : "border-border bg-sunk hover:border-marine/40"
                       )}
                     >
                       <span
                         className={cn(
                           "flex size-9 shrink-0 items-center justify-center rounded-control transition-colors",
                           active
-                            ? "bg-ocean text-tx-invert"
+                            ? "bg-marine text-tx-invert"
                             : "bg-white text-muted-foreground"
                         )}
                       >
@@ -1286,7 +1286,7 @@ export function OrderForm({
                       <span
                         className={cn(
                           "ml-auto flex size-5 shrink-0 items-center justify-center rounded-full border transition-colors",
-                          active ? "border-ocean bg-ocean text-white" : "border-border bg-white"
+                          active ? "border-marine bg-marine text-white" : "border-border bg-white"
                         )}
                       >
                         {active ? <CheckCircle2 className="size-4" /> : null}
@@ -1327,7 +1327,7 @@ export function OrderForm({
                     <button
                       type="button"
                       onClick={() => fileInputRef.current?.click()}
-                      className="flex min-h-11 w-full cursor-pointer items-center justify-center gap-2 rounded-control border border-dashed border-border bg-sunk px-4 py-3 text-sm font-medium text-muted-foreground outline-none transition-colors hover:border-ocean hover:text-ocean focus-visible:ring-[3px] focus-visible:ring-ocean/25"
+                      className="flex min-h-11 w-full cursor-pointer items-center justify-center gap-2 rounded-control border border-dashed border-border bg-sunk px-4 py-3 text-sm font-medium text-muted-foreground outline-none transition-colors hover:border-marine hover:text-marine focus-visible:ring-[3px] focus-visible:ring-marine/25"
                     >
                       <Paperclip className="size-4" />
                       Attach PNG, JPG or PDF (max 10MB each)
@@ -1340,7 +1340,7 @@ export function OrderForm({
                             key={`${file.name}-${i}`}
                             className="flex items-center gap-2.5 rounded-control border border-border bg-card px-3 py-2 text-sm animate-in fade-in slide-in-from-bottom-1 motion-reduce:animate-none"
                           >
-                            <FileText className="size-4 shrink-0 text-ocean" />
+                            <FileText className="size-4 shrink-0 text-marine" />
                             <span className="min-w-0 flex-1 truncate text-foreground">
                               {file.name}
                             </span>
@@ -1400,7 +1400,7 @@ export function OrderForm({
                     className="rounded-icon border border-border bg-sunk p-3.5 sm:p-4"
                   >
                     <div className="mb-3 flex items-center gap-2">
-                      <span className="flex size-7 items-center justify-center rounded-control bg-sky-tint text-xs font-semibold text-ocean-deep">
+                      <span className="flex size-7 items-center justify-center rounded-control bg-marine-tint text-xs font-semibold text-marine-deep">
                         {i + 1}
                       </span>
                       <span className="text-sm font-semibold text-foreground">
@@ -1444,7 +1444,7 @@ export function OrderForm({
                   <button
                     type="button"
                     onClick={() => goToStep(1)}
-                    className="cursor-pointer font-medium text-ocean underline-offset-2 hover:underline"
+                    className="cursor-pointer font-medium text-marine underline-offset-2 hover:underline"
                   >
                     Edit step 1
                   </button>
@@ -1677,7 +1677,7 @@ export function OrderForm({
                         {paxRows.map((r, i) => (
                           <span
                             key={i}
-                            className="inline-flex items-center rounded-chip bg-sky-tint px-2.5 py-0.5 text-xs font-medium text-ocean"
+                            className="inline-flex items-center rounded-chip bg-marine-tint px-2.5 py-0.5 text-xs font-medium text-marine"
                           >
                             {r.given.trim()} {r.surname.trim()}
                           </span>
@@ -1712,7 +1712,7 @@ export function OrderForm({
               </div>
 
               {isGuest ? (
-                <div className="mt-4 flex items-start gap-2.5 rounded-control border border-line-strong bg-sky-tint/60 px-3.5 py-3 text-sm text-ocean-deep">
+                <div className="mt-4 flex items-start gap-2.5 rounded-control border border-line-strong bg-marine-tint/60 px-3.5 py-3 text-sm text-marine-deep">
                   <LogIn className="mt-0.5 size-4 shrink-0" />
                   <span>
                     You&apos;ll create a free account (or sign in) to place this
@@ -1804,7 +1804,7 @@ function ReviewRow({
             type="button"
             onClick={onEdit}
             aria-label={`Edit ${label.toLowerCase()}`}
-            className="cursor-pointer rounded-control p-1 text-tx-faint transition-colors hover:bg-muted hover:text-ocean"
+            className="cursor-pointer rounded-control p-1 text-tx-faint transition-colors hover:bg-muted hover:text-marine"
           >
             <Pencil className="size-3.5" />
           </button>

@@ -206,7 +206,7 @@ export default function EmployeesPage() {
     <DropdownMenu>
       <DropdownMenuTrigger
         aria-label={`Actions for ${emp.full_name || "employee"}`}
-        className="inline-flex size-9 items-center justify-center rounded-control text-muted-foreground outline-none transition-colors hover:bg-muted hover:text-foreground focus-visible:ring-[3px] focus-visible:ring-ocean/25"
+        className="inline-flex size-9 items-center justify-center rounded-control text-muted-foreground outline-none transition-colors hover:bg-muted hover:text-foreground focus-visible:ring-[3px] focus-visible:ring-marine/25"
       >
         <MoreHorizontal className="size-4" />
       </DropdownMenuTrigger>
@@ -289,7 +289,7 @@ export default function EmployeesPage() {
           </p>
         ) : all.length === 0 ? (
           <div className="flex flex-col items-center gap-2 px-6 py-14 text-center">
-            <div className="flex size-12 items-center justify-center rounded-surface bg-sky-tint text-ocean-deep">
+            <div className="flex size-12 items-center justify-center rounded-card bg-marine-tint text-marine-deep">
               <UserPlus className="size-6" />
             </div>
             <p className="tracking-heading text-base font-semibold text-foreground">
@@ -313,7 +313,7 @@ export default function EmployeesPage() {
                   <MobileRecordCard
                     key={emp.id}
                     title={
-                      <Link href={`/admin/employees/${emp.id}`} className="hover:text-ocean">
+                      <Link href={`/admin/employees/${emp.id}`} className="hover:text-marine">
                         <UserCell name={emp.full_name || "Unnamed"} />
                       </Link>
                     }
@@ -365,7 +365,7 @@ export default function EmployeesPage() {
                         <TableCell className="pl-6">
                           <Link
                             href={`/admin/employees/${emp.id}`}
-                            className="hover:text-ocean"
+                            className="hover:text-marine"
                             onClick={(e) => e.stopPropagation()}
                           >
                             <UserCell name={emp.full_name || "Unnamed"} />
@@ -458,7 +458,7 @@ export default function EmployeesPage() {
                 value={accessLevel}
                 onChange={(e) => setAccessLevel(e.target.value as AccessLevel)}
                 disabled={createMutation.isPending}
-                className="h-10 w-full rounded-control border border-input bg-sunk px-3 text-base text-foreground outline-none transition-[color,box-shadow,border-color] duration-150 focus-visible:border-ocean focus-visible:ring-[3px] focus-visible:ring-ocean/25 sm:text-sm"
+                className="h-10 w-full rounded-control border border-input bg-sunk px-3 text-base text-foreground outline-none transition-[color,box-shadow,border-color] duration-150 focus-visible:border-marine focus-visible:ring-[3px] focus-visible:ring-marine/25 sm:text-sm"
               >
                 {ACCESS_LEVELS.map((lvl) => (
                   <option key={lvl} value={lvl}>
@@ -576,7 +576,7 @@ export default function EmployeesPage() {
                 value={editAccess}
                 onChange={(e) => setEditAccess(e.target.value as AccessLevel)}
                 disabled={editMutation.isPending}
-                className="h-10 w-full rounded-control border border-input bg-sunk px-3 text-base text-foreground outline-none transition-[color,box-shadow,border-color] duration-150 focus-visible:border-ocean focus-visible:ring-[3px] focus-visible:ring-ocean/25 sm:text-sm"
+                className="h-10 w-full rounded-control border border-input bg-sunk px-3 text-base text-foreground outline-none transition-[color,box-shadow,border-color] duration-150 focus-visible:border-marine focus-visible:ring-[3px] focus-visible:ring-marine/25 sm:text-sm"
               >
                 {ACCESS_LEVELS.map((lvl) => (
                   <option key={lvl} value={lvl}>

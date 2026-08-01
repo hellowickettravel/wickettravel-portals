@@ -1,65 +1,120 @@
 import type { ReactNode } from "react";
 
-import { Badge } from "@/components/ui/badge";
+import { cn } from "@/lib/utils";
 import type { OrderStatus } from "@/lib/db/types";
 
 /**
- * Status badge — a thin naming layer over <Badge>.
+ * Status — design system v4 §11, "Dot and text, no container".
  *
- * The badge itself (6px radius, squared like a printed label, 1px border in a
- * darker tint of its own hue) lives in `components/ui/badge.tsx`. This file
- * exists to fix the *mapping*: a status's colour comes from what it means,
- * never from wanting some variety across a table.
+ * A small coloured dot next to normal-weight text. No pill, no fill, no
+ * border. This is the single biggest reason a forty-row orders table now
+ * reads calmly: a badge on every row turns the status column into a field
+ * of coloured blocks that competes with the data, while a 6px dot says the
+ * same thing and then gets out of the way.
  *
- *   sky     new, unstarted            violet  waiting on someone
- *   gold   in progress, money        jade    confirmed, active, done
- *   ruby    cancelled, attention      neutral inert, archived, no account
+ * The dot carries the meaning and the word carries the detail, so this is
+ * never colour-alone — it degrades correctly for anyone who cannot
+ * distinguish the hues.
+ *
+ * The hue is fixed by meaning and does not vary for visual interest:
+ *
+ *   violet  waiting, not yet started
+ *   marine  live, being worked on
+ *   jade    confirmed, completed, paid
+ *   ruby    cancelled, failed, needs attention
+ *   gold    money
+ *   neutral inert, archived, no account
  */
 
-/** The legacy tone vocabulary, kept so existing screens keep rendering. */
-export type Tone = "blue" | "green" | "gold" | "red" | "slate" | "violet";
+/** The tone vocabulary. `blue`/`green`/`red`/`slate` are legacy aliases. */
+export type Tone =
+  | "marine"
+  | "violet"
+  | "jade"
+  | "gold"
+  | "ruby"
+  | "neutral"
+  | "blue"
+  | "green"
+  | "red"
+  | "slate";
 
-const TONE_VARIANT = {
-  blue: "sky",
-  green: "jade",
-  gold: "gold",
-  red: "ruby",
-  slate: "neutral",
-  violet: "violet",
-} as const;
+const DOT: Record<Tone, string> = {
+  marine: "bg-marine",
+  violet: "bg-violet",
+  jade: "bg-jade",
+  gold: "bg-gold",
+  ruby: "bg-ruby",
+  neutral: "bg-tx-faint",
+  // legacy aliases
+  blue: "bg-marine",
+  green: "bg-jade",
+  red: "bg-ruby",
+  slate: "bg-tx-faint",
+};
 
 export function StatusBadge({
-  tone = "slate",
-  dot,
+  tone = "neutral",
+  dot = true,
   children,
   className,
 }: {
   tone?: Tone;
-  /** The 6px live dot. Only for states that are genuinely running. */
+  /** Kept for call-site compatibility. The dot is the design; hiding it
+   *  leaves a bare word, which is only right inside an already-labelled
+   *  column. */
   dot?: boolean;
   children: ReactNode;
   className?: string;
 }) {
   return (
-    <Badge variant={TONE_VARIANT[tone]} dot={dot} className={className}>
+    <span
+      data-slot="status"
+      className={cn(
+        "inline-flex items-center gap-2 text-[13px] whitespace-nowrap text-tx-body",
+        className
+      )}
+    >
+      {dot ? (
+        <span
+          aria-hidden
+          className={cn("size-1.5 shrink-0 rounded-full", DOT[tone])}
+        />
+      ) : null}
       {children}
-    </Badge>
+    </span>
+  );
+}
+
+/** The live dot, on its own — for a header or an avatar corner. */
+export function StatusDot({
+  tone = "neutral",
+  className,
+}: {
+  tone?: Tone;
+  className?: string;
+}) {
+  return (
+    <span
+      aria-hidden
+      className={cn("inline-block size-1.5 shrink-0 rounded-full", DOT[tone], className)}
+    />
   );
 }
 
 /* ---------------------------------------------------------------- orders -- */
 
 const ORDER_STATUS = {
-  new: { variant: "sky", label: "New", dot: false },
-  in_progress: { variant: "gold", label: "In progress", dot: true },
-  completed: { variant: "jade", label: "Completed", dot: false },
-  cancelled: { variant: "ruby", label: "Cancelled", dot: false },
-} as const;
+  new: { tone: "violet", label: "New" },
+  in_progress: { tone: "marine", label: "In progress" },
+  completed: { tone: "jade", label: "Completed" },
+  cancelled: { tone: "ruby", label: "Cancelled" },
+} as const satisfies Record<OrderStatus, { tone: Tone; label: string }>;
 
 /**
- * The order lifecycle, badged. One definition, used by every screen that
- * shows an order — dashboard, orders, transactions, order detail, customers —
- * so `in_progress` is gold everywhere and reads "In progress", not
+ * The order lifecycle. One definition, used by every screen that shows an
+ * order — dashboard, orders, transactions, order detail, customers — so
+ * `in_progress` is marine everywhere and reads "In progress", never
  * "In_progress".
  */
 export function OrderStatusBadge({
@@ -69,11 +124,11 @@ export function OrderStatusBadge({
   status: OrderStatus;
   className?: string;
 }) {
-  const { variant, label, dot } = ORDER_STATUS[status];
+  const { tone, label } = ORDER_STATUS[status];
   return (
-    <Badge variant={variant} dot={dot} className={className}>
+    <StatusBadge tone={tone} className={className}>
       {label}
-    </Badge>
+    </StatusBadge>
   );
 }
 
@@ -82,22 +137,27 @@ export function orderStatusLabel(status: OrderStatus): string {
   return ORDER_STATUS[status].label;
 }
 
-/** Map an order status to a badge tone. */
+/** The tone for an order status. */
+export function orderStatusTone(status: OrderStatus): Tone {
+  return ORDER_STATUS[status].tone;
+}
+
+/** Map a free-text status string to a tone. */
 export function orderTone(status: string): Tone {
   switch (status) {
     case "Open":
     case "New":
-      return "blue";
+      return "violet";
     case "In Progress":
     case "Pending":
-      return "gold";
+      return "marine";
     case "Closed":
     case "Completed":
     case "Confirmed":
-      return "green";
+      return "jade";
     case "Cancelled":
-      return "red";
+      return "ruby";
     default:
-      return "slate";
+      return "neutral";
   }
 }

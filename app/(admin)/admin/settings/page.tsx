@@ -252,7 +252,7 @@ export default function SettingsPage() {
           <div className="space-y-2">
             {fieldLabel("Logo")}
             <div className="flex items-center gap-4">
-              <div className="flex size-20 shrink-0 items-center justify-center overflow-hidden rounded-surface border border-border bg-sunk">
+              <div className="flex size-20 shrink-0 items-center justify-center overflow-hidden rounded-card border border-border bg-sunk">
                 {logoUrl ? (
                   // eslint-disable-next-line @next/next/no-img-element
                   <img src={logoUrl} alt="Business logo" className="size-full object-cover" />
@@ -305,14 +305,14 @@ export default function SettingsPage() {
           </div>
           <div className="space-y-2">
             {fieldLabel("Brand colours")}
-            <div className="flex items-center gap-3 rounded-surface border border-border bg-sunk p-3">
+            <div className="flex items-center gap-3 rounded-card border border-border bg-sunk p-3">
               <div className="flex items-center gap-2">
-                <div className="size-12 rounded-surface bg-ocean-deep" />
-                <div className="size-12 rounded-surface bg-flame" />
+                <div className="size-12 rounded-card bg-marine-deep" />
+                <div className="size-12 rounded-card bg-coral" />
               </div>
               <div>
                 <p className="tabular text-sm font-semibold tracking-heading text-foreground">
-                  {BRAND.ocean} · {BRAND.flame}
+                  {BRAND.marine} · {BRAND.coral}
                 </p>
                 <p className="flex items-center gap-1 text-xs text-muted-foreground">
                   <Lock className="size-3" />
@@ -343,7 +343,7 @@ export default function SettingsPage() {
           ))}
         </ul>
         <div className="mt-5 flex justify-end">
-          <Button type="button" variant="ocean" onClick={savePrefs} disabled={prefsMutation.isPending}>
+          <Button type="button" variant="marine" onClick={savePrefs} disabled={prefsMutation.isPending}>
             {prefsMutation.isPending ? (
               <>
                 <Loader2 className="size-4 animate-spin" />

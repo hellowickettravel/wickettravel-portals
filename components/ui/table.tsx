@@ -5,20 +5,23 @@ import * as React from "react"
 import { cn } from "@/lib/utils"
 
 /**
- * Table — the portal's data surface.
+ * Table — design system v4 §12, "Hairline rows in a bordered card".
  *
- * Header row on `sand` with Plex Mono micro-labels, warm hairline dividers
- * between rows, 16px of vertical air in every cell, and a warm hover so a row
- * reads as a target. Numbers are tabular wherever a column says so, which is
- * what keeps a fare column aligned on the decimal.
+ * Rows are separated by a single very faint line and nothing else. No zebra
+ * striping: a table of forty orders should read as one calm block, and the
+ * only things carrying colour are the status dots and the values.
  *
- * Hover is `sand`, not a blue tint: rows are hovered constantly while
- * scanning, and a cool wash on a warm canvas read as "selected" rather than
- * "under the cursor". Selection keeps the blue, so the two stay distinct.
+ * Header row sits on `sunk` with uppercase micro-labels, 36px tall. Cells
+ * take 10px of vertical air at 13.5px — compact density, so roughly twelve
+ * rows land above the fold instead of six.
  *
- * The wrapper scrolls sideways on its own so the page never does — but a wide
- * table should still fall back to <MobileRecordCard> below md rather than ask
- * anyone to scroll a table on a phone. <DataTable> wires that up for you.
+ * Hover is `sunk` and selection is `marine-tint`, deliberately different:
+ * rows are hovered constantly while scanning, so the hover has to be the
+ * quieter of the two or every pass of the mouse looks like a selection.
+ *
+ * The wrapper scrolls sideways on its own so the page never does — but a
+ * wide table should still fall back to <MobileRecordCard> below md rather
+ * than ask anyone to scroll a table on a phone. <DataTable> wires that up.
  */
 function Table({ className, ...props }: React.ComponentProps<"table">) {
   return (
@@ -29,7 +32,7 @@ function Table({ className, ...props }: React.ComponentProps<"table">) {
       <table
         data-slot="table"
         className={cn(
-          "w-full caption-bottom border-collapse text-[14.5px] leading-[1.6]",
+          "w-full caption-bottom border-collapse text-[13.5px] leading-[1.55]",
           className
         )}
         {...props}
@@ -42,7 +45,7 @@ function TableHeader({ className, ...props }: React.ComponentProps<"thead">) {
   return (
     <thead
       data-slot="table-header"
-      className={cn("bg-sand [&_tr]:border-b [&_tr]:border-line", className)}
+      className={cn("bg-sunk [&_tr]:border-b [&_tr]:border-line", className)}
       {...props}
     />
   )
@@ -63,7 +66,7 @@ function TableFooter({ className, ...props }: React.ComponentProps<"tfoot">) {
     <tfoot
       data-slot="table-footer"
       className={cn(
-        "border-t border-line bg-sand font-medium text-tx-head [&>tr]:last:border-b-0",
+        "border-t border-line bg-sunk font-medium text-tx-head [&>tr]:last:border-b-0",
         className
       )}
       {...props}
@@ -76,7 +79,7 @@ function TableRow({ className, ...props }: React.ComponentProps<"tr">) {
     <tr
       data-slot="table-row"
       className={cn(
-        "border-b border-line-faint transition-colors duration-150 ease-brand hover:bg-sand has-aria-expanded:bg-sand data-[state=selected]:bg-sky-tint",
+        "border-b border-line-faint transition-colors duration-150 ease-brand hover:bg-sunk has-aria-expanded:bg-sunk data-[state=selected]:bg-marine-tint",
         className
       )}
       {...props}
@@ -84,7 +87,7 @@ function TableRow({ className, ...props }: React.ComponentProps<"tr">) {
   )
 }
 
-/** Column label — Plex Mono 11px, 0.1em, uppercase. Never sentence case. */
+/** Column label — Inter 600, 11px, 0.06em, uppercase. Never sentence case. */
 function TableHead({
   className,
   numeric,
@@ -98,7 +101,7 @@ function TableHead({
       data-slot="table-head"
       data-numeric={numeric ? true : undefined}
       className={cn(
-        "h-12 px-4 text-left align-middle font-micro whitespace-nowrap text-tx-muted [&:has([role=checkbox])]:pr-0",
+        "h-9 px-3 text-left align-middle font-micro whitespace-nowrap text-tx-muted [&:has([role=checkbox])]:pr-0",
         numeric && "tabular text-right",
         className
       )}
@@ -120,7 +123,7 @@ function TableCell({
       data-slot="table-cell"
       data-numeric={numeric ? true : undefined}
       className={cn(
-        "px-4 py-4 align-middle text-tx-body whitespace-nowrap [&:has([role=checkbox])]:pr-0",
+        "px-3 py-2.5 align-middle text-tx-body whitespace-nowrap [&:has([role=checkbox])]:pr-0",
         numeric && "tabular text-right",
         className
       )}
@@ -136,7 +139,7 @@ function TableCaption({
   return (
     <caption
       data-slot="table-caption"
-      className={cn("mt-4 text-[13px] text-tx-muted", className)}
+      className={cn("mt-3 text-[12.5px] text-tx-muted", className)}
       {...props}
     />
   )

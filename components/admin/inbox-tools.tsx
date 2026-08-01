@@ -26,7 +26,7 @@ function fieldLabel(text: string) {
 }
 
 const selectClass =
-  "h-10 w-full rounded-control border border-input bg-sunk px-3 text-base text-foreground outline-none transition-[color,box-shadow,border-color] duration-150 focus-visible:border-ocean focus-visible:ring-[3px] focus-visible:ring-ocean/25 sm:text-sm";
+  "h-10 w-full rounded-control border border-input bg-sunk px-3 text-base text-foreground outline-none transition-[color,box-shadow,border-color] duration-150 focus-visible:border-marine focus-visible:ring-[3px] focus-visible:ring-marine/25 sm:text-sm";
 
 /**
  * Admin conversation-routing panel. Messaging is fully internal (Supabase
@@ -77,7 +77,7 @@ export function InboxTools() {
     <SectionCard
       title={
         <span className="inline-flex items-center gap-2">
-          <Route className="size-4 text-ocean" />
+          <Route className="size-4 text-marine" />
           Route a conversation
         </span>
       }
@@ -95,10 +95,10 @@ export function InboxTools() {
             employeeId: assignEmp,
           });
         }}
-        className="max-w-xl space-y-3 rounded-surface border border-border bg-sunk/40 p-4"
+        className="max-w-xl space-y-3 rounded-card border border-border bg-sunk/40 p-4"
       >
         <p className="flex items-center gap-2 text-sm font-semibold text-foreground">
-          <UserCheck className="size-4 text-ocean" />
+          <UserCheck className="size-4 text-marine" />
           Assign a conversation
         </p>
         <div className="space-y-1.5">

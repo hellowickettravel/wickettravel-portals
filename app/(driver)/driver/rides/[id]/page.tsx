@@ -41,8 +41,8 @@ export default function RideDetailPage({ params }: { params: Promise<{ id: strin
     return (
       <div className="animate-in fade-in duration-300">
         <BackBar onBack={() => router.push("/driver/jobs")} />
-        <div className="mt-10 rounded-surface border border-dashed border-line-strong bg-sunk/60 px-6 py-14 text-center">
-          <div className="mx-auto flex size-12 items-center justify-center rounded-surface bg-sky-tint text-ocean-deep">
+        <div className="mt-10 rounded-card border border-dashed border-line-strong bg-sunk/60 px-6 py-14 text-center">
+          <div className="mx-auto flex size-12 items-center justify-center rounded-card bg-marine-tint text-marine-deep">
             <Car className="size-6" />
           </div>
           <p className="mt-3 tracking-heading text-sm font-semibold text-tx-head">Ride not found</p>
@@ -94,7 +94,7 @@ export default function RideDetailPage({ params }: { params: Promise<{ id: strin
 
       {/* Status flow (only for accepted/active trips) */}
       {isActive && !isClosed ? (
-        <div className="rounded-surface bg-card p-5 border border-line shadow-lift">
+        <div className="rounded-card bg-card p-5 border border-line shadow-card">
           <h2 className="mb-4 tracking-heading text-sm font-semibold text-tx-head">Trip progress</h2>
           <TripStepper stage={ride.stage} />
         </div>
@@ -104,7 +104,7 @@ export default function RideDetailPage({ params }: { params: Promise<{ id: strin
       {isClosed ? (
         <div
           className={cn(
-            "flex items-center gap-3 rounded-surface px-4 py-3.5 ring-1",
+            "flex items-center gap-3 rounded-card px-4 py-3.5 ring-1",
             ride.stage === "completed"
               ? "bg-jade-tint ring-jade-line"
               : "bg-ruby-tint ring-ruby-line"
@@ -134,10 +134,10 @@ export default function RideDetailPage({ params }: { params: Promise<{ id: strin
       ) : null}
 
       {/* Customer */}
-      <div className="rounded-surface bg-card p-4 border border-line shadow-lift">
+      <div className="rounded-card bg-card p-4 border border-line shadow-card">
         <div className="flex items-center justify-between gap-3">
           <div className="flex items-center gap-3">
-            <div className="flex size-11 items-center justify-center rounded-full bg-sky-tint font-semibold text-ocean-deep">
+            <div className="flex size-11 items-center justify-center rounded-full bg-marine-tint font-semibold text-marine-deep">
               {ride.customerName.split(" ").map((p) => p[0]).slice(0, 2).join("")}
             </div>
             <div>
@@ -169,7 +169,7 @@ export default function RideDetailPage({ params }: { params: Promise<{ id: strin
       </div>
 
       {/* Trip details */}
-      <div className="rounded-surface bg-card p-5 border border-line shadow-lift">
+      <div className="rounded-card bg-card p-5 border border-line shadow-card">
         <h2 className="mb-3 tracking-heading text-sm font-semibold text-tx-head">Trip details</h2>
 
         <div className="space-y-3">
@@ -188,7 +188,7 @@ export default function RideDetailPage({ params }: { params: Promise<{ id: strin
       </div>
 
       {/* Fare breakdown */}
-      <div className="rounded-surface bg-card p-5 border border-line shadow-lift">
+      <div className="rounded-card bg-card p-5 border border-line shadow-card">
         <h2 className="mb-3 tracking-heading text-sm font-semibold text-tx-head">Fare</h2>
         <dl className="space-y-2 text-sm">
           <div className="flex justify-between">
@@ -293,7 +293,7 @@ function BackBar({ onBack }: { onBack: () => void }) {
     <button
       type="button"
       onClick={onBack}
-      className="inline-flex h-9 items-center gap-1.5 rounded-control pr-2 text-sm font-medium text-muted-foreground outline-none transition-colors hover:text-foreground focus-visible:ring-2 focus-visible:ring-ocean/40"
+      className="inline-flex h-9 items-center gap-1.5 rounded-control pr-2 text-sm font-medium text-muted-foreground outline-none transition-colors hover:text-foreground focus-visible:ring-2 focus-visible:ring-marine/40"
     >
       <ArrowLeft className="size-4" />
       Back
@@ -319,7 +319,7 @@ function DetailRow({
       <span
         className={cn(
           "mt-0.5 flex size-8 shrink-0 items-center justify-center rounded-control",
-          accent === "brand" ? "bg-ocean/10 text-ocean" : "bg-flame/10 text-flame-hover"
+          accent === "brand" ? "bg-marine/10 text-marine" : "bg-coral/10 text-coral-hover"
         )}
       >
         <Icon className={cn("size-4", accent === "brand" && "-rotate-45")} />

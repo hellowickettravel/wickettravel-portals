@@ -121,7 +121,7 @@ export default function ResetPasswordPage() {
       {status === "verifying" ? (
         /* ---------- Verifying the recovery link ---------- */
         <div className="flex flex-col items-start gap-3 py-6">
-          <Loader2 className="size-6 animate-spin text-ocean" />
+          <Loader2 className="size-6 animate-spin text-marine" />
           <p className="text-[14.5px] leading-[1.6] text-tx-muted">
             Checking your reset link…
           </p>
@@ -132,7 +132,7 @@ export default function ResetPasswordPage() {
           <IconChip tone="ruby">
             <ShieldAlert />
           </IconChip>
-          <h1 className="mt-5 text-[25px] leading-[1.26] font-bold tracking-heading text-tx-head">
+          <h1 className="font-serif-display mt-4 text-[24px] leading-[1.2] text-tx-head">
             That link has expired
           </h1>
           <p className="mt-3.5 text-[14.5px] leading-[1.6] text-tx-muted">
@@ -222,7 +222,7 @@ export default function ResetPasswordPage() {
             Remembered it?{" "}
             <Link
               href="/login"
-              className="font-semibold text-ocean underline-offset-[3px] transition-colors duration-150 ease-brand hover:underline"
+              className="font-semibold text-marine underline-offset-[3px] transition-colors duration-150 ease-brand hover:underline"
             >
               Sign in
             </Link>

@@ -33,9 +33,9 @@ export default function DriverProfilePage() {
       </h1>
 
       {/* Identity card */}
-      <div className="rounded-surface bg-ocean p-5">
+      <div className="rounded-card bg-marine p-5">
         <div className="flex items-center gap-4">
-          <div className="flex size-16 shrink-0 items-center justify-center rounded-icon bg-flame text-xl font-bold text-white">
+          <div className="flex size-16 shrink-0 items-center justify-center rounded-icon bg-coral text-xl font-bold text-white">
             {initialsOf(DRIVER.name)}
           </div>
           <div className="min-w-0">
@@ -43,12 +43,12 @@ export default function DriverProfilePage() {
               <p className="truncate tracking-heading text-lg font-semibold text-white">
                 {DRIVER.name}
               </p>
-              <BadgeCheck className="size-4 shrink-0 text-flame-vivid" />
+              <BadgeCheck className="size-4 shrink-0 text-coral-vivid" />
             </div>
             <p className="text-xs text-white/70">{DRIVER.city} · Partner since {DRIVER.memberSince}</p>
             <div className="mt-1.5 flex items-center gap-3">
               <span className="inline-flex items-center gap-1 rounded-chip bg-white/18 px-2 py-0.5 text-xs font-medium text-white">
-                <Star className="size-3 fill-flame-vivid text-flame-vivid" />
+                <Star className="size-3 fill-coral-vivid text-coral-vivid" />
                 {DRIVER.rating}
               </span>
               <span className="text-xs text-white/70">{DRIVER.totalTrips.toLocaleString("en-IN")} trips</span>
@@ -61,8 +61,8 @@ export default function DriverProfilePage() {
       <section>
         <SectionLabel>Availability</SectionLabel>
         <OnlineToggle size="full" />
-        <div className="mt-3 flex items-center gap-3 rounded-surface bg-card p-4 border border-line shadow-lift">
-          <div className="flex size-9 items-center justify-center rounded-surface bg-sky-tint text-ocean-deep">
+        <div className="mt-3 flex items-center gap-3 rounded-card bg-card p-4 border border-line shadow-card">
+          <div className="flex size-9 items-center justify-center rounded-card bg-marine-tint text-marine-deep">
             <Clock3 className="size-[18px]" />
           </div>
           <div className="flex-1">
@@ -76,7 +76,7 @@ export default function DriverProfilePage() {
       {/* Contact */}
       <section>
         <SectionLabel>Contact</SectionLabel>
-        <div className="divide-y divide-border rounded-surface bg-card border border-line shadow-lift">
+        <div className="divide-y divide-border rounded-card bg-card border border-line shadow-card">
           <InfoRow icon={Phone} label="Phone" value={DRIVER.phone} />
           <InfoRow icon={Mail} label="Email" value={DRIVER.email} />
           <InfoRow icon={MapPin} label="Base city" value={DRIVER.city} />
@@ -86,7 +86,7 @@ export default function DriverProfilePage() {
       {/* Vehicle */}
       <section>
         <SectionLabel>Vehicle</SectionLabel>
-        <div className="divide-y divide-border rounded-surface bg-card border border-line shadow-lift">
+        <div className="divide-y divide-border rounded-card bg-card border border-line shadow-card">
           <InfoRow icon={Car} label="Type" value={DRIVER.vehicle.type} />
           <InfoRow icon={Car} label="Make & model" value={DRIVER.vehicle.makeModel} />
           <InfoRow icon={Hash} label="Registration" value={DRIVER.vehicle.plate} />
@@ -98,12 +98,12 @@ export default function DriverProfilePage() {
       {/* Covered airports */}
       <section>
         <SectionLabel>Airports covered</SectionLabel>
-        <div className="rounded-surface bg-card p-4 border border-line shadow-lift">
+        <div className="rounded-card bg-card p-4 border border-line shadow-card">
           <div className="flex flex-wrap gap-2">
             {DRIVER.airports.map((a) => (
               <span
                 key={a}
-                className="inline-flex items-center gap-1.5 rounded-control bg-sky-tint px-3 py-1.5 text-sm font-medium text-ocean"
+                className="inline-flex items-center gap-1.5 rounded-control bg-marine-tint px-3 py-1.5 text-sm font-medium text-marine"
               >
                 <Plane className="size-3.5 -rotate-45" />
                 {airportLabel(a)}
@@ -117,10 +117,10 @@ export default function DriverProfilePage() {
       {/* Documents */}
       <section>
         <SectionLabel>Documents</SectionLabel>
-        <div className="divide-y divide-border rounded-surface bg-card border border-line shadow-lift">
+        <div className="divide-y divide-border rounded-card bg-card border border-line shadow-card">
           {DRIVER.documents.map((doc) => (
             <div key={doc.name} className="flex items-center gap-3 px-4 py-3.5">
-              <div className="flex size-10 shrink-0 items-center justify-center rounded-surface bg-sky-tint text-ocean-deep">
+              <div className="flex size-10 shrink-0 items-center justify-center rounded-card bg-marine-tint text-marine-deep">
                 <FileText className="size-[18px]" />
               </div>
               <div className="min-w-0 flex-1">
@@ -180,7 +180,7 @@ function InfoRow({
 }) {
   return (
     <div className="flex items-center gap-3 px-4 py-3.5">
-      <div className="flex size-9 shrink-0 items-center justify-center rounded-surface bg-sky-tint text-ocean-deep">
+      <div className="flex size-9 shrink-0 items-center justify-center rounded-card bg-marine-tint text-marine-deep">
         <Icon className="size-[18px]" />
       </div>
       <div className="min-w-0 flex-1">

@@ -4,7 +4,7 @@ import { STAGE_META, type TripStage } from "@/lib/driver/mock";
 type Tone = "blue" | "green" | "gold" | "red" | "slate";
 
 const TONE_BG: Record<Tone, string> = {
-  blue: "bg-sky-tint text-ocean-deep",
+  blue: "bg-marine-tint text-marine-deep",
   green: "bg-jade-tint text-jade",
   gold: "bg-gold-tint text-gold",
   red: "bg-ruby-tint text-ruby",
@@ -12,7 +12,7 @@ const TONE_BG: Record<Tone, string> = {
 };
 
 const TONE_DOT: Record<Tone, string> = {
-  blue: "bg-ocean",
+  blue: "bg-marine",
   green: "bg-jade",
   gold: "bg-gold",
   red: "bg-ruby",

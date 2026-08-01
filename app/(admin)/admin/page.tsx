@@ -31,7 +31,7 @@ function isThisMonth(iso: string) {
 
 /** Activity hue by what happened, not by position in the list. */
 const ACTIVITY_TONE = {
-  order: "ocean",
+  order: "marine",
   message: "violet",
   assignment: "jade",
 } as const;
@@ -115,7 +115,7 @@ export default async function AdminDashboardPage() {
             hint="from completed orders"
           />
           <StatCard
-            tone="ocean"
+            tone="marine"
             icon={MessageSquare}
             label="Conversations"
             value={num(conversationsCount)}
@@ -135,16 +135,16 @@ export default async function AdminDashboardPage() {
       <section className="space-y-4">
         <div className="flex flex-wrap items-end justify-between gap-3">
           <div>
-            <p className="font-micro text-flame">Latest five</p>
+            <p className="font-micro text-coral">Latest five</p>
             {/* Manrope, and a clear step below the 36px Fraunces <h1> — a
                 25px section heading was competing with the page title. */}
-            <h2 className="mt-2 text-[21px] leading-[1.3] font-bold tracking-heading text-tx-head">
+            <h2 className="mt-1.5 text-[18px] leading-[1.3] font-semibold tracking-heading text-tx-head">
               Recent orders
             </h2>
           </div>
           <Link
             href="/admin/orders"
-            className="inline-flex items-center gap-1.5 rounded-chip text-[14.5px] font-semibold text-ocean underline-offset-[3px] outline-none transition-colors duration-150 ease-brand hover:text-ocean-deep hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-flame"
+            className="inline-flex items-center gap-1.5 rounded-chip text-[14.5px] font-semibold text-marine underline-offset-[3px] outline-none transition-colors duration-150 ease-brand hover:text-marine-deep hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-coral"
           >
             View all orders
             <ArrowRight className="size-4" />
@@ -182,7 +182,7 @@ export default async function AdminDashboardPage() {
                     <li key={a.id}>
                       <Link
                         href={a.link}
-                        className="group flex gap-3 rounded-chip outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-flame"
+                        className="group flex gap-3 rounded-chip outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-coral"
                       >
                         <IconChip
                           tone={ACTIVITY_TONE[a.kind]}
@@ -191,7 +191,7 @@ export default async function AdminDashboardPage() {
                           <Icon />
                         </IconChip>
                         <div className="min-w-0 flex-1 leading-snug">
-                          <p className="text-[14.5px] font-medium text-tx-body transition-colors duration-150 ease-brand group-hover:text-ocean">
+                          <p className="text-[14.5px] font-medium text-tx-body transition-colors duration-150 ease-brand group-hover:text-marine">
                             {a.title}
                           </p>
                           <p className="truncate text-[13px] text-tx-muted">
@@ -209,7 +209,7 @@ export default async function AdminDashboardPage() {
 
         {/* The three running totals, on a sky band so the pair reads as one
             block rather than as two more white cards. */}
-        <Card size="sm" className="border-sky-line bg-sky-tint shadow-none">
+        <Card size="sm" className="border-marine-line bg-marine-tint shadow-none">
           <CardHeader>
             <CardTitle>Book of business</CardTitle>
           </CardHeader>
@@ -221,10 +221,10 @@ export default async function AdminDashboardPage() {
             ].map((row) => (
               <div
                 key={row.label}
-                className="flex items-baseline justify-between gap-4 rounded-chip border border-sky-line bg-surface px-4 py-3"
+                className="flex items-baseline justify-between gap-4 rounded-chip border border-marine-line bg-surface px-4 py-3"
               >
                 <span className="font-micro text-tx-muted">{row.label}</span>
-                <span className="font-metric text-[21px] font-semibold text-tx-head">
+                <span className="tabular text-[21px] font-semibold text-tx-head">
                   {row.value}
                 </span>
               </div>

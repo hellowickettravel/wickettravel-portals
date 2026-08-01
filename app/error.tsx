@@ -22,7 +22,7 @@ export default function Error({
     <main className="flex min-h-dvh flex-col items-center justify-center bg-background px-6 text-center">
       <BrandLogo className="h-9 w-auto" />
 
-      <p className="mt-10 text-xs font-semibold uppercase tracking-[0.18em] text-ocean">
+      <p className="mt-10 text-xs font-semibold uppercase tracking-[0.18em] text-marine">
         Something went wrong
       </p>
       <h1 className="mt-2 text-3xl font-semibold tracking-tight text-tx-head">

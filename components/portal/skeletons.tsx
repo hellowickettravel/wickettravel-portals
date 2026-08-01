@@ -11,17 +11,17 @@ import { cn } from "@/lib/utils";
  */
 
 /** A single stat card placeholder, matching <StatCard>'s anatomy exactly:
- *  40px chip → micro-label → 34px Fraunces metric → caption, in the same
- *  24/22 box. The heights are the rendered heights, not the font sizes, so
- *  nothing jumps when the real number lands. No shadow — stat cards carry
- *  none. */
+ *  32px chip → 16px micro-label → 30px metric → 19px caption, in the same
+ *  18/16 box with the same border and shadow. The heights here are the
+ *  RENDERED heights, not the font sizes — that is the only way the card
+ *  does not resize at the moment the real number arrives. */
 export function StatCardSkeleton() {
   return (
-    <div className="rounded-surface border border-line bg-surface px-6 py-[22px]">
-      <Skeleton className="size-10 rounded-icon" />
-      <Skeleton className="mt-5 h-[15px] w-24" />
-      <Skeleton className="mt-2 h-[37px] w-20" />
-      <Skeleton className="mt-2 h-[21px] w-28" />
+    <div className="rounded-card border border-line bg-surface px-[18px] py-4 shadow-card">
+      <Skeleton className="size-8 rounded-icon" />
+      <Skeleton className="mt-4 h-4 w-24" />
+      <Skeleton className="mt-1.5 h-[30px] w-20" />
+      <Skeleton className="mt-1.5 h-[19px] w-28" />
     </div>
   );
 }
@@ -29,7 +29,7 @@ export function StatCardSkeleton() {
 /** A responsive grid of stat-card skeletons. */
 export function StatCardsSkeleton({ count = 4 }: { count?: number }) {
   return (
-    <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-4">
+    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
       {Array.from({ length: count }).map((_, i) => (
         <StatCardSkeleton key={i} />
       ))}
@@ -50,7 +50,7 @@ export function TableSkeleton({
   return (
     <Panel className={cn("overflow-hidden", className)}>
       {/* Header — the real one sits on `sunk`, so this does too. */}
-      <div className="flex items-center gap-4 border-b border-line bg-sunk px-4 py-3.5">
+      <div className="flex h-9 items-center gap-4 border-b border-line bg-sunk px-3">
         {Array.from({ length: columns }).map((_, i) => (
           <Skeleton key={i} className="h-3 flex-1 bg-line" />
         ))}
@@ -58,7 +58,7 @@ export function TableSkeleton({
       {/* Rows — 14px of vertical air, hairline dividers. */}
       <div className="divide-y divide-line-faint">
         {Array.from({ length: rows }).map((_, r) => (
-          <div key={r} className="flex items-center gap-4 px-4 py-3.5">
+          <div key={r} className="flex items-center gap-4 px-3 py-2.5">
             {Array.from({ length: columns }).map((_, c) => (
               <Skeleton
                 key={c}
@@ -77,7 +77,7 @@ export function ConversationListSkeleton({ rows = 6 }: { rows?: number }) {
   return (
     <ul className="divide-y divide-line-faint">
       {Array.from({ length: rows }).map((_, i) => (
-        <li key={i} className="flex items-center gap-3 px-4 py-3.5">
+        <li key={i} className="flex items-center gap-3 px-3 py-2.5">
           {/* Avatars are the one circle in the system. */}
           <Skeleton className="size-10 shrink-0 rounded-full" />
           <div className="min-w-0 flex-1 space-y-2">
@@ -124,7 +124,7 @@ export function InboxSkeleton() {
               key={i}
               className={cn("flex", b.mine ? "justify-end" : "justify-start")}
             >
-              <Skeleton className={cn("h-10 rounded-surface", b.w)} />
+              <Skeleton className={cn("h-10 rounded-card", b.w)} />
             </div>
           ))}
         </div>

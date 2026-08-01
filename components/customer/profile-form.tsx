@@ -234,7 +234,7 @@ export function CustomerProfileForm({
           {PREF_ITEMS.map((p) => (
             <li key={p.key} className="flex items-center justify-between gap-4 py-3.5 first:pt-0 last:pb-0">
               <div className="flex items-start gap-3">
-                <BellRing className="mt-0.5 size-4 shrink-0 text-ocean" />
+                <BellRing className="mt-0.5 size-4 shrink-0 text-marine" />
                 <div>
                   <p className="text-sm font-medium text-foreground">{p.label}</p>
                   <p className="text-xs text-muted-foreground">{p.desc}</p>

@@ -7,7 +7,7 @@ import { cn } from "@/lib/utils"
 /**
  * Form label — design-system.html §09.
  * 700 · 13.5px · #17293A · sentence case. Sits 8px above its field.
- * Required is marked with a flame asterisk, never with "(required)".
+ * Required is marked with a coral asterisk, never with "(required)".
  */
 function Label({
   className,
@@ -26,7 +26,7 @@ function Label({
     >
       {children}
       {required ? (
-        <span aria-hidden className="-ml-1.5 text-flame">
+        <span aria-hidden className="-ml-1.5 text-coral">
           *
         </span>
       ) : null}

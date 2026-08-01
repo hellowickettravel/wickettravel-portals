@@ -66,7 +66,7 @@ export default function MyRidesPage() {
 
       {/* Tabs — they wrap, they never scroll sideways (v2 §02). */}
       <div>
-        <div className="flex flex-wrap gap-1 rounded-surface bg-sunk p-1">
+        <div className="flex flex-wrap gap-1 rounded-card bg-sunk p-1">
           {tabs.map((t) => {
             const active = tab === t;
             const count = buckets[t].length;
@@ -77,7 +77,7 @@ export default function MyRidesPage() {
                 onClick={() => setTab(t)}
                 aria-pressed={active}
                 className={cn(
-                  "inline-flex h-9 flex-1 items-center justify-center gap-1.5 rounded-control px-3 text-sm font-medium whitespace-nowrap outline-none transition-colors focus-visible:ring-2 focus-visible:ring-ocean/40",
+                  "inline-flex h-9 flex-1 items-center justify-center gap-1.5 rounded-control px-3 text-sm font-medium whitespace-nowrap outline-none transition-colors focus-visible:ring-2 focus-visible:ring-marine/40",
                   active
                     ? "bg-card text-tx-head"
                     : "text-muted-foreground hover:text-foreground"
@@ -88,7 +88,7 @@ export default function MyRidesPage() {
                   <span
                     className={cn(
                       "rounded-chip px-1.5 text-[10px] font-semibold",
-                      active ? "bg-sky-tint text-ocean-deep" : "bg-line-strong/60 text-muted-foreground"
+                      active ? "bg-marine-tint text-marine-deep" : "bg-line-strong/60 text-muted-foreground"
                     )}
                   >
                     {count}
@@ -102,8 +102,8 @@ export default function MyRidesPage() {
 
       {/* List */}
       {rides.length === 0 ? (
-        <div className="rounded-surface border border-dashed border-line-strong bg-sunk/60 px-6 py-16 text-center">
-          <div className="mx-auto flex size-12 items-center justify-center rounded-surface bg-sky-tint text-ocean-deep">
+        <div className="rounded-card border border-dashed border-line-strong bg-sunk/60 px-6 py-16 text-center">
+          <div className="mx-auto flex size-12 items-center justify-center rounded-card bg-marine-tint text-marine-deep">
             <EmptyIcon className="size-6" />
           </div>
           <p className="mt-3 tracking-heading text-sm font-semibold text-tx-head">

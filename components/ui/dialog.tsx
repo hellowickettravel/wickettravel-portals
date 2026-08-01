@@ -11,7 +11,7 @@ import { XIcon } from "lucide-react"
  * Dialog / modal — design-system.html §04, §05, §13.
  *
  * The clipped corner at its larger radius (6/24/24/24), lift-2, and an
- * ocean-tinted scrim rather than black. It enters as an entrance, not a
+ * marine-tinted scrim rather than black. It enters as an entrance, not a
  * micro-interaction: 260ms, a 10px rise and a fade, once.
  *
  * Focus trapping, Esc-to-close, backdrop dismissal, scroll lock and the
@@ -34,7 +34,7 @@ function DialogClose({ ...props }: DialogPrimitive.Close.Props) {
   return <DialogPrimitive.Close data-slot="dialog-close" {...props} />
 }
 
-/** Scrim — ocean night at 32%. Never black, never blurred. */
+/** Scrim — marine night at 32%. Never black, never blurred. */
 function DialogOverlay({
   className,
   ...props
@@ -43,7 +43,7 @@ function DialogOverlay({
     <DialogPrimitive.Backdrop
       data-slot="dialog-overlay"
       className={cn(
-        "fixed inset-0 isolate z-50 bg-ocean-ink/32 transition-opacity duration-[260ms] ease-brand data-ending-style:opacity-0 data-starting-style:opacity-0",
+        "fixed inset-0 isolate z-50 bg-rail/32 transition-opacity duration-[260ms] ease-brand data-ending-style:opacity-0 data-starting-style:opacity-0",
         className
       )}
       {...props}
@@ -65,7 +65,7 @@ function DialogContent({
       <DialogPrimitive.Popup
         data-slot="dialog-content"
         className={cn(
-          "fixed top-1/2 left-1/2 z-50 grid w-full max-w-[calc(100%-2rem)] -translate-x-1/2 -translate-y-1/2 gap-5 rounded-surface-lg border border-line bg-surface p-6 text-sm text-tx-body shadow-lift-lg outline-none sm:max-w-md",
+          "fixed top-1/2 left-1/2 z-50 grid w-full max-w-[calc(100%-2rem)] -translate-x-1/2 -translate-y-1/2 gap-5 rounded-panel border border-line bg-surface p-6 text-sm text-tx-body shadow-pop outline-none sm:max-w-md",
           "transition-[opacity,transform] duration-[260ms] ease-brand data-ending-style:opacity-0 data-starting-style:translate-y-[calc(-50%+10px)] data-starting-style:opacity-0",
           className
         )}
@@ -153,7 +153,7 @@ function DialogDescription({
     <DialogPrimitive.Description
       data-slot="dialog-description"
       className={cn(
-        "text-[14.5px] leading-[1.6] text-tx-muted *:[a]:underline *:[a]:underline-offset-[3px] *:[a]:hover:text-ocean",
+        "text-[14.5px] leading-[1.6] text-tx-muted *:[a]:underline *:[a]:underline-offset-[3px] *:[a]:hover:text-marine",
         className
       )}
       {...props}

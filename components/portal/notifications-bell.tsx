@@ -149,7 +149,7 @@ export function NotificationsBell({
     <DropdownMenu>
       <DropdownMenuTrigger
         aria-label={unread > 0 ? `Notifications, ${unread} unread` : "Notifications"}
-        className="relative inline-flex size-[46px] shrink-0 items-center justify-center rounded-icon text-tx-muted outline-none transition-colors duration-150 ease-brand hover:bg-sunk hover:text-tx-head focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-flame"
+        className="relative inline-flex size-[46px] shrink-0 items-center justify-center rounded-icon text-tx-muted outline-none transition-colors duration-150 ease-brand hover:bg-sunk hover:text-tx-head focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-coral"
       >
         <Bell className="size-5" />
         {unread > 0 ? (
@@ -168,7 +168,7 @@ export function NotificationsBell({
             <button
               type="button"
               onClick={() => readAllMutation.mutate()}
-              className="inline-flex items-center gap-1.5 text-[13px] font-medium text-ocean transition-colors duration-150 ease-brand hover:text-ocean-deep"
+              className="inline-flex items-center gap-1.5 text-[13px] font-medium text-marine transition-colors duration-150 ease-brand hover:text-marine-deep"
             >
               <CheckCheck className="size-4" />
               Mark all read
@@ -210,10 +210,10 @@ export function NotificationsBell({
                     }
                     className={cn(
                       "flex w-full items-start gap-3 px-4 py-3 text-left transition-colors duration-150 ease-brand hover:bg-sunk",
-                      !n.is_read && "bg-sky-tint/60"
+                      !n.is_read && "bg-marine-tint/60"
                     )}
                   >
-                    <div className="mt-0.5 flex size-8 shrink-0 items-center justify-center rounded-icon bg-sky-tint text-ocean [&_svg]:[stroke-width:1.75]">
+                    <div className="mt-0.5 flex size-8 shrink-0 items-center justify-center rounded-icon bg-marine-tint text-marine [&_svg]:[stroke-width:1.75]">
                       <Icon className="size-4" />
                     </div>
                     <div className="min-w-0 flex-1">
@@ -222,7 +222,7 @@ export function NotificationsBell({
                           {titleLine}
                         </p>
                         {!n.is_read ? (
-                          <span className="size-2 shrink-0 rounded-full bg-ocean" />
+                          <span className="size-2 shrink-0 rounded-full bg-marine" />
                         ) : null}
                       </div>
                       {n.body ? (
@@ -243,7 +243,7 @@ export function NotificationsBell({
 
         <Link
           href={notificationsHref}
-          className="flex items-center justify-center gap-1.5 border-t border-line px-4 py-3 text-[14.5px] font-medium text-ocean outline-none transition-colors duration-150 ease-brand hover:bg-sunk focus-visible:bg-sunk"
+          className="flex items-center justify-center gap-1.5 border-t border-line px-4 py-3 text-[14.5px] font-medium text-marine outline-none transition-colors duration-150 ease-brand hover:bg-sunk focus-visible:bg-sunk"
         >
           View all notifications
           <ArrowRight className="size-4" />

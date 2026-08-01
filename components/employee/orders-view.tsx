@@ -64,7 +64,7 @@ export function EmployeeOrders({ accessLevel }: { accessLevel: AccessLevel }) {
       />
 
       {/* Personal totals (NOT company-wide) */}
-      <div className="grid grid-cols-1 gap-4 rounded-surface border border-border bg-card p-1 shadow-lift sm:grid-cols-3">
+      <div className="grid grid-cols-1 gap-4 rounded-card border border-border bg-card p-1 shadow-card sm:grid-cols-3">
         {[
           { label: "My orders", value: String(rows.length) },
           { label: "My open", value: String(myOpen) },
@@ -90,7 +90,7 @@ export function EmployeeOrders({ accessLevel }: { accessLevel: AccessLevel }) {
           </p>
         ) : rows.length === 0 ? (
           <div className="flex flex-col items-center gap-2 px-6 py-14 text-center">
-            <div className="flex size-12 items-center justify-center rounded-surface bg-sky-tint text-ocean-deep">
+            <div className="flex size-12 items-center justify-center rounded-card bg-marine-tint text-marine-deep">
               <ShoppingBag className="size-6" />
             </div>
             <p className="tracking-heading text-base font-semibold text-foreground">
@@ -202,7 +202,7 @@ export function EmployeeOrders({ accessLevel }: { accessLevel: AccessLevel }) {
                         <Link
                           href={`/employee/orders/${o.id}`}
                           onClick={(e) => e.stopPropagation()}
-                          className="inline-flex items-center gap-1 text-sm font-medium text-ocean transition-colors hover:text-ocean-deep"
+                          className="inline-flex items-center gap-1 text-sm font-medium text-marine transition-colors hover:text-marine-deep"
                         >
                           View
                           <ChevronRight className="size-3.5" />

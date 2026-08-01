@@ -8,7 +8,7 @@ import { cn } from "@/lib/utils";
 /**
  * Password field with an accessible show/hide toggle. Drop-in replacement for
  * <Input type="password" />, so it inherits the field spec exactly — 48px,
- * visible border, inner shadow, ocean focus ring.
+ * visible border, inner shadow, marine focus ring.
  *
  * The toggle is a real button rather than a hover affordance, because half the
  * people using this are on a phone.

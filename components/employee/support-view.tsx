@@ -112,7 +112,7 @@ export function EmployeeSupport({ adminEmail }: { adminEmail: string }) {
         <div className="lg:col-span-2">
           <SectionCard
             title="Frequently asked questions"
-            action={<MessageCircleQuestion className="size-5 text-ocean" />}
+            action={<MessageCircleQuestion className="size-5 text-marine" />}
           >
             <ul className="divide-y divide-border">
               {FAQS.map((f, i) => {
@@ -122,7 +122,7 @@ export function EmployeeSupport({ adminEmail }: { adminEmail: string }) {
                     <button
                       type="button"
                       onClick={() => setOpen(isOpen ? null : i)}
-                      className="flex w-full items-center justify-between gap-4 rounded-control py-4 text-left outline-none transition-colors hover:text-ocean focus-visible:ring-2 focus-visible:ring-ocean/40"
+                      className="flex w-full items-center justify-between gap-4 rounded-control py-4 text-left outline-none transition-colors hover:text-marine focus-visible:ring-2 focus-visible:ring-marine/40"
                     >
                       <span className="text-sm font-medium text-foreground">{f.q}</span>
                       <ChevronDown
@@ -147,7 +147,7 @@ export function EmployeeSupport({ adminEmail }: { adminEmail: string }) {
         {/* Contact admin */}
         <SectionCard title="Contact admin">
           <div className="flex flex-col items-start gap-3">
-            <div className="flex size-11 items-center justify-center rounded-surface bg-sky-tint text-ocean-deep">
+            <div className="flex size-11 items-center justify-center rounded-card bg-marine-tint text-marine-deep">
               <LifeBuoy className="size-5" />
             </div>
             <p className="text-sm text-muted-foreground">

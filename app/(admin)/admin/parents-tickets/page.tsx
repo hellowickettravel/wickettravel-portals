@@ -40,7 +40,7 @@ const TICKETS_KEY = ["admin", "parent-tickets", "list"] as const;
 const PAGE_SIZE = 12;
 
 const selectClass =
-  "h-10 rounded-control border border-input bg-card px-3 text-base text-foreground outline-none transition-colors focus-visible:border-ocean focus-visible:ring-[3px] focus-visible:ring-ocean/25 sm:text-sm";
+  "h-10 rounded-control border border-input bg-card px-3 text-base text-foreground outline-none transition-colors focus-visible:border-marine focus-visible:ring-[3px] focus-visible:ring-marine/25 sm:text-sm";
 
 const STATUS_TABS: { label: string; value: "all" | ParentTicketStatus }[] = [
   { label: "All", value: "all" },
@@ -55,7 +55,7 @@ function Route({ from, to }: { from: string; to: string }) {
   return (
     <span className="inline-flex min-w-0 items-center gap-1.5 text-sm text-muted-foreground">
       <span className="truncate">{from}</span>
-      <ArrowRight className="size-3.5 shrink-0 text-ocean" />
+      <ArrowRight className="size-3.5 shrink-0 text-marine" />
       <span className="truncate">{to}</span>
     </span>
   );
@@ -125,7 +125,7 @@ export default function AdminParentsTicketsPage() {
       />
 
       <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-        <div className="flex flex-wrap items-center gap-1 rounded-surface bg-sunk p-1">
+        <div className="flex flex-wrap items-center gap-1 rounded-card bg-sunk p-1">
           {STATUS_TABS.map((t) => (
             <button
               key={t.value}
@@ -133,7 +133,7 @@ export default function AdminParentsTicketsPage() {
               className={cn(
                 "shrink-0 rounded-control px-3.5 py-1.5 text-sm font-medium transition-colors",
                 statusTab === t.value
-                  ? "bg-ocean text-tx-invert"
+                  ? "bg-marine text-tx-invert"
                   : "text-muted-foreground hover:text-foreground"
               )}
             >
@@ -183,7 +183,7 @@ export default function AdminParentsTicketsPage() {
           </p>
         ) : all.length === 0 ? (
           <div className="flex flex-col items-center gap-2 px-6 py-14 text-center">
-            <div className="flex size-12 items-center justify-center rounded-surface bg-sky-tint text-ocean-deep">
+            <div className="flex size-12 items-center justify-center rounded-card bg-marine-tint text-marine-deep">
               <HeartHandshake className="size-6" />
             </div>
             <p className="tracking-heading text-base font-semibold text-foreground">
@@ -213,7 +213,7 @@ export default function AdminParentsTicketsPage() {
                       title={<span className="text-tx-head">{e.full_name}</span>}
                       subtitle={e.reference_number}
                       action={
-                        <span className="inline-flex items-center gap-0.5 text-xs font-medium text-ocean">
+                        <span className="inline-flex items-center gap-0.5 text-xs font-medium text-marine">
                           View
                           <ChevronRight className="size-4" />
                         </span>
@@ -324,7 +324,7 @@ export default function AdminParentsTicketsPage() {
                       >
                         <Link
                           href={`/admin/parents-tickets/${e.id}`}
-                          className="inline-flex items-center gap-1.5 rounded-control border border-border bg-card px-3 py-1.5 text-sm font-medium text-foreground transition-colors hover:border-ocean hover:text-ocean"
+                          className="inline-flex items-center gap-1.5 rounded-control border border-border bg-card px-3 py-1.5 text-sm font-medium text-foreground transition-colors hover:border-marine hover:text-marine"
                         >
                           <Eye className="size-4" />
                           View

@@ -44,14 +44,14 @@ export default async function AdminEmployeeDetailPage({
     <div className="space-y-5">
       <Link
         href="/admin/employees"
-        className="inline-flex items-center gap-1.5 text-sm font-medium text-ocean transition-colors hover:text-ocean-deep"
+        className="inline-flex items-center gap-1.5 text-sm font-medium text-marine transition-colors hover:text-marine-deep"
       >
         <ArrowLeft className="size-4" />
         Back to employees
       </Link>
 
       {/* Header */}
-      <div className="flex flex-col gap-4 rounded-surface border border-border bg-card p-5 shadow-lift sm:flex-row sm:items-center sm:justify-between">
+      <div className="flex flex-col gap-4 rounded-card border border-border bg-card p-5 shadow-card sm:flex-row sm:items-center sm:justify-between">
         <div className="space-y-1.5">
           <UserCell name={profile.full_name || "Unnamed"} />
           <div className="flex flex-wrap items-center gap-2">
@@ -88,7 +88,7 @@ export default async function AdminEmployeeDetailPage({
                   href={`/admin/orders/${o.id}`}
                   className="flex items-center gap-4 px-5 py-3.5 transition-colors hover:bg-sunk"
                 >
-                  <Plane className="size-4 -rotate-45 text-ocean" />
+                  <Plane className="size-4 -rotate-45 text-marine" />
                   <div className="min-w-0 flex-1">
                     <p className="truncate text-sm font-medium text-foreground">
                       {o.route_from ?? "—"} → {o.route_to ?? "—"}

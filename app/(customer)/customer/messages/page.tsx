@@ -214,8 +214,8 @@ export default function CustomerMessagesPage() {
     const el = document.getElementById(`cmsg-${id}`);
     if (el) {
       el.scrollIntoView({ behavior: "smooth", block: "center" });
-      el.classList.add("ring-2", "ring-ocean/50");
-      setTimeout(() => el.classList.remove("ring-2", "ring-ocean/50"), 1200);
+      el.classList.add("ring-2", "ring-marine/50");
+      setTimeout(() => el.classList.remove("ring-2", "ring-marine/50"), 1200);
     }
   }
 
@@ -230,12 +230,12 @@ export default function CustomerMessagesPage() {
         </p>
       </div>
 
-      <div className="flex h-[calc(100dvh-16rem)] min-h-[420px] flex-col overflow-hidden rounded-surface border border-border bg-card shadow-lift">
+      <div className="flex h-[calc(100dvh-16rem)] min-h-[420px] flex-col overflow-hidden rounded-card border border-border bg-card shadow-card">
         {/* Chat header */}
         <div className="flex items-center gap-3 border-b border-border px-4 py-3.5 sm:px-5">
           <ChatBackButton onClick={() => router.back()} label="Go back" />
           <div className="relative">
-            <div className="flex size-10 items-center justify-center rounded-full bg-sky-tint text-ocean">
+            <div className="flex size-10 items-center justify-center rounded-full bg-marine-tint text-marine">
               <Plane className="size-5 -rotate-45" />
             </div>
             <span className="absolute -bottom-0.5 -right-0.5 size-3 rounded-full border-2 border-card bg-jade" />
@@ -258,7 +258,7 @@ export default function CustomerMessagesPage() {
             </div>
           ) : !conversation ? (
             <div className="flex h-full flex-col items-center justify-center gap-2 text-center">
-              <div className="flex size-12 items-center justify-center rounded-surface bg-sky-tint text-ocean-deep">
+              <div className="flex size-12 items-center justify-center rounded-card bg-marine-tint text-marine-deep">
                 <MessageCircle className="size-6" />
               </div>
               <p className="tracking-heading text-sm font-semibold text-foreground">
@@ -314,9 +314,9 @@ export default function CustomerMessagesPage() {
                       <div
                         id={`cmsg-${m.id}`}
                         className={cn(
-                          "rounded-surface px-3.5 py-2 text-sm transition-colors",
+                          "rounded-card px-3.5 py-2 text-sm transition-colors",
                           mine
-                            ? "bg-ocean text-tx-invert"
+                            ? "bg-marine text-tx-invert"
                             : "border border-line bg-surface text-tx-body"
                         )}
                       >
@@ -358,7 +358,7 @@ export default function CustomerMessagesPage() {
             />
           ) : null}
           {pendingFile ? (
-            <div className="mb-2 flex items-center gap-2.5 rounded-surface border border-border bg-sunk px-2.5 py-2">
+            <div className="mb-2 flex items-center gap-2.5 rounded-card border border-border bg-sunk px-2.5 py-2">
               {pendingPreview ? (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img
@@ -367,7 +367,7 @@ export default function CustomerMessagesPage() {
                   className="size-10 shrink-0 rounded-control object-cover"
                 />
               ) : (
-                <div className="flex size-10 shrink-0 items-center justify-center rounded-control bg-sky-tint text-ocean-deep">
+                <div className="flex size-10 shrink-0 items-center justify-center rounded-control bg-marine-tint text-marine-deep">
                   <FileText className="size-5" />
                 </div>
               )}

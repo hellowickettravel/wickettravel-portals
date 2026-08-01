@@ -8,7 +8,7 @@ import { cn } from "@/lib/utils"
  * White, 1px warm line, 16px radius, lift-1. Padding is 22–26px on desktop
  * and 20px on mobile; `size="sm"` is the portal-screen density.
  *
- * White on the sand canvas already reads as lifted, so the shadow here is
+ * White on the sunk canvas already reads as lifted, so the shadow here is
  * doing very little work and is kept deliberately faint — the border is what
  * defines the card.
  *
@@ -26,7 +26,7 @@ function Card({
       data-slot="card"
       data-size={size}
       className={cn(
-        "group/card flex flex-col gap-(--card-spacing) overflow-hidden rounded-surface border border-line bg-card py-(--card-spacing) text-sm text-card-foreground shadow-lift",
+        "group/card flex flex-col gap-(--card-spacing) overflow-hidden rounded-card border border-line bg-card py-(--card-spacing) text-sm text-card-foreground shadow-card",
         "[--card-px:20px] [--card-spacing:20px] md:[--card-px:26px] md:[--card-spacing:24px]",
         "data-[size=sm]:[--card-px:18px] data-[size=sm]:[--card-spacing:18px] md:data-[size=sm]:[--card-px:22px] md:data-[size=sm]:[--card-spacing:20px]",
         "has-data-[slot=card-footer]:pb-0 has-[>img:first-child]:pt-0",
@@ -103,7 +103,7 @@ function CardFooter({ className, ...props }: React.ComponentProps<"div">) {
     <div
       data-slot="card-footer"
       className={cn(
-        "flex items-center gap-3 border-t border-line-faint bg-sand px-(--card-px) py-(--card-spacing)",
+        "flex items-center gap-3 border-t border-line-faint bg-sunk px-(--card-px) py-(--card-spacing)",
         className
       )}
       {...props}

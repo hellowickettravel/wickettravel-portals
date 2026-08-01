@@ -34,7 +34,7 @@ export default function EarningsPage() {
       </div>
 
       {/* Chart */}
-      <div className="rounded-surface bg-card p-5 border border-line shadow-lift">
+      <div className="rounded-card bg-card p-5 border border-line shadow-card">
         <div className="mb-4 flex items-center justify-between">
           <div>
             <h2 className="tracking-heading text-sm font-semibold text-tx-head">Last 7 days</h2>
@@ -49,7 +49,7 @@ export default function EarningsPage() {
       </div>
 
       {/* Per-ride breakdown */}
-      <div className="rounded-surface bg-card p-1.5 border border-line shadow-lift">
+      <div className="rounded-card bg-card p-1.5 border border-line shadow-card">
         <div className="flex items-center justify-between px-3.5 pb-1 pt-3">
           <h2 className="tracking-heading text-sm font-semibold text-tx-head">Recent payouts</h2>
           <span className="text-xs text-muted-foreground">Fare − fee = net</span>
@@ -57,7 +57,7 @@ export default function EarningsPage() {
         <ul className="divide-y divide-border">
           {EARNINGS.map((e) => (
             <li key={e.ref} className="flex items-center gap-3 px-3.5 py-3">
-              <div className="flex size-10 shrink-0 items-center justify-center rounded-surface bg-sky-tint text-ocean-deep">
+              <div className="flex size-10 shrink-0 items-center justify-center rounded-card bg-marine-tint text-marine-deep">
                 <Wallet className="size-[18px]" />
               </div>
               <div className="min-w-0 flex-1">

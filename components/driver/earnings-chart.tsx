@@ -28,7 +28,7 @@ export function EarningsChart({
                 <div
                   className={cn(
                     "w-full max-w-9 rounded-chip transition-all",
-                    isPeak ? "bg-flame" : "bg-ocean/85"
+                    isPeak ? "bg-coral" : "bg-marine/85"
                   )}
                   style={{ height: `${Math.max(pct, 6)}%` }}
                   title={`${d.label}: ${inr(d.value)}`}

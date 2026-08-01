@@ -74,7 +74,7 @@ export function MessageAttachment({
             e.stopPropagation();
             void downloadFile(url, name);
           }}
-          className="absolute bottom-2 right-2 inline-flex size-11 items-center justify-center rounded-chip bg-ocean-ink/60 text-tx-invert shadow-lift outline-none transition-colors duration-150 ease-brand hover:bg-ocean-ink/80 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white sm:opacity-0 sm:group-hover:opacity-100 sm:focus-visible:opacity-100"
+          className="absolute bottom-2 right-2 inline-flex size-11 items-center justify-center rounded-chip bg-rail/60 text-tx-invert shadow-card outline-none transition-colors duration-150 ease-brand hover:bg-rail/80 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white sm:opacity-0 sm:group-hover:opacity-100 sm:focus-visible:opacity-100"
         >
           <Download className="size-4" />
         </button>
@@ -87,15 +87,15 @@ export function MessageAttachment({
       type="button"
       onClick={() => void downloadFile(url, name)}
       className={cn(
-        "mb-1 flex w-full max-w-[260px] items-center gap-2.5 rounded-chip border px-3 py-2 text-left text-[14.5px] outline-none transition-colors duration-150 ease-brand focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-flame",
+        "mb-1 flex w-full max-w-[260px] items-center gap-2.5 rounded-chip border px-3 py-2 text-left text-[14.5px] outline-none transition-colors duration-150 ease-brand focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-coral",
         mine
           ? "border-white/25 bg-white/10 hover:bg-white/20"
-          : "border-line bg-sunk hover:bg-sand-deep"
+          : "border-line bg-sunk hover:bg-pressed"
       )}
     >
-      <FileText className={cn("size-5 shrink-0", mine ? "text-tx-invert" : "text-ocean")} />
+      <FileText className={cn("size-5 shrink-0", mine ? "text-tx-invert" : "text-marine")} />
       <span className="min-w-0 flex-1 truncate">{name}</span>
-      <Download className={cn("size-4 shrink-0", mine ? "text-tx-invert-2" : "text-tx-muted")} />
+      <Download className={cn("size-4 shrink-0", mine ? "text-tx-rail-dim" : "text-tx-muted")} />
     </button>
   );
 }

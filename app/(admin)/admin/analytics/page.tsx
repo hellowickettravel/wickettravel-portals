@@ -18,7 +18,7 @@ const RANGES = [
 /** Vertical bar chart (CSS). */
 function BarChart({
   data,
-  color = "var(--ocean)",
+  color = "var(--marine)",
   format,
 }: {
   data: { label: string; value: number }[];
@@ -116,7 +116,7 @@ function TopEmployees({ data }: { data: { name: string; closed: number }[] }) {
           </div>
           <div className="h-2 w-full overflow-hidden rounded-chip bg-sunk">
             <div
-              className="h-full rounded-chip bg-ocean"
+              className="h-full rounded-chip bg-marine"
               style={{ width: `${(e.closed / max) * 100}%` }}
             />
           </div>
@@ -186,7 +186,7 @@ export default async function AnalyticsPage({
   }));
 
   const statusData = [
-    { label: "New", value: orders.filter((o) => o.status === "new").length, color: "var(--ocean)" },
+    { label: "New", value: orders.filter((o) => o.status === "new").length, color: "var(--marine)" },
     { label: "In progress", value: orders.filter((o) => o.status === "in_progress").length, color: "var(--gold)" },
     { label: "Completed", value: orders.filter((o) => o.status === "completed").length, color: "var(--jade)" },
     { label: "Cancelled", value: orders.filter((o) => o.status === "cancelled").length, color: "var(--ruby)" },
@@ -222,7 +222,7 @@ export default async function AnalyticsPage({
         title="Analytics"
         subtitle="Performance across orders, revenue and your team."
         actions={
-          <div className="inline-flex items-center gap-1 rounded-surface bg-muted p-1">
+          <div className="inline-flex items-center gap-1 rounded-card bg-muted p-1">
             {RANGES.map((r) => (
               <Link
                 key={r.key}
@@ -230,7 +230,7 @@ export default async function AnalyticsPage({
                 className={cn(
                   "rounded-control px-3 py-1.5 text-sm font-medium transition-colors",
                   r.key === range.key
-                    ? "bg-ocean text-tx-invert"
+                    ? "bg-marine text-tx-invert"
                     : "text-muted-foreground hover:text-foreground"
                 )}
               >
@@ -251,7 +251,7 @@ export default async function AnalyticsPage({
       {!hasData ? (
         <SectionCard title="No data yet">
           <div className="flex flex-col items-center gap-2 py-12 text-center">
-            <div className="flex size-12 items-center justify-center rounded-surface bg-sky-tint text-ocean-deep">
+            <div className="flex size-12 items-center justify-center rounded-card bg-marine-tint text-marine-deep">
               <BarChart3 className="size-6" />
             </div>
             <p className="tracking-heading text-base font-semibold text-foreground">
@@ -272,7 +272,7 @@ export default async function AnalyticsPage({
             <SectionCard title="Revenue by month" description="Completed revenue (GBP)">
               <BarChart
                 data={revenueByMonth}
-                color="var(--ocean-deep)"
+                color="var(--marine-deep)"
                 format={(v) => gbp(v)}
               />
             </SectionCard>

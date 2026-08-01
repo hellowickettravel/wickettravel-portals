@@ -397,13 +397,13 @@ export function ConversationInbox({
     const el = document.getElementById(`cmsg-${id}`);
     if (el) {
       el.scrollIntoView({ behavior: "smooth", block: "center" });
-      el.classList.add("ring-2", "ring-ocean/50");
-      setTimeout(() => el.classList.remove("ring-2", "ring-ocean/50"), 1200);
+      el.classList.add("ring-2", "ring-marine/50");
+      setTimeout(() => el.classList.remove("ring-2", "ring-marine/50"), 1200);
     }
   }
 
   return (
-    <div className="flex h-[calc(100dvh-9.5rem)] min-h-[460px] overflow-hidden rounded-surface border border-border bg-card shadow-lift">
+    <div className="flex h-[calc(100dvh-9.5rem)] min-h-[460px] overflow-hidden rounded-card border border-border bg-card shadow-card">
       {/* LEFT — conversation list */}
       <aside
         className={cn(
@@ -429,7 +429,7 @@ export function ConversationInbox({
           </div>
         ) : conversations.length === 0 ? (
           <div className="flex flex-1 flex-col items-center justify-center gap-2 px-6 text-center">
-            <div className="flex size-12 items-center justify-center rounded-surface bg-sky-tint text-ocean-deep">
+            <div className="flex size-12 items-center justify-center rounded-card bg-marine-tint text-marine-deep">
               <Inbox className="size-6" />
             </div>
             <p className="tracking-heading text-sm font-semibold text-foreground">
@@ -456,14 +456,14 @@ export function ConversationInbox({
                     type="button"
                     onClick={() => openConversation(c.id)}
                     className={cn(
-                      "flex w-full items-center gap-3 border-b border-l-2 border-border/70 px-4 py-3 text-left outline-none transition-colors focus-visible:bg-sunk focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ocean/40",
+                      "flex w-full items-center gap-3 border-b border-l-2 border-border/70 px-4 py-3 text-left outline-none transition-colors focus-visible:bg-sunk focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-marine/40",
                       isActive
-                        ? "border-l-ocean bg-sky-tint/70"
+                        ? "border-l-marine bg-marine-tint/70"
                         : "border-l-transparent hover:bg-sunk"
                     )}
                   >
                     <Avatar className="size-10">
-                      <AvatarFallback className="bg-sky-tint text-xs font-semibold text-ocean-deep">
+                      <AvatarFallback className="bg-marine-tint text-xs font-semibold text-marine-deep">
                         {initialsOf(name)}
                       </AvatarFallback>
                     </Avatar>
@@ -479,7 +479,7 @@ export function ConversationInbox({
                           {c.preview ?? "No messages yet"}
                         </p>
                         {c.unreadCount > 0 ? (
-                          <span className="inline-flex min-w-5 shrink-0 items-center justify-center rounded-chip bg-ocean px-1.5 py-0.5 text-[10px] font-semibold text-tx-invert">
+                          <span className="inline-flex min-w-5 shrink-0 items-center justify-center rounded-chip bg-marine px-1.5 py-0.5 text-[10px] font-semibold text-tx-invert">
                             {c.unreadCount}
                           </span>
                         ) : null}
@@ -507,7 +507,7 @@ export function ConversationInbox({
                   label="Back to conversations"
                 />
                 <Avatar className="size-9">
-                  <AvatarFallback className="bg-sky-tint text-xs font-semibold text-ocean-deep">
+                  <AvatarFallback className="bg-marine-tint text-xs font-semibold text-marine-deep">
                     {initialsOf(active.customer?.name || active.customer?.wa_phone || "?")}
                   </AvatarFallback>
                 </Avatar>
@@ -536,7 +536,7 @@ export function ConversationInbox({
                           employeeId: e.target.value || null,
                         })
                       }
-                      className="h-9 max-w-[10rem] rounded-control border border-input bg-sunk px-2.5 text-base text-foreground outline-none transition-colors focus-visible:border-ocean focus-visible:ring-[3px] focus-visible:ring-ocean/30 disabled:opacity-50 sm:text-sm"
+                      className="h-9 max-w-[10rem] rounded-control border border-input bg-sunk px-2.5 text-base text-foreground outline-none transition-colors focus-visible:border-marine focus-visible:ring-[3px] focus-visible:ring-marine/30 disabled:opacity-50 sm:text-sm"
                     >
                       <option value="">Unassigned</option>
                       {activeEmployees.map((emp) => (
@@ -636,9 +636,9 @@ export function ConversationInbox({
                           <div
                             id={`cmsg-${m.id}`}
                             className={cn(
-                              "rounded-surface px-3.5 py-2 text-sm transition-colors",
+                              "rounded-card px-3.5 py-2 text-sm transition-colors",
                               mine
-                                ? "bg-ocean text-tx-invert"
+                                ? "bg-marine text-tx-invert"
                                 : "border border-line bg-surface text-tx-body"
                             )}
                           >
@@ -683,7 +683,7 @@ export function ConversationInbox({
                   />
                 ) : null}
                 {pendingFile ? (
-                  <div className="mb-2 flex items-center gap-2.5 rounded-surface border border-border bg-sunk px-2.5 py-2">
+                  <div className="mb-2 flex items-center gap-2.5 rounded-card border border-border bg-sunk px-2.5 py-2">
                     {pendingPreview ? (
                       // eslint-disable-next-line @next/next/no-img-element
                       <img
@@ -692,7 +692,7 @@ export function ConversationInbox({
                         className="size-10 shrink-0 rounded-control object-cover"
                       />
                     ) : (
-                      <div className="flex size-10 shrink-0 items-center justify-center rounded-control bg-sky-tint text-ocean-deep">
+                      <div className="flex size-10 shrink-0 items-center justify-center rounded-control bg-marine-tint text-marine-deep">
                         <FileText className="size-5" />
                       </div>
                     )}

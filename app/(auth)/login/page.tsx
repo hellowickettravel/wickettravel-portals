@@ -215,7 +215,7 @@ export default function LoginPage() {
       />
 
       {redirectParam?.startsWith("/customer/book") ? (
-        <div className="mb-8 flex items-start gap-3 rounded-surface border border-sky-line bg-sky-tint px-4 py-3.5 text-[14.5px] leading-[1.6] text-ocean-deep">
+        <div className="mb-8 flex items-start gap-3 rounded-card border border-marine-line bg-marine-tint px-4 py-3.5 text-[14.5px] leading-[1.6] text-marine-deep">
           <Plane className="mt-0.5 size-[18px] shrink-0 -rotate-45" />
           <span>
             Your booking details are saved. Sign in and we&apos;ll take you
@@ -294,7 +294,7 @@ export default function LoginPage() {
               ? `/signup?redirect=${encodeURIComponent(redirectParam)}`
               : "/signup"
           }
-          className="font-semibold text-ocean underline-offset-[3px] transition-colors duration-150 ease-brand hover:underline"
+          className="font-semibold text-marine underline-offset-[3px] transition-colors duration-150 ease-brand hover:underline"
         >
           Sign up
         </Link>

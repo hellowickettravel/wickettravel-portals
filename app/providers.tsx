@@ -6,6 +6,7 @@ import {
   QueryClient,
   QueryClientProvider,
 } from "@tanstack/react-query";
+import { TooltipProvider } from "@/components/ui/tooltip";
 
 // Dev-only: lazy-load the devtools so the package is never pulled into the
 // production bundle. In prod this resolves to a no-op component and the import
@@ -40,7 +41,10 @@ export function Providers({ children }: { children: React.ReactNode }) {
 
   return (
     <QueryClientProvider client={queryClient}>
-      {children}
+      {/* 300ms: long enough that sweeping the cursor across a collapsed nav
+          rail does not fire six tooltips, short enough that deliberately
+          resting on an icon feels answered. */}
+      <TooltipProvider delay={300}>{children}</TooltipProvider>
       {process.env.NODE_ENV === "development" ? (
         <ReactQueryDevtools initialIsOpen={false} />
       ) : null}

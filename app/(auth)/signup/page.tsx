@@ -172,10 +172,10 @@ export default function SignupPage() {
       {sentTo ? (
         /* ---------- Check-your-email confirmation ---------- */
         <>
-          <IconChip tone="ocean">
+          <IconChip tone="marine">
             <MailCheck />
           </IconChip>
-          <h1 className="mt-5 text-[25px] leading-[1.26] font-bold tracking-heading text-tx-head">
+          <h1 className="font-serif-display mt-4 text-[24px] leading-[1.2] text-tx-head">
             Check your email
           </h1>
           <p className="mt-3.5 text-[14.5px] leading-[1.6] text-tx-muted">
@@ -204,7 +204,7 @@ export default function SignupPage() {
           />
 
           {resumingBooking ? (
-            <div className="mb-8 flex items-start gap-3 rounded-surface border border-sky-line bg-sky-tint px-4 py-3.5 text-[14.5px] leading-[1.6] text-ocean-deep">
+            <div className="mb-8 flex items-start gap-3 rounded-card border border-marine-line bg-marine-tint px-4 py-3.5 text-[14.5px] leading-[1.6] text-marine-deep">
               <Plane className="mt-0.5 size-[18px] shrink-0 -rotate-45" />
               <span>
                 Your booking details are saved. Create your free account and
@@ -313,7 +313,7 @@ export default function SignupPage() {
             Already have an account?{" "}
             <Link
               href={loginHref}
-              className="font-semibold text-ocean underline-offset-[3px] transition-colors duration-150 ease-brand hover:underline"
+              className="font-semibold text-marine underline-offset-[3px] transition-colors duration-150 ease-brand hover:underline"
             >
               Sign in
             </Link>

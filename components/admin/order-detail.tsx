@@ -192,7 +192,7 @@ export function OrderDetail({
       <div className="space-y-5">
         <Link
           href="/admin/orders"
-          className="inline-flex items-center gap-1.5 rounded-chip text-[14.5px] font-semibold text-ocean underline-offset-[3px] outline-none transition-colors duration-150 ease-brand hover:text-ocean-deep hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-flame"
+          className="inline-flex items-center gap-1.5 rounded-chip text-[14.5px] font-semibold text-marine underline-offset-[3px] outline-none transition-colors duration-150 ease-brand hover:text-marine-deep hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-coral"
         >
           <ArrowLeft className="size-4" />
           Back to orders
@@ -207,7 +207,7 @@ export function OrderDetail({
               </p>
               <OrderStatusBadge status={order.status} />
             </div>
-            <h1 className="mt-2 text-[25px] leading-[1.26] font-bold tracking-heading text-tx-head sm:text-[32px] sm:leading-[1.16] sm:tracking-[-0.015em]">
+            <h1 className="mt-1.5 text-[22px] leading-[1.2] font-semibold tracking-heading text-tx-head sm:text-[24px]">
               {order.customer?.name ?? "Unknown customer"}
             </h1>
             <p className="mt-2 text-[14.5px] text-tx-muted">
@@ -269,7 +269,7 @@ export function OrderDetail({
             order.selling_price != null ? (
               gbp(order.selling_price)
             ) : (
-              /* A 27px flame em dash reads as a mistake. Say what's true. */
+              /* A 27px coral em dash reads as a mistake. Say what's true. */
               <span className="text-[19px] font-semibold text-tx-muted">
                 Not priced
               </span>
@@ -333,7 +333,7 @@ export function OrderDetail({
                     order.customer?.id ? (
                       <Link
                         href={`/admin/customers/${order.customer.id}`}
-                        className="rounded-chip text-ocean underline-offset-[3px] outline-none hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-flame"
+                        className="rounded-chip text-marine underline-offset-[3px] outline-none hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-coral"
                       >
                         {order.customer.name || "View customer"}
                       </Link>
@@ -349,7 +349,7 @@ export function OrderDetail({
                     order.conversation_id ? (
                       <Link
                         href={`/admin/messages/${order.conversation_id}`}
-                        className="inline-flex items-center gap-1.5 rounded-chip text-ocean underline-offset-[3px] outline-none hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-flame"
+                        className="inline-flex items-center gap-1.5 rounded-chip text-marine underline-offset-[3px] outline-none hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-coral"
                       >
                         <MessageSquare className="size-4" />
                         View chat

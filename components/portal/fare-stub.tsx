@@ -33,7 +33,7 @@ type FareStubMeta = {
 function codeClass(value: string) {
   return cn(
     "font-mono font-medium tracking-[0.01em] text-tx-head",
-    value.length <= 4 ? "text-[25px] leading-none" : "text-[19px] leading-[1.36]"
+    value.length <= 4 ? "text-[20px] leading-none" : "text-[16px] leading-[1.36]"
   );
 }
 
@@ -64,7 +64,7 @@ export function FareStub({
     <div
       data-slot="fare-stub"
       className={cn(
-        "flex flex-col rounded-surface border border-line bg-surface shadow-lift min-[620px]:flex-row",
+        "flex flex-col rounded-card border border-line bg-surface shadow-card min-[620px]:flex-row",
         "[--stub-notch:var(--canvas)]",
         className
       )}
@@ -73,8 +73,8 @@ export function FareStub({
       <div className="flex-1 p-6 min-[620px]:px-[26px]">
         <div className="flex flex-wrap items-center gap-x-[13px] gap-y-1">
           <span className={codeClass(from)}>{from}</span>
-          {/* The one flame mark on this surface. */}
-          <Plane className="size-[17px] shrink-0 -rotate-45 text-flame" aria-hidden />
+          {/* The one coral mark on this surface. */}
+          <Plane className="size-[17px] shrink-0 -rotate-45 text-coral" aria-hidden />
           <span className={codeClass(to)}>{to}</span>
         </div>
 
@@ -107,8 +107,8 @@ export function FareStub({
           "mx-6 h-px border-t-2 border-dashed border-line-strong",
           "min-[620px]:mx-0 min-[620px]:my-5 min-[620px]:h-auto min-[620px]:w-px min-[620px]:border-t-0 min-[620px]:border-l-2",
           // The two notches.
-          "before:absolute before:size-[22px] before:rounded-full before:bg-(--stub-notch) before:shadow-lift-in",
-          "after:absolute after:size-[22px] after:rounded-full after:bg-(--stub-notch) after:shadow-lift-in",
+          "before:absolute before:size-[22px] before:rounded-full before:bg-(--stub-notch) before:shadow-card",
+          "after:absolute after:size-[22px] after:rounded-full after:bg-(--stub-notch) after:shadow-card",
           // Stacked: notches sit on the left and right edges of the card.
           "before:top-[-11px] before:left-[-31px]",
           "after:top-[-11px] after:right-[-31px]",
@@ -121,7 +121,7 @@ export function FareStub({
       {/* ---------- The tear-off ---------- */}
       <div className="flex flex-col justify-center p-6 min-[620px]:w-[152px] min-[620px]:shrink-0 min-[620px]:px-[26px]">
         <span className="font-micro text-tx-muted">{fareLabel}</span>
-        <p className="tabular mt-1 text-[27px] leading-[1.15] font-bold tracking-[-0.02em] text-flame">
+        <p className="tabular mt-1 text-[22px] leading-[1.15] font-semibold tracking-[-0.021em] text-coral-ink">
           {fare}
         </p>
         {fareNote ? (

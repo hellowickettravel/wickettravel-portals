@@ -41,7 +41,7 @@ export function MessageReplyButton({
       aria-label="Reply to this message"
       title="Reply"
       className={cn(
-        "inline-flex size-7 items-center justify-center rounded-chip border border-line bg-surface text-tx-faint opacity-0 shadow-lift outline-none transition-all duration-150 ease-brand hover:border-ocean hover:text-ocean focus-visible:opacity-100 focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-flame group-hover:opacity-100",
+        "inline-flex size-7 items-center justify-center rounded-chip border border-line bg-surface text-tx-faint opacity-0 shadow-card outline-none transition-all duration-150 ease-brand hover:border-marine hover:text-marine focus-visible:opacity-100 focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-coral group-hover:opacity-100",
         className
       )}
     >
@@ -74,20 +74,20 @@ export function QuotedMessage({
         onJump && "cursor-pointer",
         mine
           ? "bg-white/15 hover:bg-white/22"
-          : "bg-sunk hover:bg-sand-deep"
+          : "bg-sunk hover:bg-pressed"
       )}
     >
       <span
         className={cn(
           "w-0.5 shrink-0 rounded-full",
-          mine ? "bg-white/60" : "bg-ocean"
+          mine ? "bg-white/60" : "bg-marine"
         )}
       />
       <span className="min-w-0 flex-1">
         <span
           className={cn(
             "block text-[13px] font-semibold",
-            mine ? "text-tx-invert" : "text-ocean"
+            mine ? "text-tx-invert" : "text-marine"
           )}
         >
           {quoted.label}
@@ -95,7 +95,7 @@ export function QuotedMessage({
         <span
           className={cn(
             "flex items-center gap-1 truncate text-[13px]",
-            mine ? "text-tx-invert-2" : "text-tx-muted"
+            mine ? "text-tx-rail-dim" : "text-tx-muted"
           )}
         >
           {quoted.hasAttachment && !quoted.body?.trim() ? (
@@ -118,9 +118,9 @@ export function ReplyComposerBar({
 }) {
   return (
     <div className="mb-2 flex items-stretch gap-2 rounded-chip border border-line bg-sunk py-1.5 pl-2.5 pr-2">
-      <span className="w-0.5 shrink-0 rounded-full bg-ocean" />
+      <span className="w-0.5 shrink-0 rounded-full bg-marine" />
       <div className="min-w-0 flex-1">
-        <p className="text-[13px] font-semibold text-ocean">
+        <p className="text-[13px] font-semibold text-marine">
           Replying to {quoted.label}
         </p>
         <p className="flex items-center gap-1 truncate text-[13px] text-tx-muted">
@@ -134,7 +134,7 @@ export function ReplyComposerBar({
         type="button"
         aria-label="Cancel reply"
         onClick={onCancel}
-        className="inline-flex size-9 shrink-0 items-center justify-center self-center rounded-chip text-tx-faint outline-none transition-colors duration-150 ease-brand hover:bg-surface hover:text-tx-head focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-flame"
+        className="inline-flex size-9 shrink-0 items-center justify-center self-center rounded-chip text-tx-faint outline-none transition-colors duration-150 ease-brand hover:bg-surface hover:text-tx-head focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-coral"
       >
         <X className="size-4" />
       </button>

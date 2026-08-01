@@ -24,17 +24,17 @@ export function StatTile({
   return (
     <div
       className={cn(
-        "rounded-surface bg-card p-4 border border-line shadow-lift",
+        "rounded-card bg-card p-4 border border-line shadow-card",
         className
       )}
     >
-      <div className="flex size-9 items-center justify-center rounded-surface bg-sky-tint text-ocean-deep">
+      <div className="flex size-9 items-center justify-center rounded-card bg-marine-tint text-marine-deep">
         <Icon className="size-[18px]" />
       </div>
       <p
         className={cn(
           "mt-3 text-xl font-semibold tracking-tight sm:text-2xl",
-          accent ? "text-flame-hover" : "text-foreground"
+          accent ? "text-coral-hover" : "text-foreground"
         )}
       >
         {value}

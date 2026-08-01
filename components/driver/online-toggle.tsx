@@ -25,7 +25,7 @@ export function OnlineToggle({
         onClick={() => setOnline(!online)}
         aria-pressed={online}
         className={cn(
-          "flex w-full items-center justify-between gap-3 rounded-surface px-4 py-3.5 text-left ring-1 transition-colors outline-none focus-visible:ring-2 focus-visible:ring-ocean/40",
+          "flex w-full items-center justify-between gap-3 rounded-card px-4 py-3.5 text-left ring-1 transition-colors outline-none focus-visible:ring-2 focus-visible:ring-marine/40",
           online
             ? "bg-jade-tint ring-jade-line"
             : "bg-sunk ring-line-strong",
@@ -66,7 +66,7 @@ export function OnlineToggle({
       onClick={() => setOnline(!online)}
       aria-pressed={online}
       className={cn(
-        "inline-flex items-center gap-2 rounded-control py-1.5 pl-2.5 pr-1.5 text-xs font-semibold ring-1 transition-colors outline-none focus-visible:ring-2 focus-visible:ring-ocean/40",
+        "inline-flex items-center gap-2 rounded-control py-1.5 pl-2.5 pr-1.5 text-xs font-semibold ring-1 transition-colors outline-none focus-visible:ring-2 focus-visible:ring-marine/40",
         online
           ? "bg-jade-tint text-jade ring-jade-line"
           : "bg-sunk text-tx-muted ring-line-strong",

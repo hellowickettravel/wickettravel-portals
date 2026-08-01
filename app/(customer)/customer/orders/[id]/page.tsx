@@ -50,16 +50,16 @@ export default async function CustomerOrderDetailPage({
     <div className="space-y-5 animate-in fade-in slide-in-from-bottom-2 duration-500 ease-out">
       <Link
         href="/customer/orders"
-        className="inline-flex items-center gap-1.5 text-sm font-medium text-ocean transition-colors hover:text-ocean-deep"
+        className="inline-flex items-center gap-1.5 text-sm font-medium text-marine transition-colors hover:text-marine-deep"
       >
         <ArrowLeft className="size-4" />
         Back to my orders
       </Link>
 
       {/* Header */}
-      <div className="flex flex-col gap-4 rounded-surface border border-border bg-card p-5 shadow-lift sm:flex-row sm:items-center sm:justify-between">
+      <div className="flex flex-col gap-4 rounded-card border border-border bg-card p-5 shadow-card sm:flex-row sm:items-center sm:justify-between">
         <div className="flex items-center gap-3">
-          <div className="flex size-11 shrink-0 items-center justify-center rounded-surface bg-sky-tint text-ocean-deep">
+          <div className="flex size-11 shrink-0 items-center justify-center rounded-card bg-marine-tint text-marine-deep">
             <Plane className="size-5 -rotate-45" />
           </div>
           <div className="leading-tight">
@@ -94,7 +94,7 @@ export default async function CustomerOrderDetailPage({
         <div className="space-y-5">
           <SectionCard title="Your quote">
             <div className="flex items-center gap-3">
-              <div className="flex size-11 items-center justify-center rounded-surface bg-sky-tint text-ocean-deep">
+              <div className="flex size-11 items-center justify-center rounded-card bg-marine-tint text-marine-deep">
                 <Ticket className="size-5" />
               </div>
               <div>

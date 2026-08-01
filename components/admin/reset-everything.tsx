@@ -103,9 +103,9 @@ export function ResetEverything() {
   }
 
   return (
-    <div className="rounded-surface border-2 border-ruby-line bg-ruby-tint/60 p-5 sm:p-6">
+    <div className="rounded-card border-2 border-ruby-line bg-ruby-tint/60 p-5 sm:p-6">
       <div className="flex items-start gap-3">
-        <div className="flex size-10 shrink-0 items-center justify-center rounded-surface bg-ruby-tint text-ruby">
+        <div className="flex size-10 shrink-0 items-center justify-center rounded-card bg-ruby-tint text-ruby">
           <ShieldAlert className="size-5" />
         </div>
         <div className="min-w-0">

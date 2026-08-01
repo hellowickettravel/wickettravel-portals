@@ -26,7 +26,7 @@ export default function DriverLoginPage() {
   return (
     <main className="grid min-h-dvh lg:grid-cols-[1.1fr_1fr]">
       {/* Brand / hero — hidden on phones */}
-      <section className="hidden bg-ocean lg:flex lg:flex-col lg:justify-between lg:p-11 xl:p-14">
+      <section className="hidden bg-marine lg:flex lg:flex-col lg:justify-between lg:p-11 xl:p-14">
 
         <div>
           <BrandLogo variant="white" className="h-9 w-auto" priority />
@@ -37,7 +37,7 @@ export default function DriverLoginPage() {
           <h1 className="mt-3.5 max-w-[15ch] text-[29px] leading-[1.2] font-bold tracking-display text-balance text-white">
             Drive with Wicket. Earn on every airport ride.
           </h1>
-          <p className="mt-3 max-w-[34ch] text-[15.5px] leading-[1.6] text-tx-invert-2">
+          <p className="mt-3 max-w-[34ch] text-[15.5px] leading-[1.6] text-tx-rail-dim">
             Accept airport pickups across Hyderabad, Chennai & Bengaluru, track
             your trips, and get weekly payouts — all from your phone.
           </p>
@@ -47,8 +47,8 @@ export default function DriverLoginPage() {
           <div className="flex size-[34px] shrink-0 items-center justify-center rounded-control bg-white/13">
             <Star className="size-[17px] text-tx-invert" />
           </div>
-          <p className="text-[13.5px] leading-[1.6] text-tx-invert-3">
-            <span className="font-semibold text-tx-invert-2">Trusted by 2,000+ drivers</span>{" "}
+          <p className="text-[13.5px] leading-[1.6] text-tx-rail-dim">
+            <span className="font-semibold text-tx-rail-dim">Trusted by 2,000+ drivers</span>{" "}
             across South India.
           </p>
         </div>
@@ -61,7 +61,7 @@ export default function DriverLoginPage() {
             <BrandLogo className="h-8 w-auto" priority />
           </div>
 
-          <div className="mb-1 inline-flex items-center gap-1.5 rounded-chip bg-sky-tint px-2.5 py-1 text-xs font-medium text-ocean">
+          <div className="mb-1 inline-flex items-center gap-1.5 rounded-chip bg-marine-tint px-2.5 py-1 text-xs font-medium text-marine">
             <Car className="size-3.5" />
             Driver Partner
           </div>
@@ -104,7 +104,7 @@ export default function DriverLoginPage() {
                 disabled={loading}
               />
               <div className="flex justify-end">
-                <button type="button" className="text-xs font-medium text-ocean transition-colors hover:text-ocean-deep">
+                <button type="button" className="text-xs font-medium text-marine transition-colors hover:text-marine-deep">
                   Forgot password?
                 </button>
               </div>
@@ -128,7 +128,7 @@ export default function DriverLoginPage() {
 
           <p className="mt-6 text-center text-sm text-tx-muted">
             New driver?{" "}
-            <Link href="/driver/apply" className="font-medium text-ocean transition-colors hover:text-ocean-deep">
+            <Link href="/driver/apply" className="font-medium text-marine transition-colors hover:text-marine-deep">
               Become a partner
             </Link>
           </p>

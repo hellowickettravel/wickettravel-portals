@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   ClipboardList,
@@ -48,6 +49,21 @@ export default function OrdersPage() {
   const supabase = useMemo(() => createClient(), []);
   const [tab, setTab] = useState<Tab>("all");
   const [query, setQuery] = useState("");
+
+  // The topbar's global search navigates here as `?q=`, which is what makes
+  // that search real rather than decorative.
+  //
+  // Adjusting state during render rather than in an effect: this is React's
+  // documented pattern for "reset some state when an input changes". An
+  // effect would render the stale list first and then immediately re-render,
+  // which is both a flash and a cascading update.
+  const searchParams = useSearchParams();
+  const urlQuery = searchParams.get("q") ?? "";
+  const [lastUrlQuery, setLastUrlQuery] = useState(urlQuery);
+  if (urlQuery !== lastUrlQuery) {
+    setLastUrlQuery(urlQuery);
+    setQuery(urlQuery);
+  }
 
   const { data: orders, isLoading, isError } = useQuery({
     queryKey: ORDERS_KEY,
@@ -294,7 +310,7 @@ export default function OrdersPage() {
 
         <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-4">
           <StatCard
-            tone="ocean"
+            tone="marine"
             icon={Plane}
             label="Total orders"
             value={num(totals.total)}

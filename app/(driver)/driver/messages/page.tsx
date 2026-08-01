@@ -35,19 +35,19 @@ export default function DriverMessagesPage() {
 
   return (
     <div className="animate-in fade-in slide-in-from-bottom-2 duration-500 ease-out">
-      <div className="flex h-[calc(100dvh-9.5rem)] min-h-[440px] flex-col overflow-hidden rounded-surface bg-card border border-line shadow-lift lg:h-[calc(100dvh-8rem)]">
+      <div className="flex h-[calc(100dvh-9.5rem)] min-h-[440px] flex-col overflow-hidden rounded-card bg-card border border-line shadow-card lg:h-[calc(100dvh-8rem)]">
         {/* Chat header */}
         <div className="flex items-center gap-3 border-b border-border px-3 py-3 sm:px-4">
           <button
             type="button"
             onClick={() => router.back()}
             aria-label="Go back"
-            className="flex size-9 items-center justify-center rounded-icon text-tx-muted outline-none transition-colors hover:bg-sunk hover:text-tx-head focus-visible:ring-2 focus-visible:ring-ocean/40"
+            className="flex size-9 items-center justify-center rounded-icon text-tx-muted outline-none transition-colors hover:bg-sunk hover:text-tx-head focus-visible:ring-2 focus-visible:ring-marine/40"
           >
             <ArrowLeft className="size-5" />
           </button>
           <div className="relative">
-            <div className="flex size-10 items-center justify-center rounded-full bg-sky-tint font-semibold text-ocean-deep">
+            <div className="flex size-10 items-center justify-center rounded-full bg-marine-tint font-semibold text-marine-deep">
               {customerName.split(" ").map((p) => p[0]).slice(0, 2).join("")}
             </div>
             <span className="absolute -bottom-0.5 -right-0.5 size-3 rounded-full border-2 border-card bg-jade" />
@@ -88,9 +88,9 @@ export default function DriverMessagesPage() {
                 <div className="max-w-[80%] sm:max-w-[65%]">
                   <div
                     className={cn(
-                      "rounded-surface px-3.5 py-2 text-sm",
+                      "rounded-card px-3.5 py-2 text-sm",
                       mine
-                        ? "bg-ocean text-tx-invert"
+                        ? "bg-marine text-tx-invert"
                         : "border border-line bg-surface text-tx-body"
                     )}
                   >

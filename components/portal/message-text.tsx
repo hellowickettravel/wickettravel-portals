@@ -25,7 +25,7 @@ export function MessageText({ text, mine }: { text: string; mine?: boolean }) {
             rel="noopener noreferrer"
             className={cn(
               "font-medium underline underline-offset-2 transition-opacity hover:opacity-80",
-              mine ? "text-tx-invert" : "text-ocean"
+              mine ? "text-tx-invert" : "text-marine"
             )}
           >
             {part}

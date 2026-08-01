@@ -97,8 +97,8 @@ export default function CustomerOrdersPage() {
           </div>
         </SectionCard>
       ) : rows.length === 0 ? (
-        <div className="flex flex-col items-center justify-center gap-3 rounded-surface border border-border bg-card py-16 text-center shadow-lift">
-          <div className="flex size-12 items-center justify-center rounded-surface bg-sky-tint text-ocean-deep">
+        <div className="flex flex-col items-center justify-center gap-3 rounded-card border border-border bg-card py-16 text-center shadow-card">
+          <div className="flex size-12 items-center justify-center rounded-card bg-marine-tint text-marine-deep">
             <Plane className="size-6 -rotate-45" />
           </div>
           <p className="tracking-heading text-base font-semibold text-foreground">
@@ -119,14 +119,14 @@ export default function CustomerOrdersPage() {
             return (
               <div
                 key={o.id}
-                className="overflow-hidden rounded-surface border border-border bg-card shadow-lift"
+                className="overflow-hidden rounded-card border border-border bg-card shadow-card"
               >
                 <button
                   type="button"
                   onClick={() => setOpenId(open ? null : o.id)}
-                  className="flex w-full items-center gap-4 px-5 py-4 text-left outline-none transition-colors hover:bg-sunk focus-visible:bg-sunk focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ocean/40"
+                  className="flex w-full items-center gap-4 px-5 py-4 text-left outline-none transition-colors hover:bg-sunk focus-visible:bg-sunk focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-marine/40"
                 >
-                  <div className="flex size-11 shrink-0 items-center justify-center rounded-surface bg-sky-tint text-ocean-deep">
+                  <div className="flex size-11 shrink-0 items-center justify-center rounded-card bg-marine-tint text-marine-deep">
                     <Plane className="size-5 -rotate-45" />
                   </div>
                   <div className="min-w-0 flex-1">
@@ -191,7 +191,7 @@ export default function CustomerOrdersPage() {
                     <div className="mt-5 flex flex-wrap gap-2">
                       <Button
                         render={<Link href={`/customer/orders/${o.id}`} />}
-                        variant="ocean"
+                        variant="marine"
                         size="sm"
                       >
                         View details

@@ -76,7 +76,7 @@ function FilterSearch({
           type="button"
           onClick={() => onValueChange("")}
           aria-label="Clear search"
-          className="absolute top-1/2 right-1 inline-flex size-10 -translate-y-1/2 items-center justify-center rounded-chip text-tx-faint outline-none transition-colors duration-150 ease-brand hover:bg-sunk hover:text-tx-body focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-flame sm:size-7"
+          className="absolute top-1/2 right-1 inline-flex size-10 -translate-y-1/2 items-center justify-center rounded-chip text-tx-faint outline-none transition-colors duration-150 ease-brand hover:bg-sunk hover:text-tx-body focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-coral sm:size-7"
         >
           <X className="size-4" />
         </button>
@@ -94,7 +94,7 @@ export type FilterOption = {
 
 /**
  * Segmented filter chips on a sunk track. The selected chip is a white
- * surface with ocean text — sky tint would vanish against the track.
+ * surface with marine text — sky tint would vanish against the track.
  * Chips wrap inside the track rather than scrolling out of reach.
  */
 function FilterChips({
@@ -127,9 +127,9 @@ function FilterChips({
             aria-pressed={active}
             onClick={() => onValueChange(option.value)}
             className={cn(
-              "inline-flex h-11 items-center gap-2 rounded-chip px-3 text-[13px] font-semibold tracking-ui whitespace-nowrap outline-none transition-colors duration-150 ease-brand focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-flame sm:h-[30px]",
+              "inline-flex h-11 items-center gap-2 rounded-chip px-3 text-[13px] font-semibold tracking-ui whitespace-nowrap outline-none transition-colors duration-150 ease-brand focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-coral sm:h-[30px]",
               active
-                ? "bg-surface text-ocean-deep shadow-lift"
+                ? "bg-surface text-marine-deep shadow-card"
                 : "text-tx-muted hover:text-tx-head"
             )}
           >
@@ -138,7 +138,7 @@ function FilterChips({
               <span
                 className={cn(
                   "tabular text-[12px] font-semibold",
-                  active ? "text-ocean" : "text-tx-muted"
+                  active ? "text-marine" : "text-tx-muted"
                 )}
               >
                 {option.count}

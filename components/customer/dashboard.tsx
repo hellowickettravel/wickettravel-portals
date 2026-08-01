@@ -88,7 +88,7 @@ export function CustomerDashboard({ firstName }: { firstName: string }) {
       </div>
 
       {/* CTA */}
-      <div className="rounded-surface bg-ocean p-6 md:p-7">
+      <div className="rounded-card bg-marine p-6 md:p-7">
         <div className="flex flex-col items-start justify-between gap-5 md:flex-row md:items-center">
           <div className="max-w-md">
             <h2 className="tracking-heading text-xl font-semibold text-white md:text-2xl">
@@ -100,7 +100,7 @@ export function CustomerDashboard({ firstName }: { firstName: string }) {
           </div>
           <Link
             href="/customer/book"
-            className="inline-flex h-[42px] items-center gap-2 rounded-control bg-flame px-[18px] text-[15px] font-semibold tracking-ui text-tx-invert outline-none transition-colors duration-150 ease-brand hover:bg-flame-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
+            className="inline-flex h-[42px] items-center gap-2 rounded-control bg-coral px-[18px] text-[15px] font-semibold tracking-ui text-tx-invert outline-none transition-colors duration-150 ease-brand hover:bg-coral-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
           >
             Book a New Flight
             <ArrowRight className="size-[17px]" />
@@ -114,7 +114,7 @@ export function CustomerDashboard({ firstName }: { firstName: string }) {
         action={
           <Link
             href="/customer/orders"
-            className="inline-flex items-center gap-1 text-sm font-medium text-ocean transition-colors hover:text-ocean-deep"
+            className="inline-flex items-center gap-1 text-sm font-medium text-marine transition-colors hover:text-marine-deep"
           >
             View all <ArrowRight className="size-4" />
           </Link>
@@ -132,7 +132,7 @@ export function CustomerDashboard({ firstName }: { firstName: string }) {
                 className="flex flex-col gap-3 py-3.5 first:pt-0 last:pb-0 sm:flex-row sm:items-center sm:justify-between"
               >
                 <div className="flex items-center gap-3">
-                  <div className="flex size-10 items-center justify-center rounded-surface bg-sky-tint text-ocean-deep">
+                  <div className="flex size-10 items-center justify-center rounded-card bg-marine-tint text-marine-deep">
                     <Plane className="size-5 -rotate-45" />
                   </div>
                   <div className="leading-tight">
@@ -163,13 +163,13 @@ export function CustomerDashboard({ firstName }: { firstName: string }) {
       </SectionCard>
 
       {/* Help footer */}
-      <div className="flex items-center justify-between rounded-surface border border-border bg-sunk px-5 py-4">
+      <div className="flex items-center justify-between rounded-card border border-border bg-sunk px-5 py-4">
         <p className="text-sm text-muted-foreground">
           Have a question? Chat with our team directly in the portal.
         </p>
         <Link
           href="/customer/messages"
-          className="inline-flex items-center gap-1 text-sm font-medium text-ocean hover:text-ocean-deep"
+          className="inline-flex items-center gap-1 text-sm font-medium text-marine hover:text-marine-deep"
         >
           Open messages <ArrowUpRight className="size-4" />
         </Link>

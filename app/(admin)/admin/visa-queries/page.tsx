@@ -36,7 +36,7 @@ const ENQUIRIES_KEY = ["admin", "visa-enquiries", "list"] as const;
 const PAGE_SIZE = 12;
 
 const selectClass =
-  "h-10 rounded-control border border-input bg-card px-3 text-base text-foreground outline-none transition-colors focus-visible:border-ocean focus-visible:ring-[3px] focus-visible:ring-ocean/25 sm:text-sm";
+  "h-10 rounded-control border border-input bg-card px-3 text-base text-foreground outline-none transition-colors focus-visible:border-marine focus-visible:ring-[3px] focus-visible:ring-marine/25 sm:text-sm";
 
 const STATUS_TABS: { label: string; value: "all" | VisaEnquiryStatus }[] = [
   { label: "All", value: "all" },
@@ -100,7 +100,7 @@ export default function AdminVisaQueriesPage() {
       />
 
       <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-        <div className="flex flex-wrap items-center gap-1 rounded-surface bg-sunk p-1">
+        <div className="flex flex-wrap items-center gap-1 rounded-card bg-sunk p-1">
           {STATUS_TABS.map((t) => (
             <button
               key={t.value}
@@ -108,7 +108,7 @@ export default function AdminVisaQueriesPage() {
               className={cn(
                 "shrink-0 rounded-control px-3.5 py-1.5 text-sm font-medium transition-colors",
                 statusTab === t.value
-                  ? "bg-ocean text-tx-invert"
+                  ? "bg-marine text-tx-invert"
                   : "text-muted-foreground hover:text-foreground"
               )}
             >
@@ -156,7 +156,7 @@ export default function AdminVisaQueriesPage() {
           </p>
         ) : all.length === 0 ? (
           <div className="flex flex-col items-center gap-2 px-6 py-14 text-center">
-            <div className="flex size-12 items-center justify-center rounded-surface bg-sky-tint text-ocean-deep">
+            <div className="flex size-12 items-center justify-center rounded-card bg-marine-tint text-marine-deep">
               <Stamp className="size-6" />
             </div>
             <p className="tracking-heading text-base font-semibold text-foreground">
@@ -192,7 +192,7 @@ export default function AdminVisaQueriesPage() {
                         }
                         subtitle={e.reference_number}
                         action={
-                          <span className="inline-flex items-center gap-0.5 text-xs font-medium text-ocean">
+                          <span className="inline-flex items-center gap-0.5 text-xs font-medium text-marine">
                             View
                             <ChevronRight className="size-4" />
                           </span>
@@ -257,7 +257,7 @@ export default function AdminVisaQueriesPage() {
                         </TableCell>
                         <TableCell>
                           <span className="inline-flex items-center gap-1.5 text-sm text-muted-foreground">
-                            <contact.Icon className="size-4 text-ocean" />
+                            <contact.Icon className="size-4 text-marine" />
                             {contact.label}
                           </span>
                         </TableCell>
@@ -275,7 +275,7 @@ export default function AdminVisaQueriesPage() {
                         >
                           <Link
                             href={`/admin/visa-queries/${e.id}`}
-                            className="inline-flex items-center gap-1.5 rounded-control border border-border bg-card px-3 py-1.5 text-sm font-medium text-foreground transition-colors hover:border-ocean hover:text-ocean"
+                            className="inline-flex items-center gap-1.5 rounded-control border border-border bg-card px-3 py-1.5 text-sm font-medium text-foreground transition-colors hover:border-marine hover:text-marine"
                           >
                             <Eye className="size-4" />
                             View

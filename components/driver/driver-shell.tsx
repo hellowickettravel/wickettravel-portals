@@ -70,16 +70,16 @@ function DesktopSidebar({ pathname }: { pathname: string }) {
       </Link>
 
       {/* Driver card */}
-      <div className="mx-3 mb-2 flex items-center gap-3 rounded-surface bg-white/10 px-3 py-2.5">
+      <div className="mx-3 mb-2 flex items-center gap-3 rounded-card bg-white/10 px-3 py-2.5">
         <Avatar className="size-10">
-          <AvatarFallback className="bg-flame text-sm font-semibold text-white">
+          <AvatarFallback className="bg-coral text-sm font-semibold text-white">
             {initialsOf(DRIVER.name)}
           </AvatarFallback>
         </Avatar>
         <div className="min-w-0 leading-tight">
           <p className="truncate text-sm font-semibold text-white">{DRIVER.name}</p>
           <p className="flex items-center gap-1 text-[11px] text-white/60">
-            <Star className="size-3 fill-flame-vivid text-flame-vivid" />
+            <Star className="size-3 fill-coral-vivid text-coral-vivid" />
             {DRIVER.rating} · {DRIVER.vehicle.type}
           </p>
         </div>
@@ -94,9 +94,9 @@ function DesktopSidebar({ pathname }: { pathname: string }) {
               key={item.href}
               href={item.href}
               className={cn(
-                "flex h-11 items-center gap-3 rounded-control px-[13px] text-[15px] font-medium outline-none transition-colors duration-150 ease-brand focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-flame",
+                "flex h-11 items-center gap-3 rounded-control px-[13px] text-[15px] font-medium outline-none transition-colors duration-150 ease-brand focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-coral",
                 active
-                  ? "bg-surface font-semibold text-ocean [&_svg]:text-flame"
+                  ? "bg-surface font-semibold text-marine [&_svg]:text-coral"
                   : "text-white/85 hover:bg-white/10 hover:text-white"
               )}
             >
@@ -110,7 +110,7 @@ function DesktopSidebar({ pathname }: { pathname: string }) {
       <div className="border-t border-white/15 px-3 py-3">
         <Link
           href="/driver/login"
-          className="flex h-11 w-full items-center gap-3 rounded-control px-[13px] text-[15px] font-medium text-white/85 outline-none transition-colors duration-150 ease-brand hover:bg-white/10 hover:text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-flame"
+          className="flex h-11 w-full items-center gap-3 rounded-control px-[13px] text-[15px] font-medium text-white/85 outline-none transition-colors duration-150 ease-brand hover:bg-white/10 hover:text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-coral"
         >
           <LogOut className="size-[19px]" />
           Sign out
@@ -136,14 +136,14 @@ function MobileTabBar({ pathname }: { pathname: string }) {
               href={t.href}
               aria-current={active ? "page" : undefined}
               className={cn(
-                "flex min-h-[52px] flex-1 flex-col items-center justify-center gap-0.5 rounded-control py-1.5 text-[10.5px] font-medium outline-none transition-colors focus-visible:ring-2 focus-visible:ring-ocean/40",
-                active ? "text-flame-hover" : "text-muted-foreground"
+                "flex min-h-[52px] flex-1 flex-col items-center justify-center gap-0.5 rounded-control py-1.5 text-[10.5px] font-medium outline-none transition-colors focus-visible:ring-2 focus-visible:ring-marine/40",
+                active ? "text-coral-hover" : "text-muted-foreground"
               )}
             >
               <span
                 className={cn(
                   "flex size-7 items-center justify-center rounded-control transition-colors",
-                  active && "bg-flame/10"
+                  active && "bg-coral/10"
                 )}
               >
                 <Icon className="size-[20px]" />
@@ -180,16 +180,16 @@ export function DriverShell({ children }: { children: React.ReactNode }) {
             <Link
               href="/driver/messages"
               aria-label="Messages"
-              className="relative flex size-10 items-center justify-center rounded-icon text-tx-muted outline-none transition-colors hover:bg-sunk hover:text-tx-head focus-visible:ring-2 focus-visible:ring-ocean/40"
+              className="relative flex size-10 items-center justify-center rounded-icon text-tx-muted outline-none transition-colors hover:bg-sunk hover:text-tx-head focus-visible:ring-2 focus-visible:ring-marine/40"
             >
               <MessageSquare className="size-[18px]" />
-              <span className="absolute right-2 top-2 size-2 rounded-full bg-flame ring-2 ring-white" />
+              <span className="absolute right-2 top-2 size-2 rounded-full bg-coral ring-2 ring-white" />
             </Link>
 
             <DropdownMenu>
-              <DropdownMenuTrigger className="flex items-center gap-2 rounded-control p-1 outline-none transition-colors hover:bg-sunk focus-visible:ring-[3px] focus-visible:ring-ocean/30 sm:pr-2">
+              <DropdownMenuTrigger className="flex items-center gap-2 rounded-control p-1 outline-none transition-colors hover:bg-sunk focus-visible:ring-[3px] focus-visible:ring-marine/30 sm:pr-2">
                 <Avatar className="size-9">
-                  <AvatarFallback className="bg-sky-tint text-sm font-semibold text-ocean-deep">
+                  <AvatarFallback className="bg-marine-tint text-sm font-semibold text-marine-deep">
                     {initialsOf(DRIVER.name)}
                   </AvatarFallback>
                 </Avatar>
