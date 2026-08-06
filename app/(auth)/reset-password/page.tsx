@@ -3,15 +3,20 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { Loader2, ShieldAlert } from "lucide-react";
-import { BrandLogo } from "@/components/brand/brand-logo";
 import { toast } from "sonner";
 import { createClient } from "@/lib/supabase/client";
-import { Button } from "@/components/ui/button";
-import { Label } from "@/components/ui/label";
-import { PasswordInput } from "@/components/portal/password-input";
-import { PasswordStrength } from "@/components/auth/password-strength";
-import { AuthAside } from "@/components/auth/auth-aside";
-import { AuthFooter } from "@/components/auth/auth-footer";
+import { AuthShell } from "@/components/auth/auth-shell";
+import { AuthHeading } from "@/components/auth/auth-heading";
+import { AuthAlert } from "@/components/auth/auth-alert";
+import {
+  AuthField,
+  AuthLabel,
+  AuthSecondaryButton,
+  AuthSubmit,
+  authLinkClass,
+} from "@/components/auth/auth-controls";
+import { AuthPasswordField } from "@/components/auth/auth-password-field";
+import { PasswordChecklist } from "@/components/auth/password-checklist";
 import { checkPassword, MIN_PASSWORD_LENGTH } from "@/lib/security/password";
 
 type RecoveryStatus = "verifying" | "ready" | "invalid";
@@ -20,6 +25,7 @@ export default function ResetPasswordPage() {
   const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState("");
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [status, setStatus] = useState<RecoveryStatus>("verifying");
 
   // Only allow a password change inside a genuine recovery flow. We mark the
@@ -42,8 +48,8 @@ export default function ResetPasswordPage() {
     if (code) {
       supabase.auth
         .exchangeCodeForSession(code)
-        .then(({ error }) => {
-          if (!error) {
+        .then(({ error: exchangeError }) => {
+          if (!exchangeError) {
             resolved = true;
             setStatus("ready");
           } else if (!resolved) {
@@ -70,30 +76,26 @@ export default function ResetPasswordPage() {
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
-
     if (status !== "ready") return;
+    setError(null);
 
     const pw = checkPassword(password);
     if (!pw.ok) {
-      toast.error("Choose a stronger password", {
-        description: pw.firstError ?? "Meet all the password requirements.",
-      });
+      setError(pw.firstError ?? "Meet all the password requirements.");
       return;
     }
     if (password !== confirm) {
-      toast.error("Passwords don't match");
+      setError("Those passwords don't match.");
       return;
     }
 
     setLoading(true);
     const supabase = createClient();
-    const { error } = await supabase.auth.updateUser({ password });
+    const { error: updateError } = await supabase.auth.updateUser({ password });
 
-    if (error) {
+    if (updateError) {
       setLoading(false);
-      toast.error("Couldn't update password", {
-        description: error.message,
-      });
+      setError(updateError.message);
       return;
     }
 
@@ -103,135 +105,97 @@ export default function ResetPasswordPage() {
     window.location.assign("/login");
   }
 
+  // ---------- Verifying the recovery link ----------
+  if (status === "verifying") {
+    return (
+      <AuthShell screen="reset">
+        <div className="flex flex-col items-center gap-3 py-10 text-center">
+          <Loader2 className="size-6 animate-spin text-brand" />
+          <p className="text-[13.5px] text-slate-500">
+            Verifying your reset link…
+          </p>
+        </div>
+      </AuthShell>
+    );
+  }
+
+  // ---------- Invalid / expired link ----------
+  if (status === "invalid") {
+    return (
+      <AuthShell screen="reset">
+        <span className="mb-6 flex size-16 items-center justify-center rounded-full bg-rose-50 text-rose-600">
+          <ShieldAlert className="size-7" />
+        </span>
+        <AuthHeading title="This link has expired" dot={false} className="mb-4" />
+        <p className="mb-8 text-[15px] leading-[1.6] text-slate-500">
+          Reset links can only be used once and stop working after 60 minutes.
+          Request a fresh one and we&apos;ll send another straight away.
+        </p>
+
+        <AuthSecondaryButton href="/forgot-password">
+          Request a new link
+        </AuthSecondaryButton>
+
+        <p className="mt-7 text-[13.5px] text-slate-500">
+          <Link href="/login" className={authLinkClass}>
+            Back to sign in
+          </Link>
+        </p>
+      </AuthShell>
+    );
+  }
+
+  // ---------- Valid recovery session → set new password ----------
   return (
-    <main className="grid min-h-dvh lg:grid-cols-[1.2fr_1fr]">
-      <AuthAside
-        headline="Reset your password securely."
-        supporting="Choose a new password to get back into your Wicket Travel workspace."
+    <AuthShell screen="reset">
+      <AuthHeading
+        title="Set a new password"
+        dot={false}
+        description="Choose something you haven't used on this account before."
       />
 
-      <section className="relative flex items-center justify-center bg-white px-6 py-12 sm:px-10">
-        <div className="w-full max-w-sm">
-          <div className="mb-10 lg:hidden">
-            <BrandLogo className="h-8 w-auto" priority />
-          </div>
+      {error ? <AuthAlert>{error}</AuthAlert> : null}
 
-          {status === "verifying" ? (
-            /* ---------- Verifying the recovery link ---------- */
-            <div className="flex flex-col items-center gap-3 py-10 text-center">
-              <Loader2 className="size-6 animate-spin text-brand" />
-              <p className="text-sm text-slate-500">Verifying your reset link…</p>
-            </div>
-          ) : status === "invalid" ? (
-            /* ---------- Invalid / expired link ---------- */
-            <div className="text-center">
-              <div className="mx-auto mb-5 flex size-14 items-center justify-center rounded-2xl bg-rose-50 text-rose-600">
-                <ShieldAlert className="size-7" />
-              </div>
-              <h2 className="font-display text-[26px] font-semibold leading-tight tracking-tight text-navy">
-                Reset link invalid or expired
-              </h2>
-              <p className="mt-3 text-sm text-slate-500">
-                This password reset link is no longer valid. Reset links can only
-                be used once and expire after a short time. Please request a new
-                one.
-              </p>
-              <Link
-                href="/login"
-                className="mt-7 inline-flex h-11 w-full items-center justify-center rounded-[10px] bg-primary text-sm font-semibold text-white shadow-sm shadow-orange/25 transition-all duration-150 hover:bg-orange-dark hover:shadow-md hover:shadow-orange/30 hover:-translate-y-px"
-              >
-                Back to sign in
-              </Link>
-              <p className="mt-5 text-xs text-slate-500">
-                On the sign-in screen, use “Forgot password?” to get a fresh link.
-              </p>
-            </div>
-          ) : (
-            /* ---------- Valid recovery session → set new password ---------- */
-            <>
-              <p className="font-label text-xs font-semibold uppercase tracking-[0.18em] text-brand">
-                Reset password
-              </p>
-              <h2 className="mt-2 font-display text-[28px] font-semibold leading-tight tracking-tight text-navy">
-                Set a new password
-              </h2>
-              <p className="mt-2 text-sm text-slate-500">
-                Enter and confirm your new password below.
-              </p>
+      <form onSubmit={handleSubmit} noValidate className="flex flex-col gap-5">
+        <AuthField>
+          <AuthLabel htmlFor="password">New password</AuthLabel>
+          <AuthPasswordField
+            id="password"
+            autoComplete="new-password"
+            placeholder="At least 8 characters"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            required
+            minLength={MIN_PASSWORD_LENGTH}
+            disabled={loading}
+          />
+          <PasswordChecklist password={password} />
+        </AuthField>
 
-              <form onSubmit={handleSubmit} className="mt-8 space-y-5">
-                <div className="space-y-2">
-                  <Label
-                    htmlFor="password"
-                    className="font-label text-xs font-medium uppercase tracking-wider text-slate-600"
-                  >
-                    New password
-                  </Label>
-                  <PasswordInput
-                    id="password"
-                    autoComplete="new-password"
-                    placeholder="At least 8 characters"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    required
-                    minLength={MIN_PASSWORD_LENGTH}
-                    disabled={loading}
-                    className="h-11 rounded-[10px] bg-neutral-soft"
-                  />
-                  <PasswordStrength password={password} />
-                </div>
+        <AuthField>
+          <AuthLabel htmlFor="confirm">Confirm new password</AuthLabel>
+          <AuthPasswordField
+            id="confirm"
+            autoComplete="new-password"
+            placeholder="Re-enter your password"
+            value={confirm}
+            onChange={(e) => setConfirm(e.target.value)}
+            required
+            minLength={MIN_PASSWORD_LENGTH}
+            disabled={loading}
+          />
+        </AuthField>
 
-                <div className="space-y-2">
-                  <Label
-                    htmlFor="confirm"
-                    className="font-label text-xs font-medium uppercase tracking-wider text-slate-600"
-                  >
-                    Confirm new password
-                  </Label>
-                  <PasswordInput
-                    id="confirm"
-                    autoComplete="new-password"
-                    placeholder="Re-enter your password"
-                    value={confirm}
-                    onChange={(e) => setConfirm(e.target.value)}
-                    required
-                    minLength={MIN_PASSWORD_LENGTH}
-                    disabled={loading}
-                    className="h-11 rounded-[10px] bg-neutral-soft"
-                  />
-                </div>
+        <AuthSubmit loading={loading} loadingLabel="Saving…">
+          Save new password
+        </AuthSubmit>
+      </form>
 
-                <Button
-                  type="submit"
-                  disabled={loading}
-                  className="h-11 w-full rounded-[10px] bg-primary text-sm font-semibold text-white shadow-sm shadow-orange/25 transition-all duration-150 hover:bg-orange-dark hover:shadow-md hover:shadow-orange/30 hover:-translate-y-px"
-                >
-                  {loading ? (
-                    <>
-                      <Loader2 className="size-4 animate-spin" />
-                      Updating…
-                    </>
-                  ) : (
-                    "Update password"
-                  )}
-                </Button>
-              </form>
-
-              <p className="mt-6 text-center text-sm text-slate-500">
-                Back to{" "}
-                <Link
-                  href="/login"
-                  className="font-medium text-brand transition-colors hover:text-brand-dark"
-                >
-                  Sign in
-                </Link>
-              </p>
-            </>
-          )}
-        </div>
-
-        <AuthFooter />
-      </section>
-    </main>
+      <p className="mt-7 text-[13.5px] text-slate-500">
+        <Link href="/login" className={authLinkClass}>
+          Back to sign in
+        </Link>
+      </p>
+    </AuthShell>
   );
 }

@@ -2,26 +2,36 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { Plane, Loader2 } from "lucide-react";
+import { Plane } from "lucide-react";
 import { toast } from "sonner";
 import { createClient } from "@/lib/supabase/client";
 import { guardLogin, recordLogin } from "@/lib/actions/auth-guard";
 import { safeInternalPath } from "@/lib/security/redirect";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { PasswordInput } from "@/components/portal/password-input";
-import { AuthAside } from "@/components/auth/auth-aside";
+import { AuthShell } from "@/components/auth/auth-shell";
+import { AuthHeading } from "@/components/auth/auth-heading";
+import { AuthAlert } from "@/components/auth/auth-alert";
+import {
+  AuthField,
+  AuthLabel,
+  AuthSubmit,
+  authFieldClass,
+  authLinkClass,
+} from "@/components/auth/auth-controls";
+import { AuthPasswordField } from "@/components/auth/auth-password-field";
 import { GoogleButton } from "@/components/auth/google-button";
 import { OrDivider } from "@/components/auth/or-divider";
-import { AuthFooter } from "@/components/auth/auth-footer";
-import { BrandLogo } from "@/components/brand/brand-logo";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
-  const [sendingReset, setSendingReset] = useState(false);
+  // Inline form error. Sign-in failures are the user's next action, so they
+  // stay on the panel rather than expiring in a toast.
+  const [error, setError] = useState<string | null>(null);
+  // Set when sign-in failed only because the address is unverified — lets the
+  // alert offer a resend instead of dead-ending.
+  const [unverifiedEmail, setUnverifiedEmail] = useState<string | null>(null);
   // Carried into the Sign up link so a guest mid-booking who creates an
   // account still lands back on their filled wizard afterwards.
   const [redirectParam, setRedirectParam] = useState<string | null>(null);
@@ -34,17 +44,13 @@ export default function LoginPage() {
     setRedirectParam(params.get("redirect"));
     const err = params.get("error");
     if (err === "no_access") {
-      toast.error("No portal access", {
-        description: "This account isn't allowed to sign in to the portal.",
-      });
+      setError("This account isn't allowed to sign in to the portal.");
     } else if (err === "account_deactivated") {
-      toast.error("Account deactivated", {
-        description: "Your account has been deactivated. Contact your administrator.",
-      });
+      setError(
+        "Your account has been deactivated. Contact your administrator to get it re-enabled."
+      );
     } else if (err === "auth") {
-      toast.error("Sign in link failed", {
-        description: "We couldn't complete that link. Please try again.",
-      });
+      setError("We couldn't complete that sign-in link. Please try again.");
     }
     if (err) {
       // Clean the error out of the URL but keep a ?redirect= target alive.
@@ -59,12 +65,12 @@ export default function LoginPage() {
 
   async function resendVerification(targetEmail: string) {
     const supabase = createClient();
-    const { error } = await supabase.auth.resend({
+    const { error: resendError } = await supabase.auth.resend({
       type: "signup",
       email: targetEmail,
     });
-    if (error) {
-      toast.error("Couldn't resend email", { description: error.message });
+    if (resendError) {
+      toast.error("Couldn't resend email", { description: resendError.message });
     } else {
       toast.success("Verification email sent — check your inbox.");
     }
@@ -73,6 +79,8 @@ export default function LoginPage() {
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setLoading(true);
+    setError(null);
+    setUnverifiedEmail(null);
 
     const cleanEmail = email.trim();
 
@@ -81,43 +89,36 @@ export default function LoginPage() {
     const gate = await guardLogin(cleanEmail);
     if (!gate.ok) {
       setLoading(false);
-      toast.error("Too many attempts", {
-        description: "Please wait a few minutes and try again.",
-      });
+      setError("Too many attempts. Please wait a few minutes and try again.");
       return;
     }
 
     const supabase = createClient();
 
-    const { data, error } = await supabase.auth.signInWithPassword({
+    const { data, error: signInError } = await supabase.auth.signInWithPassword({
       email: cleanEmail,
       password,
     });
 
-    if (error || !data.user) {
+    if (signInError || !data.user) {
       // Log the failure so the sliding-window limiter can lock repeated abuse.
       void recordLogin(cleanEmail, false);
       setLoading(false);
-      const code = error?.code ?? "";
-      const msg = (error?.message ?? "").toLowerCase();
+      const code = signInError?.code ?? "";
+      const msg = (signInError?.message ?? "").toLowerCase();
 
       if (code === "email_not_confirmed" || msg.includes("not confirmed")) {
-        toast.error("Please verify your email first.", {
-          description: "Check your inbox for the verification link.",
-          action: {
-            label: "Resend",
-            onClick: () => void resendVerification(email.trim()),
-          },
-        });
+        setUnverifiedEmail(cleanEmail);
+        setError("Please verify your email address before signing in.");
       } else if (
         code === "invalid_credentials" ||
         msg.includes("invalid login credentials")
       ) {
-        toast.error("Invalid email or password.");
+        setError(
+          "That email and password don't match an account. Check both and try again."
+        );
       } else {
-        toast.error("Sign in failed", {
-          description: error?.message ?? "Please try again.",
-        });
+        setError(signInError?.message ?? "Sign in failed. Please try again.");
       }
       return;
     }
@@ -137,9 +138,9 @@ export default function LoginPage() {
     if (profileError) {
       // Transient read failure — keep the session, don't bounce the user.
       setLoading(false);
-      toast.error("Couldn't load your profile", {
-        description: "Please check your connection and try again.",
-      });
+      setError(
+        "We couldn't load your profile. Check your connection and try again."
+      );
       return;
     }
 
@@ -147,9 +148,9 @@ export default function LoginPage() {
     if (profile?.is_active === false) {
       await supabase.auth.signOut();
       setLoading(false);
-      toast.error("Account deactivated", {
-        description: "Your account has been deactivated. Contact your administrator.",
-      });
+      setError(
+        "Your account has been deactivated. Contact your administrator to get it re-enabled."
+      );
       return;
     }
 
@@ -176,155 +177,103 @@ export default function LoginPage() {
     // No recognised role — drop the session and explain.
     await supabase.auth.signOut();
     setLoading(false);
-    toast.error("No portal access", {
-      description: "This account isn't allowed to sign in to the portal.",
-    });
-  }
-
-  async function handleForgotPassword() {
-    const cleanEmail = email.trim();
-    if (!cleanEmail) {
-      toast.error("Enter your email first", {
-        description: "Type your email above, then tap “Forgot password?”.",
-      });
-      return;
-    }
-
-    if (sendingReset) return; // guard against a double-tap firing two emails
-
-    setSendingReset(true);
-    const supabase = createClient();
-    // Supabase only sends the email if the account exists. We always show the
-    // same neutral message so we never reveal whether an email is registered.
-    await supabase.auth.resetPasswordForEmail(cleanEmail, {
-      redirectTo: `${window.location.origin}/reset-password`,
-    });
-    setSendingReset(false);
-
-    toast.success("If an account exists for that email, a reset link has been sent.");
+    setError("This account isn't allowed to sign in to the portal.");
   }
 
   return (
-    <main className="grid min-h-dvh lg:grid-cols-[1.2fr_1fr]">
-      <AuthAside />
+    <AuthShell screen="signin">
+      <AuthHeading
+        title="Welcome back"
+        description="Use your work email to access the portal."
+      />
 
-      {/* ===================== RIGHT / FORM PANEL ===================== */}
-      <section className="relative flex items-center justify-center bg-white px-6 py-12 sm:px-10">
-        <div className="w-full max-w-sm animate-in fade-in slide-in-from-bottom-2 duration-500 ease-out">
-          {/* Mobile brand (left panel hidden on small screens) */}
-          <div className="mb-10 lg:hidden">
-            <BrandLogo className="h-8 w-auto" priority />
-          </div>
-
-          <p className="font-label text-xs font-semibold uppercase tracking-[0.18em] text-brand">
-            Sign in
-          </p>
-          <h2 className="mt-2 font-display text-[28px] font-semibold leading-tight tracking-tight text-navy">
-            Welcome back
-          </h2>
-          <p className="mt-2 text-sm text-slate-500">
-            Sign in to manage chats and orders.
-          </p>
-
-          {redirectParam?.startsWith("/customer/book") ? (
-            <div className="mt-5 flex items-start gap-2.5 rounded-[10px] border border-outline bg-chip/60 px-3.5 py-3 text-sm text-brand-dark">
-              <Plane className="mt-0.5 size-4 shrink-0 -rotate-45" />
-              <span>
-                Your booking details are saved. Sign in and we&apos;ll take you
-                straight back to place the order.
-              </span>
-            </div>
+      {error ? (
+        <AuthAlert>
+          {error}
+          {unverifiedEmail ? (
+            <button
+              type="button"
+              onClick={() => void resendVerification(unverifiedEmail)}
+              className="mt-1.5 block font-medium underline underline-offset-2"
+            >
+              Resend the verification email
+            </button>
           ) : null}
+        </AuthAlert>
+      ) : null}
 
-          <form onSubmit={handleSubmit} className="mt-8 space-y-5">
-            <div className="space-y-2">
-              <Label
-                htmlFor="email"
-                className="font-label text-xs font-medium uppercase tracking-wider text-slate-600"
-              >
-                Email
-              </Label>
-              <Input
-                id="email"
-                type="email"
-                autoComplete="email"
-                placeholder="you@wicket.co.uk"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-                disabled={loading}
-                className="h-11 rounded-[10px] bg-neutral-soft"
-              />
-            </div>
+      {redirectParam?.startsWith("/customer/book") ? (
+        <div className="mb-5 flex items-start gap-3 rounded-[10px] border border-border bg-chip/60 px-4 py-3 text-[13px] leading-[1.5] text-brand-dark">
+          <Plane className="mt-0.5 size-4 shrink-0 -rotate-45" />
+          <span>
+            Your booking details are saved. Sign in and we&apos;ll take you
+            straight back to place the order.
+          </span>
+        </div>
+      ) : null}
 
-            <div className="space-y-2">
-              <Label
-                htmlFor="password"
-                className="font-label text-xs font-medium uppercase tracking-wider text-slate-600"
-              >
-                Password
-              </Label>
-              <PasswordInput
-                id="password"
-                autoComplete="current-password"
-                placeholder="••••••••"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-                disabled={loading}
-                className="h-11 rounded-[10px] bg-neutral-soft"
-              />
-              <div className="flex justify-end">
-                <button
-                  type="button"
-                  onClick={handleForgotPassword}
-                  disabled={sendingReset || loading}
-                  className="text-xs font-medium text-brand transition-colors hover:text-brand-dark disabled:opacity-50"
-                >
-                  {sendingReset ? "Sending…" : "Forgot password?"}
-                </button>
-              </div>
-            </div>
+      <form onSubmit={handleSubmit} className="flex flex-col gap-5">
+        <AuthField>
+          <AuthLabel htmlFor="email">Email address</AuthLabel>
+          <Input
+            id="email"
+            type="email"
+            autoComplete="email"
+            placeholder="you@company.com"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            required
+            disabled={loading}
+            className={authFieldClass}
+          />
+        </AuthField>
 
-            <Button
-              type="submit"
-              disabled={loading}
-              className="h-11 w-full rounded-[10px] bg-primary text-sm font-semibold text-white shadow-sm shadow-orange/25 transition-all duration-150 hover:bg-orange-dark hover:shadow-md hover:shadow-orange/30 hover:-translate-y-px"
-            >
-              {loading ? (
-                <>
-                  <Loader2 className="size-4 animate-spin" />
-                  Signing in…
-                </>
-              ) : (
-                "Sign in"
-              )}
-            </Button>
-          </form>
+        <AuthField>
+          <AuthLabel htmlFor="password">Password</AuthLabel>
+          <AuthPasswordField
+            id="password"
+            autoComplete="current-password"
+            placeholder="••••••••"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            required
+            disabled={loading}
+          />
+        </AuthField>
 
-          <div className="my-6">
-            <OrDivider />
-          </div>
-
-          <GoogleButton />
-
-          <p className="mt-6 text-center text-sm text-slate-500">
-            Don&apos;t have an account?{" "}
-            <Link
-              href={
-                redirectParam
-                  ? `/signup?redirect=${encodeURIComponent(redirectParam)}`
-                  : "/signup"
-              }
-              className="font-medium text-brand transition-colors hover:text-brand-dark"
-            >
-              Sign up
-            </Link>
-          </p>
+        <div className="flex justify-end">
+          <Link
+            href="/forgot-password"
+            className={`text-[13.5px] ${authLinkClass}`}
+          >
+            Forgot password?
+          </Link>
         </div>
 
-        <AuthFooter />
-      </section>
-    </main>
+        <AuthSubmit loading={loading} loadingLabel="Signing in…">
+          Sign in
+        </AuthSubmit>
+      </form>
+
+      <div className="my-7">
+        <OrDivider />
+      </div>
+
+      <GoogleButton />
+
+      <p className="mt-8 text-[13.5px] text-slate-500">
+        Don&apos;t have an account yet?{" "}
+        <Link
+          href={
+            redirectParam
+              ? `/signup?redirect=${encodeURIComponent(redirectParam)}`
+              : "/signup"
+          }
+          className={authLinkClass}
+        >
+          Sign up now
+        </Link>
+      </p>
+    </AuthShell>
   );
 }

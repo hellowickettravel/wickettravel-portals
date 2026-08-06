@@ -2,21 +2,26 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { Plane, Loader2, MailCheck } from "lucide-react";
-import { BrandLogo } from "@/components/brand/brand-logo";
-import { toast } from "sonner";
+import { Plane, MailCheck } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { guardSignup, recordSignup } from "@/lib/actions/auth-guard";
 import { checkPassword } from "@/lib/security/password";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { PasswordInput } from "@/components/portal/password-input";
-import { PasswordStrength } from "@/components/auth/password-strength";
-import { AuthAside } from "@/components/auth/auth-aside";
+import { AuthShell } from "@/components/auth/auth-shell";
+import { AuthHeading } from "@/components/auth/auth-heading";
+import { AuthAlert } from "@/components/auth/auth-alert";
+import {
+  AuthField,
+  AuthLabel,
+  AuthSecondaryButton,
+  AuthSubmit,
+  authFieldClass,
+  authLinkClass,
+} from "@/components/auth/auth-controls";
+import { AuthPasswordField } from "@/components/auth/auth-password-field";
+import { PasswordChecklist } from "@/components/auth/password-checklist";
 import { GoogleButton } from "@/components/auth/google-button";
 import { OrDivider } from "@/components/auth/or-divider";
-import { AuthFooter } from "@/components/auth/auth-footer";
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -26,6 +31,7 @@ export default function SignupPage() {
   const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState("");
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [sentTo, setSentTo] = useState<string | null>(null);
   // A guest who started the booking wizard arrives with ?redirect= — keep it
   // through the sign-in links so they land back on their filled wizard.
@@ -45,27 +51,26 @@ export default function SignupPage() {
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
+    setError(null);
 
     const name = fullName.trim();
     const cleanEmail = email.trim();
 
     if (!name) {
-      toast.error("Enter your full name");
+      setError("Enter your full name.");
       return;
     }
     if (!EMAIL_RE.test(cleanEmail)) {
-      toast.error("Enter a valid email address");
+      setError("Enter a valid email address.");
       return;
     }
     const pw = checkPassword(password);
     if (!pw.ok) {
-      toast.error("Choose a stronger password", {
-        description: pw.firstError ?? "Meet all the password requirements.",
-      });
+      setError(pw.firstError ?? "Meet all the password requirements.");
       return;
     }
     if (password !== confirm) {
-      toast.error("Passwords don't match");
+      setError("Those passwords don't match.");
       return;
     }
 
@@ -75,16 +80,14 @@ export default function SignupPage() {
     const gate = await guardSignup(cleanEmail);
     if (!gate.ok) {
       setLoading(false);
-      toast.error("Too many attempts", {
-        description: "Please wait a little while and try again.",
-      });
+      setError("Too many attempts. Please wait a little while and try again.");
       return;
     }
     void recordSignup(cleanEmail);
 
     const supabase = createClient();
 
-    const { data, error } = await supabase.auth.signUp({
+    const { data, error: signUpError } = await supabase.auth.signUp({
       email: cleanEmail,
       password,
       options: {
@@ -98,9 +101,9 @@ export default function SignupPage() {
       },
     });
 
-    if (error) {
+    if (signUpError) {
       setLoading(false);
-      const msg = error.message.toLowerCase();
+      const msg = signUpError.message.toLowerCase();
       // ENUMERATION PROTECTION: never reveal that an email is already registered.
       // For a "already exists" style error we show the SAME neutral
       // check-your-email screen a fresh signup gets — an attacker can't tell the
@@ -109,9 +112,7 @@ export default function SignupPage() {
         setSentTo(cleanEmail);
         return;
       }
-      toast.error("Sign up failed", {
-        description: "We couldn't complete sign up. Please try again.",
-      });
+      setError("We couldn't complete sign up. Please try again.");
       return;
     }
 
@@ -134,197 +135,155 @@ export default function SignupPage() {
 
     if (!res.ok) {
       setLoading(false);
-      toast.error("Couldn't finish setup", {
-        description: "Your account was created but role setup failed.",
-      });
+      setError("Your account was created but role setup failed. Contact support.");
       return;
     }
 
     // Email verification required — do NOT log in. Show the confirmation state.
     setLoading(false);
     setSentTo(cleanEmail);
-    toast.success("Check your email to verify your account.");
   }
 
+  // ---------- Check-your-email confirmation ----------
+  if (sentTo) {
+    return (
+      <AuthShell screen="sent">
+        <span className="mb-6 flex size-16 items-center justify-center rounded-full bg-orange/10 text-orange-dark">
+          <MailCheck className="size-7" />
+        </span>
+        <AuthHeading title="Check your email" dot={false} className="mb-4" />
+        <p className="text-[15px] leading-[1.6] text-slate-500">
+          We sent a verification link to{" "}
+          <span className="font-medium text-navy">{sentTo}</span>. Click it to
+          activate your account, then sign in.
+        </p>
+        <p className="mt-4 mb-8 text-[13.5px] leading-[1.55] text-slate-500">
+          Nothing arrived? Check the spam folder before requesting another —
+          repeated requests are rate limited.
+        </p>
+
+        <AuthSecondaryButton href={loginHref}>Go to sign in</AuthSecondaryButton>
+      </AuthShell>
+    );
+  }
+
+  // ---------- Sign-up form ----------
   return (
-    <main className="grid min-h-dvh lg:grid-cols-[1.2fr_1fr]">
-      <AuthAside
-        headline="Book and track every flight in one place."
-        supporting="Create your Wicket Travel account to manage bookings and chat with our team — all from one simple dashboard."
+    <AuthShell screen="signup">
+      <AuthHeading
+        title="Create account"
+        description="Place orders, track every booking and talk to the team in one place."
       />
 
-      {/* ===================== RIGHT / FORM PANEL ===================== */}
-      <section className="relative flex items-center justify-center bg-white px-6 py-12 sm:px-10">
-        <div className="w-full max-w-sm animate-in fade-in slide-in-from-bottom-2 duration-500 ease-out">
-          {/* Mobile brand */}
-          <div className="mb-10 lg:hidden">
-            <BrandLogo className="h-8 w-auto" priority />
-          </div>
+      {error ? <AuthAlert>{error}</AuthAlert> : null}
 
-          {sentTo ? (
-            /* ---------- Check-your-email confirmation ---------- */
-            <div className="text-center">
-              <div className="mx-auto mb-5 flex size-14 items-center justify-center rounded-2xl bg-chip text-brand-dark">
-                <MailCheck className="size-7" />
-              </div>
-              <h2 className="font-display text-[26px] font-semibold leading-tight tracking-tight text-navy">
-                Check your email
-              </h2>
-              <p className="mt-3 text-sm text-slate-500">
-                We sent a verification link to{" "}
-                <span className="font-medium text-foreground">{sentTo}</span>.
-                Click it to activate your account, then sign in.
-              </p>
-              <Link
-                href={loginHref}
-                className="mt-7 inline-flex h-11 w-full items-center justify-center rounded-[10px] bg-primary text-sm font-semibold text-white shadow-sm shadow-orange/25 transition-all duration-150 hover:bg-orange-dark hover:shadow-md hover:shadow-orange/30 hover:-translate-y-px"
-              >
-                Go to sign in
-              </Link>
-              <p className="mt-5 text-xs text-slate-500">
-                Didn&apos;t get it? Check spam, or wait a minute and try again.
-              </p>
-            </div>
-          ) : (
-            /* ---------- Sign-up form ---------- */
-            <>
-              <p className="font-label text-xs font-semibold uppercase tracking-[0.18em] text-brand">
-                Sign up
-              </p>
-              <h2 className="mt-2 font-display text-[28px] font-semibold leading-tight tracking-tight text-navy">
-                Create your account
-              </h2>
-              <p className="mt-2 text-sm text-slate-500">
-                Book and track your flights with Wicket Travel.
-              </p>
-
-              {resumingBooking ? (
-                <div className="mt-5 flex items-start gap-2.5 rounded-[10px] border border-outline bg-chip/60 px-3.5 py-3 text-sm text-brand-dark">
-                  <Plane className="mt-0.5 size-4 shrink-0 -rotate-45" />
-                  <span>
-                    Your booking details are saved. Create your free account
-                    and we&apos;ll take you straight back to place the order.
-                  </span>
-                </div>
-              ) : null}
-
-              <form onSubmit={handleSubmit} className="mt-8 space-y-5">
-                <div className="space-y-2">
-                  <Label
-                    htmlFor="fullName"
-                    className="font-label text-xs font-medium uppercase tracking-wider text-slate-600"
-                  >
-                    Full name
-                  </Label>
-                  <Input
-                    id="fullName"
-                    type="text"
-                    autoComplete="name"
-                    placeholder="Jane Traveller"
-                    value={fullName}
-                    onChange={(e) => setFullName(e.target.value)}
-                    required
-                    disabled={loading}
-                    className="h-11 rounded-[10px] bg-neutral-soft"
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label
-                    htmlFor="email"
-                    className="font-label text-xs font-medium uppercase tracking-wider text-slate-600"
-                  >
-                    Email
-                  </Label>
-                  <Input
-                    id="email"
-                    type="email"
-                    autoComplete="email"
-                    placeholder="you@example.com"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    required
-                    disabled={loading}
-                    className="h-11 rounded-[10px] bg-neutral-soft"
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label
-                    htmlFor="password"
-                    className="font-label text-xs font-medium uppercase tracking-wider text-slate-600"
-                  >
-                    Password
-                  </Label>
-                  <PasswordInput
-                    id="password"
-                    autoComplete="new-password"
-                    placeholder="At least 8 characters"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    required
-                    disabled={loading}
-                    className="h-11 rounded-[10px] bg-neutral-soft"
-                  />
-                  <PasswordStrength password={password} />
-                </div>
-
-                <div className="space-y-2">
-                  <Label
-                    htmlFor="confirm"
-                    className="font-label text-xs font-medium uppercase tracking-wider text-slate-600"
-                  >
-                    Confirm password
-                  </Label>
-                  <PasswordInput
-                    id="confirm"
-                    autoComplete="new-password"
-                    placeholder="Re-enter your password"
-                    value={confirm}
-                    onChange={(e) => setConfirm(e.target.value)}
-                    required
-                    disabled={loading}
-                    className="h-11 rounded-[10px] bg-neutral-soft"
-                  />
-                </div>
-
-                <Button
-                  type="submit"
-                  disabled={loading}
-                  className="h-11 w-full rounded-[10px] bg-primary text-sm font-semibold text-white shadow-sm shadow-orange/25 transition-all duration-150 hover:bg-orange-dark hover:shadow-md hover:shadow-orange/30 hover:-translate-y-px"
-                >
-                  {loading ? (
-                    <>
-                      <Loader2 className="size-4 animate-spin" />
-                      Creating account…
-                    </>
-                  ) : (
-                    "Create account"
-                  )}
-                </Button>
-              </form>
-
-              <div className="my-6">
-                <OrDivider />
-              </div>
-
-              <GoogleButton />
-
-              <p className="mt-6 text-center text-sm text-slate-500">
-                Already have an account?{" "}
-                <Link
-                  href={loginHref}
-                  className="font-medium text-brand transition-colors hover:text-brand-dark"
-                >
-                  Sign in
-                </Link>
-              </p>
-            </>
-          )}
+      {resumingBooking ? (
+        <div className="mb-5 flex items-start gap-3 rounded-[10px] border border-border bg-chip/60 px-4 py-3 text-[13px] leading-[1.5] text-brand-dark">
+          <Plane className="mt-0.5 size-4 shrink-0 -rotate-45" />
+          <span>
+            Your booking details are saved. Create your free account and
+            we&apos;ll take you straight back to place the order.
+          </span>
         </div>
+      ) : null}
 
-        <AuthFooter />
-      </section>
-    </main>
+      <form onSubmit={handleSubmit} noValidate className="flex flex-col gap-5">
+        <AuthField>
+          <AuthLabel htmlFor="fullName">Full name</AuthLabel>
+          <Input
+            id="fullName"
+            type="text"
+            autoComplete="name"
+            placeholder="Jane Traveller"
+            value={fullName}
+            onChange={(e) => setFullName(e.target.value)}
+            required
+            disabled={loading}
+            className={authFieldClass}
+          />
+        </AuthField>
+
+        <AuthField>
+          <AuthLabel htmlFor="email">Email address</AuthLabel>
+          <Input
+            id="email"
+            type="email"
+            autoComplete="email"
+            placeholder="you@company.com"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            required
+            disabled={loading}
+            className={authFieldClass}
+          />
+        </AuthField>
+
+        <AuthField>
+          <AuthLabel htmlFor="password">Password</AuthLabel>
+          <AuthPasswordField
+            id="password"
+            autoComplete="new-password"
+            placeholder="At least 8 characters"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            required
+            disabled={loading}
+          />
+          <PasswordChecklist password={password} />
+        </AuthField>
+
+        <AuthField>
+          <AuthLabel htmlFor="confirm">Confirm password</AuthLabel>
+          <AuthPasswordField
+            id="confirm"
+            autoComplete="new-password"
+            placeholder="Re-enter your password"
+            value={confirm}
+            onChange={(e) => setConfirm(e.target.value)}
+            required
+            disabled={loading}
+          />
+        </AuthField>
+
+        <AuthSubmit loading={loading} loadingLabel="Creating account…">
+          Create account
+        </AuthSubmit>
+
+        <p className="text-xs leading-[1.55] text-pretty text-slate-500">
+          By creating an account you agree to our{" "}
+          <a
+            href="https://www.wickettravel.com/terms-of-service"
+            target="_blank"
+            rel="noopener noreferrer"
+            className={authLinkClass}
+          >
+            Terms of Service
+          </a>{" "}
+          and{" "}
+          <a
+            href="https://www.wickettravel.com/privacy-policy"
+            target="_blank"
+            rel="noopener noreferrer"
+            className={authLinkClass}
+          >
+            Privacy Policy
+          </a>
+          .
+        </p>
+      </form>
+
+      <div className="my-6">
+        <OrDivider />
+      </div>
+
+      <GoogleButton />
+
+      <p className="mt-6 text-[13.5px] text-slate-500">
+        Already have an account?{" "}
+        <Link href={loginHref} className={authLinkClass}>
+          Sign in
+        </Link>
+      </p>
+    </AuthShell>
   );
 }

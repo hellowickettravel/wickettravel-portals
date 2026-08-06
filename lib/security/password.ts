@@ -14,7 +14,10 @@ export const MAX_PASSWORD_LENGTH = 72; // bcrypt/GoTrue hard limit — reject lo
 
 export type PasswordRule = {
   id: string;
+  /** Full sentence — used for the single-message fallback (toast, server error). */
   label: string;
+  /** Terse form for the inline checklist, which lays rules out two per row. */
+  shortLabel: string;
   test: (pw: string) => boolean;
 };
 
@@ -22,21 +25,25 @@ export const PASSWORD_RULES: PasswordRule[] = [
   {
     id: "length",
     label: `At least ${MIN_PASSWORD_LENGTH} characters`,
+    shortLabel: `${MIN_PASSWORD_LENGTH}+ characters`,
     test: (pw) => pw.length >= MIN_PASSWORD_LENGTH,
   },
   {
     id: "lower",
     label: "A lowercase letter (a–z)",
+    shortLabel: "One lowercase letter",
     test: (pw) => /[a-z]/.test(pw),
   },
   {
     id: "upper",
     label: "An uppercase letter (A–Z)",
+    shortLabel: "One capital letter",
     test: (pw) => /[A-Z]/.test(pw),
   },
   {
     id: "number",
     label: "A number (0–9)",
+    shortLabel: "One number",
     test: (pw) => /\d/.test(pw),
   },
 ];
@@ -72,15 +79,4 @@ export function checkPassword(pw: string): PasswordCheck {
   }
 
   return { ok, passed, score, firstError };
-}
-
-/** Coarse strength label from the score, for the meter caption. */
-export function passwordStrengthLabel(score: number): {
-  label: string;
-  tone: "weak" | "fair" | "good" | "strong";
-} {
-  if (score <= 1) return { label: "Weak", tone: "weak" };
-  if (score === 2) return { label: "Fair", tone: "fair" };
-  if (score === 3) return { label: "Good", tone: "good" };
-  return { label: "Strong", tone: "strong" };
 }
