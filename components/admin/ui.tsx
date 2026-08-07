@@ -193,15 +193,35 @@ export function CardTitle({ children }: { children: React.ReactNode }) {
 
 /* ----------------------------------------------------------------- KPIs */
 
-export type KpiTone = "marine" | "warn" | "ok" | "teal" | "violet" | "ink";
+export type KpiTone =
+  | "marine"
+  | "warn"
+  | "ok"
+  | "teal"
+  | "violet"
+  | "ink"
+  | "danger";
 
+/** softTint() — the paler ramp, used for the KPI icon chip. */
 const KPI_CHIP: Record<KpiTone, string> = {
-  marine: "bg-marine-50 text-marine-600",
+  marine: "bg-marine-wash text-marine-600",
   warn: "bg-warn-wash text-warn-ink",
   ok: "bg-ok-wash text-ok-ink",
-  teal: "bg-teal-bg/60 text-teal-ink",
-  violet: "bg-violet-bg/60 text-violet-ink",
+  teal: "bg-teal-wash text-teal-ink",
+  violet: "bg-violet-wash text-violet-ink",
   ink: "bg-neutral-wash text-ink-700",
+  danger: "bg-danger-soft text-danger-ink",
+};
+
+/** tint() — the stronger ramp, used for the trend pill and status chips. */
+const KPI_TREND: Record<KpiTone, string> = {
+  marine: "bg-marine-tint text-marine-600",
+  warn: "bg-warn-bg text-warn-ink",
+  ok: "bg-ok-bg text-ok-ink",
+  teal: "bg-teal-bg text-teal-ink",
+  violet: "bg-violet-bg text-violet-ink",
+  ink: "bg-neutral-bg text-ink-700",
+  danger: "bg-danger-bg text-danger-ink",
 };
 
 export function KpiGrid({ children }: { children: React.ReactNode }) {
@@ -218,6 +238,8 @@ export function Kpi({
   meta,
   icon,
   tone = "marine",
+  trend,
+  trendDir = "up",
   valueClass,
   metaClass,
 }: {
@@ -226,6 +248,9 @@ export function Kpi({
   meta?: React.ReactNode;
   icon?: React.ReactNode;
   tone?: KpiTone;
+  /** e.g. "+12" — rendered as the design's arrow pill beside the figure. */
+  trend?: string | null;
+  trendDir?: "up" | "down";
   /** Money is ink; commission is the one figure allowed a success tint. */
   valueClass?: string;
   metaClass?: string;
@@ -250,13 +275,25 @@ export function Kpi({
       <span className="text-ink-600 text-[11px] font-medium tracking-[0.11em] uppercase">
         {label}
       </span>
-      <span
-        className={cn(
-          "font-poppins text-ink-880 text-[24px] leading-none font-medium tracking-[-0.022em] tabular-nums",
-          valueClass
-        )}
-      >
-        {value}
+      <span className="flex flex-wrap items-baseline gap-2.5">
+        <span
+          className={cn(
+            "font-poppins text-ink-880 text-[24px] leading-none font-medium tracking-[-0.022em] tabular-nums",
+            valueClass
+          )}
+        >
+          {value}
+        </span>
+        {trend ? (
+          <span
+            className={cn(
+              "inline-flex items-center gap-[3px] rounded-full px-2 py-0.5 text-[11px] font-semibold tabular-nums",
+              KPI_TREND[tone]
+            )}
+          >
+            {trendDir === "up" ? "↑" : "↓"} {trend}
+          </span>
+        ) : null}
       </span>
       {meta ? (
         <span
@@ -505,20 +542,23 @@ export function Th({
   );
 }
 
-/** Row height is the design's 52px comfortable density. */
+/** Row height is the design's 54px comfortable density. */
 export function Td({
   children,
   align = "left",
   className,
+  onClick,
 }: {
   children?: React.ReactNode;
   align?: "left" | "right";
   className?: string;
+  onClick?: React.MouseEventHandler<HTMLTableCellElement>;
 }) {
   return (
     <td
+      onClick={onClick}
       className={cn(
-        "border-line-soft h-[52px] border-t px-5 text-[13px] font-normal whitespace-nowrap",
+        "border-line-soft h-[54px] border-t px-5 text-[13px] font-normal whitespace-nowrap",
         align === "right" ? "text-right" : "text-left",
         className
       )}
@@ -531,12 +571,17 @@ export function Td({
 export function Tr({
   children,
   className,
+  onClick,
 }: {
   children: React.ReactNode;
   className?: string;
+  onClick?: React.MouseEventHandler<HTMLTableRowElement>;
 }) {
   return (
-    <tr className={cn("hover:bg-marine-row transition-colors", className)}>
+    <tr
+      onClick={onClick}
+      className={cn("hover:bg-marine-row transition-colors", className)}
+    >
       {children}
     </tr>
   );
@@ -736,6 +781,101 @@ export function FieldTile({
   );
 }
 
+/**
+ * The compact label/value tile the design uses inside an enquiry's column
+ * cards — no icon, tighter than `FieldTile`, and it stretches to fill its grid
+ * row so a column of cards stays flush.
+ */
+export function MiniField({
+  label,
+  value,
+}: {
+  label: React.ReactNode;
+  value: React.ReactNode;
+}) {
+  return (
+    <div className="border-line-hair bg-surface-4 hover:border-line-strong flex min-w-0 flex-col justify-center gap-1 rounded-[10px] border px-[13px] py-[11px] transition-colors hover:bg-white">
+      <span className="text-ink-quiet text-[10px] font-semibold tracking-[0.08em] uppercase">
+        {label}
+      </span>
+      <span className="text-ink-850 text-[13px] leading-[1.45] font-medium break-words text-pretty">
+        {value === null || value === undefined || value === "" ? "—" : value}
+      </span>
+    </div>
+  );
+}
+
+/**
+ * The design's "Contact applicant" row: one large button per channel, each in
+ * that channel's own brand hue, with the applicant's preferred method ringed
+ * in marine and flagged.
+ */
+export type ContactChannel = {
+  key: "mail" | "whatsapp" | "phone";
+  label: string;
+  sub: string;
+  href: string;
+  external?: boolean;
+  preferred?: boolean;
+};
+
+const CHANNEL_TINT: Record<ContactChannel["key"], string> = {
+  mail: "bg-chan-mail-bg text-chan-mail-ink",
+  whatsapp: "bg-chan-whatsapp-bg text-chan-whatsapp-ink",
+  phone: "bg-chan-phone-bg text-chan-phone-ink",
+};
+
+export function ContactButtons({
+  channels,
+  icons,
+}: {
+  channels: ContactChannel[];
+  icons: Record<ContactChannel["key"], React.ReactNode>;
+}) {
+  return (
+    <div className="grid grid-cols-[repeat(auto-fit,minmax(220px,1fr))] gap-3 px-5 py-4">
+      {channels.map((c) => (
+        <a
+          key={c.key}
+          href={c.href}
+          target={c.external ? "_blank" : undefined}
+          rel={c.external ? "noopener noreferrer" : undefined}
+          className={cn(
+            "flex min-w-0 items-center gap-3.5 rounded-[12px] border px-4 py-3.5 text-left no-underline transition-colors hover:no-underline",
+            c.preferred
+              ? "border-marine-edge bg-surface-3 hover:border-marine-500"
+              : "border-line-base hover:border-marine-edge bg-white"
+          )}
+        >
+          <span
+            className={cn(
+              "flex size-[46px] flex-none items-center justify-center rounded-full",
+              CHANNEL_TINT[c.key]
+            )}
+          >
+            {icons[c.key]}
+          </span>
+          <span className="flex min-w-0 flex-col gap-[3px]">
+            <span className="flex items-center gap-2">
+              <span className="text-ink-800 text-[13px] font-semibold">
+                {c.label}
+              </span>
+              {c.preferred ? (
+                <span className="bg-marine-tint text-marine-600 rounded-full px-2 py-0.5 text-[9.5px] font-semibold tracking-[0.06em] uppercase">
+                  Preferred
+                </span>
+              ) : null}
+            </span>
+            <span className="text-ink-500 truncate text-[11.5px] font-normal">
+              {c.sub}
+            </span>
+          </span>
+        </a>
+      ))}
+    </div>
+  );
+}
+
 /** Money: ink, 600, tabular — never coloured, per the design's rule. */
 export function Money({
   children,
@@ -807,6 +947,113 @@ export function Avatar({
     >
       {initialsOf(name)}
     </span>
+  );
+}
+
+/**
+ * The design's money panel: one headline figure in success ink on the left,
+ * a rule-separated breakdown on the right. Used by Transactions and by both
+ * person-detail screens.
+ */
+export function MoneyPanel({
+  title,
+  pill,
+  label,
+  total,
+  note,
+  rows,
+}: {
+  title: string;
+  pill?: React.ReactNode;
+  label: string;
+  total: React.ReactNode;
+  note?: React.ReactNode;
+  rows: { label: string; value: React.ReactNode }[];
+}) {
+  return (
+    <Card>
+      <div className="border-line-soft flex flex-wrap items-center justify-between gap-3 border-b px-5 py-4">
+        <CardTitle>{title}</CardTitle>
+        {pill ? (
+          <span className="bg-ok-bg text-ok-ink rounded-full px-3 py-1 text-[11px] font-medium">
+            {pill}
+          </span>
+        ) : null}
+      </div>
+      <div className="flex flex-wrap items-stretch gap-[clamp(20px,3vw,40px)] p-5">
+        <div className="flex min-w-0 flex-[1_1_200px] flex-col gap-1.5">
+          <span className="text-ink-600 text-[11px] font-medium tracking-[0.11em] uppercase">
+            {label}
+          </span>
+          <span className="font-poppins text-ok-ink text-[clamp(30px,3vw,36px)] leading-none font-medium tracking-[-0.022em] tabular-nums">
+            {total}
+          </span>
+          {note ? (
+            <span className="text-ink-600 text-[11.5px] font-normal">{note}</span>
+          ) : null}
+        </div>
+        <div className="flex min-w-0 flex-[2_1_280px] flex-col">
+          {rows.map((r) => (
+            <div
+              key={r.label}
+              className="border-line-soft flex items-baseline justify-between gap-4 border-b py-[11px]"
+            >
+              <span className="text-ink-600 text-[12.5px] font-normal">
+                {r.label}
+              </span>
+              <span className="text-[13px] font-medium whitespace-nowrap tabular-nums">
+                {r.value}
+              </span>
+            </div>
+          ))}
+        </div>
+      </div>
+    </Card>
+  );
+}
+
+/**
+ * A record row in a detail-screen list: reference + who on the left, a status
+ * pill, then the money hard-right. The design uses this shape on the dashboard,
+ * on both person-detail screens and in an order's own history.
+ */
+export function RecordRow({
+  href,
+  reference,
+  who,
+  meta,
+  status,
+  price,
+}: {
+  href: string;
+  /** Deliberately NOT called `ref` — that name is reserved by React. */
+  reference: React.ReactNode;
+  who?: React.ReactNode;
+  meta: React.ReactNode;
+  status: React.ReactNode;
+  price: React.ReactNode;
+}) {
+  return (
+    <Link
+      href={href}
+      className="border-line-soft hover:bg-surface-1 flex w-full items-center gap-4 border-b px-5 py-3 text-left no-underline hover:no-underline"
+    >
+      <span className="flex min-w-0 flex-1 flex-col gap-1">
+        <span className="flex flex-wrap items-center gap-2">
+          <span className="text-marine-600 text-[12.5px] font-medium tabular-nums">
+            {reference}
+          </span>
+          {who ? (
+            <span className="text-ink-800 text-[12.5px] font-normal">{who}</span>
+          ) : null}
+        </span>
+        <span className="text-ink-600 text-[12.5px] font-normal">{meta}</span>
+      </span>
+      <span className="flex-none">{status}</span>
+      <span className="text-ink-800 min-w-[60px] flex-none text-right text-[13px] font-medium tabular-nums">
+        {price}
+      </span>
+    </Link>
   );
 }
 

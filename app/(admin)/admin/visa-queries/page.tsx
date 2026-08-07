@@ -1,313 +1,254 @@
 "use client";
 
-import { useMemo, useState } from "react";
-import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useEffect, useMemo, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
-import { Search, Stamp, Eye, ChevronRight, Mail, Phone, MessageCircle } from "lucide-react";
-import { PageHeader } from "@/components/admin/page-header";
-import { SectionCard } from "@/components/admin/section-card";
-import { StatusBadge } from "@/components/admin/status-badge";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import { TableSkeleton } from "@/components/portal/skeletons";
-import { MobileRecordCard } from "@/components/portal/mobile-record-card";
 import { listVisaEnquiries } from "@/lib/actions/visa";
 import {
   VISA_STATUSES,
   VISA_STATUS_LABELS,
-  VISA_STATUS_TONE,
-  type PreferredContactMethod,
   type VisaEnquiryStatus,
 } from "@/lib/visa";
-import { useListControls } from "@/lib/hooks/use-list-controls";
 import { fmtDate } from "@/lib/format";
 import { cn } from "@/lib/utils";
+import {
+  Btn,
+  Card,
+  EmptyState,
+  PageHead,
+  Pill,
+  Screen,
+  Table,
+  TableFoot,
+  TableScroll,
+  TableSkeleton,
+  Td,
+  Th,
+  Thead,
+  Tr,
+  ViewButton,
+  focusRing,
+} from "@/components/admin/ui";
 
 const ENQUIRIES_KEY = ["admin", "visa-enquiries", "list"] as const;
-const PAGE_SIZE = 12;
+const PAGE_SIZE = 5;
 
-const selectClass =
-  "border-line-field text-ink-800 focus:border-marine-500 focus:shadow-[0_0_0_3px_var(--color-marine-200)] h-10 w-full cursor-pointer rounded-[10px] border bg-white px-3.5 text-[13.5px] font-normal outline-none transition-[border-color,box-shadow] duration-[130ms] disabled:opacity-50";
+type Tab = "all" | VisaEnquiryStatus;
 
-const STATUS_TABS: { label: string; value: "all" | VisaEnquiryStatus }[] = [
+const TABS: { label: string; value: Tab }[] = [
   { label: "All", value: "all" },
-  ...VISA_STATUSES.map((s) => ({ label: VISA_STATUS_LABELS[s], value: s })),
+  ...VISA_STATUSES.map((s) => ({ label: VISA_STATUS_LABELS[s], value: s as Tab })),
 ];
 
-const CONTACT_META: Record<
-  PreferredContactMethod,
-  { label: string; Icon: typeof Mail }
-> = {
-  email: { label: "Email", Icon: Mail },
-  phone: { label: "Call", Icon: Phone },
-  whatsapp: { label: "WhatsApp", Icon: MessageCircle },
-};
-
+/**
+ * Visa queries — the design's queue screen: filter pills with live counts, an
+ * enquiry-type select, a 54px-row table and an explanatory empty state. Text
+ * search comes from the shell's top-bar field (`?q=`).
+ */
 export default function AdminVisaQueriesPage() {
   const router = useRouter();
+  const params = useSearchParams();
+  const q = (params.get("q") ?? "").trim().toLowerCase();
+
   const { data, isLoading, isError } = useQuery({
     queryKey: ENQUIRIES_KEY,
     queryFn: listVisaEnquiries,
   });
 
-  const [statusTab, setStatusTab] = useState<"all" | VisaEnquiryStatus>("all");
+  const [tab, setTab] = useState<Tab>("all");
   const [visaType, setVisaType] = useState("all");
+  const [limit, setLimit] = useState(PAGE_SIZE);
 
   const all = useMemo(() => data ?? [], [data]);
 
-  // Distinct visa types actually submitted → the type filter's options.
   const visaTypes = useMemo(
     () => Array.from(new Set(all.map((e) => e.visa_type))).sort(),
     [all]
   );
 
-  const narrowed = useMemo(
+  const searched = useMemo(
     () =>
       all.filter(
         (e) =>
-          (statusTab === "all" || e.status === statusTab) &&
+          !q ||
+          `${e.first_name} ${e.last_name} ${e.email} ${e.reference_number} ${e.visa_type}`
+            .toLowerCase()
+            .includes(q)
+      ),
+    [all, q]
+  );
+
+  // Counts respect the search and the type filter but not the status filter, so
+  // switching status never hides what sits behind the other chips.
+  const counts = useMemo(() => {
+    const base = searched.filter(
+      (e) => visaType === "all" || e.visa_type === visaType
+    );
+    const out: Record<string, number> = { all: base.length };
+    for (const s of VISA_STATUSES) {
+      out[s] = base.filter((e) => e.status === s).length;
+    }
+    return out;
+  }, [searched, visaType]);
+
+  const rows = useMemo(
+    () =>
+      searched.filter(
+        (e) =>
+          (tab === "all" || e.status === tab) &&
           (visaType === "all" || e.visa_type === visaType)
       ),
-    [all, statusTab, visaType]
+    [searched, tab, visaType]
   );
 
-  // Rows arrive newest-first from the server; search narrows by applicant
-  // name, email or #VQ reference.
-  const { query, setQuery, visible, total, hasMore, loadMore } = useListControls(
-    narrowed,
-    PAGE_SIZE,
-    (e, q) =>
-      `${e.first_name} ${e.last_name}`.toLowerCase().includes(q) ||
-      e.email.toLowerCase().includes(q) ||
-      e.reference_number.toLowerCase().includes(q)
-  );
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setLimit(PAGE_SIZE);
+  }, [tab, visaType, q]);
+
+  const visible = rows.slice(0, limit);
+  const remaining = Math.max(0, rows.length - limit);
 
   return (
-    <div className="space-y-7">
-      <PageHeader
-        eyebrow="Enquiries"
-        title="Visa Queries"
-        subtitle="Dubai visa applications submitted from the website."
+    <Screen>
+      <PageHead
+        title="Visa queries"
+        intro="Enquiries submitted from the public website. Nobody needs an account to send one, so treat contact details as unverified."
       />
 
-      <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-        <div className="flex flex-wrap items-center gap-2">
-          {STATUS_TABS.map((t) => (
-            <button
-              key={t.value}
-              onClick={() => setStatusTab(t.value)}
+      <Card>
+        <div className="border-line-soft flex flex-wrap items-center justify-between gap-3 border-b px-5 py-4">
+          <div className="flex flex-wrap gap-2">
+            {TABS.map((t) => (
+              <button
+                key={t.value}
+                type="button"
+                onClick={() => setTab(t.value)}
+                aria-pressed={tab === t.value}
+                className={cn(
+                  "flex h-[34px] shrink-0 items-center gap-2 rounded-full border px-4 text-[13px] font-medium whitespace-nowrap outline-none",
+                  tab === t.value
+                    ? "border-ink-800 bg-ink-800 text-white"
+                    : "border-line-field text-ink-700 hover:bg-surface-1 bg-white"
+                )}
+              >
+                {t.label}
+                <span className="text-[11px] font-medium tabular-nums opacity-[0.66]">
+                  {counts[t.value] ?? 0}
+                </span>
+              </button>
+            ))}
+          </div>
+          <label className="flex items-center gap-2">
+            <span className="text-ink-600 text-[11.5px] font-medium whitespace-nowrap">
+              Visa type
+            </span>
+            <select
+              value={visaType}
+              onChange={(e) => setVisaType(e.target.value)}
               className={cn(
-                "flex h-[34px] shrink-0 items-center gap-2 rounded-full border px-4 text-[13px] font-medium whitespace-nowrap outline-none transition-colors",
-                statusTab === t.value
-                  ? "border-ink-800 bg-ink-800 text-white"
-                  : "border-line-field text-ink-800 hover:bg-surface-1 bg-white"
+                "border-line-field text-ink-800 h-[34px] cursor-pointer rounded-full border bg-white pr-8 pl-3.5 text-[12.5px] font-medium outline-none",
+                focusRing
               )}
             >
-              {t.label}
-            </button>
-          ))}
+              <option value="all">All types</option>
+              {visaTypes.map((t) => (
+                <option key={t} value={t}>
+                  {t}
+                </option>
+              ))}
+            </select>
+          </label>
         </div>
 
-        <div className="flex flex-col gap-3 sm:flex-row">
-          <select
-            aria-label="Filter by visa type"
-            value={visaType}
-            onChange={(e) => setVisaType(e.target.value)}
-            className={cn(selectClass, "w-full sm:w-48")}
-          >
-            <option value="all">All visa types</option>
-            {visaTypes.map((t) => (
-              <option key={t} value={t}>
-                {t}
-              </option>
-            ))}
-          </select>
-          <div className="relative sm:w-72">
-            <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-ink-600" />
-            <Input
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              aria-label="Search visa enquiries by name, email or reference"
-              placeholder="Search name, email or reference…"
-              className="h-10 rounded-[10px] bg-white pl-9"
-            />
-          </div>
-        </div>
-      </div>
-
-      <SectionCard flush>
         {isLoading ? (
-          <div className="p-4">
-            <TableSkeleton rows={6} columns={6} />
-          </div>
+          <TableSkeleton rows={6} />
         ) : isError ? (
-          <p className="px-6 py-10 text-center text-sm text-ink-600">
-            Couldn’t load visa enquiries. If this is a fresh setup, run
-            APPLY_VISA_ENQUIRIES.sql in the Supabase SQL editor first.
-          </p>
-        ) : all.length === 0 ? (
-          <div className="flex flex-col items-center gap-2 px-6 py-14 text-center">
-            <div className="flex size-12 items-center justify-center rounded-[12px] bg-marine-tint text-marine-600">
-              <Stamp className="size-6" />
-            </div>
-            <p className="font-poppins text-base font-semibold text-ink-800">
-              No visa enquiries yet
-            </p>
-            <p className="max-w-sm text-sm text-ink-600">
-              Applications submitted through the website’s Dubai visa form will
-              appear here the moment they arrive.
-            </p>
-          </div>
+          <EmptyState
+            title="Couldn't load visa enquiries"
+            body="If this is a fresh setup, run APPLY_VISA_ENQUIRIES.sql in the Supabase SQL editor first, then reload this page."
+          />
+        ) : rows.length === 0 ? (
+          <EmptyState
+            title={
+              all.length === 0
+                ? "No visa enquiries yet"
+                : "No enquiries match these filters"
+            }
+            body={
+              all.length === 0
+                ? "Applications submitted through the website's Dubai visa form appear here the moment they arrive."
+                : "Clear the status or visa-type filter to widen the list."
+            }
+            action={
+              all.length === 0 ? undefined : (
+                <Btn
+                  onClick={() => {
+                    setTab("all");
+                    setVisaType("all");
+                  }}
+                >
+                  Clear all filters
+                </Btn>
+              )
+            }
+          />
         ) : (
           <>
-            {/* Mobile cards */}
-            <div className="space-y-3 p-4 md:hidden">
-              {visible.length === 0 ? (
-                <p className="py-8 text-center text-sm text-ink-600">
-                  No enquiries match your filters.
-                </p>
-              ) : (
-                visible.map((e) => {
-                  const contact = CONTACT_META[e.preferred_contact_method];
-                  return (
-                    <Link
+            <TableScroll>
+              <Table min={940}>
+                <Thead>
+                  <Th>Reference</Th>
+                  <Th>Name</Th>
+                  <Th>Visa type</Th>
+                  <Th>Received</Th>
+                  <Th>Status</Th>
+                  <Th align="right" />
+                </Thead>
+                <tbody>
+                  {visible.map((e) => (
+                    <Tr
                       key={e.id}
-                      href={`/admin/visa-queries/${e.id}`}
-                      className="block"
+                      className="cursor-pointer"
+                      onClick={() => router.push(`/admin/visa-queries/${e.id}`)}
                     >
-                      <MobileRecordCard
-                        title={
-                          <span className="text-ink-900">
-                            {e.first_name} {e.last_name}
-                          </span>
-                        }
-                        subtitle={e.reference_number}
-                        action={
-                          <span className="inline-flex items-center gap-0.5 text-xs font-medium text-marine-600">
-                            View
-                            <ChevronRight className="size-4" />
-                          </span>
-                        }
-                        badge={
-                          <StatusBadge tone={VISA_STATUS_TONE[e.status]}>
-                            {VISA_STATUS_LABELS[e.status]}
-                          </StatusBadge>
-                        }
-                        fields={[
-                          { label: "Visa type", value: e.visa_type },
-                          { label: "Prefers", value: contact.label },
-                          {
-                            label: "Submitted",
-                            value: fmtDate(e.created_at),
-                            wide: true,
-                          },
-                        ]}
-                      />
-                    </Link>
-                  );
-                })
-              )}
-            </div>
-
-            {/* Desktop table */}
-            <div className="hidden md:block">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead className="pl-6">Reference</TableHead>
-                    <TableHead>Applicant</TableHead>
-                    <TableHead>Visa type</TableHead>
-                    <TableHead>Prefers</TableHead>
-                    <TableHead>Submitted</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead className="pr-6 text-right">Manage</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {visible.map((e) => {
-                    const contact = CONTACT_META[e.preferred_contact_method];
-                    return (
-                      <TableRow
-                        key={e.id}
-                        className="cursor-pointer"
-                        onClick={() => router.push(`/admin/visa-queries/${e.id}`)}
-                      >
-                        <TableCell className="pl-6 font-medium tabular-nums text-ink-900">
-                          {e.reference_number}
-                        </TableCell>
-                        <TableCell>
-                          <span className="block font-medium text-ink-800">
-                            {e.first_name} {e.last_name}
-                          </span>
-                          <span className="block text-xs text-ink-600">
-                            {e.email}
-                          </span>
-                        </TableCell>
-                        <TableCell className="text-ink-600">
-                          {e.visa_type}
-                        </TableCell>
-                        <TableCell>
-                          <span className="inline-flex items-center gap-1.5 text-sm text-ink-600">
-                            <contact.Icon className="size-4 text-marine-600" />
-                            {contact.label}
-                          </span>
-                        </TableCell>
-                        <TableCell className="text-ink-600">
-                          {fmtDate(e.created_at)}
-                        </TableCell>
-                        <TableCell>
-                          <StatusBadge tone={VISA_STATUS_TONE[e.status]}>
-                            {VISA_STATUS_LABELS[e.status]}
-                          </StatusBadge>
-                        </TableCell>
-                        <TableCell
-                          className="pr-6 text-right"
-                          onClick={(ev) => ev.stopPropagation()}
-                        >
-                          <Link
-                            href={`/admin/visa-queries/${e.id}`}
-                            className="inline-flex items-center gap-1.5 rounded-lg border border-line-base bg-white px-3 py-1.5 text-sm font-medium text-ink-800 transition-colors hover:border-marine-500 hover:text-marine-600"
-                          >
-                            <Eye className="size-4" />
-                            View
-                          </Link>
-                        </TableCell>
-                      </TableRow>
-                    );
-                  })}
-                  {visible.length === 0 ? (
-                    <TableRow>
-                      <TableCell
-                        colSpan={7}
-                        className="py-10 text-center text-sm text-ink-600"
-                      >
-                        No enquiries match your filters.
-                      </TableCell>
-                    </TableRow>
-                  ) : null}
-                </TableBody>
+                      <Td className="text-marine-600 text-[13px] font-semibold tabular-nums">
+                        {e.reference_number}
+                      </Td>
+                      <Td className="text-[13.5px] font-medium">
+                        {e.first_name} {e.last_name}
+                      </Td>
+                      <Td>{e.visa_type}</Td>
+                      <Td className="text-ink-600 text-[13px]">
+                        {fmtDate(e.created_at)}
+                      </Td>
+                      <Td>
+                        <Pill>{VISA_STATUS_LABELS[e.status]}</Pill>
+                      </Td>
+                      <Td align="right" onClick={(ev) => ev.stopPropagation()}>
+                        <ViewButton href={`/admin/visa-queries/${e.id}`} />
+                      </Td>
+                    </Tr>
+                  ))}
+                </tbody>
               </Table>
-            </div>
-
-            {hasMore ? (
-              <div className="flex justify-center border-t border-line-base p-4">
-                <Button variant="outline" size="sm" onClick={loadMore}>
-                  Load more ({total - visible.length} more)
-                </Button>
-              </div>
-            ) : null}
+            </TableScroll>
+            <TableFoot
+              shown={visible.length}
+              total={rows.length}
+              noun="enquiries"
+              action={
+                remaining > 0 ? (
+                  <Btn onClick={() => setLimit((l) => l + PAGE_SIZE)}>
+                    Load {Math.min(PAGE_SIZE, remaining)} more — {remaining}{" "}
+                    remaining
+                  </Btn>
+                ) : undefined
+              }
+            />
           </>
         )}
-      </SectionCard>
-    </div>
+      </Card>
+    </Screen>
   );
 }

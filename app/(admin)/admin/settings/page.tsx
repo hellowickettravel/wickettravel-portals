@@ -2,15 +2,8 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { ImageUp, Loader2, Trash2, Lock } from "lucide-react";
+import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
-import { PageHeader } from "@/components/admin/page-header";
-import { SectionCard } from "@/components/admin/section-card";
-import { ResetEverything } from "@/components/admin/reset-everything";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Switch } from "@/components/ui/switch";
 import { createClient } from "@/lib/supabase/client";
 import {
   getBusinessSettings,
@@ -23,14 +16,48 @@ import {
 } from "@/lib/actions/notifications";
 import { uploadBrandingLogo } from "@/lib/storage";
 import { ADMIN_SETTINGS_KEY } from "@/lib/query-keys";
+import { cn } from "@/lib/utils";
+import {
+  Btn,
+  Card,
+  CardHead,
+  PageHead,
+  Screen,
+  focusRing,
+  inputClass,
+} from "@/components/admin/ui";
+import { CheckIcon, UploadIcon } from "@/components/admin/icons";
+import { ResetEverything } from "@/components/admin/reset-everything";
 
 const PREFS_KEY = ["notification-prefs"] as const;
 
-function fieldLabel(text: string) {
+const TABS = ["Business profile", "Notifications", "Security"] as const;
+type Tab = (typeof TABS)[number];
+
+/** The design's 46×27 switch: marine track when on, 21px white thumb. */
+function Toggle({
+  checked,
+  onChange,
+  label,
+}: {
+  checked: boolean;
+  onChange: (v: boolean) => void;
+  label: string;
+}) {
   return (
-    <span className="text-ink-500 text-[11px] font-medium uppercase tracking-[0.09em]">
-      {text}
-    </span>
+    <button
+      type="button"
+      role="switch"
+      aria-checked={checked}
+      aria-label={label}
+      onClick={() => onChange(!checked)}
+      className={cn(
+        "flex h-[27px] w-[46px] flex-none rounded-full border-0 p-1 outline-none transition-colors duration-150",
+        checked ? "bg-marine-500 justify-end" : "bg-line-field justify-start"
+      )}
+    >
+      <span className="block size-[21px] rounded-full bg-white shadow-[0_4px_12px_oklch(0.205_0.038_258_/_0.07)]" />
+    </button>
   );
 }
 
@@ -39,6 +66,8 @@ export default function SettingsPage() {
   const supabase = useMemo(() => createClient(), []);
   const logoInputRef = useRef<HTMLInputElement>(null);
   const [uploadingLogo, setUploadingLogo] = useState(false);
+  const [logoError, setLogoError] = useState("");
+  const [tab, setTab] = useState<Tab>("Business profile");
 
   const { data: settings, isLoading } = useQuery({
     queryKey: ADMIN_SETTINGS_KEY,
@@ -63,8 +92,6 @@ export default function SettingsPage() {
   const [dailySummary, setDailySummary] = useState(false);
   const [statusChange, setStatusChange] = useState(true);
 
-  // Hydrate the editable form once the saved settings load (and re-sync if
-  // another admin changes them live).
   useEffect(() => {
     if (settings) {
       // eslint-disable-next-line react-hooks/set-state-in-effect
@@ -73,12 +100,13 @@ export default function SettingsPage() {
       setPhone(settings.business_phone ?? "");
       setAddress(settings.business_address ?? "");
       setCommission(
-        settings.default_commission != null ? String(settings.default_commission) : ""
+        settings.default_commission != null
+          ? String(settings.default_commission)
+          : ""
       );
     }
   }, [settings]);
 
-  // Hydrate notification toggles from the saved prefs once they load.
   useEffect(() => {
     if (prefs) {
       // eslint-disable-next-line react-hooks/set-state-in-effect
@@ -114,7 +142,8 @@ export default function SettingsPage() {
       toast.success("Settings saved");
       queryClient.invalidateQueries({ queryKey: ADMIN_SETTINGS_KEY });
     },
-    onError: () => toast.error("Couldn't save", { description: "Please try again." }),
+    onError: () =>
+      toast.error("Couldn't save", { description: "Please try again." }),
   });
 
   const prefsMutation = useMutation({
@@ -128,13 +157,15 @@ export default function SettingsPage() {
       queryClient.invalidateQueries({ queryKey: PREFS_KEY });
     },
     onError: () =>
-      toast.error("Couldn't save preferences", { description: "Please try again." }),
+      toast.error("Couldn't save preferences", {
+        description: "Please try again.",
+      }),
   });
 
   function save(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
-    const parsedCommission = commission.trim() === "" ? null : Number(commission);
-    if (parsedCommission != null && !Number.isFinite(parsedCommission)) {
+    const parsed = commission.trim() === "" ? null : Number(commission);
+    if (parsed != null && !Number.isFinite(parsed)) {
       toast.error("Commission must be a number");
       return;
     }
@@ -143,16 +174,7 @@ export default function SettingsPage() {
       businessEmail: email,
       businessPhone: phone,
       businessAddress: address,
-      defaultCommission: parsedCommission,
-    });
-  }
-
-  function savePrefs() {
-    prefsMutation.mutate({
-      newOrder,
-      newMessage,
-      dailySummary,
-      statusChange,
+      defaultCommission: parsed,
     });
   }
 
@@ -160,16 +182,19 @@ export default function SettingsPage() {
     const file = e.target.files?.[0];
     e.target.value = "";
     if (!file) return;
+    setLogoError("");
     setUploadingLogo(true);
     const uploaded = await uploadBrandingLogo(file);
     if (!uploaded.ok) {
       setUploadingLogo(false);
+      setLogoError(uploaded.error);
       toast.error("Upload failed", { description: uploaded.error });
       return;
     }
     const saved = await saveBrandLogo(uploaded.url);
     setUploadingLogo(false);
     if (!saved.ok) {
+      setLogoError(saved.error);
       toast.error("Couldn't save logo", { description: saved.error });
       return;
     }
@@ -191,174 +216,225 @@ export default function SettingsPage() {
 
   const logoUrl = settings?.logo_url ?? null;
 
+  const FIELDS = [
+    { id: "biz-name", label: "Trading name", value: name, set: setName, type: "text" },
+    { id: "biz-email", label: "Support email", value: email, set: setEmail, type: "email" },
+    { id: "biz-phone", label: "Support phone", value: phone, set: setPhone, type: "text" },
+    {
+      id: "commission",
+      label: "Default commission (%)",
+      value: commission,
+      set: setCommission,
+      type: "number",
+    },
+    {
+      id: "biz-address",
+      label: "Registered address",
+      value: address,
+      set: setAddress,
+      type: "text",
+      span: "1 / -1",
+    },
+  ];
+
+  const TOGGLES = [
+    {
+      label: "New order placed",
+      hint: "Email you when a customer places an order.",
+      checked: newOrder,
+      set: setNewOrder,
+    },
+    {
+      label: "Customer message received",
+      hint: "Notify you when a customer sends a message in any conversation.",
+      checked: newMessage,
+      set: setNewMessage,
+    },
+    {
+      label: "Order status changes",
+      hint: "Alert you whenever an order moves between New, In progress, Completed or Cancelled.",
+      checked: statusChange,
+      set: setStatusChange,
+    },
+    {
+      label: "Daily summary email",
+      hint: "A daily digest of orders and activity across the platform.",
+      checked: dailySummary,
+      set: setDailySummary,
+    },
+  ];
+
   return (
-    <div className="space-y-7">
-      <PageHeader
-        eyebrow="Configuration"
+    <Screen width={1080}>
+      <PageHead
         title="Settings"
-        subtitle="Manage your business profile, branding and preferences."
+        intro="Business details, commission rules and who gets told about what."
       />
 
-      <form onSubmit={save} className="space-y-7">
-        <SectionCard title="Business profile" description="Used across invoices and customer messages.">
-          {isLoading ? (
-            <div className="flex items-center gap-2 py-6 text-sm text-ink-600">
-              <Loader2 className="size-4 animate-spin" />
-              Loading settings…
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-              <div className="space-y-2">
-                <Label htmlFor="biz-name">{fieldLabel("Business name")}</Label>
-                <Input id="biz-name" value={name} onChange={(e) => setName(e.target.value)} className="h-10 rounded-[10px] bg-surface-1" />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="biz-email">{fieldLabel("Email")}</Label>
-                <Input id="biz-email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} className="h-10 rounded-[10px] bg-surface-1" />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="biz-phone">{fieldLabel("Phone")}</Label>
-                <Input id="biz-phone" value={phone} onChange={(e) => setPhone(e.target.value)} className="h-10 rounded-[10px] bg-surface-1" />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="biz-address">{fieldLabel("Address")}</Label>
-                <Input id="biz-address" value={address} onChange={(e) => setAddress(e.target.value)} className="h-10 rounded-[10px] bg-surface-1" />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="commission">{fieldLabel("Default commission (%)")}</Label>
-                <Input id="commission" type="number" value={commission} onChange={(e) => setCommission(e.target.value)} className="h-10 max-w-xs rounded-[10px] bg-surface-1" />
-              </div>
-            </div>
-          )}
-          <div className="mt-5 flex justify-end">
-            <Button type="submit" disabled={saveMutation.isPending || isLoading}>
-              {saveMutation.isPending ? (
-                <>
-                  <Loader2 className="size-4 animate-spin" />
-                  Saving…
-                </>
-              ) : (
-                "Save changes"
-              )}
-            </Button>
-          </div>
-        </SectionCard>
-      </form>
-
-      {/* Branding */}
-      <SectionCard title="Branding" description="Your logo. The brand colour is fixed by the Wicket Travel design system.">
-        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
-          <div className="space-y-2">
-            {fieldLabel("Logo")}
-            <div className="flex items-center gap-4">
-              <div className="flex size-20 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-line-base bg-surface-1">
-                {logoUrl ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img src={logoUrl} alt="Business logo" className="size-full object-cover" />
-                ) : (
-                  <ImageUp className="size-6 text-ink-600" />
-                )}
-              </div>
-              <div className="space-y-2">
-                <input
-                  ref={logoInputRef}
-                  type="file"
-                  accept=".png,.jpg,.jpeg"
-                  className="hidden"
-                  onChange={handleLogo}
-                />
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  disabled={uploadingLogo}
-                  onClick={() => logoInputRef.current?.click()}
-                >
-                  {uploadingLogo ? (
-                    <>
-                      <Loader2 className="size-4 animate-spin" />
-                      Uploading…
-                    </>
-                  ) : (
-                    <>
-                      <ImageUp className="size-4" />
-                      {logoUrl ? "Replace logo" : "Upload logo"}
-                    </>
-                  )}
-                </Button>
-                {logoUrl ? (
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    className="text-rose-600 hover:bg-rose-50 hover:text-rose-700"
-                    onClick={removeLogo}
-                  >
-                    <Trash2 className="size-4" />
-                    Remove
-                  </Button>
-                ) : null}
-                <p className="text-xs text-ink-600">PNG or JPG, up to 10MB.</p>
-              </div>
-            </div>
-          </div>
-          <div className="space-y-2">
-            {fieldLabel("Brand colours")}
-            <div className="flex items-center gap-3 rounded-xl border border-line-base bg-surface-1 p-3">
-              <div className="flex items-center gap-2">
-                <div className="size-12 rounded-xl bg-navy shadow-sm ring-1 ring-black/5" />
-                <div className="size-12 rounded-xl bg-orange shadow-sm ring-1 ring-black/5" />
-              </div>
-              <div>
-                <p className="font-poppins text-sm font-semibold text-ink-800">
-                  #1E3A5F · #F97316
-                </p>
-                <p className="flex items-center gap-1 text-xs text-ink-600">
-                  <Lock className="size-3" />
-                  Wicket Travel Navy &amp; Orange · locked by the design system
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
-      </SectionCard>
-
-      {/* Notifications (persisted, per-admin) */}
-      <SectionCard title="Notifications" description="Choose what you get alerted about. Saved to your account.">
-        <ul className="divide-y divide-line-soft">
-          {[
-            { label: "New order alerts", desc: "Notify you when an order is created.", checked: newOrder, set: setNewOrder },
-            { label: "New message alerts", desc: "Notify when a customer sends a message.", checked: newMessage, set: setNewMessage },
-            { label: "Order status changes", desc: "Alerts when an order's status changes.", checked: statusChange, set: setStatusChange },
-            { label: "Daily summary email", desc: "A daily digest of orders and activity (coming soon).", checked: dailySummary, set: setDailySummary },
-          ].map((n) => (
-            <li key={n.label} className="flex items-center justify-between gap-4 py-3.5 first:pt-0 last:pb-0">
-              <div>
-                <p className="text-sm font-medium text-ink-800">{n.label}</p>
-                <p className="text-xs text-ink-600">{n.desc}</p>
-              </div>
-              <Switch checked={n.checked} onCheckedChange={(v) => n.set(Boolean(v))} />
-            </li>
-          ))}
-        </ul>
-        <div className="mt-5 flex justify-end">
-          <Button type="button" onClick={savePrefs} disabled={prefsMutation.isPending}>
-            {prefsMutation.isPending ? (
-              <>
-                <Loader2 className="size-4 animate-spin" />
-                Saving…
-              </>
-            ) : (
-              "Save preferences"
+      <div className="flex flex-wrap gap-2">
+        {TABS.map((t) => (
+          <button
+            key={t}
+            type="button"
+            onClick={() => setTab(t)}
+            aria-pressed={tab === t}
+            className={cn(
+              "h-10 rounded-full border px-5 text-[13px] font-medium whitespace-nowrap outline-none",
+              tab === t
+                ? "border-ink-800 bg-ink-800 text-white"
+                : "border-line-field text-ink-700 hover:bg-surface-1 bg-white"
             )}
-          </Button>
-        </div>
-      </SectionCard>
-
-      {/* Danger zone — full portal wipe. Kept visually separate at the bottom. */}
-      <div className="pt-2">
-        <ResetEverything />
+          >
+            {t}
+          </button>
+        ))}
       </div>
-    </div>
+
+      {tab === "Business profile" ? (
+        <Card>
+          <CardHead title="Business profile" />
+
+          {/* ------------------------------------------------ brand logo */}
+          <div className="border-line-soft flex flex-wrap items-center gap-5 border-b p-5">
+            <span className="border-line-field bg-marine-tint text-marine-600 font-poppins relative flex size-[76px] flex-none items-center justify-center overflow-hidden rounded-full border text-[22px] font-medium">
+              {logoUrl ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={logoUrl}
+                  alt="Business logo"
+                  className="absolute inset-0 size-full object-cover"
+                />
+              ) : (
+                "WT"
+              )}
+            </span>
+            <div className="flex min-w-0 flex-[1_1_260px] flex-col gap-1.5">
+              <span className="text-ink-800 text-[13px] font-medium">
+                Business logo
+              </span>
+              <span className="text-ink-500 text-[12.5px] leading-[1.5] font-normal text-pretty">
+                PNG or JPEG only. Square images look best — this shows in the
+                portal sidebar and on anything you send to customers.
+              </span>
+              <span className="text-ink-500 text-[11.5px] font-normal">
+                {logoUrl ? "Logo uploaded" : "No logo uploaded yet"}
+              </span>
+              {logoError ? (
+                <span className="text-danger-ink text-[12px] font-medium">
+                  {logoError}
+                </span>
+              ) : null}
+            </div>
+            <div className="flex flex-wrap items-center gap-2.5">
+              <input
+                ref={logoInputRef}
+                type="file"
+                accept=".png,.jpg,.jpeg"
+                className="hidden"
+                onChange={handleLogo}
+              />
+              <Btn
+                disabled={uploadingLogo}
+                onClick={() => logoInputRef.current?.click()}
+              >
+                {uploadingLogo ? (
+                  <Loader2 className="size-4 animate-spin" />
+                ) : (
+                  <UploadIcon size={15} />
+                )}
+                {logoUrl ? "Replace logo" : "Upload logo"}
+              </Btn>
+              {logoUrl ? <Btn onClick={removeLogo}>Remove</Btn> : null}
+            </div>
+          </div>
+
+          {/* ---------------------------------------------------- fields */}
+          <form onSubmit={save}>
+            <div className="grid grid-cols-[repeat(auto-fit,minmax(230px,1fr))] gap-4 p-5">
+              {FIELDS.map((f) => (
+                <label
+                  key={f.id}
+                  style={f.span ? { gridColumn: f.span } : undefined}
+                  className="flex min-w-0 flex-col gap-2"
+                >
+                  <span className="text-ink-700 text-[11.5px] font-medium">
+                    {f.label}
+                  </span>
+                  <input
+                    id={f.id}
+                    type={f.type}
+                    value={f.value}
+                    disabled={isLoading}
+                    onChange={(e) => f.set(e.target.value)}
+                    className={cn(inputClass, focusRing)}
+                  />
+                </label>
+              ))}
+            </div>
+            <div className="px-5 pb-5">
+              <Btn
+                variant="ember"
+                type="submit"
+                disabled={saveMutation.isPending || isLoading}
+              >
+                {saveMutation.isPending ? (
+                  <Loader2 className="size-4 animate-spin" />
+                ) : (
+                  <CheckIcon size={15} />
+                )}
+                Save changes
+              </Btn>
+            </div>
+          </form>
+        </Card>
+      ) : null}
+
+      {tab === "Notifications" ? (
+        <Card>
+          <CardHead title="Notification preferences" />
+          {TOGGLES.map((t) => (
+            <div
+              key={t.label}
+              className="border-line-soft relative flex flex-wrap items-center gap-4 border-b px-5 py-4 last:border-b-0"
+            >
+              <span className="flex min-w-0 flex-[1_1_260px] flex-col gap-1">
+                <span className="text-[13px] font-medium">{t.label}</span>
+                <span className="text-ink-500 text-[12.5px] leading-[1.5] font-normal text-pretty">
+                  {t.hint}
+                </span>
+              </span>
+              <Toggle
+                checked={t.checked}
+                label={t.label}
+                onChange={(v) => t.set(v)}
+              />
+            </div>
+          ))}
+          <div className="border-line-soft border-t p-5">
+            <Btn
+              variant="ember"
+              onClick={() =>
+                prefsMutation.mutate({
+                  newOrder,
+                  newMessage,
+                  dailySummary,
+                  statusChange,
+                })
+              }
+              disabled={prefsMutation.isPending}
+            >
+              {prefsMutation.isPending ? (
+                <Loader2 className="size-4 animate-spin" />
+              ) : (
+                <CheckIcon size={15} />
+              )}
+              Save preferences
+            </Btn>
+          </div>
+        </Card>
+      ) : null}
+
+      {tab === "Security" ? <ResetEverything /> : null}
+    </Screen>
   );
 }

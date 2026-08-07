@@ -1,16 +1,10 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { LifeBuoy, CheckCircle2, RotateCcw, Loader2, Search } from "lucide-react";
+import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
-import { PageHeader } from "@/components/admin/page-header";
-import { SectionCard } from "@/components/admin/section-card";
-import { StatusBadge } from "@/components/admin/status-badge";
-import { UserCell } from "@/components/admin/user-cell";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { TableSkeleton } from "@/components/portal/skeletons";
 import {
   listAllSupportTickets,
   setSupportTicketStatus,
@@ -19,6 +13,17 @@ import { ADMIN_SUPPORT_TICKETS_KEY } from "@/lib/query-keys";
 import { createClient } from "@/lib/supabase/client";
 import { fmtRelative } from "@/lib/format";
 import { cn } from "@/lib/utils";
+import {
+  Btn,
+  Card,
+  EmptyState,
+  PageHead,
+  Pill,
+  Screen,
+  TableSkeleton,
+  focusRing,
+} from "@/components/admin/ui";
+import { CheckIcon, RefreshIcon } from "@/components/admin/icons";
 
 const TABS = ["All", "Open", "Resolved"] as const;
 type Tab = (typeof TABS)[number];
@@ -30,15 +35,23 @@ const SUBMITTERS = [
 ] as const;
 type Submitter = (typeof SUBMITTERS)[number]["value"];
 
-const selectClass =
-  "border-line-field text-ink-800 focus:border-marine-500 focus:shadow-[0_0_0_3px_var(--color-marine-200)] h-10 w-full cursor-pointer rounded-[10px] border bg-white px-3.5 text-[13.5px] font-normal outline-none transition-[border-color,box-shadow] duration-[130ms] disabled:opacity-50";
+/** A short, stable display reference derived from the ticket's real id. */
+function ticketRef(id: string) {
+  return `#SUP-${id.replace(/-/g, "").slice(0, 4).toUpperCase()}`;
+}
 
+/**
+ * Support — the design's ticket list: tickets raised by employees and
+ * customers about the platform itself, filtered by state and by who raised
+ * them, each row carrying its own status pill and resolve action.
+ */
 export default function AdminSupportPage() {
+  const params = useSearchParams();
+  const topSearch = (params.get("q") ?? "").trim().toLowerCase();
   const queryClient = useQueryClient();
   const supabase = useMemo(() => createClient(), []);
   const [tab, setTab] = useState<Tab>("All");
   const [submitter, setSubmitter] = useState<Submitter>("all");
-  const [query, setQuery] = useState("");
 
   const { data, isLoading, isError } = useQuery({
     queryKey: ADMIN_SUPPORT_TICKETS_KEY,
@@ -76,32 +89,28 @@ export default function AdminSupportPage() {
       toast.error("Couldn't update ticket", { description: "Please try again." }),
   });
 
-  const openCount = tickets.filter((t) => t.status === "open").length;
-
-  // Name shown/searched for a ticket depends on who raised it.
   const submitterName = (t: (typeof tickets)[number]) =>
     t.submitter_role === "customer"
       ? t.customer?.full_name || "Customer"
       : t.employee?.full_name || "Employee";
 
-  // Live counts per status tab (respecting the submitter + search filters, so
-  // the numbers always match what a tab would actually show).
+  // Counts respect the submitter filter and the top-bar search, so a tab's
+  // number always matches what selecting it would show.
   const preTab = useMemo(() => {
-    const q = query.trim().toLowerCase();
     return tickets.filter((t) => {
       const matchesSubmitter =
         submitter === "all" ? true : t.submitter_role === submitter;
       const matchesQuery =
-        !q ||
-        [t.subject, t.message, submitterName(t)]
+        !topSearch ||
+        [t.subject, t.message, submitterName(t), ticketRef(t.id)]
           .join(" ")
           .toLowerCase()
-          .includes(q);
+          .includes(topSearch);
       return matchesSubmitter && matchesQuery;
     });
-    // submitterName is a stable pure helper; tickets/submitter/query drive this.
+    // submitterName is a stable pure helper.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [tickets, submitter, query]);
+  }, [tickets, submitter, topSearch]);
 
   const tabCounts: Record<Tab, number> = {
     All: preTab.length,
@@ -118,163 +127,144 @@ export default function AdminSupportPage() {
   );
 
   return (
-    <div className="space-y-7">
-      <PageHeader
-        eyebrow="Support"
-        title="Support Queries"
-        subtitle="Issues raised by your team and customers — triage and resolve."
+    <Screen width={1240}>
+      <PageHead
+        title="Support"
+        intro="Tickets raised by employees and customers about the platform itself."
       />
 
-      <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-        <div className="flex flex-wrap items-center gap-2">
-          {TABS.map((t) => (
-            <button
-              key={t}
-              onClick={() => setTab(t)}
-              className={cn(
-                "inline-flex h-[34px] items-center gap-2 rounded-full border px-4 text-[13px] font-medium whitespace-nowrap outline-none transition-colors",
-                tab === t
-                  ? "border-ink-800 bg-ink-800 text-white"
-                  : "border-line-field text-ink-800 hover:bg-surface-1 bg-white"
-              )}
-            >
-              {t}
-              <span
+      <Card>
+        <div className="border-line-soft flex flex-wrap items-center justify-between gap-3 border-b px-5 py-4">
+          <div className="flex flex-wrap gap-2">
+            {TABS.map((t) => (
+              <button
+                key={t}
+                type="button"
+                onClick={() => setTab(t)}
+                aria-pressed={tab === t}
                 className={cn(
-                  "text-[11px] font-medium tabular-nums opacity-[0.66]",
+                  "inline-flex h-[34px] items-center gap-2 rounded-full border px-4 text-[13px] font-medium whitespace-nowrap outline-none",
                   tab === t
-                    ? "text-white"
-                    : "text-ink-600"
+                    ? "border-ink-800 bg-ink-800 text-white"
+                    : "border-line-field text-ink-700 hover:bg-surface-1 bg-white"
                 )}
               >
-                {tabCounts[t]}
-              </span>
-            </button>
-          ))}
-        </div>
-
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-          <p className="order-last text-sm text-ink-600 sm:order-first">
-            <span className="font-semibold text-ink-800">{openCount}</span> open
-          </p>
-          <select
-            aria-label="Filter by who raised the ticket"
-            value={submitter}
-            onChange={(e) => setSubmitter(e.target.value as Submitter)}
-            className={cn(selectClass, "w-full sm:w-40")}
-          >
-            {SUBMITTERS.map((s) => (
-              <option key={s.value} value={s.value}>
-                {s.label}
-              </option>
+                {t}
+                <span className="text-[11px] font-medium tabular-nums opacity-[0.66]">
+                  {tabCounts[t]}
+                </span>
+              </button>
             ))}
-          </select>
-          <div className="relative sm:w-72">
-            <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-ink-600" />
-            <Input
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              aria-label="Search support tickets by subject, message or name"
-              placeholder="Search subject, message or name…"
-              className="h-10 rounded-[10px] bg-white pl-9"
-            />
           </div>
+          <label className="flex items-center gap-2">
+            <span className="text-ink-600 text-[11.5px] font-medium whitespace-nowrap">
+              Raised by
+            </span>
+            <select
+              value={submitter}
+              onChange={(e) => setSubmitter(e.target.value as Submitter)}
+              className={cn(
+                "border-line-field text-ink-800 h-[34px] cursor-pointer rounded-full border bg-white pr-8 pl-3.5 text-[12.5px] font-medium outline-none",
+                focusRing
+              )}
+            >
+              {SUBMITTERS.map((s) => (
+                <option key={s.value} value={s.value}>
+                  {s.label}
+                </option>
+              ))}
+            </select>
+          </label>
         </div>
-      </div>
 
-      <SectionCard flush>
         {isLoading ? (
-          <div className="p-4">
-            <TableSkeleton rows={5} columns={4} />
-          </div>
+          <TableSkeleton rows={5} />
         ) : isError ? (
-          <p className="px-6 py-10 text-center text-sm text-ink-600">
-            Couldn’t load tickets. Refresh to try again.
-          </p>
-        ) : tickets.length === 0 ? (
-          <div className="flex flex-col items-center gap-2 px-6 py-14 text-center">
-            <div className="flex size-12 items-center justify-center rounded-[12px] bg-marine-tint text-marine-600">
-              <LifeBuoy className="size-6" />
-            </div>
-            <p className="font-poppins text-base font-semibold text-ink-800">
-              No support tickets
-            </p>
-            <p className="max-w-sm text-sm text-ink-600">
-              When an employee or customer raises a query from their Support
-              page, it lands here.
-            </p>
-          </div>
+          <EmptyState
+            title="Couldn't load tickets"
+            body="Something went wrong reading the support queue. Refresh the page to try again."
+          />
         ) : visible.length === 0 ? (
-          <p className="px-6 py-10 text-center text-sm text-ink-600">
-            No tickets match your filters.
-          </p>
+          <EmptyState
+            title={
+              tickets.length === 0
+                ? "No support tickets"
+                : "No tickets match these filters"
+            }
+            body={
+              tickets.length === 0
+                ? "When an employee or customer raises a query from their Support page, it lands here."
+                : "Clear the state or raised-by filter to see the rest of the queue."
+            }
+            action={
+              tickets.length === 0 ? undefined : (
+                <Btn
+                  onClick={() => {
+                    setTab("All");
+                    setSubmitter("all");
+                  }}
+                >
+                  Clear all filters
+                </Btn>
+              )
+            }
+          />
         ) : (
-          <ul className="divide-y divide-line-soft">
-            {visible.map((t) => {
-              const resolved = t.status === "resolved";
-              const busy =
-                statusMutation.isPending &&
-                statusMutation.variables?.id === t.id;
-              return (
-                <li key={t.id} className="flex flex-col gap-3 px-5 py-4 sm:flex-row sm:items-start sm:justify-between">
-                  <div className="min-w-0 flex-1">
-                    <div className="flex flex-wrap items-center gap-2">
-                      <p className="text-sm font-semibold text-ink-800">
-                        {t.subject}
-                      </p>
-                      <StatusBadge tone={resolved ? "green" : "amber"}>
-                        {resolved ? "Resolved" : "Open"}
-                      </StatusBadge>
-                      <StatusBadge
-                        tone={t.submitter_role === "customer" ? "violet" : "slate"}
-                      >
-                        {t.submitter_role === "customer" ? "Customer" : "Employee"}
-                      </StatusBadge>
-                    </div>
-                    <p className="mt-1 whitespace-pre-wrap text-sm text-ink-600">
-                      {t.message}
-                    </p>
-                    <div className="mt-2 flex items-center gap-2">
-                      <UserCell
-                        name={
-                          t.submitter_role === "customer"
-                            ? t.customer?.full_name || "Customer"
-                            : t.employee?.full_name || "Employee"
-                        }
-                      />
-                      <span className="text-xs text-ink-600">
-                        · {fmtRelative(t.created_at)}
-                      </span>
-                    </div>
-                  </div>
-                  <div className="shrink-0">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      disabled={busy}
-                      onClick={() =>
-                        statusMutation.mutate({
-                          id: t.id,
-                          status: resolved ? "open" : "resolved",
-                        })
-                      }
-                    >
-                      {busy ? (
-                        <Loader2 className="size-4 animate-spin" />
-                      ) : resolved ? (
-                        <RotateCcw className="size-4" />
-                      ) : (
-                        <CheckCircle2 className="size-4" />
-                      )}
-                      {resolved ? "Reopen" : "Mark resolved"}
-                    </Button>
-                  </div>
-                </li>
-              );
-            })}
-          </ul>
+          visible.map((t) => {
+            const resolved = t.status === "resolved";
+            const busy =
+              statusMutation.isPending && statusMutation.variables?.id === t.id;
+            return (
+              <div
+                key={t.id}
+                className="border-line-soft flex flex-wrap items-start gap-4 border-b px-5 py-4 last:border-b-0"
+              >
+                <span className="flex min-w-0 flex-[1_1_320px] flex-col gap-1">
+                  <span className="block leading-[1.45]">
+                    <span className="text-marine-600 mr-2.5 text-[12.5px] font-medium tabular-nums">
+                      {ticketRef(t.id)}
+                    </span>
+                    <span className="text-ink-880 text-[13.5px] font-medium tracking-[-0.008em]">
+                      {t.subject}
+                    </span>
+                  </span>
+                  <span className="text-ink-600 text-[12.5px] leading-[1.55] font-normal whitespace-pre-wrap text-pretty">
+                    {t.message}
+                  </span>
+                  <span className="text-ink-500 text-[11.5px] font-normal">
+                    {submitterName(t)} ·{" "}
+                    {t.submitter_role === "customer" ? "Customer" : "Employee"} ·{" "}
+                    {fmtRelative(t.created_at)}
+                  </span>
+                </span>
+                <span className="flex flex-none items-center gap-3">
+                  <Pill tone={resolved ? "ok" : "marine"}>
+                    {resolved ? "Resolved" : "Open"}
+                  </Pill>
+                  <Btn
+                    disabled={busy}
+                    onClick={() =>
+                      statusMutation.mutate({
+                        id: t.id,
+                        status: resolved ? "open" : "resolved",
+                      })
+                    }
+                  >
+                    {busy ? (
+                      <Loader2 className="size-4 animate-spin" />
+                    ) : resolved ? (
+                      <RefreshIcon size={15} />
+                    ) : (
+                      <CheckIcon size={15} />
+                    )}
+                    {resolved ? "Reopen" : "Mark resolved"}
+                  </Btn>
+                </span>
+              </div>
+            );
+          })
         )}
-      </SectionCard>
-    </div>
+      </Card>
+    </Screen>
   );
 }

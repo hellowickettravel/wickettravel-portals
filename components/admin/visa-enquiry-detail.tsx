@@ -1,26 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
-import {
-  ArrowLeft,
-  Stamp,
-  Mail,
-  Phone,
-  MessageCircle,
-  FileText,
-  Download,
-  ExternalLink,
-  Loader2,
-  StickyNote,
-} from "lucide-react";
+import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
-import { SectionCard } from "@/components/admin/section-card";
-import { StatusBadge } from "@/components/admin/status-badge";
-import { Button } from "@/components/ui/button";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import {
   setVisaEnquiryStatus,
   addVisaEnquiryNote,
@@ -29,52 +12,44 @@ import {
 import {
   VISA_STATUSES,
   VISA_STATUS_LABELS,
-  VISA_STATUS_TONE,
-  type PreferredContactMethod,
   type VisaAdminNote,
   type VisaEnquiryStatus,
 } from "@/lib/visa";
 import { fmtDate, fmtRelative } from "@/lib/format";
 import { cn } from "@/lib/utils";
+import {
+  BackLink,
+  Btn,
+  Card,
+  CardHead,
+  ContactButtons,
+  MiniField,
+  PageTitle,
+  Pill,
+  Screen,
+  focusRing,
+  textareaClass,
+} from "@/components/admin/ui";
+import {
+  BriefcaseIcon,
+  CheckIcon,
+  DocumentIcon,
+  DownloadDocIcon,
+  EditIcon,
+  IdCardIcon,
+  ImageIcon,
+  MailIcon,
+  PhoneIcon,
+  UserIcon,
+  VisaIcon,
+  WhatsAppIcon,
+} from "@/components/admin/icons";
 
 const selectClass =
-  "border-line-field text-ink-800 focus:border-marine-500 focus:shadow-[0_0_0_3px_var(--color-marine-200)] h-10 w-full cursor-pointer rounded-[10px] border bg-white px-3.5 text-[13.5px] font-normal outline-none transition-[border-color,box-shadow] duration-[130ms] disabled:opacity-50";
+  "border-line-field text-ink-800 h-[34px] cursor-pointer rounded-full border bg-white pr-8 pl-3.5 text-[12.5px] font-medium outline-none disabled:opacity-50";
 
-/** One label/value pair inside a section's definition grid. */
-function Field({
-  label,
-  value,
-  wide,
-}: {
-  label: string;
-  value: React.ReactNode;
-  wide?: boolean;
-}) {
-  return (
-    <div className={cn("min-w-0", wide && "sm:col-span-2")}>
-      <dt className="text-ink-500 text-[11px] font-medium uppercase tracking-[0.09em]">
-        {label}
-      </dt>
-      <dd className="mt-1 whitespace-pre-wrap break-words text-sm text-ink-800">
-        {value == null || value === "" ? "—" : value}
-      </dd>
-    </div>
-  );
-}
-
-/** Yes/No badge; `alert` renders Yes in red (background flags the admin must see). */
-function YesNo({ value, alert }: { value: boolean; alert?: boolean }) {
-  return (
-    <StatusBadge tone={value ? (alert ? "red" : "blue") : "slate"}>
-      {value ? "Yes" : "No"}
-    </StatusBadge>
-  );
-}
-
-function SectionGrid({ children }: { children: React.ReactNode }) {
-  return (
-    <dl className="grid grid-cols-1 gap-x-6 gap-y-4 sm:grid-cols-2">{children}</dl>
-  );
+function yesNo(v: boolean) {
+  return v ? "Yes" : "No";
 }
 
 function fmtBytes(size: number): string {
@@ -83,6 +58,15 @@ function fmtBytes(size: number): string {
   return `${size} B`;
 }
 
+function isImage(name: string) {
+  return /\.(png|jpe?g|gif|webp)$/i.test(name);
+}
+
+/**
+ * A visa enquiry, built to the design's "Enquiry detail" screen: a contact row
+ * in each channel's own hue, then the whole application laid out as column
+ * cards of compact label/value tiles, with documents and internal notes last.
+ */
 export function VisaEnquiryDetail({ detail }: { detail: Detail }) {
   const router = useRouter();
   const { enquiry, documents } = detail;
@@ -135,352 +119,326 @@ export function VisaEnquiryDetail({ detail }: { detail: Detail }) {
     toast.success("Note saved");
   }
 
-  const contactActions: {
-    method: PreferredContactMethod;
-    label: string;
-    href: string;
-    Icon: typeof Mail;
-    external?: boolean;
-  }[] = [
-    { method: "email", label: "Email", href: mailHref, Icon: Mail },
-    {
-      method: "whatsapp",
-      label: "WhatsApp",
-      href: waHref,
-      Icon: MessageCircle,
-      external: true,
-    },
-    { method: "phone", label: "Call", href: telHref, Icon: Phone },
-  ];
-
   return (
-    <div className="space-y-5">
-      <Link
-        href="/admin/visa-queries"
-        className="inline-flex items-center gap-1.5 text-sm font-medium text-marine-600 transition-colors hover:text-marine-600"
-      >
-        <ArrowLeft className="size-4" />
-        Back to visa queries
-      </Link>
+    <Screen>
+      <BackLink href="/admin/visa-queries">Visa queries</BackLink>
 
-      {/* Header */}
-      <div className="flex flex-col gap-4 rounded-[12px] border border-line-base bg-white p-5 shadow-[0_1px_2px_oklch(0.205_0.038_258_/_0.04)] sm:flex-row sm:items-center sm:justify-between">
-        <div className="flex items-center gap-3">
-          <div className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-marine-tint text-marine-600">
-            <Stamp className="size-5" />
+      {/* -------------------------------------------------------- header */}
+      <div className="flex flex-wrap items-end justify-between gap-4">
+        <div className="min-w-0">
+          <div className="flex flex-wrap items-center gap-3">
+            <PageTitle>{enquiry.reference_number}</PageTitle>
+            <Pill>{VISA_STATUS_LABELS[status]}</Pill>
           </div>
-          <div className="leading-tight">
-            <div className="flex flex-wrap items-center gap-2">
-              <p className="font-poppins text-lg font-semibold text-ink-900">
-                Enquiry {enquiry.reference_number}
-              </p>
-              <StatusBadge tone={VISA_STATUS_TONE[status]}>
-                {VISA_STATUS_LABELS[status]}
-              </StatusBadge>
-            </div>
-            <p className="text-sm text-ink-600">
-              {fullName} · {enquiry.visa_type} · Submitted{" "}
-              {fmtDate(enquiry.created_at)}
-            </p>
-          </div>
+          <p className="text-ink-600 m-0 mt-1.5 text-[13.5px] font-normal">
+            {fullName} · {enquiry.visa_type} · submitted{" "}
+            {fmtDate(enquiry.created_at)}
+          </p>
         </div>
-
-        <div className="flex items-center gap-2">
-          <label
-            htmlFor="enquiry-status"
-            className="text-ink-500 text-[11px] font-medium uppercase tracking-[0.09em]"
-          >
-            Status
+        <div className="flex flex-wrap items-center gap-3">
+          <label className="flex items-center gap-2">
+            <span className="text-ink-600 text-[11.5px] font-medium whitespace-nowrap">
+              Status
+            </span>
+            <select
+              value={status}
+              disabled={statusBusy}
+              onChange={(e) => changeStatus(e.target.value as VisaEnquiryStatus)}
+              className={cn(selectClass, focusRing, statusBusy && "opacity-60")}
+            >
+              {VISA_STATUSES.map((s) => (
+                <option key={s} value={s}>
+                  {VISA_STATUS_LABELS[s]}
+                </option>
+              ))}
+            </select>
           </label>
-          <select
-            id="enquiry-status"
-            value={status}
-            disabled={statusBusy}
-            onChange={(e) => changeStatus(e.target.value as VisaEnquiryStatus)}
-            className={cn(selectClass, "w-44", statusBusy && "opacity-60")}
+          <Btn
+            disabled={statusBusy || status === "closed"}
+            onClick={() => changeStatus("closed")}
           >
-            {VISA_STATUSES.map((s) => (
-              <option key={s} value={s}>
-                {VISA_STATUS_LABELS[s]}
-              </option>
-            ))}
-          </select>
+            <CheckIcon size={15} />
+            Mark closed
+          </Btn>
+          <Btn as="link" href={mailHref} variant="marine">
+            <MailIcon size={15} />
+            Reply by email
+          </Btn>
         </div>
       </div>
 
-      {/* Contact the applicant */}
-      <SectionCard
-        title="Contact applicant"
-        description="Reach out using the details they provided — their preferred method is highlighted."
-      >
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-          <div className="space-y-1 text-sm">
-            <p className="flex items-center gap-2 text-ink-800">
-              <Mail className="size-4 text-marine-600" />
-              {enquiry.email}
-            </p>
-            <p className="flex items-center gap-2 text-ink-800">
-              <Phone className="size-4 text-marine-600" />
-              {enquiry.phone}
-            </p>
-          </div>
-          <div className="flex flex-wrap items-center gap-2">
-            {contactActions.map(({ method, label, href, Icon, external }) => {
-              const isPreferred = method === preferred;
-              return (
-                <span key={method} className="inline-flex items-center gap-1.5">
-                  <Button
-                    variant={isPreferred ? "default" : "outline"}
-                    size="lg"
-                    render={
-                      <a
-                        href={href}
-                        target={external ? "_blank" : undefined}
-                        rel={external ? "noopener noreferrer" : undefined}
-                      />
-                    }
-                  >
-                    <Icon className="size-4" />
-                    {label}
-                  </Button>
-                  {isPreferred ? (
-                    <StatusBadge tone="blue">Preferred</StatusBadge>
-                  ) : null}
-                </span>
-              );
-            })}
-          </div>
+      {/* ------------------------------------------------ contact applicant */}
+      <Card>
+        <div className="border-line-soft flex flex-wrap items-baseline gap-2.5 border-b px-5 py-4">
+          <h2 className="text-ink-800 m-0 text-[13.5px] font-semibold tracking-[-0.008em]">
+            Contact applicant
+          </h2>
+          <span className="text-ink-500 text-[12px] font-normal">
+            {fullName} · preferred method highlighted
+          </span>
         </div>
-      </SectionCard>
+        <ContactButtons
+          icons={{
+            mail: <MailIcon size={24} />,
+            whatsapp: <WhatsAppIcon size={24} />,
+            phone: <PhoneIcon size={24} />,
+          }}
+          channels={[
+            {
+              key: "mail",
+              label: "Email",
+              sub: enquiry.email,
+              href: mailHref,
+              preferred: preferred === "email",
+            },
+            {
+              key: "whatsapp",
+              label: "WhatsApp",
+              sub: enquiry.phone,
+              href: waHref,
+              external: true,
+              preferred: preferred === "whatsapp",
+            },
+            {
+              key: "phone",
+              label: "Call",
+              sub: enquiry.phone,
+              href: telHref,
+              preferred: preferred === "phone",
+            },
+          ]}
+        />
+      </Card>
 
-      <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
-        {/* 1 — Visa & Travel */}
-        <SectionCard title="Visa & Travel">
-          <SectionGrid>
-            <Field label="Visa type" value={enquiry.visa_type} />
-            <Field label="Purpose of visit" value={enquiry.purpose_of_visit} />
-            <Field label="Arrival date" value={fmtDate(enquiry.arrival_date)} />
-            <Field
+      {/* --------------------------------------------------- column cards */}
+      <div className="grid grid-cols-1 items-stretch gap-4 min-[760px]:grid-cols-2">
+        <Card className="col-span-full">
+          <CardHead
+            icon={<VisaIcon size={15} />}
+            title="Visa & travel"
+            action={
+              <span className="text-ink-quiet text-[11px] font-normal whitespace-nowrap">
+                As submitted
+              </span>
+            }
+          />
+          <div className="grid grid-cols-[repeat(auto-fit,minmax(180px,1fr))] gap-2.5 px-[18px] py-4">
+            <MiniField label="Visa type" value={enquiry.visa_type} />
+            <MiniField label="Purpose of visit" value={enquiry.purpose_of_visit} />
+            <MiniField label="Arrival date" value={fmtDate(enquiry.arrival_date)} />
+            <MiniField
               label="Departure date"
               value={fmtDate(enquiry.departure_date)}
             />
-            <Field
+            <MiniField
               label="More than one person"
-              value={<YesNo value={enquiry.more_than_one_person} />}
+              value={yesNo(enquiry.more_than_one_person)}
             />
-            <Field
+            <MiniField
               label="Planned activities"
               value={enquiry.planned_activities}
-              wide
             />
-          </SectionGrid>
-        </SectionCard>
+          </div>
+        </Card>
 
-        {/* 2 — Personal */}
-        <SectionCard title="Personal">
-          <SectionGrid>
-            <Field label="Full name" value={fullName} />
-            <Field label="Other names" value={enquiry.other_names} />
-            <Field
+        <Card>
+          <CardHead icon={<UserIcon size={15} />} title="Personal information" />
+          <div className="grid grid-cols-[repeat(auto-fit,minmax(180px,1fr))] gap-2.5 px-[18px] py-4">
+            <MiniField label="Full name" value={fullName} />
+            <MiniField label="Other names" value={enquiry.other_names} />
+            <MiniField
               label="Date of birth"
               value={fmtDate(enquiry.date_of_birth)}
             />
-            <Field label="Place of birth" value={enquiry.place_of_birth} />
-            <Field label="Nationality" value={enquiry.nationality} />
-            <Field label="Gender" value={enquiry.gender} />
-            <Field label="Marital status" value={enquiry.marital_status} />
-            <Field label="Phone" value={enquiry.phone} />
-            <Field label="Email" value={enquiry.email} wide />
-            <Field label="UK address" value={enquiry.uk_address} wide />
-          </SectionGrid>
-        </SectionCard>
+            <MiniField label="Place of birth" value={enquiry.place_of_birth} />
+            <MiniField label="Nationality" value={enquiry.nationality} />
+            <MiniField label="Gender" value={enquiry.gender} />
+            <MiniField label="Marital status" value={enquiry.marital_status} />
+            <MiniField label="Phone" value={enquiry.phone} />
+            <MiniField label="Email" value={enquiry.email} />
+            <MiniField label="UK address" value={enquiry.uk_address} />
+          </div>
+        </Card>
 
-        {/* 3 — Passport & UK Visa */}
-        <SectionCard title="Passport & UK Visa">
-          <SectionGrid>
-            <Field label="Passport type" value={enquiry.passport_type} />
-            <Field label="Passport number" value={enquiry.passport_number} />
-            <Field
+        <Card>
+          <CardHead icon={<IdCardIcon size={15} />} title="Passport & UK visa" />
+          <div className="grid grid-cols-[repeat(auto-fit,minmax(180px,1fr))] gap-2.5 px-[18px] py-4">
+            <MiniField label="Passport type" value={enquiry.passport_type} />
+            <MiniField label="Passport number" value={enquiry.passport_number} />
+            <MiniField
               label="Issue date"
               value={fmtDate(enquiry.passport_issue_date)}
             />
-            <Field
+            <MiniField
               label="Expiry date"
               value={fmtDate(enquiry.passport_expiry_date)}
             />
-            <Field label="Issuing country" value={enquiry.issuing_country} />
-            <Field label="UK visa / BRP ref" value={enquiry.uk_visa_brp_ref} />
-            <Field
+            <MiniField label="Issuing country" value={enquiry.issuing_country} />
+            <MiniField label="UK visa / BRP ref" value={enquiry.uk_visa_brp_ref} />
+            <MiniField
               label="UK visa start"
               value={fmtDate(enquiry.uk_visa_start_date)}
             />
-            <Field
+            <MiniField
               label="UK visa expiry"
               value={fmtDate(enquiry.uk_visa_expiry_date)}
             />
-            <Field
+            <MiniField
               label="Previously visited UAE"
-              value={<YesNo value={enquiry.previously_visited_uae} />}
+              value={yesNo(enquiry.previously_visited_uae)}
             />
-            <Field
+            <MiniField
               label="Previous UAE visa number"
               value={enquiry.previous_uae_visa_number}
             />
-          </SectionGrid>
-        </SectionCard>
+          </div>
+        </Card>
 
-        {/* 4 — Employment & Background */}
-        <SectionCard title="Employment & Background">
-          <SectionGrid>
-            <Field label="Occupation" value={enquiry.occupation} />
-            <Field label="Job title" value={enquiry.job_title} />
-            <Field label="Employer" value={enquiry.employer_name} />
-            <Field label="Who covers costs" value={enquiry.who_covers_costs} />
-            <Field
-              label="Employer address"
-              value={enquiry.employer_address}
-              wide
-            />
-            <Field
+        <Card>
+          <CardHead icon={<BriefcaseIcon size={15} />} title="Background" />
+          <div className="grid grid-cols-[repeat(auto-fit,minmax(180px,1fr))] gap-2.5 px-[18px] py-4">
+            <MiniField label="Occupation" value={enquiry.occupation} />
+            <MiniField label="Job title" value={enquiry.job_title} />
+            <MiniField label="Employer" value={enquiry.employer_name} />
+            <MiniField label="Employer address" value={enquiry.employer_address} />
+            <MiniField label="Who covers costs" value={enquiry.who_covers_costs} />
+            <MiniField
               label="Refused entry to UAE"
-              value={<YesNo value={enquiry.refused_entry_uae} alert />}
+              value={
+                enquiry.refused_entry_uae ? (
+                  <span className="text-danger-ink">Yes</span>
+                ) : (
+                  "No"
+                )
+              }
             />
-            <Field
+            <MiniField
               label="Criminal conviction"
-              value={<YesNo value={enquiry.criminal_conviction} alert />}
+              value={
+                enquiry.criminal_conviction ? (
+                  <span className="text-danger-ink">Yes</span>
+                ) : (
+                  "No"
+                )
+              }
             />
-          </SectionGrid>
-        </SectionCard>
-      </div>
+          </div>
+        </Card>
 
-      {/* 5 — Documents & Notes */}
-      <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
-        <SectionCard
-          title="Documents"
-          description="Uploaded with the application. Links are private, short-lived signed URLs."
-        >
-          {enquiry.additional_notes ? (
-            <div className="mb-4 rounded-xl bg-surface-1 p-3.5 text-sm text-ink-800">
-              <p className="text-ink-500 mb-1 text-[11px] font-medium uppercase tracking-[0.09em]">
-                Applicant’s note
-              </p>
-              <p className="whitespace-pre-wrap break-words">
+        <Card className="flex flex-col">
+          <CardHead
+            icon={<DocumentIcon size={15} />}
+            title="Documents"
+            action={
+              <span className="text-ink-quiet text-[11px] font-normal whitespace-nowrap">
+                Private signed links
+              </span>
+            }
+          />
+          <div className="flex flex-1 flex-col px-[18px] pt-2.5 pb-4">
+            {enquiry.additional_notes ? (
+              <p className="border-line-soft bg-surface-1 text-ink-800 m-0 mb-3 rounded-[12px] border px-4 py-3.5 text-[13px] leading-[1.6] font-normal whitespace-pre-wrap text-pretty">
                 {enquiry.additional_notes}
               </p>
-            </div>
-          ) : null}
-          {documents.length === 0 ? (
-            <p className="text-sm text-ink-600">
-              No documents were uploaded.
-            </p>
-          ) : (
-            <ul className="space-y-2.5">
-              {documents.map((doc) => (
-                <li
-                  key={doc.url}
-                  className="flex items-center gap-3 rounded-xl border border-line-base bg-white p-3"
-                >
-                  <div className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-marine-tint text-marine-600">
-                    <FileText className="size-4" />
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <p className="truncate text-sm font-medium text-ink-800">
-                      {doc.name}
-                    </p>
-                    <p className="text-xs text-ink-600">
-                      {fmtBytes(doc.size)}
-                    </p>
-                  </div>
-                  <div className="flex shrink-0 items-center gap-1">
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      aria-label={`View ${doc.name}`}
-                      render={
-                        <a
-                          href={doc.url}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                        />
-                      }
-                    >
-                      <ExternalLink className="size-4" />
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      aria-label={`Download ${doc.name}`}
-                      render={<a href={doc.url} download={doc.name} />}
-                    >
-                      <Download className="size-4" />
-                    </Button>
-                  </div>
-                </li>
-              ))}
-            </ul>
-          )}
-        </SectionCard>
-
-        <SectionCard
-          title="Internal notes"
-          description="Only admins can see these."
-        >
-          <div className="space-y-4">
-            {notes.length === 0 ? (
-              <p className="text-sm text-ink-600">No notes yet.</p>
+            ) : null}
+            {documents.length === 0 ? (
+              <p className="text-ink-600 m-0 py-6 text-center text-[13px]">
+                No documents were uploaded.
+              </p>
             ) : (
-              <ul className="space-y-2.5">
-                {notes.map((note) => (
-                  <li
-                    key={note.id}
-                    className="rounded-xl bg-surface-1 p-3.5"
+              documents.map((doc) => (
+                <div
+                  key={doc.url}
+                  className="border-line-soft flex min-w-0 items-center gap-[11px] border-b py-[11px] last:border-b-0"
+                >
+                  <span
+                    className={cn(
+                      "flex size-8 flex-none items-center justify-center rounded-[9px]",
+                      isImage(doc.name)
+                        ? "bg-ok-wash text-ok-ink"
+                        : "bg-marine-wash text-marine-600"
+                    )}
                   >
-                    <p className="whitespace-pre-wrap break-words text-sm text-ink-800">
-                      {note.body}
-                    </p>
-                    <p className="mt-1.5 text-xs text-ink-600">
-                      {fmtRelative(note.created_at)}
-                    </p>
-                  </li>
-                ))}
-              </ul>
+                    {isImage(doc.name) ? (
+                      <ImageIcon size={17} />
+                    ) : (
+                      <DocumentIcon size={17} />
+                    )}
+                  </span>
+                  <span className="flex min-w-0 flex-1 flex-col gap-0.5">
+                    <span className="text-ink-800 truncate text-[12.5px] font-medium">
+                      {doc.name}
+                    </span>
+                    <span className="text-ink-500 text-[11px] font-normal">
+                      {fmtBytes(doc.size)}
+                    </span>
+                  </span>
+                  <a
+                    href={doc.url}
+                    download={doc.name}
+                    aria-label={`Download ${doc.name}`}
+                    className="border-line-field text-marine-600 hover:bg-surface-1 flex size-[30px] flex-none items-center justify-center rounded-full border bg-white no-underline hover:no-underline"
+                  >
+                    <DownloadDocIcon size={14} />
+                  </a>
+                </div>
+              ))
+            )}
+          </div>
+        </Card>
+
+        <Card className="col-span-full flex flex-col">
+          <CardHead
+            icon={<EditIcon size={15} />}
+            title="Internal notes"
+            action={
+              <span className="text-ink-quiet text-[11px] font-normal whitespace-nowrap">
+                Admins only
+              </span>
+            }
+          />
+          <div className="flex flex-1 flex-col gap-3.5 px-[18px] py-4">
+            {notes.length === 0 ? (
+              <p className="text-ink-600 m-0 text-[13px]">No notes yet.</p>
+            ) : (
+              notes.map((note) => (
+                <div
+                  key={note.id}
+                  className="bg-surface-1 flex flex-col gap-1 rounded-[12px] px-3.5 py-3"
+                >
+                  <span className="text-ink-700 text-[12.5px] leading-[1.55] font-normal whitespace-pre-wrap text-pretty">
+                    {note.body}
+                  </span>
+                  <span className="text-ink-500 text-[11px] font-normal">
+                    {fmtRelative(note.created_at)}
+                  </span>
+                </div>
+              ))
             )}
 
-            <form onSubmit={saveNote} className="space-y-2.5">
-              <Label
-                htmlFor="new-note"
-                className="text-ink-500 text-[11px] font-medium uppercase tracking-[0.09em]"
-              >
-                Add a note
-              </Label>
-              <Textarea
-                id="new-note"
+            <form onSubmit={saveNote} className="flex flex-col gap-3.5">
+              <textarea
+                rows={2}
                 value={noteDraft}
                 onChange={(e) => setNoteDraft(e.target.value)}
-                placeholder="e.g. Called the applicant, waiting on passport scan…"
-                rows={3}
+                placeholder="Add a note for the team…"
                 maxLength={2000}
                 disabled={noteBusy}
-                className="rounded-[10px] bg-surface-1"
+                aria-label="Add an internal note"
+                className={cn(textareaClass, focusRing)}
               />
-              <div className="flex justify-end">
-                <Button
-                  type="submit"
-                  size="sm"
-                  disabled={noteBusy || !noteDraft.trim()}
-                >
-                  {noteBusy ? (
-                    <Loader2 className="size-4 animate-spin" />
-                  ) : (
-                    <StickyNote className="size-4" />
-                  )}
-                  Save note
-                </Button>
-              </div>
+              <Btn
+                type="submit"
+                className="self-start h-[38px] px-5 text-[12.5px]"
+                disabled={noteBusy || !noteDraft.trim()}
+              >
+                {noteBusy ? <Loader2 className="size-4 animate-spin" /> : null}
+                Add note
+              </Btn>
             </form>
           </div>
-        </SectionCard>
+        </Card>
       </div>
-    </div>
+    </Screen>
   );
 }

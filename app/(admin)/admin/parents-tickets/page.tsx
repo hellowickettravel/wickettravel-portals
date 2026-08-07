@@ -1,81 +1,70 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { createClient } from "@/lib/supabase/client";
-import { Search, HeartHandshake, Eye, ChevronRight, ArrowRight } from "lucide-react";
-import { PageHeader } from "@/components/admin/page-header";
-import { SectionCard } from "@/components/admin/section-card";
-import { StatusBadge } from "@/components/admin/status-badge";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import { TableSkeleton } from "@/components/portal/skeletons";
-import { MobileRecordCard } from "@/components/portal/mobile-record-card";
 import { listParentTickets } from "@/lib/actions/parents-tickets";
 import {
   PARENT_TICKET_STATUSES,
   PARENT_TICKET_STATUS_LABELS,
-  PARENT_TICKET_STATUS_TONE,
-  PARENT_TICKET_TYPE_LABELS,
-  PARENT_TICKET_TYPE_TONE,
-  PARENT_TICKET_TYPES,
   type ParentTicketStatus,
-  type ParentTicketType,
 } from "@/lib/parents-tickets";
-import { useListControls } from "@/lib/hooks/use-list-controls";
 import { fmtDate } from "@/lib/format";
 import { cn } from "@/lib/utils";
+import {
+  Btn,
+  Card,
+  EmptyState,
+  PageHead,
+  Pill,
+  Screen,
+  Table,
+  TableFoot,
+  TableScroll,
+  TableSkeleton,
+  Td,
+  Th,
+  Thead,
+  Tr,
+  ViewButton,
+} from "@/components/admin/ui";
 
 const TICKETS_KEY = ["admin", "parent-tickets", "list"] as const;
-const PAGE_SIZE = 12;
+const PAGE_SIZE = 5;
 
-const selectClass =
-  "border-line-field text-ink-800 focus:border-marine-500 focus:shadow-[0_0_0_3px_var(--color-marine-200)] h-10 w-full cursor-pointer rounded-[10px] border bg-white px-3.5 text-[13.5px] font-normal outline-none transition-[border-color,box-shadow] duration-[130ms] disabled:opacity-50";
+type Tab = "all" | ParentTicketStatus;
 
-const STATUS_TABS: { label: string; value: "all" | ParentTicketStatus }[] = [
+const TABS: { label: string; value: Tab }[] = [
   { label: "All", value: "all" },
   ...PARENT_TICKET_STATUSES.map((s) => ({
     label: PARENT_TICKET_STATUS_LABELS[s],
-    value: s,
+    value: s as Tab,
   })),
 ];
 
-/** From → To with an arrow, truncating gracefully on narrow screens. */
-function Route({ from, to }: { from: string; to: string }) {
-  return (
-    <span className="inline-flex min-w-0 items-center gap-1.5 text-sm text-ink-600">
-      <span className="truncate">{from}</span>
-      <ArrowRight className="size-3.5 shrink-0 text-marine-600" />
-      <span className="truncate">{to}</span>
-    </span>
-  );
-}
-
+/**
+ * Parent tickets — the design's second queue. Both sides of the board live on
+ * one record: `requester` needs a companion for a parent, `traveller` is
+ * offering to help. The Type column carries its own hue pair so a glance
+ * separates the two without reading.
+ */
 export default function AdminParentsTicketsPage() {
   const router = useRouter();
+  const params = useSearchParams();
+  const q = (params.get("q") ?? "").trim().toLowerCase();
   const queryClient = useQueryClient();
   const supabase = useMemo(() => createClient(), []);
+
   const { data, isLoading, isError } = useQuery({
     queryKey: TICKETS_KEY,
     queryFn: listParentTickets,
-    // Realtime is the primary live path; this is a safety net so the board is
-    // never more than a minute stale even if the socket drops.
-    refetchInterval: 60_000,
   });
 
-  // Realtime: any insert/update/delete on the leads table refreshes the board
-  // instantly (admin RLS scopes the stream to all rows). Enabled in migration
-  // 0019 (publication + replica identity).
+  const [tab, setTab] = useState<Tab>("all");
+  const [limit, setLimit] = useState(PAGE_SIZE);
+
+  // Live: a new public submission lands in the queue without a reload.
   useEffect(() => {
     const channel = supabase
       .channel("admin-parent-tickets")
@@ -90,272 +79,170 @@ export default function AdminParentsTicketsPage() {
     };
   }, [supabase, queryClient]);
 
-  const [statusTab, setStatusTab] = useState<"all" | ParentTicketStatus>("all");
-  const [typeFilter, setTypeFilter] = useState<"all" | ParentTicketType>("all");
-
   const all = useMemo(() => data ?? [], [data]);
 
-  const narrowed = useMemo(
+  const searched = useMemo(
     () =>
       all.filter(
-        (e) =>
-          (statusTab === "all" || e.status === statusTab) &&
-          (typeFilter === "all" || e.enquiry_type === typeFilter)
+        (t) =>
+          !q ||
+          `${t.full_name} ${t.reference_number} ${t.from_location} ${t.to_location}`
+            .toLowerCase()
+            .includes(q)
       ),
-    [all, statusTab, typeFilter]
+    [all, q]
   );
 
-  // Rows arrive newest-first from the server; search narrows by name, email or
-  // #PT reference.
-  const { query, setQuery, visible, total, hasMore, loadMore } = useListControls(
-    narrowed,
-    PAGE_SIZE,
-    (e, q) =>
-      e.full_name.toLowerCase().includes(q) ||
-      e.email.toLowerCase().includes(q) ||
-      e.reference_number.toLowerCase().includes(q)
+  const counts = useMemo(() => {
+    const out: Record<string, number> = { all: searched.length };
+    for (const s of PARENT_TICKET_STATUSES) {
+      out[s] = searched.filter((t) => t.status === s).length;
+    }
+    return out;
+  }, [searched]);
+
+  const rows = useMemo(
+    () => searched.filter((t) => tab === "all" || t.status === tab),
+    [searched, tab]
   );
+
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setLimit(PAGE_SIZE);
+  }, [tab, q]);
+
+  const visible = rows.slice(0, limit);
+  const remaining = Math.max(0, rows.length - limit);
 
   return (
-    <div className="space-y-7">
-      <PageHeader
-        eyebrow="Leads"
-        title="Parents Tickets"
-        subtitle="Companion requests and offers submitted from the website."
+    <Screen>
+      <PageHead
+        title="Parent tickets"
+        intro="Requests from parents travelling to their children and children arranging travel for a parent. Both sides of the request live on one record."
       />
 
-      <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-        <div className="flex flex-wrap items-center gap-2">
-          {STATUS_TABS.map((t) => (
-            <button
-              key={t.value}
-              onClick={() => setStatusTab(t.value)}
-              className={cn(
-                "flex h-[34px] shrink-0 items-center gap-2 rounded-full border px-4 text-[13px] font-medium whitespace-nowrap outline-none transition-colors",
-                statusTab === t.value
-                  ? "border-ink-800 bg-ink-800 text-white"
-                  : "border-line-field text-ink-800 hover:bg-surface-1 bg-white"
-              )}
-            >
-              {t.label}
-            </button>
-          ))}
-        </div>
-
-        <div className="flex flex-col gap-3 sm:flex-row">
-          <select
-            aria-label="Filter by type"
-            value={typeFilter}
-            onChange={(e) =>
-              setTypeFilter(e.target.value as "all" | ParentTicketType)
-            }
-            className={cn(selectClass, "w-full sm:w-44")}
-          >
-            <option value="all">All types</option>
-            {PARENT_TICKET_TYPES.map((t) => (
-              <option key={t} value={t}>
-                {PARENT_TICKET_TYPE_LABELS[t]}
-              </option>
+      <Card>
+        <div className="border-line-soft flex flex-wrap items-center justify-between gap-3 border-b px-5 py-4">
+          <div className="flex flex-wrap gap-2">
+            {TABS.map((t) => (
+              <button
+                key={t.value}
+                type="button"
+                onClick={() => setTab(t.value)}
+                aria-pressed={tab === t.value}
+                className={cn(
+                  "flex h-[34px] shrink-0 items-center gap-2 rounded-full border px-4 text-[13px] font-medium whitespace-nowrap outline-none",
+                  tab === t.value
+                    ? "border-ink-800 bg-ink-800 text-white"
+                    : "border-line-field text-ink-700 hover:bg-surface-1 bg-white"
+                )}
+              >
+                {t.label}
+                <span className="text-[11px] font-medium tabular-nums opacity-[0.66]">
+                  {counts[t.value] ?? 0}
+                </span>
+              </button>
             ))}
-          </select>
-          <div className="relative sm:w-72">
-            <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-ink-600" />
-            <Input
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              aria-label="Search parents tickets by name, email or reference"
-              placeholder="Search name, email or reference…"
-              className="h-10 rounded-[10px] bg-white pl-9"
-            />
           </div>
         </div>
-      </div>
 
-      <SectionCard flush>
         {isLoading ? (
-          <div className="p-4">
-            <TableSkeleton rows={6} columns={6} />
-          </div>
+          <TableSkeleton rows={6} />
         ) : isError ? (
-          <p className="px-6 py-10 text-center text-sm text-ink-600">
-            Couldn’t load parents tickets. If this is a fresh setup, run
-            APPLY_PARENTS_TICKETS.sql in the Supabase SQL editor first.
-          </p>
-        ) : all.length === 0 ? (
-          <div className="flex flex-col items-center gap-2 px-6 py-14 text-center">
-            <div className="flex size-12 items-center justify-center rounded-[12px] bg-marine-tint text-marine-600">
-              <HeartHandshake className="size-6" />
-            </div>
-            <p className="font-poppins text-base font-semibold text-ink-800">
-              No parents tickets yet
-            </p>
-            <p className="max-w-sm text-sm text-ink-600">
-              Companion requests and offers submitted through the website will
-              appear here the moment they arrive.
-            </p>
-          </div>
+          <EmptyState
+            title="Couldn't load parent tickets"
+            body="If this is a fresh setup, run APPLY_PARENTS_TICKETS.sql in the Supabase SQL editor first, then reload this page."
+          />
+        ) : rows.length === 0 ? (
+          <EmptyState
+            title={
+              all.length === 0
+                ? "No parent tickets yet"
+                : "No tickets match these filters"
+            }
+            body={
+              all.length === 0
+                ? "Requests submitted through the website's parent-ticket form appear here the moment they arrive."
+                : "Clear the status filter to widen the list."
+            }
+            action={
+              all.length === 0 ? undefined : (
+                <Btn onClick={() => setTab("all")}>Clear all filters</Btn>
+              )
+            }
+          />
         ) : (
           <>
-            {/* Mobile cards */}
-            <div className="space-y-3 p-4 md:hidden">
-              {visible.length === 0 ? (
-                <p className="py-8 text-center text-sm text-ink-600">
-                  No leads match your filters.
-                </p>
-              ) : (
-                visible.map((e) => (
-                  <Link
-                    key={e.id}
-                    href={`/admin/parents-tickets/${e.id}`}
-                    className="block"
-                  >
-                    <MobileRecordCard
-                      title={<span className="text-ink-900">{e.full_name}</span>}
-                      subtitle={e.reference_number}
-                      action={
-                        <span className="inline-flex items-center gap-0.5 text-xs font-medium text-marine-600">
-                          View
-                          <ChevronRight className="size-4" />
-                        </span>
-                      }
-                      badge={
-                        <div className="flex flex-wrap items-center justify-end gap-1.5">
-                          <StatusBadge
-                            tone={PARENT_TICKET_STATUS_TONE[e.status]}
-                          >
-                            {PARENT_TICKET_STATUS_LABELS[e.status]}
-                          </StatusBadge>
-                          {e.is_public ? (
-                            <StatusBadge tone="green">On website</StatusBadge>
-                          ) : null}
-                        </div>
-                      }
-                      fields={[
-                        {
-                          label: "Type",
-                          value: (
-                            <StatusBadge
-                              tone={PARENT_TICKET_TYPE_TONE[e.enquiry_type]}
-                            >
-                              {PARENT_TICKET_TYPE_LABELS[e.enquiry_type]}
-                            </StatusBadge>
-                          ),
-                        },
-                        { label: "Travel date", value: fmtDate(e.travel_date) },
-                        {
-                          label: "Route",
-                          value: `${e.from_location} → ${e.to_location}`,
-                          wide: true,
-                        },
-                        { label: "Submitted", value: fmtDate(e.created_at) },
-                      ]}
-                    />
-                  </Link>
-                ))
-              )}
-            </div>
-
-            {/* Desktop table */}
-            <div className="hidden md:block">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead className="pl-6">Reference</TableHead>
-                    <TableHead>Name</TableHead>
-                    <TableHead>Type</TableHead>
-                    <TableHead>Route</TableHead>
-                    <TableHead>Travel date</TableHead>
-                    <TableHead>Submitted</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead className="pr-6 text-right">Manage</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {visible.map((e) => (
-                    <TableRow
-                      key={e.id}
+            <TableScroll>
+              <Table min={940}>
+                <Thead>
+                  <Th>Reference</Th>
+                  <Th>Requester</Th>
+                  <Th>Type</Th>
+                  <Th>Route</Th>
+                  <Th>Preferred date</Th>
+                  <Th>Status</Th>
+                  <Th align="right" />
+                </Thead>
+                <tbody>
+                  {visible.map((t) => (
+                    <Tr
+                      key={t.id}
                       className="cursor-pointer"
                       onClick={() =>
-                        router.push(`/admin/parents-tickets/${e.id}`)
+                        router.push(`/admin/parents-tickets/${t.id}`)
                       }
                     >
-                      <TableCell className="pl-6 font-medium tabular-nums text-ink-900">
-                        {e.reference_number}
-                      </TableCell>
-                      <TableCell>
-                        <span className="block font-medium text-ink-800">
-                          {e.full_name}
-                        </span>
-                        <span className="block text-xs text-ink-600">
-                          {e.email}
-                        </span>
-                      </TableCell>
-                      <TableCell>
-                        <StatusBadge
-                          tone={PARENT_TICKET_TYPE_TONE[e.enquiry_type]}
-                        >
-                          {PARENT_TICKET_TYPE_LABELS[e.enquiry_type]}
-                        </StatusBadge>
-                      </TableCell>
-                      <TableCell className="max-w-[220px]">
-                        <Route from={e.from_location} to={e.to_location} />
-                      </TableCell>
-                      <TableCell className="text-ink-600">
-                        {fmtDate(e.travel_date)}
-                      </TableCell>
-                      <TableCell className="text-ink-600">
-                        {fmtDate(e.created_at)}
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex flex-wrap items-center gap-1.5">
-                          <StatusBadge
-                            tone={PARENT_TICKET_STATUS_TONE[e.status]}
-                          >
-                            {PARENT_TICKET_STATUS_LABELS[e.status]}
-                          </StatusBadge>
-                          {e.is_public ? (
-                            <StatusBadge tone="green">On website</StatusBadge>
-                          ) : null}
-                        </div>
-                      </TableCell>
-                      <TableCell
-                        className="pr-6 text-right"
-                        onClick={(ev) => ev.stopPropagation()}
-                      >
-                        <Link
-                          href={`/admin/parents-tickets/${e.id}`}
-                          className="inline-flex items-center gap-1.5 rounded-lg border border-line-base bg-white px-3 py-1.5 text-sm font-medium text-ink-800 transition-colors hover:border-marine-500 hover:text-marine-600"
-                        >
-                          <Eye className="size-4" />
-                          View
-                        </Link>
-                      </TableCell>
-                    </TableRow>
+                      <Td className="text-marine-600 text-[13px] font-semibold tabular-nums">
+                        {t.reference_number}
+                      </Td>
+                      <Td className="text-[13.5px] font-medium">
+                        {t.full_name}
+                      </Td>
+                      <Td>
+                        {t.enquiry_type === "requester" ? (
+                          <span className="bg-warn-bg text-warn-ink inline-flex items-center rounded-full px-3 py-1 text-[11px] font-medium whitespace-nowrap">
+                            Needs help
+                          </span>
+                        ) : (
+                          <span className="bg-cyan-bg text-cyan-ink inline-flex items-center rounded-full px-3 py-1 text-[11px] font-medium whitespace-nowrap">
+                            Offering help
+                          </span>
+                        )}
+                      </Td>
+                      <Td>
+                        {t.from_location} → {t.to_location}
+                      </Td>
+                      <Td className="text-ink-600 text-[13px]">
+                        {t.travel_date ? fmtDate(t.travel_date) : "No date"}
+                      </Td>
+                      <Td>
+                        <Pill>{PARENT_TICKET_STATUS_LABELS[t.status]}</Pill>
+                      </Td>
+                      <Td align="right" onClick={(ev) => ev.stopPropagation()}>
+                        <ViewButton href={`/admin/parents-tickets/${t.id}`} />
+                      </Td>
+                    </Tr>
                   ))}
-                  {visible.length === 0 ? (
-                    <TableRow>
-                      <TableCell
-                        colSpan={8}
-                        className="py-10 text-center text-sm text-ink-600"
-                      >
-                        No leads match your filters.
-                      </TableCell>
-                    </TableRow>
-                  ) : null}
-                </TableBody>
+                </tbody>
               </Table>
-            </div>
-
-            {hasMore ? (
-              <div className="flex justify-center border-t border-line-base p-4">
-                <Button variant="outline" size="sm" onClick={loadMore}>
-                  Load more ({total - visible.length} more)
-                </Button>
-              </div>
-            ) : null}
+            </TableScroll>
+            <TableFoot
+              shown={visible.length}
+              total={rows.length}
+              noun="tickets"
+              action={
+                remaining > 0 ? (
+                  <Btn onClick={() => setLimit((l) => l + PAGE_SIZE)}>
+                    Load {Math.min(PAGE_SIZE, remaining)} more — {remaining}{" "}
+                    remaining
+                  </Btn>
+                ) : undefined
+              }
+            />
           </>
         )}
-      </SectionCard>
-    </div>
+      </Card>
+    </Screen>
   );
 }

@@ -76,17 +76,31 @@ employee, customer and driver portals are unchanged and stay on navy/orange.
   (hue 82 — its *own* hue, never Ember), Completed=success, Cancelled=ink.
   Money is ink 500/600 tabular and never coloured; commission is the only figure
   allowed a success tint.
-- Tables: 52px rows, `0 20px` cells, 40px uppercase head on `--color-surface-2`,
-  horizontal scroll inside `.om-scroll`. Every list has an explanatory empty
-  state (`EmptyState` in `components/admin/ui.tsx`).
-- Primitives live in `components/admin/ui.tsx`; the icon set (24-box, 1.7px
-  stroke, `currentColor`, no icon library) in `components/admin/icons.tsx`; the
-  shell in `components/admin/admin-shell.tsx`; the order-detail boarding pass in
+- Tables: **54px** rows, `0 20px` cells, 40px uppercase head on
+  `--color-surface-2`, horizontal scroll inside `.om-scroll`. Every list has an
+  explanatory empty state (`EmptyState` in `components/admin/ui.tsx`).
+- Primitives live in `components/admin/ui.tsx`; the icon set in
+  `components/admin/icons.tsx`; the shell in
+  `components/admin/admin-shell.tsx`; the two-pane inbox in
+  `components/admin/admin-inbox.tsx`; the order-detail boarding pass in
   `components/admin/boarding-pass.tsx`.
-- Sidebar is 260px of `--color-ink-950`, groups the twelve areas into four
-  bands, marks the active item with a marine fill, and shows live unactioned
-  counts on Visa Queries and Parents Tickets. It goes off-canvas below 1024px
+- **Icons are the design's own `ico()` table, copied path-for-path** into the
+  `GLYPHS` map in `icons.tsx` (24-box, 1.7px stroke, `currentColor`, round
+  caps, no icon library). Do not redraw or "tidy" a glyph — the numbers *are*
+  the drawing. `Ico name=…` renders any of them; `iconForField(label)` is the
+  design's own label→glyph mapping used by every detail card and form row.
+- Sidebar is **256px** on the design's vertical ink ramp
+  (`--color-sidebar-top` → `--color-sidebar-bottom`), groups the eleven areas
+  into **Dashboard / Work / Enquiries / Peoples / Admin**, and marks the active
+  item with a 10%-white fill plus a 3px **ember** inset bar (never a marine
+  fill). Live unactioned counts sit on Orders, Messages, Visa queries, Parent
+  tickets and Support as small warm figures. It goes off-canvas below 1024px
   behind a hamburger + scrim.
+- The top bar's search is **per-screen**: it only renders on the screens in
+  `SEARCH` in `admin-shell.tsx`, each with its own placeholder, and hands the
+  term to that screen as `?q=`. Screens read it with `useSearchParams`.
+- Notifications is reachable from the bell / account menu, not the sidebar.
+  `/admin/messages/[id]` is a redirect into the one inbox (`?c=<id>`).
 
 ### Auth screens — scoped exception (Claude Design "Auth Pages")
 /login, /signup, /forgot-password and /reset-password follow the Claude Design

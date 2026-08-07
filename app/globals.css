@@ -117,6 +117,36 @@
 
   --color-nav-heading: oklch(0.760 0.050 250);
   --color-nav-ink: oklch(0.890 0.030 255);
+  /* The design's sidebar is a vertical ink ramp, not a flat fill. */
+  --color-sidebar-top: oklch(0.342 0.062 262);
+  --color-sidebar-bottom: oklch(0.298 0.056 264);
+  /* Queue counts in the rail: a warm figure, brighter when the row is active. */
+  --color-nav-count: oklch(0.780 0.140 55);
+  --color-nav-count-on: oklch(0.820 0.140 55);
+
+  /* softTint() — the paler of the design's two tint ramps (icon chips, wash
+     panels). tint() is the stronger pair already declared above. */
+  --color-marine-wash: oklch(0.972 0.014 252);
+  --color-teal-wash: oklch(0.974 0.018 205);
+  --color-violet-wash: oklch(0.974 0.017 292);
+  --color-danger-soft: oklch(0.976 0.013 25);
+
+  /* Contact buttons on an enquiry carry each channel's own brand hue. */
+  --color-chan-mail-bg: oklch(0.958 0.030 27);
+  --color-chan-mail-ink: oklch(0.560 0.200 27);
+  --color-chan-whatsapp-bg: oklch(0.950 0.055 152);
+  --color-chan-whatsapp-ink: oklch(0.560 0.150 152);
+  --color-chan-phone-bg: oklch(0.950 0.030 252);
+  --color-chan-phone-ink: oklch(0.480 0.160 257);
+
+  /* "Offering help" on the parent-ticket queue — its own cyan, not teal. */
+  --color-cyan-bg: oklch(0.945 0.045 195);
+  --color-cyan-ink: oklch(0.440 0.085 215);
+
+  /* Chat surfaces */
+  --color-marine-sel: oklch(0.955 0.030 250); /* selected thread row */
+  --color-marine-time: oklch(0.870 0.045 255); /* timestamp inside my bubble */
+  --color-line-pane: oklch(0.930 0.020 262); /* the two-pane divider */
 
   --color-warn-bg: oklch(0.958 0.048 82); /* "In progress" */
   --color-warn-ink: oklch(0.470 0.105 72);
@@ -799,7 +829,7 @@
     color: var(--color-ink-600);
   }
   .admin-root [data-slot="table-cell"] {
-    height: 52px;
+    height: 54px;
     font-size: 13px;
     border-top: 1px solid var(--color-line-soft);
   }

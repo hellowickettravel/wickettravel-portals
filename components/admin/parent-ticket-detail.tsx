@@ -1,25 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
-import {
-  ArrowLeft,
-  ArrowRight,
-  HeartHandshake,
-  Mail,
-  Phone,
-  MessageCircle,
-  Loader2,
-  StickyNote,
-} from "lucide-react";
+import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
-import { SectionCard } from "@/components/admin/section-card";
-import { StatusBadge } from "@/components/admin/status-badge";
-import { Button } from "@/components/ui/button";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import { Switch } from "@/components/ui/switch";
 import {
   setParentTicketStatus,
   setParentTicketPublic,
@@ -28,9 +12,6 @@ import {
 import {
   PARENT_TICKET_STATUSES,
   PARENT_TICKET_STATUS_LABELS,
-  PARENT_TICKET_STATUS_TONE,
-  PARENT_TICKET_TYPE_LABELS,
-  PARENT_TICKET_TYPE_TONE,
   maskDisplayName,
   type ParentTicketEnquiry,
   type ParentTicketNote,
@@ -38,43 +19,45 @@ import {
 } from "@/lib/parents-tickets";
 import { fmtDate, fmtRelative } from "@/lib/format";
 import { cn } from "@/lib/utils";
+import {
+  BackLink,
+  Btn,
+  Card,
+  CardHead,
+  ContactButtons,
+  MiniField,
+  PageTitle,
+  Pill,
+  Screen,
+  focusRing,
+  textareaClass,
+} from "@/components/admin/ui";
+import {
+  CheckIcon,
+  ChatIcon,
+  EditIcon,
+  FamilyIcon,
+  GlobeIcon,
+  HeartIcon,
+  MailIcon,
+  PhoneIcon,
+  PlaneIcon,
+  WhatsAppIcon,
+} from "@/components/admin/icons";
 
 const selectClass =
-  "border-line-field text-ink-800 focus:border-marine-500 focus:shadow-[0_0_0_3px_var(--color-marine-200)] h-10 w-full cursor-pointer rounded-[10px] border bg-white px-3.5 text-[13.5px] font-normal outline-none transition-[border-color,box-shadow] duration-[130ms] disabled:opacity-50";
-
-/** One label/value pair inside a section's definition grid. */
-function Field({
-  label,
-  value,
-  wide,
-}: {
-  label: string;
-  value: React.ReactNode;
-  wide?: boolean;
-}) {
-  return (
-    <div className={cn("min-w-0", wide && "sm:col-span-2")}>
-      <dt className="text-ink-500 text-[11px] font-medium uppercase tracking-[0.09em]">
-        {label}
-      </dt>
-      <dd className="mt-1 whitespace-pre-wrap break-words text-sm text-ink-800">
-        {value == null || value === "" ? "—" : value}
-      </dd>
-    </div>
-  );
-}
-
-function SectionGrid({ children }: { children: React.ReactNode }) {
-  return (
-    <dl className="grid grid-cols-1 gap-x-6 gap-y-4 sm:grid-cols-2">{children}</dl>
-  );
-}
+  "border-line-field text-ink-800 h-[34px] cursor-pointer rounded-full border bg-white pr-8 pl-3.5 text-[12.5px] font-medium outline-none disabled:opacity-50";
 
 /** "£40" or "—" for a companion fee/offer amount. */
 function amount(value: number | null): string {
   return value == null ? "—" : `£${value}`;
 }
 
+/**
+ * A parent ticket, built to the design's "Enquiry detail" screen. Both sides of
+ * the board share one record: `requester` needs a companion for a parent,
+ * `traveller` is offering to help, and the side-specific card swaps to match.
+ */
 export function ParentTicketDetail({
   enquiry,
 }: {
@@ -93,7 +76,6 @@ export function ParentTicketDetail({
   const [publicBusy, setPublicBusy] = useState(false);
 
   const canPublish = enquiry.consent_public;
-
   const isTraveller = enquiry.enquiry_type === "traveller";
 
   const mailHref = `mailto:${enquiry.email}?subject=${encodeURIComponent(
@@ -130,7 +112,9 @@ export function ParentTicketDetail({
       toast.error("Couldn't update visibility", { description: res.error });
       return;
     }
-    toast.success(next ? "Now showing on the website" : "Hidden from the website");
+    toast.success(
+      next ? "Now showing on the website" : "Hidden from the website"
+    );
     router.refresh();
   }
 
@@ -149,288 +133,263 @@ export function ParentTicketDetail({
     toast.success("Note saved");
   }
 
-  const contactActions: {
-    label: string;
-    href: string;
-    Icon: typeof Mail;
-    external?: boolean;
-  }[] = [
-    { label: "Email", href: mailHref, Icon: Mail },
-    { label: "WhatsApp", href: waHref, Icon: MessageCircle, external: true },
-    { label: "Call", href: telHref, Icon: Phone },
-  ];
-
   return (
-    <div className="space-y-5">
-      <Link
-        href="/admin/parents-tickets"
-        className="inline-flex items-center gap-1.5 text-sm font-medium text-marine-600 transition-colors hover:text-marine-600"
-      >
-        <ArrowLeft className="size-4" />
-        Back to parents tickets
-      </Link>
+    <Screen>
+      <BackLink href="/admin/parents-tickets">Parent tickets</BackLink>
 
-      {/* Header */}
-      <div className="flex flex-col gap-4 rounded-[12px] border border-line-base bg-white p-5 shadow-[0_1px_2px_oklch(0.205_0.038_258_/_0.04)] sm:flex-row sm:items-center sm:justify-between">
-        <div className="flex items-center gap-3">
-          <div className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-marine-tint text-marine-600">
-            <HeartHandshake className="size-5" />
+      {/* -------------------------------------------------------- header */}
+      <div className="flex flex-wrap items-end justify-between gap-4">
+        <div className="min-w-0">
+          <div className="flex flex-wrap items-center gap-3">
+            <PageTitle>{enquiry.reference_number}</PageTitle>
+            <Pill>{PARENT_TICKET_STATUS_LABELS[status]}</Pill>
+            {isTraveller ? (
+              <span className="bg-cyan-bg text-cyan-ink inline-flex items-center rounded-full px-3 py-1 text-[11px] font-medium whitespace-nowrap">
+                Offering help
+              </span>
+            ) : (
+              <span className="bg-warn-bg text-warn-ink inline-flex items-center rounded-full px-3 py-1 text-[11px] font-medium whitespace-nowrap">
+                Needs help
+              </span>
+            )}
+            {isPublic ? <Pill tone="ok">On website</Pill> : null}
           </div>
-          <div className="leading-tight">
-            <div className="flex flex-wrap items-center gap-2">
-              <p className="font-poppins text-lg font-semibold text-ink-900">
-                Lead {enquiry.reference_number}
-              </p>
-              <StatusBadge tone={PARENT_TICKET_TYPE_TONE[enquiry.enquiry_type]}>
-                {PARENT_TICKET_TYPE_LABELS[enquiry.enquiry_type]}
-              </StatusBadge>
-              <StatusBadge tone={PARENT_TICKET_STATUS_TONE[status]}>
-                {PARENT_TICKET_STATUS_LABELS[status]}
-              </StatusBadge>
-              {isPublic ? (
-                <StatusBadge tone="green">On website</StatusBadge>
-              ) : null}
-            </div>
-            <p className="text-sm text-ink-600">
-              {enquiry.full_name} · Submitted {fmtDate(enquiry.created_at)}
-            </p>
-          </div>
+          <p className="text-ink-600 m-0 mt-1.5 text-[13.5px] font-normal">
+            Submitted {fmtDate(enquiry.created_at)} by {enquiry.full_name} ·{" "}
+            {isTraveller ? "traveller side" : "requester side"}
+          </p>
         </div>
-
-        <div className="flex items-center gap-2">
-          <label
-            htmlFor="lead-status"
-            className="text-ink-500 text-[11px] font-medium uppercase tracking-[0.09em]"
-          >
-            Status
+        <div className="flex flex-wrap items-center gap-3">
+          <label className="flex items-center gap-2">
+            <span className="text-ink-600 text-[11.5px] font-medium whitespace-nowrap">
+              Status
+            </span>
+            <select
+              value={status}
+              disabled={statusBusy}
+              onChange={(e) =>
+                changeStatus(e.target.value as ParentTicketStatus)
+              }
+              className={cn(selectClass, focusRing, statusBusy && "opacity-60")}
+            >
+              {PARENT_TICKET_STATUSES.map((s) => (
+                <option key={s} value={s}>
+                  {PARENT_TICKET_STATUS_LABELS[s]}
+                </option>
+              ))}
+            </select>
           </label>
-          <select
-            id="lead-status"
-            value={status}
-            disabled={statusBusy}
-            onChange={(e) => changeStatus(e.target.value as ParentTicketStatus)}
-            className={cn(selectClass, "w-44", statusBusy && "opacity-60")}
+          <Btn
+            disabled={statusBusy || status === "closed"}
+            onClick={() => changeStatus("closed")}
           >
-            {PARENT_TICKET_STATUSES.map((s) => (
-              <option key={s} value={s}>
-                {PARENT_TICKET_STATUS_LABELS[s]}
-              </option>
-            ))}
-          </select>
+            <CheckIcon size={15} />
+            Mark closed
+          </Btn>
+          <Btn as="link" href={mailHref} variant="marine">
+            <MailIcon size={15} />
+            Reply by email
+          </Btn>
         </div>
       </div>
 
-      {/* Contact */}
-      <SectionCard
-        title="Contact"
-        description="Reach out manually using the details they provided."
-      >
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-          <div className="space-y-1 text-sm">
-            <p className="flex items-center gap-2 text-ink-800">
-              <Mail className="size-4 text-marine-600" />
-              {enquiry.email}
-            </p>
-            <p className="flex items-center gap-2 text-ink-800">
-              <Phone className="size-4 text-marine-600" />
-              {enquiry.phone}
-            </p>
-          </div>
-          <div className="flex flex-wrap items-center gap-2">
-            {contactActions.map(({ label, href, Icon, external }) => (
-              <Button
-                key={label}
-                variant="outline"
-                size="lg"
-                render={
-                  <a
-                    href={href}
-                    target={external ? "_blank" : undefined}
-                    rel={external ? "noopener noreferrer" : undefined}
-                  />
-                }
-              >
-                <Icon className="size-4" />
-                {label}
-              </Button>
-            ))}
-          </div>
+      {/* ------------------------------------------------ contact applicant */}
+      <Card>
+        <div className="border-line-soft flex flex-wrap items-baseline gap-2.5 border-b px-5 py-4">
+          <h2 className="text-ink-800 m-0 text-[13.5px] font-semibold tracking-[-0.008em]">
+            Contact applicant
+          </h2>
+          <span className="text-ink-500 text-[12px] font-normal">
+            {enquiry.full_name} · reach out however suits them
+          </span>
         </div>
-      </SectionCard>
+        <ContactButtons
+          icons={{
+            mail: <MailIcon size={24} />,
+            whatsapp: <WhatsAppIcon size={24} />,
+            phone: <PhoneIcon size={24} />,
+          }}
+          channels={[
+            { key: "mail", label: "Email", sub: enquiry.email, href: mailHref },
+            {
+              key: "whatsapp",
+              label: "WhatsApp",
+              sub: enquiry.phone,
+              href: waHref,
+              external: true,
+            },
+            { key: "phone", label: "Call", sub: enquiry.phone, href: telHref },
+          ]}
+        />
+      </Card>
 
-      {/* Public visibility */}
-      <SectionCard
-        title="Website visibility"
-        description="Nothing is shown publicly until you turn this on."
-      >
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-          <div className="min-w-0 space-y-1">
-            <label
-              htmlFor="show-on-website"
-              className={cn(
-                "block text-sm font-medium",
-                canPublish ? "text-ink-800" : "text-ink-600"
-              )}
-            >
-              Show on website
-            </label>
-            {canPublish ? (
-              <p className="text-sm text-ink-600">
-                The public board shows only{" "}
-                <span className="font-medium text-ink-800">
-                  {maskDisplayName(enquiry.full_name)}
-                </span>
-                , the route, date, airline, languages and what help is
-                offered/needed — never contact details.
-              </p>
-            ) : (
-              <p className="text-sm text-ink-600">
-                Unavailable — this person didn’t agree to public display when
-                they submitted the form.
-              </p>
-            )}
-          </div>
-          <Switch
-            id="show-on-website"
-            checked={isPublic}
-            disabled={!canPublish || publicBusy}
-            onCheckedChange={togglePublic}
-            aria-label="Show this entry on the website"
-            className="shrink-0"
-          />
-        </div>
-      </SectionCard>
-
-      <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
-        {/* Trip */}
-        <SectionCard title="Trip">
-          <SectionGrid>
-            <Field
+      {/* --------------------------------------------------- column cards */}
+      <div className="grid grid-cols-1 items-stretch gap-4 min-[760px]:grid-cols-2">
+        <Card>
+          <CardHead icon={<PlaneIcon size={15} />} title="Trip" />
+          <div className="grid grid-cols-[repeat(auto-fit,minmax(180px,1fr))] gap-2.5 px-[18px] py-4">
+            <MiniField
               label="Route"
-              value={
-                <span className="inline-flex flex-wrap items-center gap-1.5">
-                  {enquiry.from_location}
-                  <ArrowRight className="size-3.5 text-marine-600" />
-                  {enquiry.to_location}
-                </span>
-              }
-              wide
+              value={`${enquiry.from_location} → ${enquiry.to_location}`}
             />
-            <Field label="Travel date" value={fmtDate(enquiry.travel_date)} />
-            <Field label="Airline" value={enquiry.airline} />
-            <Field label="Languages" value={enquiry.languages} wide />
-          </SectionGrid>
-        </SectionCard>
+            <MiniField label="Travel date" value={fmtDate(enquiry.travel_date)} />
+            <MiniField label="Airline" value={enquiry.airline} />
+            <MiniField label="Languages" value={enquiry.languages} />
+          </div>
+        </Card>
 
-        {/* Side-specific */}
         {isTraveller ? (
-          <SectionCard title="Traveller — help offered">
-            <SectionGrid>
-              <Field
+          <Card>
+            <CardHead
+              icon={<HeartIcon size={15} />}
+              title="Traveller — help offered"
+            />
+            <div className="grid grid-cols-[repeat(auto-fit,minmax(180px,1fr))] gap-2.5 px-[18px] py-4">
+              <MiniField
                 label="Parents they can help"
                 value={enquiry.parents_can_help}
               />
-              <Field label="Fee" value={amount(enquiry.fee_amount)} />
-              <Field
+              <MiniField label="Fee" value={amount(enquiry.fee_amount)} />
+              <MiniField
                 label="Assistance offered"
                 value={enquiry.assistance_offered}
-                wide
               />
-            </SectionGrid>
-          </SectionCard>
+            </div>
+          </Card>
         ) : (
-          <SectionCard title="Requester — help needed">
-            <SectionGrid>
-              <Field label="Parent's name" value={enquiry.parent_name} />
-              <Field label="Parent's age" value={enquiry.parent_age} />
-              <Field label="Relationship" value={enquiry.relationship} />
-              <Field label="Offer" value={amount(enquiry.offer_amount)} />
-              <Field
+          <Card>
+            <CardHead
+              icon={<FamilyIcon size={15} />}
+              title="Requester — help needed"
+            />
+            <div className="grid grid-cols-[repeat(auto-fit,minmax(180px,1fr))] gap-2.5 px-[18px] py-4">
+              <MiniField label="Parent's name" value={enquiry.parent_name} />
+              <MiniField label="Parent's age" value={enquiry.parent_age} />
+              <MiniField label="Relationship" value={enquiry.relationship} />
+              <MiniField label="Offer" value={amount(enquiry.offer_amount)} />
+              <MiniField
                 label="Assistance needed"
                 value={enquiry.assistance_needed}
-                wide
               />
-              <Field
+              <MiniField
                 label="Mobility needs"
                 value={enquiry.mobility_needs}
-                wide
               />
-            </SectionGrid>
-          </SectionCard>
+            </div>
+          </Card>
         )}
-      </div>
 
-      {/* Applicant note + Internal notes */}
-      <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
-        <SectionCard
-          title="Their message"
-          description="Anything extra they added when submitting."
-        >
-          {enquiry.notes ? (
-            <p className="whitespace-pre-wrap break-words rounded-xl bg-surface-1 p-3.5 text-sm text-ink-800">
-              {enquiry.notes}
+        <Card className="flex flex-col">
+          <CardHead icon={<ChatIcon size={15} />} title="Their message" />
+          <div className="flex flex-1 flex-col gap-2.5 px-[18px] py-4">
+            <p className="border-line-soft bg-surface-1 text-ink-800 m-0 flex-1 rounded-[12px] border px-4 py-3.5 text-[13px] leading-[1.6] font-normal whitespace-pre-wrap text-pretty">
+              {enquiry.notes || "No additional message."}
             </p>
-          ) : (
-            <p className="text-sm text-ink-600">
-              No additional message.
-            </p>
-          )}
-        </SectionCard>
+            <span className="text-ink-500 text-[11px] font-normal">
+              {enquiry.full_name} · {fmtDate(enquiry.created_at)}
+            </span>
+          </div>
+        </Card>
 
-        <SectionCard title="Internal notes" description="Only admins can see these.">
-          <div className="space-y-4">
+        <Card className="flex flex-col">
+          <CardHead
+            icon={<GlobeIcon size={15} />}
+            title="Website visibility"
+            action={
+              <span className="text-ink-quiet text-[11px] font-normal whitespace-nowrap">
+                {canPublish ? "Consent given" : "No consent"}
+              </span>
+            }
+          />
+          <div className="flex flex-1 flex-wrap items-center gap-4 px-[18px] py-4">
+            <span className="flex min-w-0 flex-[1_1_260px] flex-col gap-1">
+              <span className="text-[13px] font-medium">Show on website</span>
+              <span className="text-ink-500 text-[12.5px] leading-[1.5] font-normal text-pretty">
+                {canPublish ? (
+                  <>
+                    The public board shows only{" "}
+                    <span className="text-ink-800 font-medium">
+                      {maskDisplayName(enquiry.full_name)}
+                    </span>
+                    , the route, date, airline, languages and what help is
+                    offered or needed — never contact details.
+                  </>
+                ) : (
+                  "Unavailable — this person didn't agree to public display when they submitted the form."
+                )}
+              </span>
+            </span>
+            <button
+              type="button"
+              role="switch"
+              aria-checked={isPublic}
+              aria-label="Show this entry on the website"
+              disabled={!canPublish || publicBusy}
+              onClick={() => togglePublic(!isPublic)}
+              className={cn(
+                "flex h-[27px] w-[46px] flex-none rounded-full border-0 p-1 outline-none transition-colors duration-150 disabled:opacity-50",
+                isPublic
+                  ? "bg-marine-500 justify-end"
+                  : "bg-line-field justify-start"
+              )}
+            >
+              <span className="block size-[21px] rounded-full bg-white shadow-[0_4px_12px_oklch(0.205_0.038_258_/_0.07)]" />
+            </button>
+          </div>
+        </Card>
+
+        <Card className="col-span-full flex flex-col">
+          <CardHead
+            icon={<EditIcon size={15} />}
+            title="Internal notes"
+            action={
+              <span className="text-ink-quiet text-[11px] font-normal whitespace-nowrap">
+                Admins only
+              </span>
+            }
+          />
+          <div className="flex flex-1 flex-col gap-3.5 px-[18px] py-4">
             {notes.length === 0 ? (
-              <p className="text-sm text-ink-600">No notes yet.</p>
+              <p className="text-ink-600 m-0 text-[13px]">No notes yet.</p>
             ) : (
-              <ul className="space-y-2.5">
-                {notes.map((note) => (
-                  <li key={note.id} className="rounded-xl bg-surface-1 p-3.5">
-                    <p className="whitespace-pre-wrap break-words text-sm text-ink-800">
-                      {note.body}
-                    </p>
-                    <p className="mt-1.5 text-xs text-ink-600">
-                      {fmtRelative(note.created_at)}
-                    </p>
-                  </li>
-                ))}
-              </ul>
+              notes.map((note) => (
+                <div
+                  key={note.id}
+                  className="bg-surface-1 flex flex-col gap-1 rounded-[12px] px-3.5 py-3"
+                >
+                  <span className="text-ink-700 text-[12.5px] leading-[1.55] font-normal whitespace-pre-wrap text-pretty">
+                    {note.body}
+                  </span>
+                  <span className="text-ink-500 text-[11px] font-normal">
+                    {fmtRelative(note.created_at)}
+                  </span>
+                </div>
+              ))
             )}
 
-            <form onSubmit={saveNote} className="space-y-2.5">
-              <Label
-                htmlFor="new-note"
-                className="text-ink-500 text-[11px] font-medium uppercase tracking-[0.09em]"
-              >
-                Add a note
-              </Label>
-              <Textarea
-                id="new-note"
+            <form onSubmit={saveNote} className="flex flex-col gap-3.5">
+              <textarea
+                rows={2}
                 value={noteDraft}
                 onChange={(e) => setNoteDraft(e.target.value)}
-                placeholder="e.g. Called them, matched with #PT-1004…"
-                rows={3}
+                placeholder="Add a note for the team…"
                 maxLength={2000}
                 disabled={noteBusy}
-                className="rounded-[10px] bg-surface-1"
+                aria-label="Add an internal note"
+                className={cn(textareaClass, focusRing)}
               />
-              <div className="flex justify-end">
-                <Button
-                  type="submit"
-                  size="sm"
-                  disabled={noteBusy || !noteDraft.trim()}
-                >
-                  {noteBusy ? (
-                    <Loader2 className="size-4 animate-spin" />
-                  ) : (
-                    <StickyNote className="size-4" />
-                  )}
-                  Save note
-                </Button>
-              </div>
+              <Btn
+                type="submit"
+                className="h-[38px] self-start px-5 text-[12.5px]"
+                disabled={noteBusy || !noteDraft.trim()}
+              >
+                {noteBusy ? <Loader2 className="size-4 animate-spin" /> : null}
+                Add note
+              </Btn>
             </form>
           </div>
-        </SectionCard>
+        </Card>
       </div>
-    </div>
+    </Screen>
   );
 }

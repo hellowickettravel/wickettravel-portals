@@ -24,6 +24,25 @@ export function fmtDate(iso: string | null | undefined): string {
   }).format(d);
 }
 
+/**
+ * The long, spoken form the Admin design uses in its dashboard standfirst —
+ * "Tuesday 4 August 2026".
+ */
+export function fmtLongDate(iso: string | null | undefined): string {
+  if (!iso) return "—";
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return "—";
+  // en-GB puts a comma after the weekday; the design writes it without one.
+  return new Intl.DateTimeFormat("en-GB", {
+    weekday: "long",
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+  })
+    .format(d)
+    .replace(",", "");
+}
+
 /** Compact relative-ish time for activity/last-seen, e.g. "2h ago", "Yesterday". */
 export function fmtRelative(iso: string | null | undefined): string {
   if (!iso) return "—";

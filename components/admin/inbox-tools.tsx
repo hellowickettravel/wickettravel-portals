@@ -1,38 +1,32 @@
 "use client";
 
 import { useState } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { UserCheck, Loader2, Route } from "lucide-react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { SectionCard } from "@/components/admin/section-card";
-import { Button } from "@/components/ui/button";
-import { Label } from "@/components/ui/label";
+import { cn } from "@/lib/utils";
+import { Card, focusRing } from "@/components/admin/ui";
+import { ArrowRightIcon, RouteIcon } from "@/components/admin/icons";
 import {
   assignConversation,
-  listEmployeesForTools,
   listConversationsForTools,
+  listEmployeesForTools,
 } from "@/lib/actions/dev";
 import {
-  ADMIN_TOOLS_EMPLOYEES_KEY,
   ADMIN_TOOLS_CONVERSATIONS_KEY,
+  ADMIN_TOOLS_EMPLOYEES_KEY,
 } from "@/lib/query-keys";
-
-function fieldLabel(text: string) {
-  return (
-    <span className="text-ink-500 text-[11px] font-medium uppercase tracking-[0.09em]">
-      {text}
-    </span>
-  );
-}
+import { ADMIN_INBOX_KEY } from "@/lib/query-keys";
 
 const selectClass =
-  "border-line-field text-ink-800 focus:border-marine-500 focus:shadow-[0_0_0_3px_var(--color-marine-200)] h-10 w-full cursor-pointer rounded-[10px] border bg-white px-3.5 text-[13.5px] font-normal outline-none transition-[border-color,box-shadow] duration-[130ms] disabled:opacity-50";
+  "border-line-field text-ink-800 h-10 w-full cursor-pointer rounded-[10px] border bg-white px-3.5 text-[13px] font-normal outline-none disabled:opacity-50";
 
 /**
- * Admin conversation-routing panel. Messaging is fully internal (Supabase
- * Realtime), so customers send their own messages from the portal — there's no
- * mock injection. This panel lets an admin route any conversation to an
- * employee so it lands in that employee's live inbox.
+ * The design's "Route a conversation" panel. Messaging is fully internal
+ * (Supabase Realtime), so this hands an existing customer thread to the
+ * employee who should own it — it lands in their live inbox immediately.
+ *
+ * The design's first field picks an order; ours picks the conversation,
+ * because that is the record an assignment actually attaches to here.
  */
 export function InboxTools() {
   const queryClient = useQueryClient();
@@ -49,113 +43,111 @@ export function InboxTools() {
   const emps = employees ?? [];
   const convos = conversations ?? [];
 
-  // Assign form
-  const [assignConv, setAssignConv] = useState("");
-  const [assignEmp, setAssignEmp] = useState("");
-
-  function refreshTools() {
-    queryClient.invalidateQueries({ queryKey: ADMIN_TOOLS_CONVERSATIONS_KEY });
-  }
+  const [conv, setConv] = useState("");
+  const [emp, setEmp] = useState("");
 
   const assignMutation = useMutation({
     mutationFn: assignConversation,
     onSuccess: (res) => {
       if (!res.ok) {
-        toast.error("Assign failed", { description: res.error });
+        toast.error("Routing failed", { description: res.error });
         return;
       }
-      toast.success("Conversation assigned", {
+      toast.success("Conversation routed", {
         description: "It now appears in that employee's inbox.",
       });
-      refreshTools();
+      queryClient.invalidateQueries({ queryKey: ADMIN_TOOLS_CONVERSATIONS_KEY });
+      queryClient.invalidateQueries({ queryKey: ADMIN_INBOX_KEY });
     },
     onError: () =>
-      toast.error("Assign failed", { description: "Please try again." }),
+      toast.error("Routing failed", { description: "Please try again." }),
   });
 
   return (
-    <SectionCard
-      title={
-        <span className="inline-flex items-center gap-2">
-          <Route className="size-4 text-marine-600" />
-          Route a conversation
+    <Card>
+      <div className="border-line-soft flex items-center gap-3 border-b px-5 py-[15px]">
+        <span className="bg-violet-bg text-violet-ink flex size-9 flex-none items-center justify-center rounded-[10px]">
+          <RouteIcon size={19} />
         </span>
-      }
-      description="Assign a customer conversation to an employee so it lands in their live inbox."
-    >
+        <div className="min-w-0">
+          <h2 className="text-ink-800 m-0 text-[13.5px] font-semibold tracking-[-0.008em]">
+            Route a conversation
+          </h2>
+          <p className="text-ink-600 m-0 mt-[3px] text-[12px] font-normal">
+            Pick a conversation and the employee who should own it — they&apos;ll
+            pick up the thread from here.
+          </p>
+        </div>
+      </div>
+
       <form
         onSubmit={(e) => {
           e.preventDefault();
-          if (!assignConv || !assignEmp) {
+          if (!conv || !emp) {
             toast.error("Pick a conversation and an employee.");
             return;
           }
-          assignMutation.mutate({
-            conversationId: assignConv,
-            employeeId: assignEmp,
-          });
+          assignMutation.mutate({ conversationId: conv, employeeId: emp });
         }}
-        className="max-w-xl space-y-3 rounded-xl border border-line-base bg-surface-1/40 p-4"
+        className="flex flex-wrap items-end gap-4 px-5 py-4"
       >
-        <p className="flex items-center gap-2 text-sm font-semibold text-ink-800">
-          <UserCheck className="size-4 text-marine-600" />
-          Assign a conversation
-        </p>
-        <div className="space-y-1.5">
-          <Label htmlFor="assign-conv">{fieldLabel("Conversation")}</Label>
+        <label className="flex min-w-0 flex-[1_1_240px] flex-col gap-[7px]">
+          <span className="text-ink-700 text-[11.5px] font-medium">
+            Conversation
+          </span>
           <select
-            id="assign-conv"
-            value={assignConv}
-            onChange={(e) => setAssignConv(e.target.value)}
+            value={conv}
+            onChange={(e) => setConv(e.target.value)}
             disabled={assignMutation.isPending}
-            className={selectClass}
+            className={cn(selectClass, focusRing)}
           >
-            <option value="">— Select conversation —</option>
+            <option value="">Select a conversation…</option>
             {convos.map((c) => (
               <option key={c.id} value={c.id}>
                 {(c.customer?.name || c.customer?.wa_phone || "Unknown") +
-                  (c.assignedEmployee ? ` (→ ${c.assignedEmployee})` : " (unassigned)")}
+                  (c.assignedEmployee
+                    ? ` — ${c.assignedEmployee}`
+                    : " — unassigned")}
               </option>
             ))}
           </select>
-        </div>
-        <div className="space-y-1.5">
-          <Label htmlFor="assign-emp">{fieldLabel("Employee")}</Label>
+        </label>
+
+        <label className="flex min-w-0 flex-[1_1_240px] flex-col gap-[7px]">
+          <span className="text-ink-700 text-[11.5px] font-medium">
+            Assign to employee
+          </span>
           <select
-            id="assign-emp"
-            value={assignEmp}
-            onChange={(e) => setAssignEmp(e.target.value)}
+            value={emp}
+            onChange={(e) => setEmp(e.target.value)}
             disabled={assignMutation.isPending}
-            className={selectClass}
+            className={cn(selectClass, focusRing)}
           >
-            <option value="">— Select employee —</option>
+            <option value="">Select an employee…</option>
             {emps.map((e) => (
               <option key={e.id} value={e.id}>
                 {e.full_name || e.email || e.id}
               </option>
             ))}
           </select>
-        </div>
-        <Button
+        </label>
+
+        <button
           type="submit"
+          aria-label="Route conversation"
+          title="Route conversation"
           disabled={assignMutation.isPending}
-          className="w-full"
+          className="bg-marine-500 hover:bg-marine-600 flex size-10 flex-none items-center justify-center rounded-full border-0 text-white outline-none disabled:opacity-60"
         >
-          {assignMutation.isPending ? (
-            <>
-              <Loader2 className="size-4 animate-spin" />
-              Assigning…
-            </>
-          ) : (
-            "Assign conversation"
-          )}
-        </Button>
-        {convos.length === 0 ? (
-          <p className="text-xs text-ink-600">
-            No conversations yet — they appear here once a customer messages you.
-          </p>
-        ) : null}
+          <ArrowRightIcon size={17} />
+        </button>
       </form>
-    </SectionCard>
+
+      {convos.length === 0 ? (
+        <p className="text-ink-600 border-line-soft m-0 border-t px-5 py-3 text-[12px]">
+          No conversations yet — they appear here once a customer messages you.
+        </p>
+      ) : null}
+    </Card>
   );
 }

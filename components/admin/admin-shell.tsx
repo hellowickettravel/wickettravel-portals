@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
@@ -10,7 +10,6 @@ import { AdminBell } from "@/components/admin/admin-bell";
 import { shadowE3 } from "@/components/admin/ui";
 import {
   LifebuoyIcon,
-  MenuIcon,
   NAV_ICONS,
   SearchIcon,
   SignOutIcon,
@@ -23,17 +22,37 @@ export type AdminNavItem = {
   icon: NavIconName;
   /** Active only on an exact match (the dashboard index). */
   exact?: boolean;
-  /** Live unactioned count — rendered as a small ember figure, per the design. */
+  /** Live unactioned count — rendered as a small warm figure, per the design. */
   count?: number;
+  /** The design weights Dashboard at 600 even when it is not the active row. */
+  emphasize?: boolean;
 };
 
 export type AdminNavSection = { heading?: string; items: AdminNavItem[] };
 
 /**
+ * Per-screen search, exactly as the design's `searchScreens` map declares it:
+ * the field only appears on the screens listed, and each one names what it
+ * searches. Longest prefix wins so detail routes fall through to no search,
+ * which is what the design does.
+ */
+const SEARCH: { prefix: string; exact?: boolean; placeholder: string; label: string }[] = [
+  { prefix: "/admin", exact: true, placeholder: "Search orders, customers…", label: "Search" },
+  { prefix: "/admin/orders", exact: true, placeholder: "Search orders", label: "Search orders" },
+  { prefix: "/admin/customers", exact: true, placeholder: "Search customers", label: "Search customers" },
+  { prefix: "/admin/employees", exact: true, placeholder: "Search staff", label: "Search staff" },
+  { prefix: "/admin/transactions", exact: true, placeholder: "Search transactions", label: "Search transactions" },
+  { prefix: "/admin/messages", exact: true, placeholder: "Search conversations", label: "Search conversations" },
+  { prefix: "/admin/visa-queries", exact: true, placeholder: "Search visa queries", label: "Search visa queries" },
+  { prefix: "/admin/parents-tickets", exact: true, placeholder: "Search tickets", label: "Search parent tickets" },
+  { prefix: "/admin/support", exact: true, placeholder: "Search tickets", label: "Search support tickets" },
+];
+
+/**
  * The Admin Portal shell, ported from the Claude Design "Admin Portal All
- * Pages" file: a 260px ink sidebar with grouped nav, and a 64px sticky top bar
- * carrying the platform-wide order search, the notification bell, a support
- * shortcut and the account menu.
+ * Pages" file: a 256px sidebar on the design's vertical ink ramp with grouped
+ * nav, and a 64px sticky top bar carrying the per-screen search, the
+ * notification bell, a support shortcut and the account menu.
  *
  * The design collapses the sidebar off-canvas below 1024px behind a hamburger
  * and a scrim; nothing about the content column changes.
@@ -60,6 +79,11 @@ export function AdminShell({
   const [acctOpen, setAcctOpen] = useState(false);
   const [query, setQuery] = useState(params.get("q") ?? "");
   const acctRef = useRef<HTMLDivElement>(null);
+
+  const search = useMemo(
+    () => SEARCH.find((s) => (s.exact ? pathname === s.prefix : pathname.startsWith(s.prefix))),
+    [pathname]
+  );
 
   // Route change closes every transient surface — the design does the same in
   // its own `go()`.
@@ -102,9 +126,13 @@ export function AdminShell({
 
       {/* ======================== SIDEBAR ======================== */}
       <aside
+        style={{
+          background:
+            "linear-gradient(180deg, var(--color-sidebar-top), var(--color-sidebar-bottom))",
+        }}
         className={cn(
-          "bg-ink-950 fixed inset-y-0 left-0 z-50 flex w-[260px] flex-none flex-col transition-transform duration-200 lg:sticky lg:top-0 lg:h-dvh lg:translate-x-0",
-          navOpen ? "translate-x-0" : "-translate-x-full"
+          "fixed inset-y-0 left-0 z-50 flex w-64 flex-none flex-col text-white shadow-[0_24px_60px_oklch(0.205_0.038_258_/_0.42)] transition-transform duration-200 lg:sticky lg:top-0 lg:h-dvh lg:translate-x-0 lg:self-start lg:shadow-none",
+          navOpen ? "translate-x-0" : "-translate-x-[110%]"
         )}
       >
         <div className="flex h-16 flex-none items-center justify-between gap-3 border-b border-white/[0.13] px-6">
@@ -160,14 +188,17 @@ export function AdminShell({
                       className={cn(
                         "flex h-10 w-full items-center gap-3 rounded-[10px] px-3 text-[13.5px] tracking-[0.4px] no-underline transition-[background-color,color,box-shadow] duration-[130ms] hover:no-underline",
                         active
-                          ? "bg-marine-500 font-semibold text-white shadow-[0_4px_12px_oklch(0.205_0.038_258_/_0.35)]"
-                          : "text-nav-ink font-medium hover:bg-white/[0.10] hover:text-white"
+                          ? "bg-white/[0.10] font-semibold text-white shadow-[inset_3px_0_0_var(--color-ember-500)] hover:bg-white/[0.14]"
+                          : cn(
+                              "text-nav-ink hover:bg-white/[0.11] hover:text-white hover:shadow-[inset_3px_0_0_rgb(255_255_255_/_0.22)]",
+                              item.emphasize ? "font-semibold" : "font-medium"
+                            )
                       )}
                     >
                       <span
                         className={cn(
                           "flex size-[18px] flex-none items-center justify-center",
-                          active ? "opacity-100" : "opacity-70"
+                          active ? "opacity-100" : "opacity-[0.78]"
                         )}
                       >
                         <Icon size={18} />
@@ -178,10 +209,10 @@ export function AdminShell({
                           <span
                             className={cn(
                               "-mt-0.5 flex-none text-[10px] leading-none font-bold tracking-normal tabular-nums",
-                              active ? "text-white" : "text-ember-500"
+                              active ? "text-nav-count-on" : "text-nav-count"
                             )}
                           >
-                            {item.count}
+                            {item.count > 9 ? "9+" : item.count}
                           </span>
                         ) : null}
                       </span>
@@ -215,31 +246,36 @@ export function AdminShell({
             type="button"
             onClick={() => setNavOpen(true)}
             aria-label="Open navigation"
-            className="border-line-field text-ink-700 flex size-10 flex-none items-center justify-center rounded-[10px] border bg-white outline-none lg:hidden"
+            className="border-line-field flex size-10 flex-none flex-col items-center justify-center gap-1 rounded-[10px] border bg-white outline-none lg:hidden"
           >
-            <MenuIcon size={18} />
+            <span className="bg-ink-700 block h-[1.5px] w-[15px]" />
+            <span className="bg-ink-700 block h-[1.5px] w-[15px]" />
+            <span className="bg-ink-700 block h-[1.5px] w-[15px]" />
           </button>
 
-          <form
-            onSubmit={(e) => {
-              e.preventDefault();
-              const q = query.trim();
-              router.push(q ? `/admin/orders?q=${encodeURIComponent(q)}` : "/admin/orders");
-            }}
-            className="relative flex min-w-0 max-w-[480px] flex-1"
-          >
-            <input
-              type="search"
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              placeholder="Search orders"
-              aria-label="Search orders"
-              className="border-line-field bg-surface-1 text-ink-800 focus:border-marine-500 focus:shadow-[0_0_0_3px_var(--color-marine-200)] h-10 w-full rounded-[10px] border pr-3 pl-9 text-[13px] font-normal outline-none transition-[border-color,box-shadow,background-color] duration-[130ms] focus:bg-white"
-            />
-            <span className="text-ink-500 pointer-events-none absolute top-[11px] left-3 block size-4">
-              <SearchIcon size={16} />
-            </span>
-          </form>
+          {search ? (
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                const q = query.trim();
+                const base = search.exact && search.prefix === "/admin" ? "/admin/orders" : search.prefix;
+                router.push(q ? `${base}?q=${encodeURIComponent(q)}` : base);
+              }}
+              className="relative flex min-w-0 max-w-[480px] flex-1"
+            >
+              <input
+                type="search"
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                placeholder={search.placeholder}
+                aria-label={search.label}
+                className="border-line-field bg-surface-1 text-ink-800 focus:border-marine-500 focus:shadow-[0_0_0_3px_var(--color-marine-200)] h-10 w-full rounded-[10px] border pr-3 pl-9 text-[13px] font-normal outline-none transition-[border-color,box-shadow,background-color] duration-[130ms] focus:bg-white"
+              />
+              <span className="text-ink-500 pointer-events-none absolute top-[11px] left-3 block size-4">
+                <SearchIcon size={16} />
+              </span>
+            </form>
+          ) : null}
 
           <div className="flex-1" />
 
@@ -263,7 +299,7 @@ export function AdminShell({
               <span className="bg-marine-500 flex size-[34px] flex-none items-center justify-center rounded-full text-[12px] font-medium text-white">
                 {initials}
               </span>
-              <span className="hidden flex-col items-start leading-[1.2] sm:flex">
+              <span className="hidden flex-col items-start leading-[1.2] min-[1180px]:flex">
                 <span className="text-ink-800 max-w-[140px] truncate text-[12.5px] font-medium tracking-[-0.005em] whitespace-nowrap">
                   {userName}
                 </span>
@@ -294,12 +330,6 @@ export function AdminShell({
                   className="text-ink-800 hover:bg-surface-1 block w-full px-4 py-3 text-left text-[12.5px] font-normal no-underline hover:no-underline"
                 >
                   Settings
-                </Link>
-                <Link
-                  href="/admin/notifications"
-                  className="text-ink-800 hover:bg-surface-1 block w-full px-4 py-3 text-left text-[12.5px] font-normal no-underline hover:no-underline"
-                >
-                  Notifications
                 </Link>
                 <form action={signOut} className="border-line-soft border-t">
                   <button

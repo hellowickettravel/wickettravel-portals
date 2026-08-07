@@ -1,8 +1,8 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { getOrders } from "@/lib/db/orders";
-import { getRecentActivity } from "@/lib/db/activity";
-import { gbp, fmtDate, fmtRelative, titleCase } from "@/lib/format";
+import { getRecentActivity, type ActivityTone } from "@/lib/db/activity";
+import { gbp, fmtDate, fmtLongDate, fmtRelative, titleCase } from "@/lib/format";
 import {
   Btn,
   Card,
@@ -12,71 +12,81 @@ import {
   PageHead,
   Pill,
   Screen,
-  shadowE1,
 } from "@/components/admin/ui";
 import {
   ChatIcon,
   ClockIcon,
   OrdersIcon,
-  PercentIcon,
   PlusIcon,
+  StaffIcon,
 } from "@/components/admin/icons";
 
-function isThisMonth(iso: string) {
-  const d = new Date(iso);
-  const now = new Date();
-  return (
-    d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth()
-  );
-}
-
-/** The activity feed's dot colour, one per record kind. */
-const ACTIVITY_DOT: Record<string, string> = {
-  order: "var(--color-marine-500)",
-  message: "var(--color-ok-ink)",
-  assignment: "var(--color-ember-600)",
+/** The activity feed's dot colour — the design's `tint(kind)[1]`. */
+const ACTIVITY_DOT: Record<ActivityTone, string> = {
+  marine: "var(--color-marine-600)",
+  ember: "var(--color-warn-ink)",
+  success: "var(--color-ok-ink)",
+  ink: "var(--color-ink-700)",
 };
+
+function sinceDays(n: number) {
+  const d = new Date();
+  d.setDate(d.getDate() - n);
+  return d.toISOString();
+}
 
 export default async function AdminDashboardPage() {
   const supabase = await createClient();
+  const head = { count: "exact" as const, head: true };
+  const last30 = sinceDays(30);
+  const last7 = sinceDays(7);
 
-  const [orders, employeesCount, conversationsCount, activity] =
-    await Promise.all([
-      getOrders(),
-      supabase
-        .from("profiles")
-        .select("id", { count: "exact", head: true })
-        .eq("role", "employee")
-        .then((r) => r.count ?? 0),
-      supabase
-        .from("conversations")
-        .select("id", { count: "exact", head: true })
-        .then((r) => r.count ?? 0),
-      getRecentActivity(7),
-    ]);
+  const [
+    orders,
+    employeesActive,
+    employeesOff,
+    conversationsCount,
+    conversationsNew,
+    activity,
+  ] = await Promise.all([
+    getOrders(),
+    supabase
+      .from("profiles")
+      .select("id", head)
+      .eq("role", "employee")
+      .eq("is_active", true)
+      .then((r) => r.count ?? 0),
+    supabase
+      .from("profiles")
+      .select("id", head)
+      .eq("role", "employee")
+      .eq("is_active", false)
+      .then((r) => r.count ?? 0),
+    supabase.from("conversations").select("id", head).then((r) => r.count ?? 0),
+    supabase
+      .from("conversations")
+      .select("id", head)
+      .gte("created_at", last30)
+      .then((r) => r.count ?? 0),
+    getRecentActivity(7),
+  ]);
 
-  const openOrders = orders.filter(
+  const active = orders.filter(
     (o) => o.status === "new" || o.status === "in_progress"
+  );
+  const ordersLast30 = orders.filter(
+    (o) => (o.created_at ?? "") >= last30
   ).length;
-  // Commission realised this month = completed orders whose closed_at falls in
-  // the current month (not creation date), so the figure tracks when revenue lands.
-  const commissionThisMonth = orders
-    .filter(
-      (o) =>
-        o.status === "completed" && o.closed_at != null && isThisMonth(o.closed_at)
-    )
-    .reduce((sum, o) => sum + (o.commission ?? 0), 0);
+  const activeLast7 = active.filter((o) => (o.created_at ?? "") >= last7).length;
 
-  const completed = orders.filter((o) => o.status === "completed");
   const bookValue = orders.reduce((s, o) => s + (o.selling_price ?? 0), 0);
-  const revenue = completed.reduce((s, o) => s + (o.selling_price ?? 0), 0);
   const recentOrders = orders.slice(0, 7);
 
   return (
     <Screen>
       <PageHead
         title="Today"
-        intro={`A live snapshot of the whole business — ${fmtDate(new Date().toISOString())}.`}
+        intro={`A live snapshot of the whole business — ${fmtLongDate(new Date().toISOString())}.`}
         actions={
           <Btn as="link" href="/admin/orders/new" variant="ember">
             <PlusIcon size={15} />
@@ -87,33 +97,35 @@ export default async function AdminDashboardPage() {
 
       <KpiGrid>
         <Kpi
-          label="Open orders"
-          value={openOrders}
-          meta="New and In progress"
+          label="Total orders"
+          value={orders.length}
+          meta="Every order on the platform"
           tone="marine"
           icon={<OrdersIcon size={18} />}
+          trend={ordersLast30 ? `+${ordersLast30}` : null}
         />
         <Kpi
-          label="Commission this month"
-          value={gbp(commissionThisMonth)}
-          meta="Earned on completed orders"
-          tone="ok"
-          valueClass="text-ok-ink"
-          icon={<PercentIcon size={18} />}
+          label="Active Orders"
+          value={active.length}
+          meta="Everything currently New or In progress"
+          tone="warn"
+          icon={<ClockIcon size={18} />}
+          trend={activeLast7 ? `+${activeLast7}` : null}
         />
         <Kpi
           label="Conversations"
           value={conversationsCount}
-          meta="Threads across the platform"
-          tone="violet"
+          meta="Customer threads on the platform"
+          tone="teal"
           icon={<ChatIcon size={18} />}
+          trend={conversationsNew ? `+${conversationsNew}` : null}
         />
         <Kpi
           label="Employees"
-          value={employeesCount}
-          meta="Active team members"
-          tone="teal"
-          icon={<ClockIcon size={18} />}
+          value={employeesActive + employeesOff}
+          meta={`${employeesActive} active · ${employeesOff} deactivated`}
+          tone="ok"
+          icon={<StaffIcon size={18} />}
         />
       </KpiGrid>
 
@@ -154,7 +166,7 @@ export default async function AdminDashboardPage() {
                     </span>
                     <span className="text-ink-600 text-[12.5px] font-normal">
                       {o.route_from ?? "—"} → {o.route_to ?? "—"} ·{" "}
-                      {o.travel_date ? fmtDate(o.travel_date) : "No date yet"}
+                      {o.travel_date ? fmtDate(o.travel_date) : "Date to confirm"}
                     </span>
                   </span>
                   <Pill>{titleCase(o.status)}</Pill>
@@ -170,7 +182,7 @@ export default async function AdminDashboardPage() {
               Showing {recentOrders.length} of {orders.length} orders
             </span>
             <Btn as="link" href="/admin/orders" size="sm">
-              All orders
+              Load more
             </Btn>
           </div>
         </Card>
@@ -179,31 +191,31 @@ export default async function AdminDashboardPage() {
         <Card className="flex h-full flex-col">
           <CardHead title="Recent activity" />
           <div className="min-h-0 flex-1 px-5 pt-2 pb-1">
-            {activity.length === 0 ? (
+            {activity.items.length === 0 ? (
               <p className="text-ink-600 m-0 py-10 text-center text-[13px]">
                 Nothing has happened yet. Orders, replies and assignments show
                 up here as your team works.
               </p>
             ) : (
-              activity.map((a) => (
+              activity.items.map((a) => (
                 <div
                   key={a.id}
                   className="border-line-soft flex gap-4 border-b py-3 last:border-b-0"
                 >
                   <span
-                    style={{
-                      background: ACTIVITY_DOT[a.kind] ?? "var(--color-ink-400)",
-                    }}
+                    style={{ background: ACTIVITY_DOT[a.tone] }}
                     className="mt-1.5 block size-2 flex-none rounded-full"
                   />
                   <div className="flex min-w-0 flex-1 flex-col gap-1">
                     <span className="text-ink-700 text-[12.5px] leading-[1.5] font-normal text-pretty">
+                      <span className="text-ink-800 font-medium">{a.actor}</span>{" "}
+                      {a.verb}{" "}
                       <Link href={a.link} className="font-medium">
-                        {a.title}
+                        {a.record}
                       </Link>
                     </span>
                     <span className="text-ink-500 text-[11.5px] font-normal">
-                      {a.detail} · {fmtRelative(a.at)}
+                      {fmtRelative(a.at)}
                     </span>
                   </div>
                 </div>
@@ -212,19 +224,17 @@ export default async function AdminDashboardPage() {
           </div>
           <div className="border-line-soft mt-auto flex flex-none items-center justify-between gap-3 border-t px-5 py-3.5">
             <span className="text-ink-600 text-[12px] font-normal">
-              Showing {activity.length} events
+              Showing {activity.items.length} of {activity.total} events
             </span>
             <Btn as="link" href="/admin/notifications" size="sm">
-              Notifications
+              Load more
             </Btn>
           </div>
         </Card>
       </div>
 
       {/* --------------------------------------------- Book of business */}
-      <div
-        className={`bg-marine-50 border-marine-line grid grid-cols-[repeat(auto-fit,minmax(180px,1fr))] gap-6 rounded-[12px] border px-[clamp(18px,2.2vw,24px)] py-6 ${shadowE1}`}
-      >
+      <div className="bg-marine-50 border-marine-line grid grid-cols-[repeat(auto-fit,minmax(180px,1fr))] gap-6 rounded-[12px] border px-[clamp(18px,2.2vw,24px)] py-6">
         <div className="flex flex-col gap-2">
           <span className="text-ember-700 text-[11px] font-medium tracking-[0.13em] uppercase">
             Book of business
@@ -234,9 +244,9 @@ export default async function AdminDashboardPage() {
           </span>
         </div>
         {[
-          { label: "Total orders", value: String(orders.length) },
+          { label: "Orders placed", value: String(orders.length) },
           { label: "Total order value", value: gbp(bookValue) },
-          { label: "Revenue (completed)", value: gbp(revenue) },
+          { label: "Conversations", value: String(conversationsCount) },
         ].map((b) => (
           <div key={b.label} className="flex flex-col gap-2">
             <span className="text-ink-600 text-[11px] font-normal tracking-[0.06em] uppercase">

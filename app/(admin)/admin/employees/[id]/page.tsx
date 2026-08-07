@@ -1,32 +1,31 @@
-import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ArrowLeft, Plane, ShoppingBag, MessageSquare, Shield } from "lucide-react";
 import { getEmployeeDetail } from "@/lib/actions/admin";
-import { SectionCard } from "@/components/admin/section-card";
-import { StatCard } from "@/components/admin/stat-card";
-import { StatusBadge, type Tone } from "@/components/admin/status-badge";
-import { UserCell } from "@/components/admin/user-cell";
 import { EmployeePasswordReset } from "@/components/admin/employee-password-reset";
+import { EmployeeStatusButton } from "@/components/admin/employee-status-button";
 import {
+  ACCESS_LEVEL_DESCRIPTIONS,
   ACCESS_LEVEL_LABELS,
   normalizeAccess,
-  type AccessLevel,
 } from "@/lib/access";
-import type { OrderStatus } from "@/lib/db/types";
-import { gbp, fmtDate, titleCase } from "@/lib/format";
-
-const ACCESS_TONE: Record<AccessLevel, Tone> = {
-  full: "blue",
-  semi_admin: "amber",
-  chat_only: "violet",
-  view_only: "slate",
-};
-const ORDER_TONE: Record<OrderStatus, Tone> = {
-  new: "blue",
-  in_progress: "amber",
-  completed: "green",
-  cancelled: "red",
-};
+import { gbp, fmtDate, fmtRelative, titleCase } from "@/lib/format";
+import {
+  BackLink,
+  Btn,
+  Card,
+  CardHead,
+  DataRow,
+  Kpi,
+  KpiGrid,
+  MoneyPanel,
+  PageTitle,
+  Pill,
+  RecordRow,
+  Screen,
+  avatarFor,
+  initialsOf,
+  shadowE1,
+} from "@/components/admin/ui";
+import { ChatIcon, Ico, iconForField } from "@/components/admin/icons";
 
 export default async function AdminEmployeeDetailPage({
   params,
@@ -39,76 +38,152 @@ export default async function AdminEmployeeDetailPage({
 
   const { profile, ordersCreated, assignmentCount } = detail;
   const level = normalizeAccess(profile.access_level);
+  const name = profile.full_name || "Unnamed";
+  const tint = avatarFor(name);
+
+  const completed = ordersCreated.filter((o) => o.status === "completed");
+  const open = ordersCreated.filter(
+    (o) => o.status === "new" || o.status === "in_progress"
+  );
+  const commission = completed.reduce((s, o) => s + (o.commission ?? 0), 0);
+  const sold = completed.reduce((s, o) => s + (o.selling_price ?? 0), 0);
+  const lastClosed = completed[0];
+
+  const fields = [
+    { label: "Email", value: profile.email ?? "—" },
+    { label: "Role", value: ACCESS_LEVEL_LABELS[level] },
+    { label: "Permissions", value: ACCESS_LEVEL_DESCRIPTIONS[level] },
+    { label: "Joined", value: fmtDate(profile.created_at) },
+    {
+      label: "Account status",
+      value: profile.is_active ? "Active" : "Deactivated",
+    },
+  ];
 
   return (
-    <div className="space-y-5">
-      <Link
-        href="/admin/employees"
-        className="inline-flex items-center gap-1.5 text-sm font-medium text-marine-600 transition-colors hover:text-marine-600"
+    <Screen width={1180}>
+      <BackLink href="/admin/employees">Employees</BackLink>
+
+      {/* --------------------------------------------------- profile head */}
+      <div
+        className={`border-line-base flex flex-wrap items-center gap-4 rounded-[12px] border bg-white p-[clamp(18px,2.2vw,24px)] ${shadowE1}`}
       >
-        <ArrowLeft className="size-4" />
-        Back to employees
-      </Link>
-
-      {/* Header */}
-      <div className="flex flex-col gap-4 rounded-[12px] border border-line-base bg-white p-5 shadow-[0_1px_2px_oklch(0.205_0.038_258_/_0.04)] sm:flex-row sm:items-center sm:justify-between">
-        <div className="space-y-1.5">
-          <UserCell name={profile.full_name || "Unnamed"} />
-          <div className="flex flex-wrap items-center gap-2">
-            <span className="text-sm text-ink-600">{profile.email ?? "—"}</span>
-            <StatusBadge tone={ACCESS_TONE[level]}>
-              {ACCESS_LEVEL_LABELS[level]}
-            </StatusBadge>
-            <StatusBadge tone={profile.is_active ? "green" : "slate"}>
-              {profile.is_active ? "Active" : "Inactive"}
-            </StatusBadge>
+        <span
+          style={{ background: tint.ink }}
+          className="flex size-[58px] flex-none items-center justify-center rounded-full text-[18px] font-medium text-white"
+        >
+          {initialsOf(name)}
+        </span>
+        <div className="flex min-w-0 flex-[1_1_220px] flex-col gap-1">
+          <div className="flex flex-wrap items-center gap-3">
+            <PageTitle>{name}</PageTitle>
+            <Pill tone={profile.is_active ? "ok" : "ink"}>
+              {profile.is_active ? "Active" : "Deactivated"}
+            </Pill>
           </div>
+          <span className="text-ink-600 text-[13px] font-normal">
+            {ACCESS_LEVEL_LABELS[level]} · joined {fmtDate(profile.created_at)}
+          </span>
         </div>
-        <EmployeePasswordReset employeeId={profile.id} />
+        <div className="flex flex-wrap gap-3">
+          <Btn as="link" href="/admin/messages">
+            <ChatIcon size={15} />
+            Message
+          </Btn>
+          <EmployeePasswordReset employeeId={profile.id} />
+          <EmployeeStatusButton
+            employeeId={profile.id}
+            isActive={profile.is_active}
+          />
+        </div>
       </div>
 
-      {/* Stats */}
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-        <StatCard label="Orders created" value={String(ordersCreated.length)} icon={ShoppingBag} />
-        <StatCard label="Conversations" value={String(assignmentCount)} icon={MessageSquare} hint="currently assigned" />
-        <StatCard label="Access level" value={ACCESS_LEVEL_LABELS[level]} icon={Shield} />
-      </div>
+      <KpiGrid>
+        <Kpi
+          label="Open orders"
+          value={open.length}
+          meta="Currently New or In progress"
+        />
+        <Kpi
+          label="Completed"
+          value={completed.length}
+          meta={`Of ${ordersCreated.length} created in total`}
+        />
+        <Kpi
+          label="Conversations"
+          value={assignmentCount}
+          meta="Threads currently assigned"
+        />
+      </KpiGrid>
 
-      {/* Orders created */}
-      <SectionCard title={`Orders created (${ordersCreated.length})`} flush>
-        {ordersCreated.length === 0 ? (
-          <p className="px-6 py-8 text-center text-sm text-ink-600">
-            This employee hasn’t created any orders yet.
-          </p>
-        ) : (
-          <ul className="divide-y divide-line-soft">
-            {ordersCreated.map((o) => (
-              <li key={o.id}>
-                <Link
-                  href={`/admin/orders/${o.id}`}
-                  className="flex items-center gap-4 px-5 py-3.5 transition-colors hover:bg-surface-1"
-                >
-                  <Plane className="size-4 -rotate-45 text-marine-600" />
-                  <div className="min-w-0 flex-1">
-                    <p className="truncate text-sm font-medium text-ink-800">
-                      {o.route_from ?? "—"} → {o.route_to ?? "—"}
-                    </p>
-                    <p className="text-xs text-ink-600">
-                      #{o.id.slice(0, 8)} · {fmtDate(o.created_at)}
-                    </p>
-                  </div>
-                  <span className="hidden text-sm font-medium text-ink-800 sm:block">
-                    {o.selling_price != null ? gbp(o.selling_price) : "—"}
-                  </span>
-                  <StatusBadge tone={ORDER_TONE[o.status]}>
-                    {titleCase(o.status)}
-                  </StatusBadge>
-                </Link>
-              </li>
+      <MoneyPanel
+        title="Commission"
+        pill={ACCESS_LEVEL_LABELS[level]}
+        label="Total earned"
+        total={gbp(commission)}
+        note="Cleared earnings on completed orders"
+        rows={[
+          { label: "Gross sales closed", value: gbp(sold) },
+          {
+            label: "Average per completed order",
+            value: gbp(completed.length ? commission / completed.length : 0),
+          },
+          {
+            label: "Last completion",
+            value: lastClosed
+              ? `${gbp(lastClosed.commission ?? 0)} · ${fmtDate(lastClosed.closed_at ?? lastClosed.created_at)}`
+              : "—",
+          },
+        ]}
+      />
+
+      <div className="grid grid-cols-1 items-start gap-4 min-[1240px]:grid-cols-[minmax(0,1.6fr)_minmax(0,1fr)]">
+        <Card>
+          <CardHead title="Orders created" />
+          {ordersCreated.length === 0 ? (
+            <p className="text-ink-600 m-0 px-5 py-10 text-center text-[13px]">
+              This employee hasn&apos;t created any orders yet.
+            </p>
+          ) : (
+            ordersCreated.map((o) => (
+              <RecordRow
+                key={o.id}
+                href={`/admin/orders/${o.id}`}
+                reference={o.order_number}
+                who={`${o.route_from ?? "—"} → ${o.route_to ?? "—"}`}
+                meta={`${titleCase(o.trip_type ?? "return")} · ${
+                  o.travel_date ? fmtDate(o.travel_date) : "Date to confirm"
+                }`}
+                status={<Pill>{titleCase(o.status)}</Pill>}
+                price={o.selling_price != null ? gbp(o.selling_price) : "—"}
+              />
+            ))
+          )}
+        </Card>
+
+        <Card>
+          <CardHead title="Details" />
+          <div className="px-5 pt-3 pb-5">
+            {fields.map((f) => (
+              <DataRow
+                key={f.label}
+                label={f.label}
+                value={f.value}
+                icon={<Ico name={iconForField(f.label)} size={15} width={1.6} />}
+              />
             ))}
-          </ul>
-        )}
-      </SectionCard>
-    </div>
+            <DataRow
+              label="Last activity"
+              value={
+                ordersCreated[0]
+                  ? fmtRelative(ordersCreated[0].created_at)
+                  : "No orders yet"
+              }
+              icon={<Ico name="clock" size={15} width={1.6} />}
+            />
+          </div>
+        </Card>
+      </div>
+    </Screen>
   );
 }

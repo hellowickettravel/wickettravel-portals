@@ -2,6 +2,7 @@ import { Suspense } from "react";
 import { redirect } from "next/navigation";
 import { getUserAndProfile, roleDashboardPath, isDeactivated } from "@/lib/auth";
 import { getBrandLogoUrl } from "@/lib/db/branding";
+import { createClient } from "@/lib/supabase/server";
 import { countNewVisaEnquiries } from "@/lib/actions/visa";
 import { countNewParentTickets } from "@/lib/actions/parents-tickets";
 import {
@@ -9,61 +10,78 @@ import {
   type AdminNavSection,
 } from "@/components/admin/admin-shell";
 
+type NavCounts = {
+  orders: number;
+  messages: number;
+  visa: number;
+  parents: number;
+  support: number;
+};
+
 /**
- * The design's sidebar groups the twelve admin areas into four bands. The two
- * queues carry live unactioned counts; everything else is a plain destination.
+ * The design's sidebar: Dashboard on its own, then Work / Enquiries / Peoples
+ * / Admin. Orders, Messages, the two enquiry queues and Support each carry a
+ * live unactioned count; everything else is a plain destination.
  */
-function buildNav(
-  newVisaCount: number,
-  newParentTicketCount: number
-): AdminNavSection[] {
+function buildNav(c: NavCounts): AdminNavSection[] {
   return [
     {
       items: [
-        { label: "Dashboard", href: "/admin", icon: "dashboard", exact: true },
+        {
+          label: "Dashboard",
+          href: "/admin",
+          icon: "dashboard",
+          exact: true,
+          emphasize: true,
+        },
       ],
     },
     {
       heading: "Work",
       items: [
-        { label: "Orders", href: "/admin/orders", icon: "orders" },
-        { label: "Messages", href: "/admin/messages", icon: "messages" },
+        { label: "Orders", href: "/admin/orders", icon: "orders", count: c.orders },
         {
-          label: "Visa Queries",
-          href: "/admin/visa-queries",
-          icon: "visa",
-          count: newVisaCount,
+          label: "Messages",
+          href: "/admin/messages",
+          icon: "messages",
+          count: c.messages,
         },
+        { label: "Analytics", href: "/admin/analytics", icon: "analytics" },
         {
-          label: "Parents Tickets",
-          href: "/admin/parents-tickets",
-          icon: "parents",
-          count: newParentTicketCount,
+          label: "Transactions",
+          href: "/admin/transactions",
+          icon: "transactions",
         },
-        { label: "Support", href: "/admin/support", icon: "support" },
       ],
     },
     {
-      heading: "People",
+      heading: "Enquiries",
+      items: [
+        {
+          label: "Visa queries",
+          href: "/admin/visa-queries",
+          icon: "visa",
+          count: c.visa,
+        },
+        {
+          label: "Parent tickets",
+          href: "/admin/parents-tickets",
+          icon: "parents",
+          count: c.parents,
+        },
+      ],
+    },
+    {
+      heading: "Peoples",
       items: [
         { label: "Employees", href: "/admin/employees", icon: "employees" },
         { label: "Customers", href: "/admin/customers", icon: "customers" },
       ],
     },
     {
-      heading: "Business",
+      heading: "Admin",
       items: [
-        {
-          label: "Transactions",
-          href: "/admin/transactions",
-          icon: "transactions",
-        },
-        { label: "Analytics", href: "/admin/analytics", icon: "analytics" },
-        {
-          label: "Notifications",
-          href: "/admin/notifications",
-          icon: "notifications",
-        },
+        { label: "Support", href: "/admin/support", icon: "support", count: c.support },
         { label: "Settings", href: "/admin/settings", icon: "settings" },
       ],
     },
@@ -90,10 +108,34 @@ export default async function AdminLayout({
   }
 
   const userName = profile?.full_name?.trim() || user.email || "Admin";
-  const [logoUrl, newVisaCount, newParentTicketCount] = await Promise.all([
+  const supabase = await createClient();
+  const head = { count: "exact" as const, head: true };
+  const [
+    logoUrl,
+    newVisaCount,
+    newParentTicketCount,
+    activeOrders,
+    openConversations,
+    openTickets,
+  ] = await Promise.all([
     getBrandLogoUrl(),
     countNewVisaEnquiries(),
     countNewParentTickets(),
+    supabase
+      .from("orders")
+      .select("id", head)
+      .in("status", ["new", "in_progress"])
+      .then((r) => r.count ?? 0),
+    supabase
+      .from("conversations")
+      .select("id", head)
+      .eq("status", "open")
+      .then((r) => r.count ?? 0),
+    supabase
+      .from("support_tickets")
+      .select("id", head)
+      .eq("status", "open")
+      .then((r) => r.count ?? 0),
   ]);
 
   return (
@@ -101,7 +143,13 @@ export default async function AdminLayout({
     // boundary — useSearchParams opts its subtree out of static rendering.
     <Suspense fallback={null}>
       <AdminShell
-        sections={buildNav(newVisaCount, newParentTicketCount)}
+        sections={buildNav({
+          orders: activeOrders,
+          messages: openConversations,
+          visa: newVisaCount,
+          parents: newParentTicketCount,
+          support: openTickets,
+        })}
         userName={userName}
         userEmail={user.email ?? ""}
         userId={user.id}

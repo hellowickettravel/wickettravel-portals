@@ -1,11 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
-  UserPlus,
   MoreHorizontal,
   Pencil,
   Ban,
@@ -13,14 +12,30 @@ import {
   Eye,
   EyeOff,
   Loader2,
-  Search,
   Trash2,
 } from "lucide-react";
 import { toast } from "sonner";
-import { PageHeader } from "@/components/admin/page-header";
-import { SectionCard } from "@/components/admin/section-card";
-import { StatusBadge, type Tone } from "@/components/admin/status-badge";
-import { UserCell } from "@/components/admin/user-cell";
+import { cn } from "@/lib/utils";
+import {
+  Avatar,
+  Btn,
+  Card as DesignCard,
+  EmptyState,
+  PageHead,
+  Pill,
+  Screen,
+  Table as DTable,
+  TableFoot,
+  TableScroll,
+  TableSkeleton as DesignTableSkeleton,
+  Td,
+  Th,
+  Thead,
+  Tr,
+  ViewButton,
+  focusRing,
+} from "@/components/admin/ui";
+import { PlusIcon } from "@/components/admin/icons";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -38,20 +53,10 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import { TableSkeleton } from "@/components/portal/skeletons";
-import { MobileRecordCard } from "@/components/portal/mobile-record-card";
 import { ConfirmDialog } from "@/components/portal/confirm-dialog";
-import { useListControls } from "@/lib/hooks/use-list-controls";
 import {
   listEmployees,
+  listOrders,
   createEmployee,
   setEmployeeActive,
   updateEmployee,
@@ -65,19 +70,14 @@ import {
   type AccessLevel,
 } from "@/lib/access";
 import type { Profile } from "@/lib/db/types";
-import { fmtDate } from "@/lib/format";
-
-const ACCESS_TONE: Record<AccessLevel, Tone> = {
-  full: "blue",
-  semi_admin: "amber",
-  chat_only: "violet",
-  view_only: "slate",
-};
 
 const EMPLOYEES_KEY = ["admin", "employees"] as const;
+const PAGE_SIZE = 5;
 
 export default function EmployeesPage() {
   const router = useRouter();
+  const params = useSearchParams();
+  const topSearch = params.get("q") ?? "";
   const queryClient = useQueryClient();
   const invalidate = () =>
     queryClient.invalidateQueries({ queryKey: EMPLOYEES_KEY });
@@ -192,14 +192,43 @@ export default function EmployeesPage() {
     });
   }
 
-  const all = employees ?? [];
-  const { query, setQuery, visible, total, hasMore, loadMore } = useListControls(
-    all,
-    10,
-    (emp, q) =>
-      (emp.full_name ?? "").toLowerCase().includes(q) ||
-      (emp.email ?? "").toLowerCase().includes(q)
-  );
+  const all = useMemo(() => employees ?? [], [employees]);
+  const [limit, setLimit] = useState(PAGE_SIZE);
+  const [search, setSearch] = useState(topSearch);
+
+  // Open orders per employee — the design's fourth column, computed from the
+  // live order list rather than a stored counter.
+  const { data: orders } = useQuery({
+    queryKey: ["admin", "orders"],
+    queryFn: listOrders,
+  });
+  const openOrdersBy = useMemo(() => {
+    const map = new Map<string, number>();
+    for (const o of orders ?? []) {
+      if (o.status !== "new" && o.status !== "in_progress") continue;
+      const id = o.assigned_employee_id;
+      if (id) map.set(id, (map.get(id) ?? 0) + 1);
+    }
+    return map;
+  }, [orders]);
+
+  const rows = useMemo(() => {
+    const q = search.trim().toLowerCase();
+    if (!q) return all;
+    return all.filter((emp) =>
+      `${emp.full_name ?? ""} ${emp.email ?? ""} ${ACCESS_LEVEL_LABELS[normalizeAccess(emp.access_level)]}`
+        .toLowerCase()
+        .includes(q)
+    );
+  }, [all, search]);
+
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setLimit(PAGE_SIZE);
+  }, [search]);
+
+  const visible = rows.slice(0, limit);
+  const remaining = Math.max(0, rows.length - limit);
 
   // Shared row-actions menu, reused by the desktop table + mobile cards.
   const renderActions = (emp: Profile) => (
@@ -253,163 +282,133 @@ export default function EmployeesPage() {
   );
 
   return (
-    <div className="space-y-7">
-      <PageHeader
-        eyebrow="Team"
+    <Screen>
+      <PageHead
         title="Employees"
-        subtitle="Manage your team, their access levels and assignments."
+        intro="Employee accounts and what they are working on. Deactivated accounts keep their history but cannot sign in."
         actions={
-          <Button onClick={() => setOpen(true)}>
-            <UserPlus className="size-4" />
-            Add Employee
-          </Button>
+          <Btn variant="ember" onClick={() => setOpen(true)}>
+            <PlusIcon size={15} />
+            Add employee
+          </Btn>
         }
       />
 
-      {all.length > 0 ? (
-        <div className="relative sm:w-80">
-          <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-ink-600" />
-          <Input
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            placeholder="Search by name or email…"
-            className="h-10 rounded-[10px] bg-white pl-9"
+      <DesignCard>
+        <div className="border-line-soft border-b px-5 py-4">
+          <input
+            type="search"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Search by name, role or email"
+            aria-label="Search employees"
+            className={cn(
+              "border-line-field bg-surface-1 text-ink-800 h-10 w-full max-w-[380px] rounded-[10px] border px-4 text-[13px] font-normal outline-none focus:bg-white",
+              focusRing
+            )}
           />
         </div>
-      ) : null}
 
-      <SectionCard flush>
         {isLoading ? (
-          <div className="p-4">
-            <TableSkeleton rows={5} columns={6} />
-          </div>
+          <DesignTableSkeleton rows={5} />
         ) : isError ? (
-          <p className="px-6 py-10 text-center text-sm text-ink-600">
-            Couldn’t load employees. Refresh to try again.
-          </p>
-        ) : all.length === 0 ? (
-          <div className="flex flex-col items-center gap-2 px-6 py-14 text-center">
-            <div className="flex size-12 items-center justify-center rounded-[12px] bg-marine-tint text-marine-600">
-              <UserPlus className="size-6" />
-            </div>
-            <p className="font-poppins text-base font-semibold text-ink-800">
-              No employees yet
-            </p>
-            <p className="max-w-sm text-sm text-ink-600">
-              Add your first team member to give them portal access.
-            </p>
-            <Button className="mt-2" onClick={() => setOpen(true)}>
-              <UserPlus className="size-4" />
-              Add Employee
-            </Button>
-          </div>
+          <EmptyState
+            title="Couldn't load employees"
+            body="Something went wrong reading the team list. Refresh the page to try again."
+          />
+        ) : rows.length === 0 ? (
+          <EmptyState
+            title={
+              all.length === 0 ? "No employees yet" : "No employees match that search"
+            }
+            body={
+              all.length === 0
+                ? "Add your first team member to give them portal access. They receive their login by email."
+                : "Try a different name, role or email address."
+            }
+            action={
+              all.length === 0 ? (
+                <Btn variant="ember" onClick={() => setOpen(true)}>
+                  <PlusIcon size={15} />
+                  Add employee
+                </Btn>
+              ) : (
+                <Btn onClick={() => setSearch("")}>Clear search</Btn>
+              )
+            }
+          />
         ) : (
           <>
-            {/* Mobile: stacked cards (no horizontal scroll) */}
-            <div className="space-y-3 p-4 md:hidden">
-              {visible.map((emp) => {
-                const level = normalizeAccess(emp.access_level);
-                return (
-                  <MobileRecordCard
-                    key={emp.id}
-                    title={
-                      <Link href={`/admin/employees/${emp.id}`} className="hover:text-marine-600">
-                        <UserCell name={emp.full_name || "Unnamed"} />
-                      </Link>
-                    }
-                    action={renderActions(emp)}
-                    badge={
-                      <StatusBadge tone={emp.is_active ? "green" : "slate"}>
-                        {emp.is_active ? "Active" : "Inactive"}
-                      </StatusBadge>
-                    }
-                    fields={[
-                      { label: "Email", value: emp.email ?? "—", wide: true },
-                      {
-                        label: "Access",
-                        value: (
-                          <StatusBadge tone={ACCESS_TONE[level]}>
-                            {ACCESS_LEVEL_LABELS[level]}
-                          </StatusBadge>
-                        ),
-                      },
-                      { label: "Joined", value: fmtDate(emp.created_at) },
-                    ]}
-                  />
-                );
-              })}
-            </div>
-
-            {/* Desktop: full table */}
-            <div className="hidden md:block">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead className="pl-6">Name</TableHead>
-                    <TableHead>Email</TableHead>
-                    <TableHead>Access</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead>Joined</TableHead>
-                    <TableHead className="pr-6 text-right">Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
+            <TableScroll>
+              <DTable min={900}>
+                <Thead>
+                  <Th>Employee</Th>
+                  <Th>Role</Th>
+                  <Th>Email</Th>
+                  <Th>Open orders</Th>
+                  <Th>Status</Th>
+                  <Th align="right" />
+                </Thead>
+                <tbody>
                   {visible.map((emp) => {
                     const level = normalizeAccess(emp.access_level);
+                    const name = emp.full_name || "Unnamed";
                     return (
-                      <TableRow
+                      <Tr
                         key={emp.id}
                         className="cursor-pointer"
                         onClick={() => router.push(`/admin/employees/${emp.id}`)}
                       >
-                        <TableCell className="pl-6">
+                        <Td>
                           <Link
                             href={`/admin/employees/${emp.id}`}
-                            className="hover:text-marine-600"
+                            className="text-ink-800 flex items-center gap-3 no-underline hover:no-underline"
                             onClick={(e) => e.stopPropagation()}
                           >
-                            <UserCell name={emp.full_name || "Unnamed"} />
+                            <Avatar name={name} size={30} />
+                            <span className="text-[13px] font-medium">{name}</span>
                           </Link>
-                        </TableCell>
-                        <TableCell className="text-ink-600">
+                        </Td>
+                        <Td>{ACCESS_LEVEL_LABELS[level]}</Td>
+                        <Td className="text-ink-600 text-[13px]">
                           {emp.email ?? "—"}
-                        </TableCell>
-                        <TableCell>
-                          <StatusBadge tone={ACCESS_TONE[level]}>
-                            {ACCESS_LEVEL_LABELS[level]}
-                          </StatusBadge>
-                        </TableCell>
-                        <TableCell>
-                          <StatusBadge tone={emp.is_active ? "green" : "slate"}>
-                            {emp.is_active ? "Active" : "Inactive"}
-                          </StatusBadge>
-                        </TableCell>
-                        <TableCell className="text-ink-600">
-                          {fmtDate(emp.created_at)}
-                        </TableCell>
-                        <TableCell
-                          className="pr-6 text-right"
-                          onClick={(e) => e.stopPropagation()}
-                        >
-                          {renderActions(emp)}
-                        </TableCell>
-                      </TableRow>
+                        </Td>
+                        <Td className="font-semibold tabular-nums">
+                          {openOrdersBy.get(emp.id) ?? 0}
+                        </Td>
+                        <Td>
+                          <Pill tone={emp.is_active ? "ok" : "ink"}>
+                            {emp.is_active ? "Active" : "Deactivated"}
+                          </Pill>
+                        </Td>
+                        <Td align="right" onClick={(e) => e.stopPropagation()}>
+                          <span className="inline-flex items-center gap-1.5">
+                            <ViewButton href={`/admin/employees/${emp.id}`} />
+                            {renderActions(emp)}
+                          </span>
+                        </Td>
+                      </Tr>
                     );
                   })}
-                </TableBody>
-              </Table>
-            </div>
-
-            {hasMore ? (
-              <div className="flex justify-center border-t border-line-base p-4">
-                <Button variant="outline" size="sm" onClick={loadMore}>
-                  Load more ({total - visible.length} more)
-                </Button>
-              </div>
-            ) : null}
+                </tbody>
+              </DTable>
+            </TableScroll>
+            <TableFoot
+              shown={visible.length}
+              total={rows.length}
+              noun="employees"
+              action={
+                remaining > 0 ? (
+                  <Btn onClick={() => setLimit((l) => l + PAGE_SIZE)}>
+                    Load {Math.min(PAGE_SIZE, remaining)} more — {remaining}{" "}
+                    remaining
+                  </Btn>
+                ) : undefined
+              }
+            />
           </>
         )}
-      </SectionCard>
+      </DesignCard>
 
       {/* Add Employee dialog */}
       <Dialog open={open} onOpenChange={setOpen}>
@@ -645,6 +644,6 @@ export default function EmployeesPage() {
         destructive
         onConfirm={() => deleting && deleteMutation.mutate(deleting.id)}
       />
-    </div>
+    </Screen>
   );
 }
