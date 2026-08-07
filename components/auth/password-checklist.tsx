@@ -4,8 +4,8 @@ import { PASSWORD_RULES, checkPassword } from "@/lib/security/password";
 import { cn } from "@/lib/utils";
 
 /**
- * Live password requirements, shown as a two-column dot grid under the field.
- * Reads the shared policy in lib/security/password.ts so the UI and the
+ * Live password requirements, shown as an auto-fitting dot grid under the
+ * field. Reads the shared policy in lib/security/password.ts so the UI and the
  * validation gate can never drift.
  */
 export function PasswordChecklist({ password }: { password: string }) {
@@ -19,14 +19,14 @@ export function PasswordChecklist({ password }: { password: string }) {
           <li
             key={rule.id}
             className={cn(
-              "flex items-center gap-2 text-[12.5px] whitespace-nowrap transition-colors",
-              ok ? "text-emerald-700" : "text-slate-500"
+              "flex items-center gap-2 text-[12.5px] font-normal whitespace-nowrap transition-colors",
+              ok ? "text-pass-ink" : "text-ink-500"
             )}
           >
             <span
               className={cn(
-                "size-[7px] shrink-0 rounded-full transition-colors",
-                ok ? "bg-emerald-600" : "bg-slate-300"
+                "block size-[7px] flex-none rounded-full transition-colors",
+                ok ? "bg-pass-dot" : "bg-ink-300"
               )}
             />
             {rule.shortLabel}

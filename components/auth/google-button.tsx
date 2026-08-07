@@ -1,10 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { createClient } from "@/lib/supabase/client";
-import { Button } from "@/components/ui/button";
 import { GoogleIcon } from "@/components/icons/google";
 
 export function GoogleButton({
@@ -39,19 +37,14 @@ export function GoogleButton({
   }
 
   return (
-    <Button
+    <button
       type="button"
-      variant="outline"
       onClick={handleGoogle}
       disabled={loading}
-      className="h-12 w-full gap-3 rounded-full border-border bg-white text-[15px] font-semibold tracking-[-0.008em] text-navy transition-colors hover:border-slate-400 hover:bg-neutral-soft"
+      className="border-ink-300 text-ink-900 hover:border-ink-400 hover:bg-ink-100 focus:border-marine-500 flex h-12 w-full items-center justify-center gap-3 rounded-full border bg-white text-[15px] font-semibold tracking-[-0.008em] outline-none [transition:background-color_140ms_ease,border-color_140ms_ease] focus:shadow-[0_0_0_3px_var(--color-marine-200)] disabled:pointer-events-none disabled:opacity-[0.62]"
     >
-      {loading ? (
-        <Loader2 className="size-[19px] animate-spin" />
-      ) : (
-        <GoogleIcon className="size-[19px]" />
-      )}
-      {label}
-    </Button>
+      <GoogleIcon className="block size-[19px]" />
+      {loading ? "Redirecting…" : label}
+    </button>
   );
 }

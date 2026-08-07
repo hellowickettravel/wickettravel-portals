@@ -1,11 +1,15 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import dynamic from "next/dynamic";
 import {
   QueryClient,
   QueryClientProvider,
 } from "@tanstack/react-query";
+import {
+  downgradeAuthCookiesToSession,
+  isSessionOnly,
+} from "@/lib/auth/session-persistence";
 
 // Dev-only: lazy-load the devtools so the package is never pulled into the
 // production bundle. In prod this resolves to a no-op component and the import
@@ -37,6 +41,30 @@ export function Providers({ children }: { children: React.ReactNode }) {
         },
       })
   );
+
+  // Honour an unticked "Keep me signed in" for the whole visit: every token
+  // refresh re-writes the auth cookies with Supabase's 400-day Max-Age, so we
+  // downgrade them back to session cookies each time the auth state changes.
+  // No-op — and no Supabase import evaluated — unless the marker cookie is set.
+  useEffect(() => {
+    if (!isSessionOnly()) return;
+    downgradeAuthCookiesToSession();
+
+    let cancelled = false;
+    let unsubscribe: (() => void) | undefined;
+    void import("@/lib/supabase/client").then(({ createClient }) => {
+      const { data } = createClient().auth.onAuthStateChange(() => {
+        if (isSessionOnly()) downgradeAuthCookiesToSession();
+      });
+      if (cancelled) data.subscription.unsubscribe();
+      else unsubscribe = () => data.subscription.unsubscribe();
+    });
+
+    return () => {
+      cancelled = true;
+      unsubscribe?.();
+    };
+  }, []);
 
   return (
     <QueryClientProvider client={queryClient}>

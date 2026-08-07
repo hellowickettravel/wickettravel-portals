@@ -1,18 +1,16 @@
 import Link from "next/link";
-import { Loader2 } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
 
 /**
- * The auth control layer. Auth uses a deliberately larger control size than
- * the portal interior (48px vs 40px) because these screens are one column of
- * a handful of fields — the extra height reads as calm, not loose.
+ * The auth control layer, built to the "Auth Pages" design spec rather than on
+ * the portal's shadcn primitives — these screens use their own Marine/Ink/Ember
+ * tokens, a 48px control height and pill CTAs, and matching the design exactly
+ * is easier without inheriting the portal button/input variants.
  */
 
 /** Shared field styling for every text input on the auth screens. */
 export const authFieldClass =
-  "h-12 w-full rounded-[10px] border border-border bg-white px-4 text-[15px] text-navy caret-primary placeholder:text-slate-400 hover:border-slate-400 md:text-[15px]";
+  "border-ink-300 text-ink-900 caret-marine-500 hover:border-ink-400 focus:border-marine-500 focus:shadow-[0_0_0_3px_var(--color-marine-200)] h-12 w-full rounded-[10px] border bg-white px-4 text-[15px] font-normal outline-none [transition:border-color_140ms_ease,box-shadow_140ms_ease] disabled:cursor-not-allowed disabled:opacity-60";
 
 export function AuthLabel({
   htmlFor,
@@ -22,12 +20,9 @@ export function AuthLabel({
   children: React.ReactNode;
 }) {
   return (
-    <Label
-      htmlFor={htmlFor}
-      className="text-[13px] font-medium text-slate-700"
-    >
+    <label htmlFor={htmlFor} className="text-ink-700 text-[13px] font-medium">
       {children}
-    </Label>
+    </label>
   );
 }
 
@@ -36,7 +31,19 @@ export function AuthField({ children }: { children: React.ReactNode }) {
   return <div className="flex flex-col gap-2">{children}</div>;
 }
 
-/** Primary pill CTA. Presses down rather than lifting, as the design specifies. */
+/** Text input, pre-styled. */
+export function AuthInput({
+  className,
+  ...props
+}: React.ComponentProps<"input">) {
+  return <input className={cn(authFieldClass, className)} {...props} />;
+}
+
+/**
+ * Primary pill CTA in ember. Presses down rather than lifting, and swaps to a
+ * progress label while the request is in flight — the design has no spinner,
+ * the label change plus the dimmed, inert surface carries the state.
+ */
 export function AuthSubmit({
   loading = false,
   loadingLabel,
@@ -49,23 +56,16 @@ export function AuthSubmit({
   className?: string;
 }) {
   return (
-    <Button
+    <button
       type="submit"
       disabled={loading}
       className={cn(
-        "mt-2 h-12 w-full rounded-full text-[15px] font-semibold tracking-[-0.008em] hover:translate-y-0 hover:shadow-none",
+        "bg-ember-600 hover:bg-ember-700 focus:bg-ember-700 mt-2 h-12 w-full rounded-full text-[15px] font-semibold tracking-[-0.008em] text-white outline-none [transition:background-color_140ms_ease,transform_90ms_ease] focus:shadow-[0_0_0_3px_#fff,0_0_0_6px_oklch(0.565_0.172_47_/_0.42)] active:translate-y-px disabled:pointer-events-none disabled:opacity-[0.62]",
         className
       )}
     >
-      {loading ? (
-        <>
-          <Loader2 className="size-4 animate-spin" />
-          {loadingLabel ?? children}
-        </>
-      ) : (
-        children
-      )}
-    </Button>
+      {loading ? (loadingLabel ?? children) : children}
+    </button>
   );
 }
 
@@ -82,28 +82,27 @@ export function AuthSecondaryButton({
   className?: string;
 }) {
   const classes = cn(
-    "h-12 w-full rounded-full border-border bg-white text-[15px] font-semibold tracking-[-0.008em] text-navy hover:bg-neutral-soft",
+    "border-ink-300 text-ink-900 hover:border-ink-400 hover:bg-ink-100 focus:border-marine-500 flex h-12 w-full items-center justify-center rounded-full border bg-white text-[15px] font-semibold tracking-[-0.008em] no-underline outline-none [transition:background-color_140ms_ease,border-color_140ms_ease] focus:shadow-[0_0_0_3px_var(--color-marine-200)] hover:no-underline",
     className
   );
 
   if (href) {
     return (
-      <Button variant="outline" className={classes} render={<Link href={href} />}>
+      <Link href={href} className={classes}>
         {children}
-      </Button>
+      </Link>
     );
   }
 
   return (
-    <Button type="button" variant="outline" onClick={onClick} className={classes}>
+    <button type="button" onClick={onClick} className={classes}>
       {children}
-    </Button>
+    </button>
   );
 }
 
 /**
- * Inline text link. Navy rather than the design's blue: on a white panel the
- * accent orange fails AA at this size, and navy is the palette's link colour.
+ * Inline text link. Colour and hover come from the `.auth-root a` rule in
+ * globals.css (marine, underline on hover) — this only carries the weight.
  */
-export const authLinkClass =
-  "font-medium text-brand underline-offset-2 transition-colors hover:text-brand-dark hover:underline";
+export const authLinkClass = "font-medium";

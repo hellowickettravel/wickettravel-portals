@@ -2,20 +2,20 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { Plane, MailCheck } from "lucide-react";
+import { Plane } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { guardSignup, recordSignup } from "@/lib/actions/auth-guard";
-import { checkPassword } from "@/lib/security/password";
-import { Input } from "@/components/ui/input";
+import { checkPassword, MIN_PASSWORD_LENGTH } from "@/lib/security/password";
 import { AuthShell } from "@/components/auth/auth-shell";
 import { AuthHeading } from "@/components/auth/auth-heading";
 import { AuthAlert } from "@/components/auth/auth-alert";
+import { AuthSentHalo } from "@/components/auth/auth-sent-halo";
 import {
   AuthField,
+  AuthInput,
   AuthLabel,
   AuthSecondaryButton,
   AuthSubmit,
-  authFieldClass,
   authLinkClass,
 } from "@/components/auth/auth-controls";
 import { AuthPasswordField } from "@/components/auth/auth-password-field";
@@ -148,16 +148,14 @@ export default function SignupPage() {
   if (sentTo) {
     return (
       <AuthShell screen="sent">
-        <span className="mb-6 flex size-16 items-center justify-center rounded-full bg-orange/10 text-orange-dark">
-          <MailCheck className="size-7" />
-        </span>
-        <AuthHeading title="Check your email" dot={false} className="mb-4" />
-        <p className="text-[15px] leading-[1.6] text-slate-500">
+        <AuthSentHalo />
+        <AuthHeading title="Check your email" dot={false} />
+        <p className="text-ink-600 mb-4 text-[15px] leading-[1.6] font-normal">
           We sent a verification link to{" "}
-          <span className="font-medium text-navy">{sentTo}</span>. Click it to
+          <span className="text-ink-900 font-medium">{sentTo}</span>. Click it to
           activate your account, then sign in.
         </p>
-        <p className="mt-4 mb-8 text-[13.5px] leading-[1.55] text-slate-500">
+        <p className="text-ink-500 mb-8 text-[13.5px] leading-[1.55] font-normal">
           Nothing arrived? Check the spam folder before requesting another —
           repeated requests are rate limited.
         </p>
@@ -178,7 +176,7 @@ export default function SignupPage() {
       {error ? <AuthAlert>{error}</AuthAlert> : null}
 
       {resumingBooking ? (
-        <div className="mb-5 flex items-start gap-3 rounded-[10px] border border-border bg-chip/60 px-4 py-3 text-[13px] leading-[1.5] text-brand-dark">
+        <div className="border-ink-300 bg-ink-100 text-ink-700 mb-5 flex items-start gap-3 rounded-[10px] border px-4 py-3 text-[13px] leading-[1.5]">
           <Plane className="mt-0.5 size-4 shrink-0 -rotate-45" />
           <span>
             Your booking details are saved. Create your free account and
@@ -190,22 +188,21 @@ export default function SignupPage() {
       <form onSubmit={handleSubmit} noValidate className="flex flex-col gap-5">
         <AuthField>
           <AuthLabel htmlFor="fullName">Full name</AuthLabel>
-          <Input
+          <AuthInput
             id="fullName"
             type="text"
             autoComplete="name"
-            placeholder="Jane Traveller"
+            placeholder="Ananya Rao"
             value={fullName}
             onChange={(e) => setFullName(e.target.value)}
             required
             disabled={loading}
-            className={authFieldClass}
           />
         </AuthField>
 
         <AuthField>
           <AuthLabel htmlFor="email">Email address</AuthLabel>
-          <Input
+          <AuthInput
             id="email"
             type="email"
             autoComplete="email"
@@ -214,7 +211,6 @@ export default function SignupPage() {
             onChange={(e) => setEmail(e.target.value)}
             required
             disabled={loading}
-            className={authFieldClass}
           />
         </AuthField>
 
@@ -223,7 +219,7 @@ export default function SignupPage() {
           <AuthPasswordField
             id="password"
             autoComplete="new-password"
-            placeholder="At least 8 characters"
+            placeholder={`At least ${MIN_PASSWORD_LENGTH} characters`}
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             required
@@ -249,7 +245,7 @@ export default function SignupPage() {
           Create account
         </AuthSubmit>
 
-        <p className="text-xs leading-[1.55] text-pretty text-slate-500">
+        <p className="text-ink-500 m-0 text-[12px] leading-[1.55] font-normal text-pretty">
           By creating an account you agree to our{" "}
           <a
             href="https://www.wickettravel.com/terms-of-service"
@@ -278,7 +274,7 @@ export default function SignupPage() {
 
       <GoogleButton />
 
-      <p className="mt-6 text-[13.5px] text-slate-500">
+      <p className="text-ink-600 mt-6 text-[13.5px] font-normal">
         Already have an account?{" "}
         <Link href={loginHref} className={authLinkClass}>
           Sign in

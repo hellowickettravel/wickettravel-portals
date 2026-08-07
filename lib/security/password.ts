@@ -3,13 +3,14 @@
  * account password. Pure (no imports), so both the client signup form (live
  * feedback) and any server-side check can share it.
  *
- * Policy: at least 8 characters, with a lowercase letter, an uppercase letter,
- * and a digit. This blocks the weakest credential-stuffing targets without
- * frustrating real users. We deliberately keep it simple + transparent (the UI
- * shows every rule) rather than an opaque score.
+ * Policy (from the "Auth Pages" design's live checklist): at least 10
+ * characters, with a capital letter, a number and a symbol. This blocks the
+ * weakest credential-stuffing targets without frustrating real users. We
+ * deliberately keep it simple + transparent (the UI shows every rule) rather
+ * than an opaque score.
  */
 
-export const MIN_PASSWORD_LENGTH = 8;
+export const MIN_PASSWORD_LENGTH = 10;
 export const MAX_PASSWORD_LENGTH = 72; // bcrypt/GoTrue hard limit — reject longer
 
 export type PasswordRule = {
@@ -29,12 +30,6 @@ export const PASSWORD_RULES: PasswordRule[] = [
     test: (pw) => pw.length >= MIN_PASSWORD_LENGTH,
   },
   {
-    id: "lower",
-    label: "A lowercase letter (a–z)",
-    shortLabel: "One lowercase letter",
-    test: (pw) => /[a-z]/.test(pw),
-  },
-  {
     id: "upper",
     label: "An uppercase letter (A–Z)",
     shortLabel: "One capital letter",
@@ -45,6 +40,12 @@ export const PASSWORD_RULES: PasswordRule[] = [
     label: "A number (0–9)",
     shortLabel: "One number",
     test: (pw) => /\d/.test(pw),
+  },
+  {
+    id: "symbol",
+    label: "A symbol (e.g. ! ? @ #)",
+    shortLabel: "One symbol",
+    test: (pw) => /[^A-Za-z0-9]/.test(pw),
   },
 ];
 

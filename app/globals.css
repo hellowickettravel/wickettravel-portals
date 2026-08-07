@@ -19,6 +19,11 @@
   --font-montserrat: var(--font-jakarta);
   --font-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
 
+  /* Auth screens use the "Auth Pages" design's own pairing: Instrument Sans
+     for body/labels, Poppins for the display headings and the brand wordmark. */
+  --font-instrument: var(--font-instrument-sans);
+  --font-poppins: var(--font-poppins-sans);
+
   /* Brand tokens (usable as bg-brand, text-navy, text-orange, etc.) */
   --color-brand: var(--brand);
   --color-brand-dark: var(--brand-dark);
@@ -31,6 +36,46 @@
   --color-chip: var(--chip);
   --color-surface: var(--surface);
   --color-neutral-soft: var(--neutral);
+
+  /* ---------------------------------------------------------------
+     AUTH DESIGN SYSTEM — Marine / Ink / Ember
+     Exact oklch values lifted from the Claude Design "Auth Pages" +
+     "Brand System" files. Deliberately a separate namespace from the
+     portal's navy/orange tokens above so the auth screens can match the
+     design 1:1 without shifting the admin/employee/customer shells.
+     --------------------------------------------------------------- */
+  --color-marine-100: oklch(0.930 0.034 257);
+  --color-marine-200: oklch(0.878 0.056 252); /* focus ring */
+  --color-marine-500: oklch(0.505 0.170 257); /* links, focus border, caret */
+  --color-marine-600: oklch(0.435 0.148 257); /* link hover */
+  --color-marine-tint: oklch(0.945 0.030 252); /* ghost-button hover */
+
+  --color-ink-50: oklch(0.988 0.003 258);
+  --color-ink-100: oklch(0.972 0.004 258); /* secondary button hover */
+  --color-ink-200: oklch(0.912 0.006 258); /* divider rules */
+  --color-ink-300: oklch(0.860 0.008 258); /* field + button borders */
+  --color-ink-400: oklch(0.700 0.016 258); /* border hover */
+  --color-ink-450: oklch(0.645 0.012 258); /* placeholder */
+  --color-ink-500: oklch(0.560 0.014 258); /* captions, "or", fine print */
+  --color-ink-600: oklch(0.470 0.018 258); /* support copy */
+  --color-ink-700: oklch(0.375 0.022 258); /* body + field labels */
+  --color-ink-900: oklch(0.225 0.036 258); /* headings, input text */
+
+  --color-ember-50: oklch(0.955 0.040 52); /* "check your email" halo */
+  --color-ember-300: oklch(0.858 0.110 58); /* hero eyebrow text */
+  --color-ember-500: oklch(0.720 0.170 50); /* hero rule + logo dot */
+  --color-ember-600: oklch(0.565 0.172 47); /* primary CTA */
+  --color-ember-700: oklch(0.505 0.155 45); /* CTA hover */
+
+  --color-alert-bg: oklch(0.955 0.028 25);
+  --color-alert-line: oklch(0.898 0.050 25);
+  --color-alert-ink: oklch(0.455 0.160 25);
+
+  --color-pass-dot: oklch(0.505 0.115 158);
+  --color-pass-ink: oklch(0.430 0.100 158);
+
+  --color-hero-navy: oklch(0.320 0.060 256);
+  --color-hero-tint: oklch(0.300 0.055 256 / 0.22);
 
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
@@ -199,6 +244,61 @@
     transition-duration: 0.001ms !important;
     scroll-behavior: auto !important;
   }
+}
+
+/* =========================================================
+   AUTH SCREENS — scoped base layer
+   The design ships its own <style> block (typeface, link colour,
+   placeholder, focus outline, 44px mobile touch targets). Scoping it to
+   .auth-root reproduces that exactly on /login, /signup,
+   /forgot-password and /reset-password without leaking into the portals.
+   ========================================================= */
+@layer base {
+  .auth-root {
+    font-family: var(--font-instrument-sans), system-ui, sans-serif;
+    line-height: 1.5;
+    color: var(--color-ink-700);
+  }
+  .auth-root a {
+    color: var(--color-marine-500);
+    text-decoration: none;
+  }
+  .auth-root a:hover {
+    color: var(--color-marine-600);
+    text-decoration: underline;
+  }
+  .auth-root ::placeholder {
+    color: var(--color-ink-450);
+    font-weight: 400;
+  }
+  .auth-root :focus-visible {
+    outline: 2px solid var(--color-marine-500) !important;
+    outline-offset: 2px;
+  }
+  @media (max-width: 639px) {
+    /* [data-compact] opts a control out — the Show/Hide toggle sits inside a
+       48px field, so growing it to 44px would push it out of its own input. */
+    .auth-root button:not([data-compact]),
+    .auth-root input:not([type="checkbox"]),
+    .auth-root select {
+      min-height: 44px;
+    }
+  }
+}
+
+/* The hero panel's long vertical ramp: it lets the photo breathe at the top,
+   then sinks the bottom into ink so the eyebrow, headline and legal footer
+   always clear AA over whatever image is behind them. */
+@utility auth-hero-scrim {
+  background: linear-gradient(
+    176deg,
+    oklch(0.3 0.058 256 / 0.62) 0%,
+    oklch(0.32 0.055 256 / 0.12) 30%,
+    oklch(0.298 0.058 256 / 0.66) 50%,
+    oklch(0.278 0.054 256 / 0.88) 72%,
+    oklch(0.262 0.05 256 / 0.96) 88%,
+    oklch(0.248 0.048 256) 100%
+  );
 }
 
 /* Faint dot-grid texture (used on the login hero panel) */

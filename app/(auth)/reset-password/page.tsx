@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { Loader2, ShieldAlert } from "lucide-react";
 import { toast } from "sonner";
 import { createClient } from "@/lib/supabase/client";
 import { AuthShell } from "@/components/auth/auth-shell";
@@ -110,8 +109,8 @@ export default function ResetPasswordPage() {
     return (
       <AuthShell screen="reset">
         <div className="flex flex-col items-center gap-3 py-10 text-center">
-          <Loader2 className="size-6 animate-spin text-brand" />
-          <p className="text-[13.5px] text-slate-500">
+          <span className="border-ink-300 border-t-marine-500 size-6 animate-spin rounded-full border-2" />
+          <p className="text-ink-500 text-[13.5px] font-normal">
             Verifying your reset link…
           </p>
         </div>
@@ -123,11 +122,11 @@ export default function ResetPasswordPage() {
   if (status === "invalid") {
     return (
       <AuthShell screen="reset">
-        <span className="mb-6 flex size-16 items-center justify-center rounded-full bg-rose-50 text-rose-600">
-          <ShieldAlert className="size-7" />
+        <span className="bg-alert-bg mb-6 flex size-16 items-center justify-center rounded-full">
+          <span className="bg-alert-ink block size-4 rounded-full" />
         </span>
-        <AuthHeading title="This link has expired" dot={false} className="mb-4" />
-        <p className="mb-8 text-[15px] leading-[1.6] text-slate-500">
+        <AuthHeading title="This link has expired" dot={false} />
+        <p className="text-ink-600 mb-8 text-[15px] leading-[1.6] font-normal">
           Reset links can only be used once and stop working after 60 minutes.
           Request a fresh one and we&apos;ll send another straight away.
         </p>
@@ -136,7 +135,7 @@ export default function ResetPasswordPage() {
           Request a new link
         </AuthSecondaryButton>
 
-        <p className="mt-7 text-[13.5px] text-slate-500">
+        <p className="text-ink-600 mt-7 text-[13.5px] font-normal">
           <Link href="/login" className={authLinkClass}>
             Back to sign in
           </Link>
@@ -162,7 +161,7 @@ export default function ResetPasswordPage() {
           <AuthPasswordField
             id="password"
             autoComplete="new-password"
-            placeholder="At least 8 characters"
+            placeholder={`At least ${MIN_PASSWORD_LENGTH} characters`}
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             required
@@ -191,7 +190,7 @@ export default function ResetPasswordPage() {
         </AuthSubmit>
       </form>
 
-      <p className="mt-7 text-[13.5px] text-slate-500">
+      <p className="text-ink-600 mt-7 text-[13.5px] font-normal">
         <Link href="/login" className={authLinkClass}>
           Back to sign in
         </Link>

@@ -7,15 +7,15 @@ import { toast } from "sonner";
 import { createClient } from "@/lib/supabase/client";
 import { guardLogin, recordLogin } from "@/lib/actions/auth-guard";
 import { safeInternalPath } from "@/lib/security/redirect";
-import { Input } from "@/components/ui/input";
+import { setKeepSignedIn } from "@/lib/auth/session-persistence";
 import { AuthShell } from "@/components/auth/auth-shell";
 import { AuthHeading } from "@/components/auth/auth-heading";
 import { AuthAlert } from "@/components/auth/auth-alert";
 import {
   AuthField,
+  AuthInput,
   AuthLabel,
   AuthSubmit,
-  authFieldClass,
   authLinkClass,
 } from "@/components/auth/auth-controls";
 import { AuthPasswordField } from "@/components/auth/auth-password-field";
@@ -26,6 +26,10 @@ export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
+  // Ticked by default, as the design shows. Unticking makes the Supabase auth
+  // cookies session-scoped so they die with the browser (see
+  // lib/auth/session-persistence.ts).
+  const [keepSignedIn, setKeepSignedInState] = useState(true);
   // Inline form error. Sign-in failures are the user's next action, so they
   // stay on the panel rather than expiring in a toast.
   const [error, setError] = useState<string | null>(null);
@@ -126,6 +130,9 @@ export default function LoginPage() {
     // Successful auth — clears this email/IP toward the sliding-window limit.
     void recordLogin(cleanEmail, true);
 
+    // Apply the persistence choice now that the auth cookies exist.
+    setKeepSignedIn(keepSignedIn);
+
     // Read the role to decide where to land. maybeSingle() returns null (no
     // error) when the row is genuinely absent, and an error only on a real
     // read failure — so we can tell "no access" apart from a transient glitch.
@@ -193,6 +200,7 @@ export default function LoginPage() {
           {unverifiedEmail ? (
             <button
               type="button"
+              data-compact
               onClick={() => void resendVerification(unverifiedEmail)}
               className="mt-1.5 block font-medium underline underline-offset-2"
             >
@@ -203,7 +211,7 @@ export default function LoginPage() {
       ) : null}
 
       {redirectParam?.startsWith("/customer/book") ? (
-        <div className="mb-5 flex items-start gap-3 rounded-[10px] border border-border bg-chip/60 px-4 py-3 text-[13px] leading-[1.5] text-brand-dark">
+        <div className="border-ink-300 bg-ink-100 text-ink-700 mb-5 flex items-start gap-3 rounded-[10px] border px-4 py-3 text-[13px] leading-[1.5]">
           <Plane className="mt-0.5 size-4 shrink-0 -rotate-45" />
           <span>
             Your booking details are saved. Sign in and we&apos;ll take you
@@ -215,7 +223,7 @@ export default function LoginPage() {
       <form onSubmit={handleSubmit} className="flex flex-col gap-5">
         <AuthField>
           <AuthLabel htmlFor="email">Email address</AuthLabel>
-          <Input
+          <AuthInput
             id="email"
             type="email"
             autoComplete="email"
@@ -224,7 +232,6 @@ export default function LoginPage() {
             onChange={(e) => setEmail(e.target.value)}
             required
             disabled={loading}
-            className={authFieldClass}
           />
         </AuthField>
 
@@ -241,10 +248,20 @@ export default function LoginPage() {
           />
         </AuthField>
 
-        <div className="flex justify-end">
+        <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-3">
+          <label className="text-ink-600 flex cursor-pointer items-center gap-2 text-[13.5px] font-normal whitespace-nowrap">
+            <input
+              type="checkbox"
+              checked={keepSignedIn}
+              onChange={(e) => setKeepSignedInState(e.target.checked)}
+              disabled={loading}
+              className="accent-marine-500 m-0 size-4 cursor-pointer"
+            />
+            Keep me signed in
+          </label>
           <Link
             href="/forgot-password"
-            className={`text-[13.5px] ${authLinkClass}`}
+            className={`text-[13.5px] whitespace-nowrap ${authLinkClass}`}
           >
             Forgot password?
           </Link>
@@ -261,7 +278,7 @@ export default function LoginPage() {
 
       <GoogleButton />
 
-      <p className="mt-8 text-[13.5px] text-slate-500">
+      <p className="text-ink-600 mt-8 text-[13.5px] font-normal">
         Don&apos;t have an account yet?{" "}
         <Link
           href={

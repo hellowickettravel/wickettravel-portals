@@ -41,6 +41,36 @@ A custom "Shared Team Inbox + Orders CRM + Admin panel" for a UK-based flight-ti
 - Rounded 14–16px cards, soft shadows, modern SaaS look
 - Portal shell: ~260px navy sidebar, active nav = solid ORANGE pill, content max ~1152px
 
+### Auth screens — scoped exception (Claude Design "Auth Pages")
+/login, /signup, /forgot-password and /reset-password follow the Claude Design
+"Auth Pages" + "Brand System" files exactly, which use a different palette and
+type pairing from the portal interior. Both live side by side:
+- Type: **Instrument Sans** (body/labels/inputs) + **Poppins** (display headings,
+  brand wordmark), loaded in `app/layout.tsx` as `--font-instrument-sans` /
+  `--font-poppins-sans`. The portals stay on Plus Jakarta Sans.
+- Colour: **Marine** (links, focus, caret), **Ink** (a navy-black neutral ramp
+  doing most of the work) and **Ember** (the CTA / single spark). Exact oklch
+  values live in `app/globals.css` under `--color-marine-*`, `--color-ink-*`,
+  `--color-ember-*`, plus `--color-alert-*`, `--color-pass-*`, `--color-hero-*`.
+  These are a **separate namespace** from the navy/orange tokens — nothing above
+  changed, so the admin/employee/customer shells are untouched.
+- Scoping: the `.auth-root` class on `AuthShell` carries the design's own base
+  layer (typeface, link colour, placeholder, focus outline, 44px mobile touch
+  targets). Any new auth screen must render inside `AuthShell` to inherit it.
+- Breakpoints follow the design, not Tailwind's defaults: the two panes stack
+  below **900px** and the hero subcopy drops below **460px**.
+- Password policy is the design's live checklist: 10+ chars, a capital, a
+  number, a symbol (`lib/security/password.ts`).
+- The hero carries the design's **screen switcher** (Sign in / Sign up / Reset /
+  Sent / New password). These are real links; "Sent" is `/forgot-password?sent=1`,
+  which is why that route is a server shell + `forgot-password-form.tsx` client
+  component rather than one client page.
+- `HERO_IMAGE` in `auth-shell.tsx` maps a photo per screen. Only
+  `public/auth/hero-flight.jpg` ships — the design's other four assets exceed the
+  192 KiB the design tool will return. Drop `hero-signup.jpg`, `hero-forgot.png`,
+  `hero-sent.jpg`, `hero-reset.jpg` into `public/auth/` and they take over with
+  no code change; until then `onError` falls back to the sign-in photo.
+
 ## Messaging (internal realtime)
 - All messaging is internal: admin ⇄ employee ⇄ customer, over Supabase Realtime between logged-in roles. No WhatsApp, no external messaging API, no mock/simulate layer.
 - Sender role is labelled in the UI as **Admin**, **Support Team** (employee), or **Customer**.

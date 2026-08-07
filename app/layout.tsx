@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Plus_Jakarta_Sans } from "next/font/google";
+import { Instrument_Sans, Plus_Jakarta_Sans, Poppins } from "next/font/google";
 import { Toaster } from "@/components/ui/sonner";
 import { Providers } from "./providers";
 import "./globals.css";
@@ -9,6 +9,23 @@ import "./globals.css";
 const jakarta = Plus_Jakarta_Sans({
   variable: "--font-jakarta",
   subsets: ["latin"],
+  display: "swap",
+});
+
+// Auth screens follow the "Auth Pages" design's own pairing: Instrument Sans
+// carries body, labels and inputs; Poppins carries the display headings and the
+// brand wordmark. Scoped to /login, /signup, /forgot-password, /reset-password
+// via .auth-root — the portals stay on Plus Jakarta Sans.
+const instrumentSans = Instrument_Sans({
+  variable: "--font-instrument-sans",
+  subsets: ["latin"],
+  display: "swap",
+});
+
+const poppins = Poppins({
+  variable: "--font-poppins-sans",
+  subsets: ["latin"],
+  weight: ["400", "500", "600"],
   display: "swap",
 });
 
@@ -39,7 +56,7 @@ export default function RootLayout({
   return (
     <html lang="en" className="h-full">
       <body
-        className={`${jakarta.variable} min-h-full font-sans antialiased`}
+        className={`${jakarta.variable} ${instrumentSans.variable} ${poppins.variable} min-h-full font-sans antialiased`}
       >
         {/* Hoisted to <head> by React 19 — warms the Supabase TLS connection. */}
         {supabaseOrigin ? (
