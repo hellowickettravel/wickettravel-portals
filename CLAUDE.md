@@ -12,7 +12,11 @@ A custom "Shared Team Inbox + Orders CRM + Admin panel" for a UK-based flight-ti
 - NOTE: project does NOT use a src/ directory. `app/` and `lib/` are at the root. The `@/*` import alias points to the project root.
 
 ## Already done
-- Next.js scaffolded, pushed to GitHub, deployed on Vercel (https://wicket-fawn.vercel.app/).
+- Next.js scaffolded, pushed to GitHub, auto-deployed on Vercel from `main`.
+  Live: **https://wicket-travel-portal.vercel.app**. (The `wicket-fawn.vercel.app`
+  previously noted here is not this project and 404s.) The per-deployment URLs
+  from the GitHub deployment status are SSO-protected — use the alias above to
+  check a release.
 - Supabase project created (London region). Keys in .env.local.
 - Supabase clients exist: lib/supabase/client.ts (browser), lib/supabase/server.ts (server), lib/supabase/middleware.ts + root middleware.ts (session + route protection for /admin and /employee).
 - DB schema live with 6 tables: profiles, customers, conversations, assignments, messages, orders. A trigger auto-creates a profile row on signup. RLS is ON; only a basic "own profile read" policy exists so far — fuller role policies come later.
