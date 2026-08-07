@@ -23,12 +23,29 @@ import {
 } from "@/components/admin/icons";
 import { MessageAttachment } from "@/components/portal/message-attachment";
 import { MessageText } from "@/components/portal/message-text";
-import { focusRing, initialsOf, shadowE1 } from "@/components/admin/ui";
+import {
+  avatarFor,
+  focusRing,
+  initialsOf,
+  shadowE1,
+} from "@/components/admin/ui";
 
+/**
+ * The design's own role captions on an order thread — User / Support / Admin,
+ * rendered uppercase. Deliberately not the shared `ROLE_LABEL`, which the
+ * customer and employee portals use and which says "Customer" / "Support Team".
+ */
+const THREAD_ROLE: Record<SenderRole, string> = {
+  admin: "Admin",
+  employee: "Support",
+  customer: "User",
+};
+
+/** The design's day divider: "29 July 2026" — no weekday, always the year. */
 const DAY = new Intl.DateTimeFormat("en-GB", {
-  weekday: "long",
   day: "numeric",
   month: "long",
+  year: "numeric",
 });
 
 function clock(iso: string) {
@@ -39,13 +56,6 @@ function clock(iso: string) {
 }
 
 const dayKey = (iso: string) => iso.slice(0, 10);
-
-/** Avatar tint per role — the design's marine / ember / ink trio. */
-const ROLE_TINT: Record<SenderRole, string> = {
-  admin: "bg-violet-bg text-violet-ink",
-  employee: "bg-marine-tint text-marine-600",
-  customer: "bg-neutral-bg text-ink-700",
-};
 
 /**
  * The order detail's Messages card — the design's own thread, not the shared
@@ -60,13 +70,11 @@ export function OrderThread({
   orderId,
   customerName,
   orderNumber,
-  currentUserId,
   senderNames = {},
 }: {
   orderId: string;
   customerName: string;
   orderNumber: string;
-  currentUserId: string;
   /**
    * sender_id → full name. The design labels each bubble with the person AND
    * their role, so staff messages carry a real name; anyone missing from the
@@ -228,8 +236,11 @@ export function OrderThread({
           </div>
         ) : (
           thread.map((m: OrderMessage, i) => {
-            const mine = m.sender_id === currentUserId;
+            // The design splits the thread by side, not by author: everything
+            // from the team — support and admin alike — is the marine bubble on
+            // the right, and only the customer sits left in white.
             const role = m.sender_role;
+            const mine = role !== "customer";
             const name =
               role === "customer"
                 ? customerName
@@ -261,11 +272,14 @@ export function OrderThread({
                       mine ? "flex-row-reverse" : "flex-row"
                     )}
                   >
+                    {/* The design tints a thread avatar from the person's own
+                        name via avatarFor(), not from their role. */}
                     <span
-                      className={cn(
-                        "flex size-8 flex-none items-center justify-center rounded-full text-[11px] font-semibold",
-                        ROLE_TINT[role]
-                      )}
+                      style={{
+                        background: avatarFor(name).bg,
+                        color: avatarFor(name).ink,
+                      }}
+                      className="flex size-8 flex-none items-center justify-center rounded-full text-[11px] font-semibold"
                     >
                       {initialsOf(name)}
                     </span>
@@ -280,7 +294,7 @@ export function OrderThread({
                           {name}
                         </span>
                         <span className="text-ink-hush text-[9.5px] font-semibold tracking-[0.06em] uppercase">
-                          {ROLE_LABEL[role]}
+                          {THREAD_ROLE[role]}
                         </span>
                       </span>
                       <div

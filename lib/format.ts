@@ -17,9 +17,31 @@ export function fmtDate(iso: string | null | undefined): string {
   if (!iso) return "—";
   const d = new Date(iso);
   if (Number.isNaN(d.getTime())) return "—";
+  return (
+    new Intl.DateTimeFormat("en-GB", {
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+    })
+      .format(d)
+      // en-GB abbreviates September as "Sept"; the design writes every month
+      // as three letters, so every short date lines up in a table column.
+      .replace("Sept", "Sep")
+  );
+}
+
+/**
+ * "12 August 2026" — the design's long date without the weekday. Used by the
+ * order screen's flight tiles and the order thread's day dividers, where
+ * `fmtLongDate` would wrap the tile onto a second line.
+ */
+export function fmtFullDate(iso: string | null | undefined): string {
+  if (!iso) return "—";
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return "—";
   return new Intl.DateTimeFormat("en-GB", {
-    day: "2-digit",
-    month: "short",
+    day: "numeric",
+    month: "long",
     year: "numeric",
   }).format(d);
 }

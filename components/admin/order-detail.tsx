@@ -42,7 +42,14 @@ import {
 import { updateOrder, setOrderStatus, assignOrder } from "@/lib/actions/admin";
 import type { OrderWithRelations, OrderStatus, Profile } from "@/lib/db/types";
 import type { SignedOrderAttachment } from "@/lib/db/order-messages";
-import { gbp, fmtDate, fmtLongDate, titleCase } from "@/lib/format";
+import type { CustomerSnapshot } from "@/lib/db/customers";
+import {
+  gbp,
+  fmtDate,
+  fmtFullDate,
+  statusLabel,
+  titleCase,
+} from "@/lib/format";
 import { cn } from "@/lib/utils";
 
 /**
@@ -146,12 +153,15 @@ export function OrderDetail({
   order,
   employees,
   attachments,
+  customer,
   currentUserId,
   currentUserName,
 }: {
   order: OrderWithRelations;
   employees: Profile[];
   attachments: SignedOrderAttachment[];
+  /** Email + lifetime summary for the design's Customer card. */
+  customer: CustomerSnapshot | null;
   currentUserId: string;
   currentUserName: string;
 }) {
@@ -218,11 +228,11 @@ export function OrderDetail({
       { label: "To", value: order.route_to ?? "—" },
       {
         label: "Departure",
-        value: order.travel_date ? fmtLongDate(order.travel_date) : "To confirm",
+        value: order.travel_date ? fmtFullDate(order.travel_date) : "To confirm",
       },
       {
         label: "Return",
-        value: order.return_date ? fmtLongDate(order.return_date) : "One way",
+        value: order.return_date ? fmtFullDate(order.return_date) : "One way",
       },
       {
         label: "Baggage",
@@ -319,11 +329,11 @@ export function OrderDetail({
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div className="min-w-0">
           <div className="flex flex-wrap items-center gap-3">
-            <h1 className="font-poppins text-ink-900 m-0 text-[clamp(20px,1.5vw,24px)] leading-[1.25] font-medium tracking-[-0.02em] tabular-nums">
+            <h1 className="font-poppins text-ink-700 m-0 text-[clamp(20px,1.5vw,24px)] leading-[1.5] font-medium tracking-[-0.02em] tabular-nums">
               {order.order_number}
             </h1>
             <Pill tone={PILL_TONE[order.status]} className="text-[11.5px]">
-              {titleCase(order.status)}
+              {statusLabel(order.status)}
             </Pill>
           </div>
           <p className="text-ink-600 mt-1.5 text-[13.5px] font-normal">
@@ -398,7 +408,7 @@ export function OrderDetail({
         }
         passengers={paxSummary(order.adults, order.children, order.passengers)}
         price={order.selling_price != null ? gbp(order.selling_price) : "—"}
-        statusLabel={titleCase(order.status)}
+        statusLabel={statusLabel(order.status)}
         statusTone={PILL_TONE[order.status]}
       />
 
@@ -478,7 +488,6 @@ export function OrderDetail({
             orderId={order.id}
             orderNumber={order.order_number}
             customerName={customerName}
-            currentUserId={currentUserId}
             senderNames={senderNames}
           />
         </div>
@@ -550,7 +559,6 @@ export function OrderDetail({
                 {
                   label: "Commission",
                   value: order.commission != null ? gbp(order.commission) : "—",
-                  ok: true,
                 },
                 {
                   label: "Margin",
@@ -567,12 +575,9 @@ export function OrderDetail({
                   <span className="text-ink-600 text-[12.5px] font-normal">
                     {r.label}
                   </span>
-                  <span
-                    className={cn(
-                      "text-[13px] font-medium tabular-nums",
-                      r.ok ? "text-ok-ink" : "text-ink-800"
-                    )}
-                  >
+                  {/* The design leaves these values uncoloured — inside the
+                      Pricing card even commission is plain ink. */}
+                  <span className="text-[13px] font-medium tabular-nums">
                     {r.value}
                   </span>
                 </div>
@@ -619,11 +624,15 @@ export function OrderDetail({
             <CardHead title="Customer" />
             <div className="flex flex-1 flex-col px-[18px] pt-2.5 pb-[18px]">
               <DataRow label="Name" value={customerName} />
+              <DataRow label="Email" value={customer?.email ?? "—"} />
               <DataRow label="Phone" value={order.customer?.wa_phone ?? "—"} />
-              <DataRow label="Created" value={fmtDate(order.created_at)} />
               <DataRow
-                label="Completed"
-                value={order.closed_at ? fmtDate(order.closed_at) : "—"}
+                label="Orders placed"
+                value={
+                  customer
+                    ? `${customer.orderCount} · ${gbp(customer.lifetimeValue)} lifetime`
+                    : "—"
+                }
               />
               {order.customer?.id ? (
                 <Btn

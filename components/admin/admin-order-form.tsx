@@ -25,6 +25,7 @@ import {
   shadowE1,
 } from "@/components/admin/ui";
 import {
+  CheckCircleIcon,
   CheckIcon,
   ChildIcon,
   DocumentIcon,
@@ -783,7 +784,7 @@ export function AdminOrderForm({ customers }: { customers: AdminOrderCustomer[] 
 
       <div className="flex flex-col gap-1.5">
         <Eyebrow>New order</Eyebrow>
-        <h1 className="font-poppins text-ink-900 m-0 text-[clamp(20px,1.5vw,24px)] leading-[1.25] font-medium tracking-[-0.02em]">
+        <h1 className="font-poppins text-ink-700 m-0 text-[clamp(20px,1.5vw,24px)] leading-[1.5] font-medium tracking-[-0.02em]">
           Create an order
         </h1>
         <p className="text-ink-600 m-0 mt-0.5 max-w-[640px] text-[13.5px] font-normal text-pretty">
@@ -826,7 +827,9 @@ export function AdminOrderForm({ customers }: { customers: AdminOrderCustomer[] 
                   aria-current={active ? "step" : undefined}
                   onClick={() => jump(s.n)}
                   className={cn(
-                    "flex w-full items-center gap-3 rounded-[10px] border-0 px-2 py-1.5 text-left outline-none transition-[background-color] duration-[130ms]",
+                    // leading-normal: the design's step row sits on the UA's
+                    // line-height, which is what keeps the rail at 80px.
+                    "flex w-full items-center gap-3 rounded-[10px] border-0 px-2 py-1.5 text-left leading-[normal] outline-none transition-[background-color] duration-[130ms]",
                     active
                       ? "bg-surface-3"
                       : open
@@ -844,7 +847,9 @@ export function AdminOrderForm({ customers }: { customers: AdminOrderCustomer[] 
                           : "border-line-strong text-ink-500 bg-white"
                     )}
                   >
-                    {done ? <CheckIcon size={15} width={2.1} /> : s.n}
+                    {/* The design marks a finished step with its circled
+                        check — ico("check", 15, 2.1) — not a bare tick. */}
+                    {done ? <CheckCircleIcon size={15} width={2.1} /> : s.n}
                   </span>
                   <span className="flex min-w-0 flex-1 flex-col gap-0.5">
                     <span
@@ -1053,7 +1058,8 @@ export function AdminOrderForm({ customers }: { customers: AdminOrderCustomer[] 
                       className={cn(
                         inputClass,
                         focusRing,
-                        "cursor-pointer",
+                        // 14px gutter, as on every other select in the wizard.
+                        "cursor-pointer px-3.5",
                         errors.customerId && "border-danger-edge"
                       )}
                     >
@@ -1218,8 +1224,12 @@ export function AdminOrderForm({ customers }: { customers: AdminOrderCustomer[] 
                         ? [
                             ["Already checked flights", false],
                             [
+                              // The design's own wording. Its "N files
+                              // attached" branch cannot arise here: this step
+                              // has no uploader — files go on the order's
+                              // thread once the record exists.
                               draft.flightInfo.trim()
-                                ? "Details shared with the team"
+                                ? "Details shared, no files"
                                 : "No details added yet",
                               true,
                             ],
@@ -1330,7 +1340,10 @@ export function AdminOrderForm({ customers }: { customers: AdminOrderCustomer[] 
             )}
           </span>
           <div className="flex flex-none flex-wrap gap-3">
+            {/* The design's wizard footer runs its secondary button a touch
+                wider than the standard 20px control padding. */}
             <Btn
+              className="px-[22px]"
               onClick={() =>
                 step === 1
                   ? router.push("/admin/orders")
