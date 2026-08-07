@@ -12,7 +12,7 @@ export default async function AdminOrderDetailPage({
 }) {
   const { id } = await params;
 
-  const [order, employees, attachments, { user }] = await Promise.all([
+  const [order, employees, attachments, { user, profile }] = await Promise.all([
     getOrderById(id),
     getEmployees(),
     getPreOrderAttachments(id),
@@ -27,6 +27,7 @@ export default async function AdminOrderDetailPage({
       employees={employees}
       attachments={attachments}
       currentUserId={user?.id ?? ""}
+      currentUserName={profile?.full_name ?? "Admin"}
     />
   );
 }

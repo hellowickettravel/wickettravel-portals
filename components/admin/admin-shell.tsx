@@ -212,7 +212,7 @@ export function AdminShell({
                               active ? "text-nav-count-on" : "text-nav-count"
                             )}
                           >
-                            {item.count > 9 ? "9+" : item.count}
+                            {item.count}
                           </span>
                         ) : null}
                       </span>

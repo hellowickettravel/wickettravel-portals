@@ -54,7 +54,8 @@ export default function RootLayout({
 }>) {
   const supabaseOrigin = supabasePreconnect();
   return (
-    <html lang="en" className="h-full">
+    // en-GB so native date inputs render dd/mm/yyyy for a UK business.
+    <html lang="en-GB" className="h-full">
       <body
         className={`${jakarta.variable} ${instrumentSans.variable} ${poppins.variable} min-h-full font-sans antialiased`}
       >

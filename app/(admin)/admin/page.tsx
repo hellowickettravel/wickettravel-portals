@@ -2,7 +2,14 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { getOrders } from "@/lib/db/orders";
 import { getRecentActivity, type ActivityTone } from "@/lib/db/activity";
-import { gbp, fmtDate, fmtLongDate, fmtRelative, titleCase } from "@/lib/format";
+import {
+  gbp,
+  fmtDate,
+  fmtLongDate,
+  fmtRelative,
+  routeLabel,
+  titleCase,
+} from "@/lib/format";
 import {
   Btn,
   Card,
@@ -165,7 +172,7 @@ export default async function AdminDashboardPage() {
                       </span>
                     </span>
                     <span className="text-ink-600 text-[12.5px] font-normal">
-                      {o.route_from ?? "—"} → {o.route_to ?? "—"} ·{" "}
+                      {routeLabel(o.route_from, o.route_to)} ·{" "}
                       {o.travel_date ? fmtDate(o.travel_date) : "Date to confirm"}
                     </span>
                   </span>

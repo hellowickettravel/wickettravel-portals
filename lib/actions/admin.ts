@@ -82,6 +82,8 @@ export type CustomerWithStats = Customer & {
   conversationCount: number;
   /** Distinct order statuses this customer has — powers the status filter. */
   orderStatuses: OrderStatus[];
+  /** Sign-in email from the linked portal account; null for a lead with no login. */
+  email: string | null;
 };
 
 /** Customers enriched with their order + conversation counts for the list page. */
@@ -91,16 +93,28 @@ export async function listCustomersWithStats(): Promise<CustomerWithStats[]> {
   if (customers.length === 0) return [];
 
   const supabase = await createClient();
-  const [{ data: orders }, { data: convs }] = await Promise.all([
-    supabase
-      .from("orders")
-      .select("customer_id, status")
-      .returns<{ customer_id: string | null; status: OrderStatus }[]>(),
-    supabase
-      .from("conversations")
-      .select("customer_id")
-      .returns<{ customer_id: string | null }[]>(),
-  ]);
+  const profileIds = customers
+    .map((c) => c.profile_id)
+    .filter((id): id is string => !!id);
+  const [{ data: orders }, { data: convs }, { data: profiles }] =
+    await Promise.all([
+      supabase
+        .from("orders")
+        .select("customer_id, status")
+        .returns<{ customer_id: string | null; status: OrderStatus }[]>(),
+      supabase
+        .from("conversations")
+        .select("customer_id")
+        .returns<{ customer_id: string | null }[]>(),
+      profileIds.length
+        ? supabase
+            .from("profiles")
+            .select("id, email")
+            .in("id", profileIds)
+            .returns<{ id: string; email: string | null }[]>()
+        : Promise.resolve({ data: [] as { id: string; email: string | null }[] }),
+    ]);
+  const emailByProfile = new Map((profiles ?? []).map((p) => [p.id, p.email]));
 
   const orderCounts = new Map<string, number>();
   const statusesByCustomer = new Map<string, Set<OrderStatus>>();
@@ -121,6 +135,7 @@ export async function listCustomersWithStats(): Promise<CustomerWithStats[]> {
     orderCount: orderCounts.get(c.id) ?? 0,
     conversationCount: convCounts.get(c.id) ?? 0,
     orderStatuses: Array.from(statusesByCustomer.get(c.id) ?? []),
+    email: c.profile_id ? (emailByProfile.get(c.profile_id) ?? null) : null,
   }));
 }
 
@@ -153,12 +168,14 @@ export async function getCustomerDetail(id: string): Promise<CustomerDetail | nu
 /**
  * Admin creates a full order (the shared Chunk 1 create-order form) for any
  * customer. Inserted through the RLS-aware client — orders_admin_all permits the
- * write — with created_by = the admin and no conversation_id (not tied to a
- * chat). Returns the new order id so the UI can route to its detail view.
+ * write — with created_by = the admin. The order is attached to that customer's
+ * conversation (reusing the most recent one, or opening their first) so
+ * "Message customer" on the record always has somewhere to go. Returns the new
+ * order id + human ref so the UI can route to its detail view.
  */
 export async function createOrder(
   input: OrderFormInput & { customerId: string }
-): Promise<DataResult<{ orderId: string }>> {
+): Promise<DataResult<{ orderId: string; orderNumber: string }>> {
   const { user, profile } = await getUserAndProfile();
   if (!user || profile?.role !== "admin") {
     return { ok: false, error: "Unauthorized" };
@@ -169,19 +186,39 @@ export async function createOrder(
   if (!normalized.ok) return normalized;
 
   const supabase = await createClient();
+
+  const { data: thread } = await supabase
+    .from("conversations")
+    .select("id")
+    .eq("customer_id", input.customerId)
+    .order("last_message_at", { ascending: false, nullsFirst: false })
+    .limit(1)
+    .maybeSingle<{ id: string }>();
+  let conversationId = thread?.id ?? null;
+  if (!conversationId) {
+    const { data: opened } = await supabase
+      .from("conversations")
+      .insert({ customer_id: input.customerId, status: "open" })
+      .select("id")
+      .single<{ id: string }>();
+    conversationId = opened?.id ?? null;
+  }
+
   const { data, error } = await supabase
     .from("orders")
     .insert({
       ...normalized.fields,
       customer_id: input.customerId,
-      conversation_id: null,
+      conversation_id: conversationId,
       created_by: user.id,
     })
-    .select("id")
-    .single<{ id: string }>();
+    .select("id, order_number")
+    .single<{ id: string; order_number: string }>();
 
   if (error) return { ok: false, error: error.message };
-  return { ok: true, data: { orderId: data.id } };
+  // The human ref is trigger-generated, so it only exists after the insert —
+  // the create screen shows it back ("Order #7343490 created").
+  return { ok: true, data: { orderId: data.id, orderNumber: data.order_number } };
 }
 
 const ORDER_STATUSES: OrderStatus[] = ["new", "in_progress", "completed", "cancelled"];
@@ -730,14 +767,15 @@ export async function deleteCustomer(id: string): Promise<ActionResult> {
 /**
  * Every conversation for the admin inbox, shaped like the employee inbox so the
  * shared <ConversationInbox> can render both. Admins aren't assignment-scoped
- * and there's no per-admin read tracking, so unreadCount is always 0.
+ * and there is no per-admin read receipt, so the badge shows how many customer
+ * messages are waiting on a reply rather than a per-viewer unread count.
  */
 export async function listAdminInbox(): Promise<InboxConversation[]> {
   await requireAdmin();
   const overview = await getConversationsOverview();
   return overview.map((c) => ({
     ...c,
-    unreadCount: 0,
+    unreadCount: c.waitingCount,
     lastReadAt: null,
     assignedEmployeeId: c.assignedEmployeeId,
   }));

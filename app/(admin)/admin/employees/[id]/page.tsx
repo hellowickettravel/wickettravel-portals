@@ -7,7 +7,7 @@ import {
   ACCESS_LEVEL_LABELS,
   normalizeAccess,
 } from "@/lib/access";
-import { gbp, fmtDate, fmtRelative, titleCase } from "@/lib/format";
+import { gbp, fmtDate, fmtRelative, routeLabel, titleCase } from "@/lib/format";
 import {
   BackLink,
   Btn,
@@ -150,7 +150,7 @@ export default async function AdminEmployeeDetailPage({
                 key={o.id}
                 href={`/admin/orders/${o.id}`}
                 reference={o.order_number}
-                who={`${o.route_from ?? "—"} → ${o.route_to ?? "—"}`}
+                who={routeLabel(o.route_from, o.route_to)}
                 meta={`${titleCase(o.trip_type ?? "return")} · ${
                   o.travel_date ? fmtDate(o.travel_date) : "Date to confirm"
                 }`}

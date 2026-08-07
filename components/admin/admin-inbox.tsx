@@ -144,15 +144,23 @@ export function AdminInbox({ currentUserId }: { currentUserId: string }) {
     };
   }, [supabase, queryClient, currentUserId]);
 
-  // Deep-link `?c=<id>` opens that thread once the inbox has loaded.
-  const deepLinked = useRef(false);
+  // Deep-link `?c=<id>` opens that thread once the inbox has loaded; otherwise
+  // the newest thread opens on its own, because the design never shows the
+  // reading pane empty on a wide screen. Below 940px the two panes stack, so we
+  // leave the list showing and let the user pick.
+  const opened = useRef(false);
   useEffect(() => {
-    if (deepLinked.current || conversations.length === 0) return;
+    if (opened.current || conversations.length === 0) return;
     const target = new URLSearchParams(window.location.search).get("c");
     if (target && conversations.some((c) => c.id === target)) {
-      deepLinked.current = true;
+      opened.current = true;
       // eslint-disable-next-line react-hooks/set-state-in-effect
       setActiveId(target);
+      return;
+    }
+    if (window.matchMedia("(min-width: 940px)").matches) {
+      opened.current = true;
+      setActiveId(conversations[0].id);
     }
   }, [conversations]);
 

@@ -1,5 +1,5 @@
 import { cn } from "@/lib/utils";
-import { FlightIcon } from "@/components/admin/icons";
+import { PlaneIcon } from "@/components/admin/icons";
 import { Pill, type PillTone } from "@/components/admin/ui";
 
 /**
@@ -75,7 +75,7 @@ export function BoardingPass({
           <div className="text-marine-500 flex min-w-[44px] flex-1 items-center gap-2">
             <span className="block h-0.5 flex-1 bg-[repeating-linear-gradient(90deg,oklch(0.505_0.170_257_/_0.38)_0_6px,transparent_6px_12px)]" />
             <span className="flex flex-none rotate-90">
-              <FlightIcon size={18} />
+              <PlaneIcon size={26} width={1.5} />
             </span>
             <span className="block h-0.5 flex-1 bg-[repeating-linear-gradient(90deg,oklch(0.505_0.170_257_/_0.38)_0_6px,transparent_6px_12px)]" />
           </div>

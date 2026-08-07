@@ -84,6 +84,28 @@ employee, customer and driver portals are unchanged and stay on navy/orange.
   `components/admin/admin-shell.tsx`; the two-pane inbox in
   `components/admin/admin-inbox.tsx`; the order-detail boarding pass in
   `components/admin/boarding-pass.tsx`.
+- The **order screens are admin-only builds**, deliberately forked from the
+  shared navy/orange ones so the employee/customer portals are untouched:
+  `components/admin/order-detail.tsx` (back link → header with `#ref` + status
+  pill + Edit / Message customer / Cancel / **Mark complete** → boarding pass →
+  a `2.4fr / 1fr` split: Flight details tiles + the live `OrderThread` on the
+  left, Passengers / Pricing / Assign Employee / Customer down the right),
+  `components/admin/order-thread.tsx` (the design's Messages card — day
+  dividers, 32px role-tinted avatars, `14px 14px 4px 14px` own-bubble in
+  marine-500, 42px circular send) and `components/admin/admin-order-form.tsx`
+  (the three-step Create-an-order wizard: step rail with Done/Current/Next
+  tracks, flight-check radio cards, passenger blocks, Review rows with per-row
+  edit jumps, footer error summary). They call the same server actions as the
+  shared `components/orders/*` so the persisted record is identical.
+- Routes render as IATA codes in tables (`routeLabel()` in `lib/format.ts`) —
+  the design's pipeline row assumes `LHR → DXB`, not the full place name, which
+  is what the record itself shows.
+- People screens (Employees, Customers) carry **one search box and no filter
+  pills** — the design gives them no status filter. Customers is
+  `Customer · Email · Phone · Orders · Status · View`.
+- The Messages screen opens the newest thread automatically above 940px; the
+  thread badge counts customer messages **waiting on a reply** (there is no
+  per-admin read receipt in the schema).
 - **Icons are the design's own `ico()` table, copied path-for-path** into the
   `GLYPHS` map in `icons.tsx` (24-box, 1.7px stroke, `currentColor`, round
   caps, no icon library). Do not redraw or "tidy" a glyph — the numbers *are*

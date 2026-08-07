@@ -6,7 +6,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { createClient } from "@/lib/supabase/client";
 import { listOrders } from "@/lib/actions/admin";
 import type { OrderStatus } from "@/lib/db/types";
-import { gbp, fmtDate, titleCase } from "@/lib/format";
+import { gbp, fmtDate, routeLabel, titleCase } from "@/lib/format";
 import { downloadCsv } from "@/lib/csv";
 import { cn } from "@/lib/utils";
 import {
@@ -333,15 +333,15 @@ export default function OrdersPage() {
                       {o.customer?.name ?? "—"}
                     </Td>
                     <Td>
-                      {o.route_from ?? "—"} → {o.route_to ?? "—"}
+                      {routeLabel(o.route_from, o.route_to)}
                     </Td>
                     <Td
                       className={cn(
                         "text-[12.5px]",
-                        o.travel_date ? "text-ink-700" : "text-ink-450"
+                        o.travel_date ? "text-ink-800" : "text-ink-500"
                       )}
                     >
-                      {o.travel_date ? fmtDate(o.travel_date) : "No date yet"}
+                      {o.travel_date ? fmtDate(o.travel_date) : "No travel date"}
                     </Td>
                     <Td align="right" className="text-[12.5px] tabular-nums">
                       {o.passengers ?? "—"}

@@ -60,6 +60,27 @@ export function fmtRelative(iso: string | null | undefined): string {
   return fmtDate(iso);
 }
 
+/**
+ * "London Heathrow (LHR)" → "LHR". The design writes routes as IATA codes so a
+ * pipeline row fits its column; the full place name still shows on the record.
+ * Falls back to the trimmed value when there is no code to pull out.
+ */
+export function placeCode(value: string | null | undefined): string {
+  if (!value) return "—";
+  const m = value.match(/\(([A-Za-z]{3})\)\s*$/);
+  if (m) return m[1].toUpperCase();
+  const bare = value.trim();
+  return /^[A-Za-z]{3}$/.test(bare) ? bare.toUpperCase() : bare;
+}
+
+/** "LHR → DXB", the design's route cell. */
+export function routeLabel(
+  from: string | null | undefined,
+  to: string | null | undefined
+): string {
+  return `${placeCode(from)} → ${placeCode(to)}`;
+}
+
 /** Capitalize the first letter of each word (for lowercase enum display). */
 export function titleCase(value: string): string {
   return value

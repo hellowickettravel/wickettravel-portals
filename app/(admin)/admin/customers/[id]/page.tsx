@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation";
 import { getCustomerDetail } from "@/lib/actions/admin";
 import { CustomerDangerZone } from "@/components/admin/customer-danger-zone";
-import { gbp, fmtDate, fmtRelative, titleCase } from "@/lib/format";
+import { gbp, fmtDate, fmtRelative, routeLabel, titleCase } from "@/lib/format";
 import {
   BackLink,
   Btn,
@@ -108,7 +108,7 @@ export default async function AdminCustomerDetailPage({
           value={upcoming.length}
           meta={
             nextTrip
-              ? `${nextTrip.route_from ?? "—"} → ${nextTrip.route_to ?? "—"} on ${fmtDate(nextTrip.travel_date)}`
+              ? `${routeLabel(nextTrip.route_from, nextTrip.route_to)} on ${fmtDate(nextTrip.travel_date)}`
               : "Nothing booked yet"
           }
         />
@@ -155,7 +155,7 @@ export default async function AdminCustomerDetailPage({
                 key={o.id}
                 href={`/admin/orders/${o.id}`}
                 reference={o.order_number}
-                who={`${o.route_from ?? "—"} → ${o.route_to ?? "—"}`}
+                who={routeLabel(o.route_from, o.route_to)}
                 meta={`${titleCase(o.trip_type ?? "return")} · ${
                   o.travel_date ? fmtDate(o.travel_date) : "Date to confirm"
                 }`}

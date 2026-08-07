@@ -5,6 +5,8 @@ export type ConversationOverview = ConversationWithCustomer & {
   assignedEmployee: string | null;
   assignedEmployeeId: string | null;
   preview: string | null;
+  /** Customer messages received since the team last replied. */
+  waitingCount: number;
 };
 
 /**
@@ -88,16 +90,37 @@ export async function getConversationsOverview(): Promise<
 
   const { data: messages } = await supabase
     .from("messages")
-    .select("conversation_id, body, created_at")
+    .select("conversation_id, body, direction, created_at")
     .in("conversation_id", ids)
     .order("created_at", { ascending: false })
-    .returns<{ conversation_id: string; body: string; created_at: string }[]>();
+    .returns<
+      {
+        conversation_id: string;
+        body: string;
+        direction: "incoming" | "outgoing";
+        created_at: string;
+      }[]
+    >();
 
   const previewByConv = new Map<string, string>();
+  // "Awaiting a reply": customer messages that have arrived since the team last
+  // answered. There is no per-admin read receipt in the schema, so this — not a
+  // per-viewer unread count — is what the badge on a thread means.
+  const waitingByConv = new Map<string, number>();
+  const answeredByConv = new Set<string>();
   for (const m of messages ?? []) {
     if (!previewByConv.has(m.conversation_id)) {
       previewByConv.set(m.conversation_id, m.body);
     }
+    if (answeredByConv.has(m.conversation_id)) continue;
+    if (m.direction === "outgoing") {
+      answeredByConv.add(m.conversation_id);
+      continue;
+    }
+    waitingByConv.set(
+      m.conversation_id,
+      (waitingByConv.get(m.conversation_id) ?? 0) + 1
+    );
   }
 
   return base.map((c) => ({
@@ -105,6 +128,7 @@ export async function getConversationsOverview(): Promise<
     assignedEmployee: employeeByConv.get(c.id) ?? null,
     assignedEmployeeId: employeeIdByConv.get(c.id) ?? null,
     preview: previewByConv.get(c.id) ?? null,
+    waitingCount: waitingByConv.get(c.id) ?? 0,
   }));
 }
 

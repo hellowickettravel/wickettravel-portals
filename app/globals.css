@@ -154,6 +154,7 @@
   --color-ok-bg: oklch(0.945 0.048 158); /* "Completed" */
   --color-ok-ink: oklch(0.430 0.100 158);
   --color-ok-wash: oklch(0.974 0.022 158);
+  --color-ok-edge: oklch(0.86 0.07 158); /* completed step dot ring */
   --color-teal-bg: oklch(0.945 0.040 205);
   --color-teal-ink: oklch(0.470 0.095 220);
   --color-violet-bg: oklch(0.945 0.038 292);

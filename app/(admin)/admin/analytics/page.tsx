@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { getOrders } from "@/lib/db/orders";
-import { gbp } from "@/lib/format";
+import { gbp, routeLabel } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import {
   Card,
@@ -209,7 +209,7 @@ export default async function AnalyticsPage({
   const routeCounts = new Map<string, number>();
   for (const o of inRange) {
     if (!o.route_from || !o.route_to) continue;
-    const k = `${o.route_from} → ${o.route_to}`;
+    const k = routeLabel(o.route_from, o.route_to);
     routeCounts.set(k, (routeCounts.get(k) ?? 0) + 1);
   }
   const topRoutes = [...routeCounts.entries()]

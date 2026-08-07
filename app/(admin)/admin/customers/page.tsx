@@ -38,21 +38,12 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { listCustomersWithStats, createCustomer } from "@/lib/actions/admin";
-import type { OrderStatus } from "@/lib/db/types";
 import { downloadCsv } from "@/lib/csv";
 import { fmtDate } from "@/lib/format";
 import { cn } from "@/lib/utils";
 
 const CUSTOMERS_KEY = ["admin", "customers", "list"] as const;
 const PAGE_SIZE = 5;
-
-const STATUS_TABS: { label: string; value: "all" | OrderStatus }[] = [
-  { label: "All", value: "all" },
-  { label: "New", value: "new" },
-  { label: "In progress", value: "in_progress" },
-  { label: "Completed", value: "completed" },
-  { label: "Cancelled", value: "cancelled" },
-];
 
 export default function AdminCustomersPage() {
   const router = useRouter();
@@ -71,7 +62,6 @@ export default function AdminCustomersPage() {
   const [password, setPassword] = useState("");
   const [waPhone, setWaPhone] = useState("");
   const [showPassword, setShowPassword] = useState(false);
-  const [statusTab, setStatusTab] = useState<"all" | OrderStatus>("all");
 
   const createMutation = useMutation({
     mutationFn: createCustomer,
@@ -110,30 +100,23 @@ export default function AdminCustomersPage() {
       ),
     [data]
   );
-  // Filter by order status first (customers with a matching order), then let the
-  // shared controls handle name/phone search + paging over the narrowed set.
-  const statusFiltered = useMemo(
-    () =>
-      statusTab === "all"
-        ? all
-        : all.filter((c) => c.orderStatuses.includes(statusTab)),
-    [all, statusTab]
-  );
   const [search, setSearch] = useState(topSearch);
   const [limit, setLimit] = useState(PAGE_SIZE);
 
   const rows = useMemo(() => {
     const q = search.trim().toLowerCase();
-    if (!q) return statusFiltered;
-    return statusFiltered.filter((c) =>
-      `${c.name ?? ""} ${c.wa_phone ?? ""}`.toLowerCase().includes(q)
+    if (!q) return all;
+    return all.filter((c) =>
+      `${c.name ?? ""} ${c.email ?? ""} ${c.wa_phone ?? ""}`
+        .toLowerCase()
+        .includes(q)
     );
-  }, [statusFiltered, search]);
+  }, [all, search]);
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setLimit(PAGE_SIZE);
-  }, [search, statusTab]);
+  }, [search]);
 
   const visible = rows.slice(0, limit);
   const remaining = Math.max(0, rows.length - limit);
@@ -141,9 +124,10 @@ export default function AdminCustomersPage() {
   function exportCsv() {
     downloadCsv(
       "customers.csv",
-      ["Name", "Phone", "Has account", "Orders", "Conversations", "Created"],
+      ["Name", "Email", "Phone", "Has account", "Orders", "Conversations", "Created"],
       all.map((c) => [
         c.name ?? "",
+        c.email ?? "",
         c.wa_phone ?? "",
         c.profile_id ? "Yes" : "No",
         c.orderCount,
@@ -173,25 +157,8 @@ export default function AdminCustomersPage() {
       />
 
       <DesignCard>
-        <div className="border-line-soft flex flex-wrap items-center justify-between gap-3 border-b px-5 py-4">
-          <div className="flex flex-wrap gap-2">
-            {STATUS_TABS.map((t) => (
-              <button
-                key={t.value}
-                type="button"
-                onClick={() => setStatusTab(t.value)}
-                aria-pressed={statusTab === t.value}
-                className={cn(
-                  "flex h-[34px] shrink-0 items-center gap-2 rounded-full border px-4 text-[13px] font-medium whitespace-nowrap outline-none",
-                  statusTab === t.value
-                    ? "border-ink-800 bg-ink-800 text-white"
-                    : "border-line-field text-ink-700 hover:bg-surface-1 bg-white"
-                )}
-              >
-                {t.label}
-              </button>
-            ))}
-          </div>
+        {/* The design gives a people screen one control: the search box. */}
+        <div className="border-line-soft border-b px-5 py-4">
           <input
             type="search"
             value={search}
@@ -232,10 +199,7 @@ export default function AdminCustomersPage() {
                 </Btn>
               ) : (
                 <Btn
-                  onClick={() => {
-                    setSearch("");
-                    setStatusTab("all");
-                  }}
+                  onClick={() => setSearch("")}
                 >
                   Clear all filters
                 </Btn>
@@ -248,9 +212,9 @@ export default function AdminCustomersPage() {
               <DTable min={900}>
                 <Thead>
                   <Th>Customer</Th>
+                  <Th>Email</Th>
                   <Th>Phone</Th>
                   <Th>Orders</Th>
-                  <Th>Conversations</Th>
                   <Th>Status</Th>
                   <Th align="right" />
                 </Thead>
@@ -274,13 +238,13 @@ export default function AdminCustomersPage() {
                           </Link>
                         </Td>
                         <Td className="text-ink-600 text-[13px]">
+                          {c.email ?? "—"}
+                        </Td>
+                        <Td className="text-ink-600 text-[13px]">
                           {c.wa_phone ?? "—"}
                         </Td>
                         <Td className="font-semibold tabular-nums">
                           {c.orderCount}
-                        </Td>
-                        <Td className="font-semibold tabular-nums">
-                          {c.conversationCount}
                         </Td>
                         <Td>
                           <Pill tone={c.profile_id ? "ok" : "ink"}>
