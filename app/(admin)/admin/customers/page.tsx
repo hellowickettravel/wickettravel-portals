@@ -164,16 +164,16 @@ export default function AdminCustomersPage() {
       />
 
       <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-        <div className="flex items-center gap-1 overflow-x-auto rounded-xl bg-muted p-1">
+        <div className="flex flex-wrap items-center gap-2">
           {STATUS_TABS.map((t) => (
             <button
               key={t.value}
               onClick={() => setStatusTab(t.value)}
               className={cn(
-                "shrink-0 rounded-lg px-3.5 py-1.5 text-sm font-medium transition-colors",
+                "flex h-[34px] shrink-0 items-center gap-2 rounded-full border px-4 text-[13px] font-medium whitespace-nowrap outline-none transition-colors",
                 statusTab === t.value
-                  ? "bg-primary text-primary-foreground shadow-sm"
-                  : "text-muted-foreground hover:text-foreground"
+                  ? "border-ink-800 bg-ink-800 text-white"
+                  : "border-line-field text-ink-800 hover:bg-surface-1 bg-white"
               )}
             >
               {t.label}
@@ -181,12 +181,12 @@ export default function AdminCustomersPage() {
           ))}
         </div>
         <div className="relative lg:w-80">
-          <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+          <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-ink-600" />
           <Input
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Search by name or phone…"
-            className="h-10 rounded-[10px] bg-card pl-9"
+            className="h-10 rounded-[10px] bg-white pl-9"
           />
         </div>
       </div>
@@ -197,18 +197,18 @@ export default function AdminCustomersPage() {
             <TableSkeleton rows={6} columns={5} />
           </div>
         ) : isError ? (
-          <p className="px-6 py-10 text-center text-sm text-muted-foreground">
+          <p className="px-6 py-10 text-center text-sm text-ink-600">
             Couldn’t load customers. Refresh to try again.
           </p>
         ) : all.length === 0 ? (
           <div className="flex flex-col items-center gap-2 px-6 py-14 text-center">
-            <div className="flex size-12 items-center justify-center rounded-2xl bg-chip text-brand-dark">
+            <div className="flex size-12 items-center justify-center rounded-[12px] bg-marine-tint text-marine-600">
               <Contact className="size-6" />
             </div>
-            <p className="font-display text-base font-semibold text-foreground">
+            <p className="font-poppins text-base font-semibold text-ink-800">
               No customers yet
             </p>
-            <p className="max-w-sm text-sm text-muted-foreground">
+            <p className="max-w-sm text-sm text-ink-600">
               Customers appear here once they sign up or message in.
             </p>
             <Button className="mt-2" onClick={() => setOpen(true)}>
@@ -221,17 +221,17 @@ export default function AdminCustomersPage() {
             {/* Mobile cards */}
             <div className="space-y-3 p-4 md:hidden">
               {visible.length === 0 ? (
-                <p className="py-8 text-center text-sm text-muted-foreground">
+                <p className="py-8 text-center text-sm text-ink-600">
                   No customers match your search.
                 </p>
               ) : (
                 visible.map((c) => (
                   <Link key={c.id} href={`/admin/customers/${c.id}`} className="block">
                     <MobileRecordCard
-                      title={<span className="text-navy">{c.name || "Unnamed"}</span>}
+                      title={<span className="text-ink-900">{c.name || "Unnamed"}</span>}
                       subtitle={c.wa_phone ?? "No phone"}
                       action={
-                        <span className="inline-flex items-center gap-0.5 text-xs font-medium text-brand">
+                        <span className="inline-flex items-center gap-0.5 text-xs font-medium text-marine-600">
                           View
                           <ChevronRight className="size-4" />
                         </span>
@@ -273,16 +273,16 @@ export default function AdminCustomersPage() {
                       className="cursor-pointer"
                       onClick={() => router.push(`/admin/customers/${c.id}`)}
                     >
-                      <TableCell className="pl-6 font-medium text-navy">
+                      <TableCell className="pl-6 font-medium text-ink-900">
                         <Link
                           href={`/admin/customers/${c.id}`}
-                          className="hover:text-brand"
+                          className="hover:text-marine-600"
                           onClick={(e) => e.stopPropagation()}
                         >
                           {c.name || "Unnamed"}
                         </Link>
                       </TableCell>
-                      <TableCell className="text-muted-foreground">
+                      <TableCell className="text-ink-600">
                         {c.wa_phone ?? "—"}
                       </TableCell>
                       <TableCell>
@@ -296,7 +296,7 @@ export default function AdminCustomersPage() {
                       <TableCell className="text-center tabular-nums">
                         {c.conversationCount}
                       </TableCell>
-                      <TableCell className="text-muted-foreground">
+                      <TableCell className="text-ink-600">
                         {fmtDate(c.created_at)}
                       </TableCell>
                       <TableCell
@@ -305,7 +305,7 @@ export default function AdminCustomersPage() {
                       >
                         <Link
                           href={`/admin/customers/${c.id}`}
-                          className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-card px-3 py-1.5 text-sm font-medium text-foreground transition-colors hover:border-brand hover:text-brand"
+                          className="inline-flex items-center gap-1.5 rounded-lg border border-line-base bg-white px-3 py-1.5 text-sm font-medium text-ink-800 transition-colors hover:border-marine-500 hover:text-marine-600"
                         >
                           <Eye className="size-4" />
                           View
@@ -317,7 +317,7 @@ export default function AdminCustomersPage() {
                     <TableRow>
                       <TableCell
                         colSpan={7}
-                        className="py-10 text-center text-sm text-muted-foreground"
+                        className="py-10 text-center text-sm text-ink-600"
                       >
                         No customers match your search.
                       </TableCell>
@@ -328,7 +328,7 @@ export default function AdminCustomersPage() {
             </div>
 
             {hasMore ? (
-              <div className="flex justify-center border-t border-border p-4">
+              <div className="flex justify-center border-t border-line-base p-4">
                 <Button variant="outline" size="sm" onClick={loadMore}>
                   Load more ({total - visible.length} more)
                 </Button>
@@ -342,7 +342,7 @@ export default function AdminCustomersPage() {
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle className="font-display">Add Customer</DialogTitle>
+            <DialogTitle className="font-poppins">Add Customer</DialogTitle>
             <DialogDescription>
               Creates a portal login so the customer can sign in straight away.
             </DialogDescription>
@@ -350,7 +350,7 @@ export default function AdminCustomersPage() {
 
           <form onSubmit={handleCreate} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="cust-name" className="font-label text-xs font-medium uppercase tracking-wider text-slate-600">
+              <Label htmlFor="cust-name" className="text-ink-500 text-[11px] font-medium uppercase tracking-[0.09em]">
                 Full name
               </Label>
               <Input
@@ -360,11 +360,11 @@ export default function AdminCustomersPage() {
                 placeholder="John Doe"
                 required
                 disabled={createMutation.isPending}
-                className="h-10 rounded-[10px] bg-neutral-soft"
+                className="h-10 rounded-[10px] bg-surface-1"
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="cust-email" className="font-label text-xs font-medium uppercase tracking-wider text-slate-600">
+              <Label htmlFor="cust-email" className="text-ink-500 text-[11px] font-medium uppercase tracking-[0.09em]">
                 Email
               </Label>
               <Input
@@ -375,12 +375,12 @@ export default function AdminCustomersPage() {
                 placeholder="john@example.com"
                 required
                 disabled={createMutation.isPending}
-                className="h-10 rounded-[10px] bg-neutral-soft"
+                className="h-10 rounded-[10px] bg-surface-1"
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="cust-phone" className="font-label text-xs font-medium uppercase tracking-wider text-slate-600">
-                Phone number <span className="font-normal normal-case tracking-normal text-muted-foreground">(optional)</span>
+              <Label htmlFor="cust-phone" className="text-ink-500 text-[11px] font-medium uppercase tracking-[0.09em]">
+                Phone number <span className="font-normal normal-case tracking-normal text-ink-600">(optional)</span>
               </Label>
               <Input
                 id="cust-phone"
@@ -389,11 +389,11 @@ export default function AdminCustomersPage() {
                 onChange={(e) => setWaPhone(e.target.value)}
                 placeholder="+44 7700 900000"
                 disabled={createMutation.isPending}
-                className="h-10 rounded-[10px] bg-neutral-soft"
+                className="h-10 rounded-[10px] bg-surface-1"
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="cust-pass" className="font-label text-xs font-medium uppercase tracking-wider text-slate-600">
+              <Label htmlFor="cust-pass" className="text-ink-500 text-[11px] font-medium uppercase tracking-[0.09em]">
                 Temporary password
               </Label>
               <div className="relative">
@@ -406,13 +406,13 @@ export default function AdminCustomersPage() {
                   required
                   minLength={8}
                   disabled={createMutation.isPending}
-                  className="h-10 rounded-[10px] bg-neutral-soft pr-10"
+                  className="h-10 rounded-[10px] bg-surface-1 pr-10"
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword((s) => !s)}
                   aria-label={showPassword ? "Hide password" : "Show password"}
-                  className="absolute right-2 top-1/2 -translate-y-1/2 rounded-md p-1 text-muted-foreground transition-colors hover:text-foreground"
+                  className="absolute right-2 top-1/2 -translate-y-1/2 rounded-md p-1 text-ink-600 transition-colors hover:text-ink-800"
                 >
                   {showPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
                 </button>

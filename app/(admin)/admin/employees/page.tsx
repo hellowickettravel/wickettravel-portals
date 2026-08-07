@@ -206,7 +206,7 @@ export default function EmployeesPage() {
     <DropdownMenu>
       <DropdownMenuTrigger
         aria-label={`Actions for ${emp.full_name || "employee"}`}
-        className="inline-flex size-9 items-center justify-center rounded-lg text-muted-foreground outline-none transition-colors hover:bg-muted hover:text-foreground focus-visible:ring-[3px] focus-visible:ring-brand/25"
+        className="inline-flex size-9 items-center justify-center rounded-lg text-ink-600 outline-none transition-colors hover:bg-neutral-bg hover:text-ink-800 focus-visible:ring-[3px] focus-visible:ring-brand/25"
       >
         <MoreHorizontal className="size-4" />
       </DropdownMenuTrigger>
@@ -268,12 +268,12 @@ export default function EmployeesPage() {
 
       {all.length > 0 ? (
         <div className="relative sm:w-80">
-          <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+          <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-ink-600" />
           <Input
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Search by name or email…"
-            className="h-10 rounded-[10px] bg-card pl-9"
+            className="h-10 rounded-[10px] bg-white pl-9"
           />
         </div>
       ) : null}
@@ -284,18 +284,18 @@ export default function EmployeesPage() {
             <TableSkeleton rows={5} columns={6} />
           </div>
         ) : isError ? (
-          <p className="px-6 py-10 text-center text-sm text-muted-foreground">
+          <p className="px-6 py-10 text-center text-sm text-ink-600">
             Couldn’t load employees. Refresh to try again.
           </p>
         ) : all.length === 0 ? (
           <div className="flex flex-col items-center gap-2 px-6 py-14 text-center">
-            <div className="flex size-12 items-center justify-center rounded-2xl bg-chip text-brand-dark">
+            <div className="flex size-12 items-center justify-center rounded-[12px] bg-marine-tint text-marine-600">
               <UserPlus className="size-6" />
             </div>
-            <p className="font-display text-base font-semibold text-foreground">
+            <p className="font-poppins text-base font-semibold text-ink-800">
               No employees yet
             </p>
-            <p className="max-w-sm text-sm text-muted-foreground">
+            <p className="max-w-sm text-sm text-ink-600">
               Add your first team member to give them portal access.
             </p>
             <Button className="mt-2" onClick={() => setOpen(true)}>
@@ -313,7 +313,7 @@ export default function EmployeesPage() {
                   <MobileRecordCard
                     key={emp.id}
                     title={
-                      <Link href={`/admin/employees/${emp.id}`} className="hover:text-brand">
+                      <Link href={`/admin/employees/${emp.id}`} className="hover:text-marine-600">
                         <UserCell name={emp.full_name || "Unnamed"} />
                       </Link>
                     }
@@ -365,13 +365,13 @@ export default function EmployeesPage() {
                         <TableCell className="pl-6">
                           <Link
                             href={`/admin/employees/${emp.id}`}
-                            className="hover:text-brand"
+                            className="hover:text-marine-600"
                             onClick={(e) => e.stopPropagation()}
                           >
                             <UserCell name={emp.full_name || "Unnamed"} />
                           </Link>
                         </TableCell>
-                        <TableCell className="text-muted-foreground">
+                        <TableCell className="text-ink-600">
                           {emp.email ?? "—"}
                         </TableCell>
                         <TableCell>
@@ -384,7 +384,7 @@ export default function EmployeesPage() {
                             {emp.is_active ? "Active" : "Inactive"}
                           </StatusBadge>
                         </TableCell>
-                        <TableCell className="text-muted-foreground">
+                        <TableCell className="text-ink-600">
                           {fmtDate(emp.created_at)}
                         </TableCell>
                         <TableCell
@@ -401,7 +401,7 @@ export default function EmployeesPage() {
             </div>
 
             {hasMore ? (
-              <div className="flex justify-center border-t border-border p-4">
+              <div className="flex justify-center border-t border-line-base p-4">
                 <Button variant="outline" size="sm" onClick={loadMore}>
                   Load more ({total - visible.length} more)
                 </Button>
@@ -415,7 +415,7 @@ export default function EmployeesPage() {
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle className="font-display">Add Employee</DialogTitle>
+            <DialogTitle className="font-poppins">Add Employee</DialogTitle>
             <DialogDescription>
               Creates a login and team member with the access level you choose.
             </DialogDescription>
@@ -423,7 +423,7 @@ export default function EmployeesPage() {
 
           <form onSubmit={handleCreate} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="emp-name" className="font-label text-xs font-medium uppercase tracking-wider text-slate-600">
+              <Label htmlFor="emp-name" className="text-ink-500 text-[11px] font-medium uppercase tracking-[0.09em]">
                 Full name
               </Label>
               <Input
@@ -433,11 +433,11 @@ export default function EmployeesPage() {
                 placeholder="Jane Smith"
                 required
                 disabled={createMutation.isPending}
-                className="h-10 rounded-[10px] bg-neutral-soft"
+                className="h-10 rounded-[10px] bg-surface-1"
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="emp-email" className="font-label text-xs font-medium uppercase tracking-wider text-slate-600">
+              <Label htmlFor="emp-email" className="text-ink-500 text-[11px] font-medium uppercase tracking-[0.09em]">
                 Email
               </Label>
               <Input
@@ -448,11 +448,11 @@ export default function EmployeesPage() {
                 placeholder="jane@wicket.co.uk"
                 required
                 disabled={createMutation.isPending}
-                className="h-10 rounded-[10px] bg-neutral-soft"
+                className="h-10 rounded-[10px] bg-surface-1"
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="emp-access" className="font-label text-xs font-medium uppercase tracking-wider text-slate-600">
+              <Label htmlFor="emp-access" className="text-ink-500 text-[11px] font-medium uppercase tracking-[0.09em]">
                 Access level
               </Label>
               <select
@@ -460,7 +460,7 @@ export default function EmployeesPage() {
                 value={accessLevel}
                 onChange={(e) => setAccessLevel(e.target.value as AccessLevel)}
                 disabled={createMutation.isPending}
-                className="h-10 w-full rounded-[10px] border border-input bg-neutral-soft px-3 text-sm text-foreground outline-none transition-[color,box-shadow,border-color] duration-150 focus-visible:border-brand focus-visible:ring-[3px] focus-visible:ring-brand/25"
+                className="h-10 w-full rounded-[10px] border border-input bg-surface-1 px-3 text-sm text-ink-800 outline-none transition-[color,box-shadow,border-color] duration-150 focus-visible:border-marine-500 focus-visible:ring-[3px] focus-visible:ring-brand/25"
               >
                 {ACCESS_LEVELS.map((lvl) => (
                   <option key={lvl} value={lvl}>
@@ -470,7 +470,7 @@ export default function EmployeesPage() {
               </select>
             </div>
             <div className="space-y-2">
-              <Label htmlFor="emp-pass" className="font-label text-xs font-medium uppercase tracking-wider text-slate-600">
+              <Label htmlFor="emp-pass" className="text-ink-500 text-[11px] font-medium uppercase tracking-[0.09em]">
                 Temporary password
               </Label>
               <div className="relative">
@@ -483,13 +483,13 @@ export default function EmployeesPage() {
                   required
                   minLength={8}
                   disabled={createMutation.isPending}
-                  className="h-10 rounded-[10px] bg-neutral-soft pr-10"
+                  className="h-10 rounded-[10px] bg-surface-1 pr-10"
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword((s) => !s)}
                   aria-label={showPassword ? "Hide password" : "Show password"}
-                  className="absolute right-2 top-1/2 -translate-y-1/2 rounded-md p-1 text-muted-foreground transition-colors hover:text-foreground"
+                  className="absolute right-2 top-1/2 -translate-y-1/2 rounded-md p-1 text-ink-600 transition-colors hover:text-ink-800"
                 >
                   {showPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
                 </button>
@@ -524,7 +524,7 @@ export default function EmployeesPage() {
       <Dialog open={editing !== null} onOpenChange={(o) => !o && setEditing(null)}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle className="font-display">Edit employee</DialogTitle>
+            <DialogTitle className="font-poppins">Edit employee</DialogTitle>
             <DialogDescription>
               Update this team member’s details and access level.
             </DialogDescription>
@@ -543,7 +543,7 @@ export default function EmployeesPage() {
             }}
           >
             <div className="space-y-2">
-              <Label htmlFor="edit-name" className="font-label text-xs font-medium uppercase tracking-wider text-slate-600">
+              <Label htmlFor="edit-name" className="text-ink-500 text-[11px] font-medium uppercase tracking-[0.09em]">
                 Full name
               </Label>
               <Input
@@ -553,11 +553,11 @@ export default function EmployeesPage() {
                 placeholder="Jane Smith"
                 required
                 disabled={editMutation.isPending}
-                className="h-10 rounded-[10px] bg-neutral-soft"
+                className="h-10 rounded-[10px] bg-surface-1"
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="edit-email" className="font-label text-xs font-medium uppercase tracking-wider text-slate-600">
+              <Label htmlFor="edit-email" className="text-ink-500 text-[11px] font-medium uppercase tracking-[0.09em]">
                 Email
               </Label>
               <Input
@@ -568,11 +568,11 @@ export default function EmployeesPage() {
                 placeholder="jane@wicket.co.uk"
                 required
                 disabled={editMutation.isPending}
-                className="h-10 rounded-[10px] bg-neutral-soft"
+                className="h-10 rounded-[10px] bg-surface-1"
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="edit-access" className="font-label text-xs font-medium uppercase tracking-wider text-slate-600">
+              <Label htmlFor="edit-access" className="text-ink-500 text-[11px] font-medium uppercase tracking-[0.09em]">
                 Access level
               </Label>
               <select
@@ -580,7 +580,7 @@ export default function EmployeesPage() {
                 value={editAccess}
                 onChange={(e) => setEditAccess(e.target.value as AccessLevel)}
                 disabled={editMutation.isPending}
-                className="h-10 w-full rounded-[10px] border border-input bg-neutral-soft px-3 text-sm text-foreground outline-none transition-[color,box-shadow,border-color] duration-150 focus-visible:border-brand focus-visible:ring-[3px] focus-visible:ring-brand/25"
+                className="h-10 w-full rounded-[10px] border border-input bg-surface-1 px-3 text-sm text-ink-800 outline-none transition-[color,box-shadow,border-color] duration-150 focus-visible:border-marine-500 focus-visible:ring-[3px] focus-visible:ring-brand/25"
               >
                 {ACCESS_LEVELS.map((lvl) => (
                   <option key={lvl} value={lvl}>

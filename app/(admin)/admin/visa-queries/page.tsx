@@ -36,7 +36,7 @@ const ENQUIRIES_KEY = ["admin", "visa-enquiries", "list"] as const;
 const PAGE_SIZE = 12;
 
 const selectClass =
-  "h-10 rounded-[10px] border border-input bg-card px-3 text-sm text-foreground outline-none transition-colors focus-visible:border-brand focus-visible:ring-[3px] focus-visible:ring-brand/25";
+  "border-line-field text-ink-800 focus:border-marine-500 focus:shadow-[0_0_0_3px_var(--color-marine-200)] h-10 w-full cursor-pointer rounded-[10px] border bg-white px-3.5 text-[13.5px] font-normal outline-none transition-[border-color,box-shadow] duration-[130ms] disabled:opacity-50";
 
 const STATUS_TABS: { label: string; value: "all" | VisaEnquiryStatus }[] = [
   { label: "All", value: "all" },
@@ -100,16 +100,16 @@ export default function AdminVisaQueriesPage() {
       />
 
       <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-        <div className="flex items-center gap-1 overflow-x-auto rounded-xl bg-muted p-1">
+        <div className="flex flex-wrap items-center gap-2">
           {STATUS_TABS.map((t) => (
             <button
               key={t.value}
               onClick={() => setStatusTab(t.value)}
               className={cn(
-                "shrink-0 rounded-lg px-3.5 py-1.5 text-sm font-medium transition-colors",
+                "flex h-[34px] shrink-0 items-center gap-2 rounded-full border px-4 text-[13px] font-medium whitespace-nowrap outline-none transition-colors",
                 statusTab === t.value
-                  ? "bg-primary text-primary-foreground shadow-sm"
-                  : "text-muted-foreground hover:text-foreground"
+                  ? "border-ink-800 bg-ink-800 text-white"
+                  : "border-line-field text-ink-800 hover:bg-surface-1 bg-white"
               )}
             >
               {t.label}
@@ -132,13 +132,13 @@ export default function AdminVisaQueriesPage() {
             ))}
           </select>
           <div className="relative sm:w-72">
-            <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+            <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-ink-600" />
             <Input
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               aria-label="Search visa enquiries by name, email or reference"
               placeholder="Search name, email or reference…"
-              className="h-10 rounded-[10px] bg-card pl-9"
+              className="h-10 rounded-[10px] bg-white pl-9"
             />
           </div>
         </div>
@@ -150,19 +150,19 @@ export default function AdminVisaQueriesPage() {
             <TableSkeleton rows={6} columns={6} />
           </div>
         ) : isError ? (
-          <p className="px-6 py-10 text-center text-sm text-muted-foreground">
+          <p className="px-6 py-10 text-center text-sm text-ink-600">
             Couldn’t load visa enquiries. If this is a fresh setup, run
             APPLY_VISA_ENQUIRIES.sql in the Supabase SQL editor first.
           </p>
         ) : all.length === 0 ? (
           <div className="flex flex-col items-center gap-2 px-6 py-14 text-center">
-            <div className="flex size-12 items-center justify-center rounded-2xl bg-chip text-brand-dark">
+            <div className="flex size-12 items-center justify-center rounded-[12px] bg-marine-tint text-marine-600">
               <Stamp className="size-6" />
             </div>
-            <p className="font-display text-base font-semibold text-foreground">
+            <p className="font-poppins text-base font-semibold text-ink-800">
               No visa enquiries yet
             </p>
-            <p className="max-w-sm text-sm text-muted-foreground">
+            <p className="max-w-sm text-sm text-ink-600">
               Applications submitted through the website’s Dubai visa form will
               appear here the moment they arrive.
             </p>
@@ -172,7 +172,7 @@ export default function AdminVisaQueriesPage() {
             {/* Mobile cards */}
             <div className="space-y-3 p-4 md:hidden">
               {visible.length === 0 ? (
-                <p className="py-8 text-center text-sm text-muted-foreground">
+                <p className="py-8 text-center text-sm text-ink-600">
                   No enquiries match your filters.
                 </p>
               ) : (
@@ -186,13 +186,13 @@ export default function AdminVisaQueriesPage() {
                     >
                       <MobileRecordCard
                         title={
-                          <span className="text-navy">
+                          <span className="text-ink-900">
                             {e.first_name} {e.last_name}
                           </span>
                         }
                         subtitle={e.reference_number}
                         action={
-                          <span className="inline-flex items-center gap-0.5 text-xs font-medium text-brand">
+                          <span className="inline-flex items-center gap-0.5 text-xs font-medium text-marine-600">
                             View
                             <ChevronRight className="size-4" />
                           </span>
@@ -241,27 +241,27 @@ export default function AdminVisaQueriesPage() {
                         className="cursor-pointer"
                         onClick={() => router.push(`/admin/visa-queries/${e.id}`)}
                       >
-                        <TableCell className="pl-6 font-medium tabular-nums text-navy">
+                        <TableCell className="pl-6 font-medium tabular-nums text-ink-900">
                           {e.reference_number}
                         </TableCell>
                         <TableCell>
-                          <span className="block font-medium text-foreground">
+                          <span className="block font-medium text-ink-800">
                             {e.first_name} {e.last_name}
                           </span>
-                          <span className="block text-xs text-muted-foreground">
+                          <span className="block text-xs text-ink-600">
                             {e.email}
                           </span>
                         </TableCell>
-                        <TableCell className="text-muted-foreground">
+                        <TableCell className="text-ink-600">
                           {e.visa_type}
                         </TableCell>
                         <TableCell>
-                          <span className="inline-flex items-center gap-1.5 text-sm text-muted-foreground">
-                            <contact.Icon className="size-4 text-brand" />
+                          <span className="inline-flex items-center gap-1.5 text-sm text-ink-600">
+                            <contact.Icon className="size-4 text-marine-600" />
                             {contact.label}
                           </span>
                         </TableCell>
-                        <TableCell className="text-muted-foreground">
+                        <TableCell className="text-ink-600">
                           {fmtDate(e.created_at)}
                         </TableCell>
                         <TableCell>
@@ -275,7 +275,7 @@ export default function AdminVisaQueriesPage() {
                         >
                           <Link
                             href={`/admin/visa-queries/${e.id}`}
-                            className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-card px-3 py-1.5 text-sm font-medium text-foreground transition-colors hover:border-brand hover:text-brand"
+                            className="inline-flex items-center gap-1.5 rounded-lg border border-line-base bg-white px-3 py-1.5 text-sm font-medium text-ink-800 transition-colors hover:border-marine-500 hover:text-marine-600"
                           >
                             <Eye className="size-4" />
                             View
@@ -288,7 +288,7 @@ export default function AdminVisaQueriesPage() {
                     <TableRow>
                       <TableCell
                         colSpan={7}
-                        className="py-10 text-center text-sm text-muted-foreground"
+                        className="py-10 text-center text-sm text-ink-600"
                       >
                         No enquiries match your filters.
                       </TableCell>
@@ -299,7 +299,7 @@ export default function AdminVisaQueriesPage() {
             </div>
 
             {hasMore ? (
-              <div className="flex justify-center border-t border-border p-4">
+              <div className="flex justify-center border-t border-line-base p-4">
                 <Button variant="outline" size="sm" onClick={loadMore}>
                   Load more ({total - visible.length} more)
                 </Button>

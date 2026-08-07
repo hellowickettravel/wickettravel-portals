@@ -38,7 +38,7 @@ import { fmtDate, fmtRelative } from "@/lib/format";
 import { cn } from "@/lib/utils";
 
 const selectClass =
-  "h-10 rounded-[10px] border border-input bg-card px-3 text-sm text-foreground outline-none transition-colors focus-visible:border-brand focus-visible:ring-[3px] focus-visible:ring-brand/25";
+  "border-line-field text-ink-800 focus:border-marine-500 focus:shadow-[0_0_0_3px_var(--color-marine-200)] h-10 w-full cursor-pointer rounded-[10px] border bg-white px-3.5 text-[13.5px] font-normal outline-none transition-[border-color,box-shadow] duration-[130ms] disabled:opacity-50";
 
 /** One label/value pair inside a section's definition grid. */
 function Field({
@@ -52,10 +52,10 @@ function Field({
 }) {
   return (
     <div className={cn("min-w-0", wide && "sm:col-span-2")}>
-      <dt className="font-label text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
+      <dt className="text-ink-500 text-[11px] font-medium uppercase tracking-[0.09em]">
         {label}
       </dt>
-      <dd className="mt-1 whitespace-pre-wrap break-words text-sm text-foreground">
+      <dd className="mt-1 whitespace-pre-wrap break-words text-sm text-ink-800">
         {value == null || value === "" ? "—" : value}
       </dd>
     </div>
@@ -157,28 +157,28 @@ export function VisaEnquiryDetail({ detail }: { detail: Detail }) {
     <div className="space-y-5">
       <Link
         href="/admin/visa-queries"
-        className="inline-flex items-center gap-1.5 text-sm font-medium text-brand transition-colors hover:text-brand-dark"
+        className="inline-flex items-center gap-1.5 text-sm font-medium text-marine-600 transition-colors hover:text-marine-600"
       >
         <ArrowLeft className="size-4" />
         Back to visa queries
       </Link>
 
       {/* Header */}
-      <div className="flex flex-col gap-4 rounded-2xl border border-border bg-card p-5 shadow-card sm:flex-row sm:items-center sm:justify-between">
+      <div className="flex flex-col gap-4 rounded-[12px] border border-line-base bg-white p-5 shadow-[0_1px_2px_oklch(0.205_0.038_258_/_0.04)] sm:flex-row sm:items-center sm:justify-between">
         <div className="flex items-center gap-3">
-          <div className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-chip text-brand-dark">
+          <div className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-marine-tint text-marine-600">
             <Stamp className="size-5" />
           </div>
           <div className="leading-tight">
             <div className="flex flex-wrap items-center gap-2">
-              <p className="font-display text-lg font-semibold text-navy">
+              <p className="font-poppins text-lg font-semibold text-ink-900">
                 Enquiry {enquiry.reference_number}
               </p>
               <StatusBadge tone={VISA_STATUS_TONE[status]}>
                 {VISA_STATUS_LABELS[status]}
               </StatusBadge>
             </div>
-            <p className="text-sm text-muted-foreground">
+            <p className="text-sm text-ink-600">
               {fullName} · {enquiry.visa_type} · Submitted{" "}
               {fmtDate(enquiry.created_at)}
             </p>
@@ -188,7 +188,7 @@ export function VisaEnquiryDetail({ detail }: { detail: Detail }) {
         <div className="flex items-center gap-2">
           <label
             htmlFor="enquiry-status"
-            className="font-label text-[11px] font-medium uppercase tracking-wider text-slate-600"
+            className="text-ink-500 text-[11px] font-medium uppercase tracking-[0.09em]"
           >
             Status
           </label>
@@ -215,12 +215,12 @@ export function VisaEnquiryDetail({ detail }: { detail: Detail }) {
       >
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div className="space-y-1 text-sm">
-            <p className="flex items-center gap-2 text-foreground">
-              <Mail className="size-4 text-brand" />
+            <p className="flex items-center gap-2 text-ink-800">
+              <Mail className="size-4 text-marine-600" />
               {enquiry.email}
             </p>
-            <p className="flex items-center gap-2 text-foreground">
-              <Phone className="size-4 text-brand" />
+            <p className="flex items-center gap-2 text-ink-800">
+              <Phone className="size-4 text-marine-600" />
               {enquiry.phone}
             </p>
           </div>
@@ -360,8 +360,8 @@ export function VisaEnquiryDetail({ detail }: { detail: Detail }) {
           description="Uploaded with the application. Links are private, short-lived signed URLs."
         >
           {enquiry.additional_notes ? (
-            <div className="mb-4 rounded-xl bg-neutral-soft p-3.5 text-sm text-foreground">
-              <p className="font-label mb-1 text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
+            <div className="mb-4 rounded-xl bg-surface-1 p-3.5 text-sm text-ink-800">
+              <p className="text-ink-500 mb-1 text-[11px] font-medium uppercase tracking-[0.09em]">
                 Applicant’s note
               </p>
               <p className="whitespace-pre-wrap break-words">
@@ -370,7 +370,7 @@ export function VisaEnquiryDetail({ detail }: { detail: Detail }) {
             </div>
           ) : null}
           {documents.length === 0 ? (
-            <p className="text-sm text-muted-foreground">
+            <p className="text-sm text-ink-600">
               No documents were uploaded.
             </p>
           ) : (
@@ -378,16 +378,16 @@ export function VisaEnquiryDetail({ detail }: { detail: Detail }) {
               {documents.map((doc) => (
                 <li
                   key={doc.url}
-                  className="flex items-center gap-3 rounded-xl border border-border bg-card p-3"
+                  className="flex items-center gap-3 rounded-xl border border-line-base bg-white p-3"
                 >
-                  <div className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-chip text-brand-dark">
+                  <div className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-marine-tint text-marine-600">
                     <FileText className="size-4" />
                   </div>
                   <div className="min-w-0 flex-1">
-                    <p className="truncate text-sm font-medium text-foreground">
+                    <p className="truncate text-sm font-medium text-ink-800">
                       {doc.name}
                     </p>
-                    <p className="text-xs text-muted-foreground">
+                    <p className="text-xs text-ink-600">
                       {fmtBytes(doc.size)}
                     </p>
                   </div>
@@ -427,18 +427,18 @@ export function VisaEnquiryDetail({ detail }: { detail: Detail }) {
         >
           <div className="space-y-4">
             {notes.length === 0 ? (
-              <p className="text-sm text-muted-foreground">No notes yet.</p>
+              <p className="text-sm text-ink-600">No notes yet.</p>
             ) : (
               <ul className="space-y-2.5">
                 {notes.map((note) => (
                   <li
                     key={note.id}
-                    className="rounded-xl bg-neutral-soft p-3.5"
+                    className="rounded-xl bg-surface-1 p-3.5"
                   >
-                    <p className="whitespace-pre-wrap break-words text-sm text-foreground">
+                    <p className="whitespace-pre-wrap break-words text-sm text-ink-800">
                       {note.body}
                     </p>
-                    <p className="mt-1.5 text-xs text-muted-foreground">
+                    <p className="mt-1.5 text-xs text-ink-600">
                       {fmtRelative(note.created_at)}
                     </p>
                   </li>
@@ -449,7 +449,7 @@ export function VisaEnquiryDetail({ detail }: { detail: Detail }) {
             <form onSubmit={saveNote} className="space-y-2.5">
               <Label
                 htmlFor="new-note"
-                className="font-label text-xs font-medium uppercase tracking-wider text-slate-600"
+                className="text-ink-500 text-[11px] font-medium uppercase tracking-[0.09em]"
               >
                 Add a note
               </Label>
@@ -461,7 +461,7 @@ export function VisaEnquiryDetail({ detail }: { detail: Detail }) {
                 rows={3}
                 maxLength={2000}
                 disabled={noteBusy}
-                className="rounded-[10px] bg-neutral-soft"
+                className="rounded-[10px] bg-surface-1"
               />
               <div className="flex justify-end">
                 <Button

@@ -77,6 +77,72 @@
   --color-hero-navy: oklch(0.320 0.060 256);
   --color-hero-tint: oklch(0.300 0.055 256 / 0.22);
 
+  /* ---------------------------------------------------------------
+     ADMIN PORTAL — extends the Marine / Ink / Ember namespace above
+     with the interior tokens from the Claude Design "Admin Portal All
+     Pages" file. Same rule as the auth block: this is a separate
+     namespace from the navy/orange portal tokens, so the employee,
+     customer and driver shells are untouched.
+     --------------------------------------------------------------- */
+  --color-ink-800: oklch(0.290 0.028 258); /* card titles, primary cell */
+  --color-ink-850: oklch(0.265 0.030 258); /* field values */
+  --color-ink-880: oklch(0.235 0.032 258); /* display figures */
+  --color-ink-950: oklch(0.205 0.038 258); /* sidebar, scrim, shadow ink */
+  --color-ink-tertiary: oklch(0.585 0.014 258); /* micro uppercase labels */
+  --color-ink-quiet: oklch(0.620 0.020 258);
+  --color-ink-hush: oklch(0.660 0.018 258); /* chat role labels */
+
+  --color-line-strong: oklch(0.884 0.024 259); /* table head rule */
+  --color-line-base: oklch(0.912 0.016 259); /* card border */
+  --color-line-field: oklch(0.906 0.015 262); /* input + button border */
+  --color-line-soft: oklch(0.940 0.011 255); /* inner rules */
+  --color-line-faint: oklch(0.930 0.012 259);
+  --color-line-hair: oklch(0.933 0.011 259);
+
+  --color-surface-1: oklch(0.983 0.003 258); /* inset field fill, row hover */
+  --color-surface-2: oklch(0.980 0.006 256); /* table head fill */
+  --color-surface-3: oklch(0.990 0.002 258); /* field card fill */
+  --color-surface-4: oklch(0.991 0.002 258);
+  --color-surface-5: oklch(0.981 0.009 250); /* boarding-pass stub */
+  --color-canvas: oklch(0.976 0.005 255); /* app background */
+
+  --color-marine-50: oklch(0.972 0.016 252); /* wash / soft tint */
+  --color-marine-row: oklch(0.975 0.013 252); /* table row hover */
+  --color-marine-line: oklch(0.905 0.036 252);
+  --color-marine-edge: oklch(0.800 0.070 252); /* selected card border */
+  --color-marine-soft: oklch(0.968 0.020 252);
+  --color-marine-icon: oklch(0.560 0.075 250); /* form label glyphs */
+  --color-marine-head: oklch(0.640 0.045 252); /* card header glyphs */
+  --color-marine-mute: oklch(0.645 0.030 250);
+
+  --color-nav-heading: oklch(0.760 0.050 250);
+  --color-nav-ink: oklch(0.890 0.030 255);
+
+  --color-warn-bg: oklch(0.958 0.048 82); /* "In progress" */
+  --color-warn-ink: oklch(0.470 0.105 72);
+  --color-warn-wash: oklch(0.978 0.022 82);
+  --color-ok-bg: oklch(0.945 0.048 158); /* "Completed" */
+  --color-ok-ink: oklch(0.430 0.100 158);
+  --color-ok-wash: oklch(0.974 0.022 158);
+  --color-teal-bg: oklch(0.945 0.040 205);
+  --color-teal-ink: oklch(0.470 0.095 220);
+  --color-violet-bg: oklch(0.945 0.038 292);
+  --color-violet-ink: oklch(0.470 0.135 292);
+  --color-neutral-bg: oklch(0.945 0.005 258); /* "Cancelled" */
+  --color-neutral-wash: oklch(0.970 0.003 258);
+
+  --color-danger-bg: oklch(0.955 0.028 25);
+  --color-danger-ink: oklch(0.455 0.160 25);
+  --color-danger-line: oklch(0.898 0.050 25);
+  --color-danger-edge: oklch(0.925 0.035 25);
+  --color-danger-rim: oklch(0.885 0.055 25);
+  --color-danger-wash: oklch(0.975 0.018 25);
+  --color-danger-mist: oklch(0.985 0.010 25);
+  --color-danger-chip: oklch(0.940 0.038 25);
+  --color-danger-ring: oklch(0.930 0.045 25);
+  --color-danger-strong: oklch(0.520 0.190 25);
+  --color-danger-title: oklch(0.400 0.150 25);
+
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
@@ -283,6 +349,510 @@
     .auth-root select {
       min-height: 44px;
     }
+  }
+}
+
+/* =========================================================
+   ADMIN PORTAL SCOPE — the "Admin Portal All Pages" design's own
+   base layer. Same contract as .auth-root above: everything the
+   design declares on <body> is reproduced here under .admin-root so
+   /admin matches it 1:1 while the employee, customer and driver
+   shells keep the navy/orange system.
+   ========================================================= */
+@layer base {
+  .admin-root {
+    font-family: var(--font-instrument-sans), system-ui, sans-serif;
+    line-height: 1.5;
+    letter-spacing: 0;
+    color: var(--color-ink-700);
+    background: var(--color-canvas);
+    -webkit-font-smoothing: antialiased;
+  }
+  .admin-root a {
+    color: var(--color-marine-500);
+    text-decoration: none;
+  }
+  .admin-root a:hover {
+    color: var(--color-marine-600);
+    text-decoration: underline;
+  }
+  .admin-root ::placeholder {
+    color: var(--color-ink-500);
+    font-weight: 400;
+  }
+  .admin-root :focus-visible {
+    outline: 2px solid var(--color-marine-500) !important;
+    outline-offset: 2px;
+  }
+  @media (max-width: 639px) {
+    /* The design exempts icon-only buttons and switches: they are already
+       square targets and growing them would break the control they sit in. */
+    .admin-root button:not([role="switch"]):not([aria-label]),
+    .admin-root input:not([type="checkbox"]):not([type="radio"]),
+    .admin-root select,
+    .admin-root textarea {
+      min-height: 44px;
+    }
+  }
+}
+
+/* ---------------------------------------------------------------
+   Shared admin primitives — two skins, one component.
+
+   PageHeader, SectionCard, StatCard, StatusBadge and UserCell are
+   imported by the employee and customer portals as well as /admin.
+   The base rules below are the locked navy/orange look those portals
+   have always had; the `.admin-root` overrides put the Admin Portal
+   design on the very same markup. Neither portal had to fork a
+   component, and neither one leaks into the other.
+   --------------------------------------------------------------- */
+@layer components {
+  /* ---- page header ---- */
+  .wt-eyebrow {
+    font-family: var(--font-jakarta), system-ui, sans-serif;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--brand);
+  }
+  .wt-page-title {
+    font-family: var(--font-jakarta), system-ui, sans-serif;
+    font-size: 20px;
+    font-weight: 600;
+    letter-spacing: -0.02em;
+    color: var(--navy);
+  }
+  .wt-page-sub {
+    font-size: 14px;
+    color: var(--muted-foreground);
+  }
+  .admin-root .wt-eyebrow {
+    font-family: var(--font-instrument-sans), system-ui, sans-serif;
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.13em;
+    color: var(--color-ember-700);
+  }
+  .admin-root .wt-page-title {
+    font-family: var(--font-poppins-sans), system-ui, sans-serif;
+    font-size: clamp(20px, 1.5vw, 24px);
+    font-weight: 500;
+    line-height: 1.25;
+    color: var(--color-ink-900);
+  }
+  .admin-root .wt-page-sub {
+    font-size: 13.5px;
+    font-weight: 400;
+    color: var(--color-ink-600);
+  }
+
+  /* ---- section card ---- */
+  /* Base = the shadcn <Card> the portals have always used: xl radius, a
+     hairline ring rather than a border, and the project's shadow-card. */
+  .wt-card {
+    background: var(--card);
+    color: var(--card-foreground);
+    border-radius: calc(var(--radius) * 1.4);
+    box-shadow:
+      0 0 0 1px rgb(from var(--foreground) r g b / 0.1),
+      0 1px 2px 0 rgb(30 58 95 / 0.05),
+      0 6px 18px -4px rgb(30 58 95 / 0.1);
+    overflow: hidden;
+  }
+  .wt-card-head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 16px 16px 0;
+  }
+  .wt-card-title {
+    font-family: var(--font-jakarta), system-ui, sans-serif;
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--foreground);
+  }
+  .wt-card-desc {
+    font-size: 13px;
+    color: var(--muted-foreground);
+  }
+  .wt-card-body {
+    padding: 16px;
+  }
+  .wt-card-body[data-flush="true"] {
+    padding: 16px 0 0;
+  }
+  .admin-root .wt-card {
+    border-radius: 12px;
+    border: 1px solid var(--color-line-base);
+    box-shadow: 0 1px 2px oklch(0.205 0.038 258 / 0.04);
+    background: #fff;
+    color: var(--color-ink-700);
+  }
+  .admin-root .wt-card-head {
+    align-items: center;
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--color-line-soft);
+  }
+  .admin-root .wt-card-title {
+    font-family: var(--font-instrument-sans), system-ui, sans-serif;
+    font-size: 13.5px;
+    font-weight: 600;
+    letter-spacing: -0.008em;
+    color: var(--color-ink-800);
+  }
+  .admin-root .wt-card-desc {
+    font-size: 12px;
+    color: var(--color-ink-600);
+  }
+  .admin-root .wt-card-body {
+    padding: 20px;
+  }
+  .admin-root .wt-card-body[data-flush="true"] {
+    padding: 0;
+  }
+
+  /* ---- stat / KPI card ---- */
+  .wt-stat-chip {
+    background: var(--chip);
+    color: var(--brand-dark);
+    border-radius: calc(var(--radius) * 1.4);
+  }
+  .wt-stat-label {
+    font-size: 12px;
+    font-weight: 500;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    color: var(--muted-foreground);
+  }
+  .wt-stat-value {
+    font-family: var(--font-jakarta), system-ui, sans-serif;
+    font-size: 24px;
+    font-weight: 600;
+    color: var(--foreground);
+  }
+  .wt-stat-hint {
+    font-size: 12px;
+    color: var(--muted-foreground);
+  }
+  .admin-root .wt-stat-chip {
+    background: var(--color-marine-50);
+    color: var(--color-marine-600);
+    border-radius: 10px;
+  }
+  .admin-root .wt-stat-label {
+    font-size: 11px;
+    letter-spacing: 0.11em;
+    color: var(--color-ink-600);
+  }
+  .admin-root .wt-stat-value {
+    font-family: var(--font-poppins-sans), system-ui, sans-serif;
+    font-size: 24px;
+    font-weight: 500;
+    line-height: 1;
+    letter-spacing: -0.022em;
+    font-variant-numeric: tabular-nums;
+    color: var(--color-ink-880);
+  }
+  .admin-root .wt-stat-hint {
+    font-size: 11.5px;
+    color: var(--color-ink-600);
+  }
+
+  /* ---- status pill ---- */
+  .wt-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    border-radius: 999px;
+    padding: 4px 10px;
+    font-size: 12px;
+    font-weight: 500;
+    white-space: nowrap;
+  }
+  .wt-pill-dot {
+    width: 5px;
+    height: 5px;
+    border-radius: 999px;
+  }
+  .wt-pill[data-tone="blue"] {
+    background: var(--chip);
+    color: var(--brand-dark);
+  }
+  .wt-pill[data-tone="blue"] .wt-pill-dot {
+    background: var(--brand);
+  }
+  .wt-pill[data-tone="green"] {
+    background: oklch(0.962 0.044 158);
+    color: oklch(0.45 0.12 158);
+  }
+  .wt-pill[data-tone="green"] .wt-pill-dot {
+    background: oklch(0.6 0.16 158);
+  }
+  .wt-pill[data-tone="amber"] {
+    background: oklch(0.968 0.056 90);
+    color: oklch(0.48 0.12 72);
+  }
+  .wt-pill[data-tone="amber"] .wt-pill-dot {
+    background: oklch(0.72 0.17 62);
+  }
+  .wt-pill[data-tone="red"] {
+    background: oklch(0.96 0.03 20);
+    color: oklch(0.48 0.18 22);
+  }
+  .wt-pill[data-tone="red"] .wt-pill-dot {
+    background: oklch(0.63 0.22 22);
+  }
+  .wt-pill[data-tone="slate"] {
+    background: oklch(0.958 0.005 258);
+    color: oklch(0.5 0.02 258);
+  }
+  .wt-pill[data-tone="slate"] .wt-pill-dot {
+    background: oklch(0.7 0.02 258);
+  }
+  .wt-pill[data-tone="violet"] {
+    background: oklch(0.955 0.03 300);
+    color: oklch(0.47 0.16 300);
+  }
+  .wt-pill[data-tone="violet"] .wt-pill-dot {
+    background: oklch(0.62 0.2 300);
+  }
+  /* The design's pills: tint fill + dark ink, no dot, 11px/500. */
+  .admin-root .wt-pill {
+    gap: 0;
+    padding: 4px 12px;
+    font-size: 11px;
+  }
+  .admin-root .wt-pill-dot {
+    display: none;
+  }
+  .admin-root .wt-pill[data-tone="blue"] {
+    background: var(--color-marine-tint);
+    color: var(--color-marine-600);
+  }
+  .admin-root .wt-pill[data-tone="green"] {
+    background: var(--color-ok-bg);
+    color: var(--color-ok-ink);
+  }
+  .admin-root .wt-pill[data-tone="amber"] {
+    background: var(--color-warn-bg);
+    color: var(--color-warn-ink);
+  }
+  .admin-root .wt-pill[data-tone="red"] {
+    background: var(--color-danger-bg);
+    color: var(--color-danger-ink);
+  }
+  .admin-root .wt-pill[data-tone="slate"] {
+    background: var(--color-neutral-bg);
+    color: var(--color-ink-700);
+  }
+  .admin-root .wt-pill[data-tone="violet"] {
+    background: var(--color-violet-bg);
+    color: var(--color-violet-ink);
+  }
+
+  /* ---- filter chip bar (shared with the employee + customer portals) ---- */
+  .wt-chipbar {
+    background: var(--muted);
+  }
+  .wt-chip {
+    border-radius: calc(var(--radius) * 0.8);
+    padding: 6px 14px;
+    font-size: 14px;
+    font-weight: 500;
+  }
+  .wt-chip.is-active {
+    background: var(--primary);
+    color: var(--primary-foreground);
+    box-shadow: 0 1px 2px rgb(30 58 95 / 0.08);
+  }
+  .wt-chip.is-idle {
+    color: var(--muted-foreground);
+  }
+  .wt-chip.is-idle:hover {
+    color: var(--foreground);
+  }
+  .wt-chip-count-on {
+    background: rgb(255 255 255 / 0.25);
+    color: #fff;
+  }
+  .wt-chip-count-off {
+    background: var(--chip);
+    color: var(--brand-dark);
+  }
+  /* The design drops the segmented track: chips become free-standing pills,
+     with the selected one filled in solid ink so it never competes with the
+     ember CTA. */
+  .admin-root .wt-chipbar {
+    gap: 8px;
+    padding: 0;
+    background: transparent;
+    flex-wrap: wrap;
+  }
+  .admin-root .wt-chip {
+    height: 34px;
+    padding: 0 16px;
+    border-radius: 999px;
+    border: 1px solid var(--color-line-field);
+    background: #fff;
+    font-size: 13px;
+    color: var(--color-ink-800);
+  }
+  .admin-root .wt-chip.is-active {
+    border-color: var(--color-ink-800);
+    background: var(--color-ink-800);
+    color: #fff;
+    box-shadow: none;
+  }
+  .admin-root .wt-chip.is-idle:hover {
+    background: var(--color-surface-1);
+    color: var(--color-ink-800);
+  }
+  .admin-root .wt-chip-count-on,
+  .admin-root .wt-chip-count-off {
+    background: transparent;
+    padding: 0;
+    font-weight: 500;
+    opacity: 0.66;
+    color: inherit;
+  }
+
+  /* ---- user cell ---- */
+  .wt-avatar-fallback {
+    background: var(--chip);
+    color: var(--brand-dark);
+  }
+  .admin-root .wt-avatar-fallback {
+    background: var(--color-marine-tint);
+    color: var(--color-marine-600);
+  }
+  .wt-user-name {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--foreground);
+  }
+  .wt-user-sub {
+    font-size: 12px;
+    color: var(--muted-foreground);
+  }
+  .admin-root .wt-user-name {
+    font-size: 13px;
+    color: var(--color-ink-800);
+  }
+  .admin-root .wt-user-sub {
+    font-size: 11.5px;
+    color: var(--color-ink-600);
+  }
+}
+
+/* ---------------------------------------------------------------
+   Shared shadcn controls, retuned to the design *inside /admin only*.
+   The admin screens still use <Button>, <Input>, <Textarea> and
+   <Table> in places where the surrounding logic isn't worth
+   rewriting; these rules put the design's control system (pill
+   buttons, 10px rectangles, 40px md height, one focus ring, 52px
+   rows) on them without touching the employee, customer or driver
+   portals, which share the same components.
+   --------------------------------------------------------------- */
+@layer components {
+  .admin-root [data-slot="button"] {
+    border-radius: 999px;
+    font-size: 13px;
+    font-weight: 500;
+    letter-spacing: 0;
+  }
+  .admin-root [data-slot="button"]:not([class*="h-"]) {
+    height: 40px;
+    padding-inline: 20px;
+  }
+  .admin-root [data-slot="input"],
+  .admin-root [data-slot="textarea"],
+  .admin-root select {
+    border-radius: 10px;
+    border-color: var(--color-line-field);
+    background: #fff;
+    font-size: 13.5px;
+    font-weight: 400;
+    color: var(--color-ink-800);
+  }
+  .admin-root [data-slot="input"]:not([class*="h-"]) {
+    height: 40px;
+  }
+  .admin-root [data-slot="input"]:focus-visible,
+  .admin-root [data-slot="textarea"]:focus-visible,
+  .admin-root select:focus-visible {
+    border-color: var(--color-marine-500);
+    box-shadow: 0 0 0 3px var(--color-marine-200);
+  }
+  .admin-root [data-slot="table"] {
+    border-collapse: collapse;
+  }
+  .admin-root [data-slot="table-head"] {
+    height: 40px;
+    background: var(--color-surface-2);
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.09em;
+    text-transform: uppercase;
+    color: var(--color-ink-600);
+  }
+  .admin-root [data-slot="table-cell"] {
+    height: 52px;
+    font-size: 13px;
+    border-top: 1px solid var(--color-line-soft);
+  }
+  .admin-root [data-slot="table-row"]:hover {
+    background: var(--color-marine-row);
+  }
+  .admin-root [data-slot="card"] {
+    border-radius: 12px;
+    border-color: var(--color-line-base);
+    box-shadow: 0 1px 2px oklch(0.205 0.038 258 / 0.04);
+  }
+}
+
+/* Thin ink scrollbar on the design's scrollable panes. */
+@utility om-scroll {
+  &::-webkit-scrollbar {
+    height: 8px;
+    width: 8px;
+  }
+  &::-webkit-scrollbar-thumb {
+    background: var(--color-ink-300);
+    border-radius: 10px;
+  }
+}
+
+/* Scroll without a visible bar (the sidebar nav column). */
+@utility om-noscroll {
+  scrollbar-width: none;
+  &::-webkit-scrollbar {
+    width: 0;
+    height: 0;
+    display: none;
+  }
+}
+
+@keyframes wt-pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.45;
+  }
+}
+
+@keyframes wt-step {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
   }
 }
 

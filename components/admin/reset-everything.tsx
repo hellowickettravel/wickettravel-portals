@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useQueryClient } from "@tanstack/react-query";
-import { AlertTriangle, Loader2, ShieldAlert } from "lucide-react";
+import { AlertTriangle, Loader2, ShieldAlert, Check, X } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -103,43 +103,85 @@ export function ResetEverything() {
   }
 
   return (
-    <div className="rounded-2xl border-2 border-rose-300 bg-rose-50/60 p-5 sm:p-6">
-      <div className="flex items-start gap-3">
-        <div className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-rose-100 text-rose-600">
-          <ShieldAlert className="size-5" />
-        </div>
-        <div className="min-w-0">
-          <h3 className="font-display text-base font-semibold text-rose-700">
-            Danger zone — Reset everything
-          </h3>
-          <p className="mt-1 text-sm text-rose-700/80">
-            Permanently wipe the portal back to a fresh state. This{" "}
-            <strong>deletes every employee, customer, order, message,
-            conversation, support ticket and notification</strong>, removes all
-            customer/employee/other-admin logins, and empties all uploaded
-            attachments.
-          </p>
-          <p className="mt-2 text-sm text-rose-700/80">
-            <strong>Kept:</strong> your own admin account and your business
-            settings (name, email, phone, commission and logo). Everything else
-            is gone. <strong>This cannot be undone.</strong>
-          </p>
-        </div>
+    // The design gives the danger zone its own card: a danger-tinted header
+    // rule, then two columns that spell out exactly what is deleted and what
+    // survives, before the button is ever reachable.
+    <div className="border-danger-rim overflow-hidden rounded-[12px] border bg-white shadow-[0_1px_2px_oklch(0.455_0.160_25_/_0.06)]">
+      <div className="border-danger-edge bg-danger-wash flex items-center gap-3 border-b px-5 py-4">
+        <span className="bg-danger-chip text-danger-ink flex size-8 flex-none items-center justify-center rounded-[9px]">
+          <ShieldAlert className="size-[17px]" />
+        </span>
+        <h2 className="text-danger-title m-0 text-[13.5px] font-semibold tracking-[-0.008em]">
+          Danger zone
+        </h2>
       </div>
 
-      <div className="mt-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-end">
-        <Button
-          type="button"
-          variant="destructive"
-          className="w-full sm:w-auto"
-          onClick={() => {
-            reset();
-            setOpen(true);
-          }}
-        >
-          <AlertTriangle className="size-4" />
-          Reset everything
-        </Button>
+      <div className="flex flex-col gap-5 p-5">
+        <div className="flex flex-col gap-1.5">
+          <h3 className="text-ink-800 m-0 text-[15px] font-semibold tracking-[-0.012em]">
+            Reset everything
+          </h3>
+          <p className="text-ink-600 m-0 max-w-[72ch] text-[13px] leading-[1.6] font-normal text-pretty">
+            Permanently wipe the portal back to a fresh state. This cannot be
+            undone, and there is no backup once it runs.
+          </p>
+        </div>
+
+        <div className="grid grid-cols-[repeat(auto-fit,minmax(260px,1fr))] gap-4">
+          <div className="border-danger-edge bg-danger-mist flex flex-col gap-2.5 rounded-[10px] border p-4">
+            <span className="text-danger-ink text-[11px] font-semibold tracking-[0.11em] uppercase">
+              Deleted forever
+            </span>
+            {[
+              "Every employee, customer and their portal logins",
+              "Every order, its messages and attachments",
+              "Every conversation and message thread",
+              "Every support ticket and notification",
+              "All uploaded files in storage",
+            ].map((d) => (
+              <span
+                key={d}
+                className="text-ink-700 flex items-start gap-2.5 text-[12.5px] leading-[1.5] font-normal text-pretty"
+              >
+                <X className="text-danger-strong mt-[3px] size-3.5 flex-none" />
+                <span className="min-w-0 flex-1">{d}</span>
+              </span>
+            ))}
+          </div>
+          <div className="border-line-base bg-surface-1 flex flex-col gap-2.5 rounded-[10px] border p-4">
+            <span className="text-ok-ink text-[11px] font-semibold tracking-[0.11em] uppercase">
+              Kept
+            </span>
+            {[
+              "Your own admin account and password",
+              "Business profile — name, email, phone and address",
+              "Default commission rate and the uploaded logo",
+            ].map((k) => (
+              <span
+                key={k}
+                className="text-ink-700 flex items-start gap-2.5 text-[12.5px] leading-[1.5] font-normal text-pretty"
+              >
+                <Check className="text-ok-ink mt-[3px] size-3.5 flex-none" />
+                <span className="min-w-0 flex-1">{k}</span>
+              </span>
+            ))}
+          </div>
+        </div>
+
+        <div className="border-line-soft flex flex-wrap items-center justify-end gap-4 border-t pt-5">
+          <Button
+            type="button"
+            variant="destructive"
+            className="w-full sm:w-auto"
+            onClick={() => {
+              reset();
+              setOpen(true);
+            }}
+          >
+            <AlertTriangle className="size-4" />
+            Reset everything
+          </Button>
+        </div>
       </div>
 
       <Dialog open={open} onOpenChange={onOpenChange}>
@@ -147,7 +189,7 @@ export function ResetEverything() {
           {step === "form" ? (
             <>
               <DialogHeader>
-                <DialogTitle className="font-display text-rose-700">
+                <DialogTitle className="font-poppins text-danger-ink">
                   Reset everything?
                 </DialogTitle>
                 <DialogDescription>
@@ -161,9 +203,9 @@ export function ResetEverything() {
               <div className="space-y-4">
                 <div className="space-y-2">
                   <Label htmlFor="reset-confirm">
-                    <span className="font-label text-xs font-medium uppercase tracking-wider text-slate-600">
+                    <span className="text-ink-500 text-[11px] font-medium uppercase tracking-[0.09em]">
                       Type{" "}
-                      <span className="font-semibold text-rose-700">
+                      <span className="font-semibold text-danger-ink">
                         {CONFIRM_PHRASE}
                       </span>{" "}
                       to confirm
@@ -182,7 +224,7 @@ export function ResetEverything() {
 
                 <div className="space-y-2">
                   <Label htmlFor="reset-password">
-                    <span className="font-label text-xs font-medium uppercase tracking-wider text-slate-600">
+                    <span className="text-ink-500 text-[11px] font-medium uppercase tracking-[0.09em]">
                       Confirm your password
                     </span>
                   </Label>
@@ -221,7 +263,7 @@ export function ResetEverything() {
           ) : (
             <>
               <DialogHeader>
-                <DialogTitle className="font-display text-rose-700">
+                <DialogTitle className="font-poppins text-danger-ink">
                   Final confirmation
                 </DialogTitle>
                 <DialogDescription>

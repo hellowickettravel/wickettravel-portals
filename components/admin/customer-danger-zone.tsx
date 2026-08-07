@@ -37,12 +37,12 @@ export function CustomerDangerZone({
   }
 
   return (
-    <div className="flex flex-col gap-3 rounded-2xl border border-rose-200 bg-rose-50/50 p-5 sm:flex-row sm:items-center sm:justify-between">
+    <div className="flex flex-col gap-3 rounded-[12px] border border-rose-200 bg-rose-50/50 p-5 sm:flex-row sm:items-center sm:justify-between">
       <div>
-        <p className="font-display text-sm font-semibold text-rose-700">
+        <p className="font-poppins text-sm font-semibold text-rose-700">
           Danger zone
         </p>
-        <p className="text-xs text-muted-foreground">
+        <p className="text-xs text-ink-600">
           Permanently delete this customer and their chat history. Orders are
           kept for revenue history.
         </p>

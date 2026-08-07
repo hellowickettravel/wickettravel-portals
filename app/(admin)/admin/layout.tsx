@@ -1,33 +1,72 @@
+import { Suspense } from "react";
 import { redirect } from "next/navigation";
 import { getUserAndProfile, roleDashboardPath, isDeactivated } from "@/lib/auth";
 import { getBrandLogoUrl } from "@/lib/db/branding";
 import { countNewVisaEnquiries } from "@/lib/actions/visa";
 import { countNewParentTickets } from "@/lib/actions/parents-tickets";
-import { PortalShell, type NavItem } from "@/components/portal/portal-shell";
+import {
+  AdminShell,
+  type AdminNavSection,
+} from "@/components/admin/admin-shell";
 
-function buildNav(newVisaCount: number, newParentTicketCount: number): NavItem[] {
+/**
+ * The design's sidebar groups the twelve admin areas into four bands. The two
+ * queues carry live unactioned counts; everything else is a plain destination.
+ */
+function buildNav(
+  newVisaCount: number,
+  newParentTicketCount: number
+): AdminNavSection[] {
   return [
-    { label: "Dashboard", href: "/admin", icon: "LayoutDashboard", exact: true },
-    { label: "Employees", href: "/admin/employees", icon: "Users" },
-    { label: "Customers", href: "/admin/customers", icon: "Contact" },
-    { label: "Orders", href: "/admin/orders", icon: "ShoppingBag" },
-    { label: "Transactions", href: "/admin/transactions", icon: "Receipt" },
-    { label: "Messages", href: "/admin/messages", icon: "MessageSquare" },
     {
-      label: "Visa Queries",
-      href: "/admin/visa-queries",
-      icon: "Stamp",
-      badge: newVisaCount,
+      items: [
+        { label: "Dashboard", href: "/admin", icon: "dashboard", exact: true },
+      ],
     },
     {
-      label: "Parents Tickets",
-      href: "/admin/parents-tickets",
-      icon: "HeartHandshake",
-      badge: newParentTicketCount,
+      heading: "Work",
+      items: [
+        { label: "Orders", href: "/admin/orders", icon: "orders" },
+        { label: "Messages", href: "/admin/messages", icon: "messages" },
+        {
+          label: "Visa Queries",
+          href: "/admin/visa-queries",
+          icon: "visa",
+          count: newVisaCount,
+        },
+        {
+          label: "Parents Tickets",
+          href: "/admin/parents-tickets",
+          icon: "parents",
+          count: newParentTicketCount,
+        },
+        { label: "Support", href: "/admin/support", icon: "support" },
+      ],
     },
-    { label: "Analytics", href: "/admin/analytics", icon: "BarChart3" },
-    { label: "Support", href: "/admin/support", icon: "LifeBuoy" },
-    { label: "Settings", href: "/admin/settings", icon: "Settings" },
+    {
+      heading: "People",
+      items: [
+        { label: "Employees", href: "/admin/employees", icon: "employees" },
+        { label: "Customers", href: "/admin/customers", icon: "customers" },
+      ],
+    },
+    {
+      heading: "Business",
+      items: [
+        {
+          label: "Transactions",
+          href: "/admin/transactions",
+          icon: "transactions",
+        },
+        { label: "Analytics", href: "/admin/analytics", icon: "analytics" },
+        {
+          label: "Notifications",
+          href: "/admin/notifications",
+          icon: "notifications",
+        },
+        { label: "Settings", href: "/admin/settings", icon: "settings" },
+      ],
+    },
   ];
 }
 
@@ -58,15 +97,18 @@ export default async function AdminLayout({
   ]);
 
   return (
-    <PortalShell
-      navItems={buildNav(newVisaCount, newParentTicketCount)}
-      portalLabel="Admin Panel"
-      userName={userName}
-      roleLabel="Administrator"
-      userId={user.id}
-      logoUrl={logoUrl}
-    >
-      {children}
-    </PortalShell>
+    // AdminShell reads ?q= to seed the top-bar search, so it needs a Suspense
+    // boundary — useSearchParams opts its subtree out of static rendering.
+    <Suspense fallback={null}>
+      <AdminShell
+        sections={buildNav(newVisaCount, newParentTicketCount)}
+        userName={userName}
+        userEmail={user.email ?? ""}
+        userId={user.id}
+        logoUrl={logoUrl}
+      >
+        {children}
+      </AdminShell>
+    </Suspense>
   );
 }

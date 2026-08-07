@@ -19,14 +19,14 @@ import {
 
 function fieldLabel(text: string) {
   return (
-    <span className="font-label text-xs font-medium uppercase tracking-wider text-slate-600">
+    <span className="text-ink-500 text-[11px] font-medium uppercase tracking-[0.09em]">
       {text}
     </span>
   );
 }
 
 const selectClass =
-  "h-10 w-full rounded-[10px] border border-input bg-neutral-soft px-3 text-sm text-foreground outline-none transition-[color,box-shadow,border-color] duration-150 focus-visible:border-brand focus-visible:ring-[3px] focus-visible:ring-brand/25";
+  "border-line-field text-ink-800 focus:border-marine-500 focus:shadow-[0_0_0_3px_var(--color-marine-200)] h-10 w-full cursor-pointer rounded-[10px] border bg-white px-3.5 text-[13.5px] font-normal outline-none transition-[border-color,box-shadow] duration-[130ms] disabled:opacity-50";
 
 /**
  * Admin conversation-routing panel. Messaging is fully internal (Supabase
@@ -77,7 +77,7 @@ export function InboxTools() {
     <SectionCard
       title={
         <span className="inline-flex items-center gap-2">
-          <Route className="size-4 text-brand" />
+          <Route className="size-4 text-marine-600" />
           Route a conversation
         </span>
       }
@@ -95,10 +95,10 @@ export function InboxTools() {
             employeeId: assignEmp,
           });
         }}
-        className="max-w-xl space-y-3 rounded-xl border border-border bg-neutral-soft/40 p-4"
+        className="max-w-xl space-y-3 rounded-xl border border-line-base bg-surface-1/40 p-4"
       >
-        <p className="flex items-center gap-2 text-sm font-semibold text-foreground">
-          <UserCheck className="size-4 text-brand" />
+        <p className="flex items-center gap-2 text-sm font-semibold text-ink-800">
+          <UserCheck className="size-4 text-marine-600" />
           Assign a conversation
         </p>
         <div className="space-y-1.5">
@@ -151,7 +151,7 @@ export function InboxTools() {
           )}
         </Button>
         {convos.length === 0 ? (
-          <p className="text-xs text-muted-foreground">
+          <p className="text-xs text-ink-600">
             No conversations yet — they appear here once a customer messages you.
           </p>
         ) : null}

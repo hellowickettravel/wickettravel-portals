@@ -31,7 +31,7 @@ const SUBMITTERS = [
 type Submitter = (typeof SUBMITTERS)[number]["value"];
 
 const selectClass =
-  "h-10 rounded-[10px] border border-input bg-card px-3 text-sm text-foreground outline-none transition-colors focus-visible:border-brand focus-visible:ring-[3px] focus-visible:ring-brand/25";
+  "border-line-field text-ink-800 focus:border-marine-500 focus:shadow-[0_0_0_3px_var(--color-marine-200)] h-10 w-full cursor-pointer rounded-[10px] border bg-white px-3.5 text-[13.5px] font-normal outline-none transition-[border-color,box-shadow] duration-[130ms] disabled:opacity-50";
 
 export default function AdminSupportPage() {
   const queryClient = useQueryClient();
@@ -126,25 +126,25 @@ export default function AdminSupportPage() {
       />
 
       <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-        <div className="inline-flex items-center gap-1 rounded-xl bg-muted p-1">
+        <div className="flex flex-wrap items-center gap-2">
           {TABS.map((t) => (
             <button
               key={t}
               onClick={() => setTab(t)}
               className={cn(
-                "inline-flex items-center gap-1.5 rounded-lg px-3.5 py-1.5 text-sm font-medium transition-colors",
+                "inline-flex h-[34px] items-center gap-2 rounded-full border px-4 text-[13px] font-medium whitespace-nowrap outline-none transition-colors",
                 tab === t
-                  ? "bg-primary text-primary-foreground shadow-sm"
-                  : "text-muted-foreground hover:text-foreground"
+                  ? "border-ink-800 bg-ink-800 text-white"
+                  : "border-line-field text-ink-800 hover:bg-surface-1 bg-white"
               )}
             >
               {t}
               <span
                 className={cn(
-                  "rounded-full px-1.5 py-0.5 text-[11px] font-semibold tabular-nums",
+                  "text-[11px] font-medium tabular-nums opacity-[0.66]",
                   tab === t
-                    ? "bg-primary-foreground/20 text-primary-foreground"
-                    : "bg-card text-muted-foreground"
+                    ? "text-white"
+                    : "text-ink-600"
                 )}
               >
                 {tabCounts[t]}
@@ -154,8 +154,8 @@ export default function AdminSupportPage() {
         </div>
 
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-          <p className="order-last text-sm text-muted-foreground sm:order-first">
-            <span className="font-semibold text-foreground">{openCount}</span> open
+          <p className="order-last text-sm text-ink-600 sm:order-first">
+            <span className="font-semibold text-ink-800">{openCount}</span> open
           </p>
           <select
             aria-label="Filter by who raised the ticket"
@@ -170,13 +170,13 @@ export default function AdminSupportPage() {
             ))}
           </select>
           <div className="relative sm:w-72">
-            <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+            <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-ink-600" />
             <Input
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               aria-label="Search support tickets by subject, message or name"
               placeholder="Search subject, message or name…"
-              className="h-10 rounded-[10px] bg-card pl-9"
+              className="h-10 rounded-[10px] bg-white pl-9"
             />
           </div>
         </div>
@@ -188,28 +188,28 @@ export default function AdminSupportPage() {
             <TableSkeleton rows={5} columns={4} />
           </div>
         ) : isError ? (
-          <p className="px-6 py-10 text-center text-sm text-muted-foreground">
+          <p className="px-6 py-10 text-center text-sm text-ink-600">
             Couldn’t load tickets. Refresh to try again.
           </p>
         ) : tickets.length === 0 ? (
           <div className="flex flex-col items-center gap-2 px-6 py-14 text-center">
-            <div className="flex size-12 items-center justify-center rounded-2xl bg-chip text-brand-dark">
+            <div className="flex size-12 items-center justify-center rounded-[12px] bg-marine-tint text-marine-600">
               <LifeBuoy className="size-6" />
             </div>
-            <p className="font-display text-base font-semibold text-foreground">
+            <p className="font-poppins text-base font-semibold text-ink-800">
               No support tickets
             </p>
-            <p className="max-w-sm text-sm text-muted-foreground">
+            <p className="max-w-sm text-sm text-ink-600">
               When an employee or customer raises a query from their Support
               page, it lands here.
             </p>
           </div>
         ) : visible.length === 0 ? (
-          <p className="px-6 py-10 text-center text-sm text-muted-foreground">
+          <p className="px-6 py-10 text-center text-sm text-ink-600">
             No tickets match your filters.
           </p>
         ) : (
-          <ul className="divide-y divide-border">
+          <ul className="divide-y divide-line-soft">
             {visible.map((t) => {
               const resolved = t.status === "resolved";
               const busy =
@@ -219,7 +219,7 @@ export default function AdminSupportPage() {
                 <li key={t.id} className="flex flex-col gap-3 px-5 py-4 sm:flex-row sm:items-start sm:justify-between">
                   <div className="min-w-0 flex-1">
                     <div className="flex flex-wrap items-center gap-2">
-                      <p className="text-sm font-semibold text-foreground">
+                      <p className="text-sm font-semibold text-ink-800">
                         {t.subject}
                       </p>
                       <StatusBadge tone={resolved ? "green" : "amber"}>
@@ -231,7 +231,7 @@ export default function AdminSupportPage() {
                         {t.submitter_role === "customer" ? "Customer" : "Employee"}
                       </StatusBadge>
                     </div>
-                    <p className="mt-1 whitespace-pre-wrap text-sm text-muted-foreground">
+                    <p className="mt-1 whitespace-pre-wrap text-sm text-ink-600">
                       {t.message}
                     </p>
                     <div className="mt-2 flex items-center gap-2">
@@ -242,7 +242,7 @@ export default function AdminSupportPage() {
                             : t.employee?.full_name || "Employee"
                         }
                       />
-                      <span className="text-xs text-muted-foreground">
+                      <span className="text-xs text-ink-600">
                         · {fmtRelative(t.created_at)}
                       </span>
                     </div>

@@ -4,14 +4,12 @@ import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
-  ArrowLeft,
   Pencil,
   CheckCircle2,
   XCircle,
   RotateCcw,
   Loader2,
   MessageSquare,
-  Plane,
 } from "lucide-react";
 import { toast } from "sonner";
 import {
@@ -24,6 +22,8 @@ import {
 } from "@/components/ui/dialog";
 import { ConfirmDialog } from "@/components/portal/confirm-dialog";
 import { SectionCard } from "@/components/admin/section-card";
+import { BoardingPass } from "@/components/admin/boarding-pass";
+import { BackLink, type PillTone } from "@/components/admin/ui";
 import { StatusBadge, type Tone } from "@/components/admin/status-badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -47,14 +47,35 @@ const ORDER_TONE: Record<OrderStatus, Tone> = {
 };
 
 const selectClass =
-  "h-10 w-full rounded-[10px] border border-input bg-neutral-soft px-3 text-sm text-foreground outline-none transition-[color,box-shadow,border-color] duration-150 focus-visible:border-brand focus-visible:ring-[3px] focus-visible:ring-brand/25 disabled:opacity-50";
+  "border-line-field text-ink-800 focus:border-marine-500 focus:shadow-[0_0_0_3px_var(--color-marine-200)] h-10 w-full cursor-pointer rounded-[10px] border bg-white px-3.5 text-[13.5px] font-normal outline-none transition-[border-color,box-shadow] duration-[130ms] disabled:opacity-50";
 
 function fieldLabel(text: string) {
   return (
-    <span className="font-label text-xs font-medium uppercase tracking-wider text-slate-600">
+    <span className="text-ink-500 text-[11px] font-medium uppercase tracking-[0.09em]">
       {text}
     </span>
   );
+}
+
+/** Status → the design's pill tone, for the boarding-pass stub. */
+const PILL_TONE: Record<OrderStatus, PillTone> = {
+  new: "marine",
+  in_progress: "warn",
+  completed: "ok",
+  cancelled: "ink",
+};
+
+/** "2 adults · 1 child" — falls back to the legacy passenger count. */
+function paxSummary(
+  adults: number,
+  children: number,
+  passengers: number | null
+) {
+  const parts: string[] = [];
+  if (adults > 0) parts.push(`${adults} adult${adults === 1 ? "" : "s"}`);
+  if (children > 0) parts.push(`${children} child${children === 1 ? "" : "ren"}`);
+  if (parts.length > 0) return parts.join(" · ");
+  return passengers != null ? `${passengers}` : "—";
 }
 
 function parseNum(v: string): number | null {
@@ -73,8 +94,8 @@ function DataRow({
 }) {
   return (
     <div className="flex items-start justify-between gap-4 py-2.5">
-      <span className="text-sm text-muted-foreground">{label}</span>
-      <span className="text-right text-sm font-medium text-foreground">{value}</span>
+      <span className="text-sm text-ink-600">{label}</span>
+      <span className="text-right text-sm font-medium text-ink-800">{value}</span>
     </div>
   );
 }
@@ -186,38 +207,30 @@ export function OrderDetail({
   const assignmentDirty = (assignId || null) !== (order.assigned_employee_id ?? null);
 
   return (
-    <div className="space-y-5">
-      <Link
-        href="/admin/orders"
-        className="inline-flex items-center gap-1.5 text-sm font-medium text-brand transition-colors hover:text-brand-dark"
-      >
-        <ArrowLeft className="size-4" />
-        Back to orders
-      </Link>
+    <div className="flex max-w-[1240px] flex-col gap-6">
+      <BackLink href="/admin/orders">All orders</BackLink>
 
-      {/* Header */}
-      <div className="flex flex-col gap-4 rounded-2xl border border-border bg-card p-5 shadow-card sm:flex-row sm:items-center sm:justify-between">
-        <div className="flex items-center gap-3">
-          <div className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-chip text-brand-dark">
-            <Plane className="size-5 -rotate-45" />
+      {/* Header — reference + status, attribution line, and the status control */}
+      <div className="flex flex-wrap items-end justify-between gap-4">
+        <div className="min-w-0">
+          <div className="flex flex-wrap items-center gap-3">
+            <h1 className="font-poppins text-ink-900 m-0 text-[clamp(20px,1.5vw,24px)] leading-[1.25] font-medium tracking-[-0.02em] tabular-nums">
+              {order.order_number}
+            </h1>
+            <StatusBadge tone={ORDER_TONE[order.status]}>
+              {titleCase(order.status)}
+            </StatusBadge>
           </div>
-          <div className="leading-tight">
-            <div className="flex items-center gap-2">
-              <p className="font-display text-lg font-semibold text-navy">
-                Order {order.order_number}
-              </p>
-              <StatusBadge tone={ORDER_TONE[order.status]}>
-                {titleCase(order.status)}
-              </StatusBadge>
-            </div>
-            <p className="text-sm text-muted-foreground">
-              {order.route_from ?? "—"} → {order.route_to ?? "—"} ·{" "}
-              {order.customer?.name ?? "Unknown customer"}
-            </p>
-          </div>
+          <p className="text-ink-600 mt-1.5 text-[13.5px] font-normal">
+            {order.customer?.name ?? "Unknown customer"} · created by{" "}
+            {createdByLabel} on {fmtDate(order.created_at)} ·{" "}
+            {order.assigned_employee?.full_name
+              ? `assigned to ${order.assigned_employee.full_name}`
+              : "unassigned"}
+          </p>
         </div>
 
-        <div className="flex flex-wrap items-center gap-2">
+        <div className="flex flex-wrap items-center gap-3">
           <Button variant="outline" size="sm" onClick={() => setEditOpen(true)}>
             <Pencil className="size-4" />
             Edit
@@ -240,7 +253,7 @@ export function OrderDetail({
               <Button
                 variant="outline"
                 size="sm"
-                className="border-rose-300 text-rose-600 hover:bg-rose-100 hover:text-rose-700"
+                className="border-danger-line text-danger-ink hover:bg-danger-bg hover:text-danger-ink"
                 onClick={() => setCancelOpen(true)}
                 disabled={busy === "status"}
               >
@@ -265,13 +278,28 @@ export function OrderDetail({
         </div>
       </div>
 
-      <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
+      {/* The design leads the record with its boarding pass. */}
+      <BoardingPass
+        carrier={order.return_date ? "Return flight" : "One way"}
+        reference={order.order_number}
+        fromCode={order.route_from ?? "—"}
+        toCode={order.route_to ?? "—"}
+        departs={order.travel_date ? fmtDate(order.travel_date) : "Not set"}
+        returns={order.return_date ? fmtDate(order.return_date) : "—"}
+        cabin={order.cabin_class ? titleCase(order.cabin_class) : "Not set"}
+        passengers={paxSummary(order.adults, order.children, order.passengers)}
+        price={order.selling_price != null ? gbp(order.selling_price) : "—"}
+        statusLabel={titleCase(order.status)}
+        statusTone={PILL_TONE[order.status]}
+      />
+
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
         {/* Flight details (full Chunk 1 record) */}
         <FlightDetailsCard order={order} />
 
         {/* Pricing */}
         <SectionCard title="Pricing">
-          <div className="divide-y divide-border">
+          <div className="divide-y divide-line-soft">
             <DataRow
               label="Selling price"
               value={order.selling_price != null ? gbp(order.selling_price) : "—"}
@@ -293,14 +321,14 @@ export function OrderDetail({
 
         {/* Customer */}
         <SectionCard title="Customer">
-          <div className="divide-y divide-border">
+          <div className="divide-y divide-line-soft">
             <DataRow
               label="Name"
               value={
                 order.customer?.id ? (
                   <Link
                     href={`/admin/customers/${order.customer.id}`}
-                    className="text-brand hover:text-brand-dark"
+                    className="text-marine-600 hover:text-marine-600"
                   >
                     {order.customer.name || "View customer"}
                   </Link>
@@ -316,7 +344,7 @@ export function OrderDetail({
                 order.conversation_id ? (
                   <Link
                     href={`/admin/messages/${order.conversation_id}`}
-                    className="inline-flex items-center gap-1 text-brand hover:text-brand-dark"
+                    className="inline-flex items-center gap-1 text-marine-600 hover:text-marine-600"
                   >
                     <MessageSquare className="size-3.5" />
                     View chat
@@ -331,7 +359,7 @@ export function OrderDetail({
 
         {/* Attribution */}
         <SectionCard title="Attribution">
-          <div className="divide-y divide-border">
+          <div className="divide-y divide-line-soft">
             <DataRow label="Created by" value={createdByLabel} />
             <DataRow label="Created" value={fmtDate(order.created_at)} />
             <DataRow
@@ -376,7 +404,7 @@ export function OrderDetail({
 
       {order.notes ? (
         <SectionCard title="Internal notes">
-          <p className="whitespace-pre-wrap text-sm text-muted-foreground">
+          <p className="whitespace-pre-wrap text-sm text-ink-600">
             {order.notes}
           </p>
         </SectionCard>
@@ -393,7 +421,7 @@ export function OrderDetail({
       <Dialog open={editOpen} onOpenChange={(o) => busy !== "edit" && setEditOpen(o)}>
         <DialogContent className="sm:max-w-lg">
           <DialogHeader>
-            <DialogTitle className="font-display">Edit order</DialogTitle>
+            <DialogTitle className="font-poppins">Edit order</DialogTitle>
             <DialogDescription>
               Update trip and pricing details. Customer can&apos;t be changed here.
             </DialogDescription>
@@ -409,7 +437,7 @@ export function OrderDetail({
                   onChange={(e) => setRouteFrom(e.target.value)}
                   required
                   disabled={busy === "edit"}
-                  className="h-10 rounded-[10px] bg-neutral-soft"
+                  className="h-10 rounded-[10px] bg-surface-1"
                 />
               </div>
               <div className="space-y-2">
@@ -420,7 +448,7 @@ export function OrderDetail({
                   onChange={(e) => setRouteTo(e.target.value)}
                   required
                   disabled={busy === "edit"}
-                  className="h-10 rounded-[10px] bg-neutral-soft"
+                  className="h-10 rounded-[10px] bg-surface-1"
                 />
               </div>
             </div>
@@ -434,7 +462,7 @@ export function OrderDetail({
                   value={travelDate}
                   onChange={(e) => setTravelDate(e.target.value)}
                   disabled={busy === "edit"}
-                  className="h-10 rounded-[10px] bg-neutral-soft"
+                  className="h-10 rounded-[10px] bg-surface-1"
                 />
               </div>
               <div className="space-y-2">
@@ -445,7 +473,7 @@ export function OrderDetail({
                   value={returnDate}
                   onChange={(e) => setReturnDate(e.target.value)}
                   disabled={busy === "edit"}
-                  className="h-10 rounded-[10px] bg-neutral-soft"
+                  className="h-10 rounded-[10px] bg-surface-1"
                 />
               </div>
             </div>
@@ -460,7 +488,7 @@ export function OrderDetail({
                   value={passengers}
                   onChange={(e) => setPassengers(e.target.value)}
                   disabled={busy === "edit"}
-                  className="h-10 rounded-[10px] bg-neutral-soft"
+                  className="h-10 rounded-[10px] bg-surface-1"
                 />
               </div>
               <div className="space-y-2">
@@ -474,7 +502,7 @@ export function OrderDetail({
                   onChange={(e) => setSellingPrice(e.target.value)}
                   placeholder="0.00"
                   disabled={busy === "edit"}
-                  className="h-10 rounded-[10px] bg-neutral-soft"
+                  className="h-10 rounded-[10px] bg-surface-1"
                 />
               </div>
             </div>
@@ -491,7 +519,7 @@ export function OrderDetail({
                   onChange={(e) => setCostPrice(e.target.value)}
                   placeholder="0.00"
                   disabled={busy === "edit"}
-                  className="h-10 rounded-[10px] bg-neutral-soft"
+                  className="h-10 rounded-[10px] bg-surface-1"
                 />
               </div>
               <div className="space-y-2">
@@ -505,7 +533,7 @@ export function OrderDetail({
                   onChange={(e) => setCommission(e.target.value)}
                   placeholder="0.00"
                   disabled={busy === "edit"}
-                  className="h-10 rounded-[10px] bg-neutral-soft"
+                  className="h-10 rounded-[10px] bg-surface-1"
                 />
               </div>
             </div>
@@ -518,7 +546,7 @@ export function OrderDetail({
                 onChange={(e) => setNotes(e.target.value)}
                 rows={3}
                 disabled={busy === "edit"}
-                className="rounded-[10px] bg-neutral-soft"
+                className="rounded-[10px] bg-surface-1"
               />
             </div>
 

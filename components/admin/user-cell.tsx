@@ -8,6 +8,7 @@ function initialsOf(name: string) {
   return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
 }
 
+/** Name cell used in every people-shaped table. */
 export function UserCell({
   name,
   sub,
@@ -20,15 +21,13 @@ export function UserCell({
   return (
     <div className="flex items-center gap-2.5">
       <Avatar className={cn(size === "sm" ? "size-7" : "size-8")}>
-        <AvatarFallback className="bg-chip text-[11px] font-semibold text-brand-dark">
+        <AvatarFallback className="wt-avatar-fallback text-[11px] font-semibold">
           {initialsOf(name)}
         </AvatarFallback>
       </Avatar>
       <div className="min-w-0 leading-tight">
-        <p className="truncate text-sm font-medium text-foreground">{name}</p>
-        {sub ? (
-          <p className="truncate text-xs text-muted-foreground">{sub}</p>
-        ) : null}
+        <p className="wt-user-name m-0 truncate">{name}</p>
+        {sub ? <p className="wt-user-sub m-0 truncate">{sub}</p> : null}
       </div>
     </div>
   );

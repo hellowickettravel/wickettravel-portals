@@ -1,11 +1,4 @@
 import type { ReactNode } from "react";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 
 type SectionCardProps = {
@@ -18,7 +11,11 @@ type SectionCardProps = {
   flush?: boolean;
 };
 
-/** Titled card wrapper used across admin screens. */
+/**
+ * Titled card used across every portal. The skin is `.wt-card` in
+ * `globals.css`: navy/orange by default, and the Admin Portal design's
+ * 12px-radius, e1-elevation card with a ruled header inside `.admin-root`.
+ */
 export function SectionCard({
   title,
   description,
@@ -28,21 +25,21 @@ export function SectionCard({
   flush,
 }: SectionCardProps) {
   return (
-    <Card className={cn("shadow-card", className)}>
+    <div className={cn("wt-card", className)}>
       {title || action ? (
-        <CardHeader className="flex flex-row items-start justify-between gap-3">
-          <div className="space-y-1">
-            {title ? (
-              <CardTitle className="font-display text-base">{title}</CardTitle>
-            ) : null}
+        <div className="wt-card-head">
+          <div className="flex min-w-0 flex-col gap-[3px]">
+            {title ? <h2 className="wt-card-title m-0">{title}</h2> : null}
             {description ? (
-              <CardDescription>{description}</CardDescription>
+              <p className="wt-card-desc m-0 text-pretty">{description}</p>
             ) : null}
           </div>
           {action ? <div className="shrink-0">{action}</div> : null}
-        </CardHeader>
+        </div>
       ) : null}
-      <CardContent className={cn(flush && "px-0 pb-0")}>{children}</CardContent>
-    </Card>
+      <div className="wt-card-body" data-flush={flush ? "true" : undefined}>
+        {children}
+      </div>
+    </div>
   );
 }

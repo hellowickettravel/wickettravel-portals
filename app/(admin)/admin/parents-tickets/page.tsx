@@ -40,7 +40,7 @@ const TICKETS_KEY = ["admin", "parent-tickets", "list"] as const;
 const PAGE_SIZE = 12;
 
 const selectClass =
-  "h-10 rounded-[10px] border border-input bg-card px-3 text-sm text-foreground outline-none transition-colors focus-visible:border-brand focus-visible:ring-[3px] focus-visible:ring-brand/25";
+  "border-line-field text-ink-800 focus:border-marine-500 focus:shadow-[0_0_0_3px_var(--color-marine-200)] h-10 w-full cursor-pointer rounded-[10px] border bg-white px-3.5 text-[13.5px] font-normal outline-none transition-[border-color,box-shadow] duration-[130ms] disabled:opacity-50";
 
 const STATUS_TABS: { label: string; value: "all" | ParentTicketStatus }[] = [
   { label: "All", value: "all" },
@@ -53,9 +53,9 @@ const STATUS_TABS: { label: string; value: "all" | ParentTicketStatus }[] = [
 /** From → To with an arrow, truncating gracefully on narrow screens. */
 function Route({ from, to }: { from: string; to: string }) {
   return (
-    <span className="inline-flex min-w-0 items-center gap-1.5 text-sm text-muted-foreground">
+    <span className="inline-flex min-w-0 items-center gap-1.5 text-sm text-ink-600">
       <span className="truncate">{from}</span>
-      <ArrowRight className="size-3.5 shrink-0 text-brand" />
+      <ArrowRight className="size-3.5 shrink-0 text-marine-600" />
       <span className="truncate">{to}</span>
     </span>
   );
@@ -125,16 +125,16 @@ export default function AdminParentsTicketsPage() {
       />
 
       <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-        <div className="flex items-center gap-1 overflow-x-auto rounded-xl bg-muted p-1">
+        <div className="flex flex-wrap items-center gap-2">
           {STATUS_TABS.map((t) => (
             <button
               key={t.value}
               onClick={() => setStatusTab(t.value)}
               className={cn(
-                "shrink-0 rounded-lg px-3.5 py-1.5 text-sm font-medium transition-colors",
+                "flex h-[34px] shrink-0 items-center gap-2 rounded-full border px-4 text-[13px] font-medium whitespace-nowrap outline-none transition-colors",
                 statusTab === t.value
-                  ? "bg-primary text-primary-foreground shadow-sm"
-                  : "text-muted-foreground hover:text-foreground"
+                  ? "border-ink-800 bg-ink-800 text-white"
+                  : "border-line-field text-ink-800 hover:bg-surface-1 bg-white"
               )}
             >
               {t.label}
@@ -159,13 +159,13 @@ export default function AdminParentsTicketsPage() {
             ))}
           </select>
           <div className="relative sm:w-72">
-            <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+            <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-ink-600" />
             <Input
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               aria-label="Search parents tickets by name, email or reference"
               placeholder="Search name, email or reference…"
-              className="h-10 rounded-[10px] bg-card pl-9"
+              className="h-10 rounded-[10px] bg-white pl-9"
             />
           </div>
         </div>
@@ -177,19 +177,19 @@ export default function AdminParentsTicketsPage() {
             <TableSkeleton rows={6} columns={6} />
           </div>
         ) : isError ? (
-          <p className="px-6 py-10 text-center text-sm text-muted-foreground">
+          <p className="px-6 py-10 text-center text-sm text-ink-600">
             Couldn’t load parents tickets. If this is a fresh setup, run
             APPLY_PARENTS_TICKETS.sql in the Supabase SQL editor first.
           </p>
         ) : all.length === 0 ? (
           <div className="flex flex-col items-center gap-2 px-6 py-14 text-center">
-            <div className="flex size-12 items-center justify-center rounded-2xl bg-chip text-brand-dark">
+            <div className="flex size-12 items-center justify-center rounded-[12px] bg-marine-tint text-marine-600">
               <HeartHandshake className="size-6" />
             </div>
-            <p className="font-display text-base font-semibold text-foreground">
+            <p className="font-poppins text-base font-semibold text-ink-800">
               No parents tickets yet
             </p>
-            <p className="max-w-sm text-sm text-muted-foreground">
+            <p className="max-w-sm text-sm text-ink-600">
               Companion requests and offers submitted through the website will
               appear here the moment they arrive.
             </p>
@@ -199,7 +199,7 @@ export default function AdminParentsTicketsPage() {
             {/* Mobile cards */}
             <div className="space-y-3 p-4 md:hidden">
               {visible.length === 0 ? (
-                <p className="py-8 text-center text-sm text-muted-foreground">
+                <p className="py-8 text-center text-sm text-ink-600">
                   No leads match your filters.
                 </p>
               ) : (
@@ -210,10 +210,10 @@ export default function AdminParentsTicketsPage() {
                     className="block"
                   >
                     <MobileRecordCard
-                      title={<span className="text-navy">{e.full_name}</span>}
+                      title={<span className="text-ink-900">{e.full_name}</span>}
                       subtitle={e.reference_number}
                       action={
-                        <span className="inline-flex items-center gap-0.5 text-xs font-medium text-brand">
+                        <span className="inline-flex items-center gap-0.5 text-xs font-medium text-marine-600">
                           View
                           <ChevronRight className="size-4" />
                         </span>
@@ -279,14 +279,14 @@ export default function AdminParentsTicketsPage() {
                         router.push(`/admin/parents-tickets/${e.id}`)
                       }
                     >
-                      <TableCell className="pl-6 font-medium tabular-nums text-navy">
+                      <TableCell className="pl-6 font-medium tabular-nums text-ink-900">
                         {e.reference_number}
                       </TableCell>
                       <TableCell>
-                        <span className="block font-medium text-foreground">
+                        <span className="block font-medium text-ink-800">
                           {e.full_name}
                         </span>
-                        <span className="block text-xs text-muted-foreground">
+                        <span className="block text-xs text-ink-600">
                           {e.email}
                         </span>
                       </TableCell>
@@ -300,10 +300,10 @@ export default function AdminParentsTicketsPage() {
                       <TableCell className="max-w-[220px]">
                         <Route from={e.from_location} to={e.to_location} />
                       </TableCell>
-                      <TableCell className="text-muted-foreground">
+                      <TableCell className="text-ink-600">
                         {fmtDate(e.travel_date)}
                       </TableCell>
-                      <TableCell className="text-muted-foreground">
+                      <TableCell className="text-ink-600">
                         {fmtDate(e.created_at)}
                       </TableCell>
                       <TableCell>
@@ -324,7 +324,7 @@ export default function AdminParentsTicketsPage() {
                       >
                         <Link
                           href={`/admin/parents-tickets/${e.id}`}
-                          className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-card px-3 py-1.5 text-sm font-medium text-foreground transition-colors hover:border-brand hover:text-brand"
+                          className="inline-flex items-center gap-1.5 rounded-lg border border-line-base bg-white px-3 py-1.5 text-sm font-medium text-ink-800 transition-colors hover:border-marine-500 hover:text-marine-600"
                         >
                           <Eye className="size-4" />
                           View
@@ -336,7 +336,7 @@ export default function AdminParentsTicketsPage() {
                     <TableRow>
                       <TableCell
                         colSpan={8}
-                        className="py-10 text-center text-sm text-muted-foreground"
+                        className="py-10 text-center text-sm text-ink-600"
                       >
                         No leads match your filters.
                       </TableCell>
@@ -347,7 +347,7 @@ export default function AdminParentsTicketsPage() {
             </div>
 
             {hasMore ? (
-              <div className="flex justify-center border-t border-border p-4">
+              <div className="flex justify-center border-t border-line-base p-4">
                 <Button variant="outline" size="sm" onClick={loadMore}>
                   Load more ({total - visible.length} more)
                 </Button>

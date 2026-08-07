@@ -2,24 +2,13 @@ import { cn } from "@/lib/utils";
 
 export type Tone = "blue" | "green" | "amber" | "red" | "slate" | "violet";
 
-const TONE_BG: Record<Tone, string> = {
-  blue: "bg-chip text-brand-dark",
-  green: "bg-emerald-50 text-emerald-700",
-  amber: "bg-amber-50 text-amber-700",
-  red: "bg-rose-50 text-rose-700",
-  slate: "bg-slate-100 text-slate-600",
-  violet: "bg-violet-50 text-violet-700",
-};
-
-const TONE_DOT: Record<Tone, string> = {
-  blue: "bg-brand",
-  green: "bg-emerald-500",
-  amber: "bg-amber-500",
-  red: "bg-rose-500",
-  slate: "bg-slate-400",
-  violet: "bg-violet-500",
-};
-
+/**
+ * Status pill. The tone map lives in `globals.css` under `.wt-pill[data-tone]`:
+ * the portals keep their dot + semantic tint, and inside `.admin-root` the same
+ * markup becomes the Admin Portal design's pill — tint fill with dark ink, no
+ * dot, 11px/500. Blue resolves to Marine and amber to the design's own Warning
+ * hue, so a status can never be confused with the Ember accent.
+ */
 export function StatusBadge({
   tone = "slate",
   children,
@@ -30,14 +19,8 @@ export function StatusBadge({
   className?: string;
 }) {
   return (
-    <span
-      className={cn(
-        "inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium",
-        TONE_BG[tone],
-        className
-      )}
-    >
-      <span className={cn("size-[5px] rounded-full", TONE_DOT[tone])} />
+    <span data-tone={tone} className={cn("wt-pill", className)}>
+      <span className="wt-pill-dot" />
       {children}
     </span>
   );

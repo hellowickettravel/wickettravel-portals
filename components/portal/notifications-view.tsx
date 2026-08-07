@@ -203,25 +203,21 @@ export function NotificationsView({
       </div>
 
       {/* Filters */}
-      <div className="inline-flex items-center gap-1 rounded-xl bg-muted p-1">
+      <div className="wt-chipbar inline-flex items-center gap-1 rounded-xl p-1">
         {TABS.map((t) => (
           <button
             key={t.value}
             onClick={() => setFilter(t.value)}
             className={cn(
-              "inline-flex items-center gap-1.5 rounded-lg px-3.5 py-1.5 text-sm font-medium transition-colors",
-              filter === t.value
-                ? "bg-primary text-primary-foreground shadow-sm"
-                : "text-muted-foreground hover:text-foreground"
+              "wt-chip inline-flex items-center gap-1.5 transition-colors",
+              filter === t.value ? "is-active" : "is-idle"
             )}
           >
             {t.label}
             <span
               className={cn(
                 "inline-flex min-w-5 items-center justify-center rounded-full px-1.5 py-0.5 text-[11px] font-semibold tabular-nums leading-none",
-                filter === t.value
-                  ? "bg-white/25 text-white"
-                  : "bg-chip text-brand-dark"
+                filter === t.value ? "wt-chip-count-on" : "wt-chip-count-off"
               )}
             >
               {t.count}

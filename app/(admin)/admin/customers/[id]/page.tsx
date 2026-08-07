@@ -34,27 +34,27 @@ export default async function AdminCustomerDetailPage({
     <div className="space-y-5">
       <Link
         href="/admin/customers"
-        className="inline-flex items-center gap-1.5 text-sm font-medium text-brand transition-colors hover:text-brand-dark"
+        className="inline-flex items-center gap-1.5 text-sm font-medium text-marine-600 transition-colors hover:text-marine-600"
       >
         <ArrowLeft className="size-4" />
         Back to customers
       </Link>
 
       {/* Header */}
-      <div className="flex items-center gap-3 rounded-2xl border border-border bg-card p-5 shadow-card">
-        <div className="flex size-12 shrink-0 items-center justify-center rounded-xl bg-chip text-brand-dark">
+      <div className="flex items-center gap-3 rounded-[12px] border border-line-base bg-white p-5 shadow-[0_1px_2px_oklch(0.205_0.038_258_/_0.04)]">
+        <div className="flex size-12 shrink-0 items-center justify-center rounded-xl bg-marine-tint text-marine-600">
           <User className="size-6" />
         </div>
         <div className="leading-tight">
           <div className="flex items-center gap-2">
-            <p className="font-display text-lg font-semibold text-navy">
+            <p className="font-poppins text-lg font-semibold text-ink-900">
               {customer.name || "Unnamed customer"}
             </p>
             <StatusBadge tone={customer.profile_id ? "green" : "slate"}>
               {customer.profile_id ? "Has account" : "Lead"}
             </StatusBadge>
           </div>
-          <p className="text-sm text-muted-foreground">
+          <p className="text-sm text-ink-600">
             {customer.wa_phone ?? "No phone number"} · joined {fmtDate(customer.created_at)}
           </p>
         </div>
@@ -63,29 +63,29 @@ export default async function AdminCustomerDetailPage({
       {/* Orders — full record, each opens the same order-detail view + inbox */}
       <SectionCard title={`Orders (${orders.length})`} flush>
         {orders.length === 0 ? (
-          <p className="px-6 py-8 text-center text-sm text-muted-foreground">
+          <p className="px-6 py-8 text-center text-sm text-ink-600">
             No orders yet.
           </p>
         ) : (
-          <ul className="divide-y divide-border">
+          <ul className="divide-y divide-line-soft">
             {orders.map((o) => (
               <li key={o.id}>
                 <Link
                   href={`/admin/orders/${o.id}`}
-                  className="flex items-center gap-4 px-5 py-3.5 transition-colors hover:bg-neutral-soft"
+                  className="flex items-center gap-4 px-5 py-3.5 transition-colors hover:bg-surface-1"
                 >
-                  <div className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-chip text-brand-dark">
+                  <div className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-marine-tint text-marine-600">
                     <Plane className="size-4 -rotate-45" />
                   </div>
                   <div className="min-w-0 flex-1">
-                    <p className="truncate font-display text-sm font-semibold text-navy">
+                    <p className="truncate font-poppins text-sm font-semibold text-ink-900">
                       {o.order_number}
                     </p>
-                    <p className="truncate text-xs text-muted-foreground">
+                    <p className="truncate text-xs text-ink-600">
                       {o.route_from ?? "—"} → {o.route_to ?? "—"}
                     </p>
                   </div>
-                  <div className="hidden text-right text-xs leading-relaxed text-muted-foreground sm:block">
+                  <div className="hidden text-right text-xs leading-relaxed text-ink-600 sm:block">
                     <p>Created {fmtDate(o.created_at)}</p>
                     <p>
                       {o.closed_at
@@ -106,23 +106,23 @@ export default async function AdminCustomerDetailPage({
       {/* Conversations */}
       <SectionCard title={`Conversations (${conversations.length})`} flush>
         {conversations.length === 0 ? (
-          <p className="px-6 py-8 text-center text-sm text-muted-foreground">
+          <p className="px-6 py-8 text-center text-sm text-ink-600">
             No conversations yet.
           </p>
         ) : (
-          <ul className="divide-y divide-border">
+          <ul className="divide-y divide-line-soft">
             {conversations.map((c) => (
               <li key={c.id}>
                 <Link
                   href={`/admin/messages/${c.id}`}
-                  className="flex items-center gap-4 px-5 py-3.5 transition-colors hover:bg-neutral-soft"
+                  className="flex items-center gap-4 px-5 py-3.5 transition-colors hover:bg-surface-1"
                 >
-                  <MessageSquare className="size-4 text-brand" />
+                  <MessageSquare className="size-4 text-marine-600" />
                   <div className="min-w-0 flex-1">
-                    <p className="text-sm font-medium text-foreground">
+                    <p className="text-sm font-medium text-ink-800">
                       Conversation #{c.id.slice(0, 8)}
                     </p>
-                    <p className="text-xs text-muted-foreground">
+                    <p className="text-xs text-ink-600">
                       Last activity {fmtRelative(c.last_message_at)}
                     </p>
                   </div>

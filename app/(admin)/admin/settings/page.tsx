@@ -28,7 +28,7 @@ const PREFS_KEY = ["notification-prefs"] as const;
 
 function fieldLabel(text: string) {
   return (
-    <span className="font-label text-xs font-medium uppercase tracking-wider text-slate-600">
+    <span className="text-ink-500 text-[11px] font-medium uppercase tracking-[0.09em]">
       {text}
     </span>
   );
@@ -202,7 +202,7 @@ export default function SettingsPage() {
       <form onSubmit={save} className="space-y-7">
         <SectionCard title="Business profile" description="Used across invoices and customer messages.">
           {isLoading ? (
-            <div className="flex items-center gap-2 py-6 text-sm text-muted-foreground">
+            <div className="flex items-center gap-2 py-6 text-sm text-ink-600">
               <Loader2 className="size-4 animate-spin" />
               Loading settings…
             </div>
@@ -210,23 +210,23 @@ export default function SettingsPage() {
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <div className="space-y-2">
                 <Label htmlFor="biz-name">{fieldLabel("Business name")}</Label>
-                <Input id="biz-name" value={name} onChange={(e) => setName(e.target.value)} className="h-10 rounded-[10px] bg-neutral-soft" />
+                <Input id="biz-name" value={name} onChange={(e) => setName(e.target.value)} className="h-10 rounded-[10px] bg-surface-1" />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="biz-email">{fieldLabel("Email")}</Label>
-                <Input id="biz-email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} className="h-10 rounded-[10px] bg-neutral-soft" />
+                <Input id="biz-email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} className="h-10 rounded-[10px] bg-surface-1" />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="biz-phone">{fieldLabel("Phone")}</Label>
-                <Input id="biz-phone" value={phone} onChange={(e) => setPhone(e.target.value)} className="h-10 rounded-[10px] bg-neutral-soft" />
+                <Input id="biz-phone" value={phone} onChange={(e) => setPhone(e.target.value)} className="h-10 rounded-[10px] bg-surface-1" />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="biz-address">{fieldLabel("Address")}</Label>
-                <Input id="biz-address" value={address} onChange={(e) => setAddress(e.target.value)} className="h-10 rounded-[10px] bg-neutral-soft" />
+                <Input id="biz-address" value={address} onChange={(e) => setAddress(e.target.value)} className="h-10 rounded-[10px] bg-surface-1" />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="commission">{fieldLabel("Default commission (%)")}</Label>
-                <Input id="commission" type="number" value={commission} onChange={(e) => setCommission(e.target.value)} className="h-10 max-w-xs rounded-[10px] bg-neutral-soft" />
+                <Input id="commission" type="number" value={commission} onChange={(e) => setCommission(e.target.value)} className="h-10 max-w-xs rounded-[10px] bg-surface-1" />
               </div>
             </div>
           )}
@@ -251,12 +251,12 @@ export default function SettingsPage() {
           <div className="space-y-2">
             {fieldLabel("Logo")}
             <div className="flex items-center gap-4">
-              <div className="flex size-20 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-border bg-neutral-soft">
+              <div className="flex size-20 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-line-base bg-surface-1">
                 {logoUrl ? (
                   // eslint-disable-next-line @next/next/no-img-element
                   <img src={logoUrl} alt="Business logo" className="size-full object-cover" />
                 ) : (
-                  <ImageUp className="size-6 text-muted-foreground" />
+                  <ImageUp className="size-6 text-ink-600" />
                 )}
               </div>
               <div className="space-y-2">
@@ -298,22 +298,22 @@ export default function SettingsPage() {
                     Remove
                   </Button>
                 ) : null}
-                <p className="text-xs text-muted-foreground">PNG or JPG, up to 10MB.</p>
+                <p className="text-xs text-ink-600">PNG or JPG, up to 10MB.</p>
               </div>
             </div>
           </div>
           <div className="space-y-2">
             {fieldLabel("Brand colours")}
-            <div className="flex items-center gap-3 rounded-xl border border-border bg-neutral-soft p-3">
+            <div className="flex items-center gap-3 rounded-xl border border-line-base bg-surface-1 p-3">
               <div className="flex items-center gap-2">
                 <div className="size-12 rounded-xl bg-navy shadow-sm ring-1 ring-black/5" />
                 <div className="size-12 rounded-xl bg-orange shadow-sm ring-1 ring-black/5" />
               </div>
               <div>
-                <p className="font-display text-sm font-semibold text-foreground">
+                <p className="font-poppins text-sm font-semibold text-ink-800">
                   #1E3A5F · #F97316
                 </p>
-                <p className="flex items-center gap-1 text-xs text-muted-foreground">
+                <p className="flex items-center gap-1 text-xs text-ink-600">
                   <Lock className="size-3" />
                   Wicket Travel Navy &amp; Orange · locked by the design system
                 </p>
@@ -325,7 +325,7 @@ export default function SettingsPage() {
 
       {/* Notifications (persisted, per-admin) */}
       <SectionCard title="Notifications" description="Choose what you get alerted about. Saved to your account.">
-        <ul className="divide-y divide-border">
+        <ul className="divide-y divide-line-soft">
           {[
             { label: "New order alerts", desc: "Notify you when an order is created.", checked: newOrder, set: setNewOrder },
             { label: "New message alerts", desc: "Notify when a customer sends a message.", checked: newMessage, set: setNewMessage },
@@ -334,8 +334,8 @@ export default function SettingsPage() {
           ].map((n) => (
             <li key={n.label} className="flex items-center justify-between gap-4 py-3.5 first:pt-0 last:pb-0">
               <div>
-                <p className="text-sm font-medium text-foreground">{n.label}</p>
-                <p className="text-xs text-muted-foreground">{n.desc}</p>
+                <p className="text-sm font-medium text-ink-800">{n.label}</p>
+                <p className="text-xs text-ink-600">{n.desc}</p>
               </div>
               <Switch checked={n.checked} onCheckedChange={(v) => n.set(Boolean(v))} />
             </li>

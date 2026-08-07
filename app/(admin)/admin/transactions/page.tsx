@@ -45,7 +45,7 @@ const STATUS_TABS: { label: string; value: "all" | OrderStatus }[] = [
 ];
 
 const selectClass =
-  "h-10 rounded-[10px] border border-input bg-card px-3 text-sm text-foreground outline-none transition-colors focus-visible:border-brand focus-visible:ring-[3px] focus-visible:ring-brand/25";
+  "border-line-field text-ink-800 focus:border-marine-500 focus:shadow-[0_0_0_3px_var(--color-marine-200)] h-10 w-full cursor-pointer rounded-[10px] border bg-white px-3.5 text-[13.5px] font-normal outline-none transition-[border-color,box-shadow] duration-[130ms] disabled:opacity-50";
 
 const ORDERS_KEY = ["admin", "orders"] as const;
 
@@ -140,16 +140,16 @@ export default function TransactionsPage() {
       {/* Filters */}
       <div className="space-y-3">
         <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-          <div className="flex items-center gap-1 overflow-x-auto rounded-xl bg-muted p-1">
+          <div className="flex flex-wrap items-center gap-2">
             {STATUS_TABS.map((t) => (
               <button
                 key={t.value}
                 onClick={() => setTab(t.value)}
                 className={cn(
-                  "shrink-0 rounded-lg px-3.5 py-1.5 text-sm font-medium transition-colors",
+                  "flex h-[34px] shrink-0 items-center gap-2 rounded-full border px-4 text-[13px] font-medium whitespace-nowrap outline-none transition-colors",
                   tab === t.value
-                    ? "bg-primary text-primary-foreground shadow-sm"
-                    : "text-muted-foreground hover:text-foreground"
+                    ? "border-ink-800 bg-ink-800 text-white"
+                    : "border-line-field text-ink-800 hover:bg-surface-1 bg-white"
                 )}
               >
                 {t.label}
@@ -157,19 +157,19 @@ export default function TransactionsPage() {
             ))}
           </div>
           <div className="relative lg:w-72">
-            <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+            <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-ink-600" />
             <Input
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               placeholder="Search by order # or customer…"
-              className="h-10 rounded-[10px] bg-card pl-9"
+              className="h-10 rounded-[10px] bg-white pl-9"
             />
           </div>
         </div>
 
         <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-end">
           <div className="space-y-1.5">
-            <Label className="font-label text-[11px] font-medium uppercase tracking-wider text-slate-600">
+            <Label className="text-ink-500 text-[11px] font-medium uppercase tracking-[0.09em]">
               Employee
             </Label>
             <select
@@ -188,7 +188,7 @@ export default function TransactionsPage() {
             </select>
           </div>
           <div className="space-y-1.5">
-            <Label className="font-label text-[11px] font-medium uppercase tracking-wider text-slate-600">
+            <Label className="text-ink-500 text-[11px] font-medium uppercase tracking-[0.09em]">
               Created from
             </Label>
             <Input
@@ -196,11 +196,11 @@ export default function TransactionsPage() {
               value={from}
               max={to || undefined}
               onChange={(e) => setFrom(e.target.value)}
-              className="h-10 w-full rounded-[10px] bg-card sm:w-44"
+              className="h-10 w-full rounded-[10px] bg-white sm:w-44"
             />
           </div>
           <div className="space-y-1.5">
-            <Label className="font-label text-[11px] font-medium uppercase tracking-wider text-slate-600">
+            <Label className="text-ink-500 text-[11px] font-medium uppercase tracking-[0.09em]">
               Created to
             </Label>
             <Input
@@ -208,14 +208,14 @@ export default function TransactionsPage() {
               value={to}
               min={from || undefined}
               onChange={(e) => setTo(e.target.value)}
-              className="h-10 w-full rounded-[10px] bg-card sm:w-44"
+              className="h-10 w-full rounded-[10px] bg-white sm:w-44"
             />
           </div>
           {(from || to || employeeId !== "all") ? (
             <Button
               variant="ghost"
               size="sm"
-              className="text-muted-foreground"
+              className="text-ink-600"
               onClick={() => {
                 setFrom("");
                 setTo("");
@@ -235,18 +235,18 @@ export default function TransactionsPage() {
             <TableSkeleton rows={8} columns={6} />
           </div>
         ) : isError ? (
-          <p className="px-6 py-10 text-center text-sm text-muted-foreground">
+          <p className="px-6 py-10 text-center text-sm text-ink-600">
             Couldn’t load transactions. Refresh to try again.
           </p>
         ) : all.length === 0 ? (
           <div className="flex flex-col items-center gap-2 px-6 py-14 text-center">
-            <div className="flex size-12 items-center justify-center rounded-2xl bg-chip text-brand-dark">
+            <div className="flex size-12 items-center justify-center rounded-[12px] bg-marine-tint text-marine-600">
               <Receipt className="size-6" />
             </div>
-            <p className="font-display text-base font-semibold text-foreground">
+            <p className="font-poppins text-base font-semibold text-ink-800">
               No transactions yet
             </p>
-            <p className="max-w-sm text-sm text-muted-foreground">
+            <p className="max-w-sm text-sm text-ink-600">
               Every order placed across the portal will be recorded here.
             </p>
           </div>
@@ -255,17 +255,17 @@ export default function TransactionsPage() {
             {/* Mobile: stacked cards */}
             <div className="space-y-3 p-4 md:hidden">
               {filtered.length === 0 ? (
-                <p className="py-8 text-center text-sm text-muted-foreground">
+                <p className="py-8 text-center text-sm text-ink-600">
                   No transactions match your filters.
                 </p>
               ) : (
                 visible.map((o) => (
                   <Link key={o.id} href={`/admin/orders/${o.id}`} className="block">
                     <MobileRecordCard
-                      title={<span className="text-navy">{o.order_number}</span>}
+                      title={<span className="text-ink-900">{o.order_number}</span>}
                       subtitle={o.customer?.name ?? "—"}
                       action={
-                        <span className="inline-flex items-center gap-0.5 text-xs font-medium text-brand">
+                        <span className="inline-flex items-center gap-0.5 text-xs font-medium text-marine-600">
                           View
                           <ChevronRight className="size-4" />
                         </span>
@@ -314,17 +314,17 @@ export default function TransactionsPage() {
                       className="cursor-pointer"
                       onClick={() => router.push(`/admin/orders/${o.id}`)}
                     >
-                      <TableCell className="pl-6 font-medium text-navy">
+                      <TableCell className="pl-6 font-medium text-ink-900">
                         <Link
                           href={`/admin/orders/${o.id}`}
-                          className="hover:text-brand"
+                          className="hover:text-marine-600"
                           onClick={(e) => e.stopPropagation()}
                         >
                           {o.order_number}
                         </Link>
                       </TableCell>
                       <TableCell>{o.customer?.name ?? "—"}</TableCell>
-                      <TableCell className="text-muted-foreground">
+                      <TableCell className="text-ink-600">
                         {o.assigned_employee?.full_name ?? "Unassigned"}
                       </TableCell>
                       <TableCell>
@@ -332,10 +332,10 @@ export default function TransactionsPage() {
                           {titleCase(o.status)}
                         </StatusBadge>
                       </TableCell>
-                      <TableCell className="text-muted-foreground">
+                      <TableCell className="text-ink-600">
                         {fmtDate(o.created_at)}
                       </TableCell>
-                      <TableCell className="text-muted-foreground">
+                      <TableCell className="text-ink-600">
                         {o.closed_at ? fmtDate(o.closed_at) : "—"}
                       </TableCell>
                       <TableCell
@@ -344,7 +344,7 @@ export default function TransactionsPage() {
                       >
                         <Link
                           href={`/admin/orders/${o.id}`}
-                          className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-card px-3 py-1.5 text-sm font-medium text-foreground transition-colors hover:border-brand hover:text-brand"
+                          className="inline-flex items-center gap-1.5 rounded-lg border border-line-base bg-white px-3 py-1.5 text-sm font-medium text-ink-800 transition-colors hover:border-marine-500 hover:text-marine-600"
                         >
                           <Eye className="size-4" />
                           View
@@ -356,7 +356,7 @@ export default function TransactionsPage() {
                     <TableRow>
                       <TableCell
                         colSpan={7}
-                        className="py-10 text-center text-sm text-muted-foreground"
+                        className="py-10 text-center text-sm text-ink-600"
                       >
                         No transactions match your filters.
                       </TableCell>
@@ -367,7 +367,7 @@ export default function TransactionsPage() {
             </div>
 
             {hasMore ? (
-              <div className="flex justify-center border-t border-border p-4">
+              <div className="flex justify-center border-t border-line-base p-4">
                 <Button
                   variant="outline"
                   size="sm"

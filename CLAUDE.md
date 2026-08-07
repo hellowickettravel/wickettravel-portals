@@ -45,6 +45,49 @@ A custom "Shared Team Inbox + Orders CRM + Admin panel" for a UK-based flight-ti
 - Rounded 14–16px cards, soft shadows, modern SaaS look
 - Portal shell: ~260px navy sidebar, active nav = solid ORANGE pill, content max ~1152px
 
+### Admin portal — scoped exception (Claude Design "Admin Portal All Pages")
+Everything under `/admin` follows the Claude Design **"Admin Portal All Pages"**
+file, which extends the auth design's system into the product interior. The
+employee, customer and driver portals are unchanged and stay on navy/orange.
+- Type: **Instrument Sans** everywhere, **Poppins 500** for page titles, the
+  brand wordmark and headline metrics. Weights are 400 / 500 / 600 only.
+- Colour: the auth **Marine / Ink / Ember** namespace plus the interior tokens
+  (`--color-ink-800…950`, `--color-line-*`, `--color-surface-*`,
+  `--color-warn-*`, `--color-ok-*`, `--color-teal-*`, `--color-violet-*`,
+  `--color-danger-*`, `--color-canvas`). All in `app/globals.css` `@theme inline`.
+- Scoping: `.admin-root` on `AdminShell` carries the design's base layer
+  (typeface, canvas, link colour, focus ring, 44px mobile targets, scrollbars).
+  Any new admin screen must render inside `AdminShell` to inherit it.
+- **Two skins, one component.** `PageHeader`, `SectionCard`, `StatCard`,
+  `StatusBadge` and `UserCell` are imported by the other portals too, so their
+  looks live in `globals.css` as `.wt-card`, `.wt-pill`, `.wt-stat-*`,
+  `.wt-page-*`, `.wt-chip*`: base rules = navy/orange, `.admin-root` overrides =
+  the design. Never hard-code admin colours into those five files.
+  The same file also retunes shared shadcn controls (`[data-slot="button"]`,
+  `input`, `textarea`, `table`, `card`) **inside `.admin-root` only**.
+- Shape language: **buttons are pills (999px), containers are rectangles** —
+  10px controls, 12px cards, 50% avatars. `--radius` is 0.75rem here, so
+  Tailwind's `rounded-lg/xl` resolve to 12/16.8px — use `rounded-[10px]` /
+  `rounded-[12px]` explicitly.
+- Controls: sm 34px (filter chips, in-table actions) · md 40px (default) ·
+  auth-only lg 48px. One focus ring everywhere:
+  `0 0 0 3px var(--color-marine-200)`.
+- Status pills are tint-fill + dark ink, no dot: New=marine, In progress=warn
+  (hue 82 — its *own* hue, never Ember), Completed=success, Cancelled=ink.
+  Money is ink 500/600 tabular and never coloured; commission is the only figure
+  allowed a success tint.
+- Tables: 52px rows, `0 20px` cells, 40px uppercase head on `--color-surface-2`,
+  horizontal scroll inside `.om-scroll`. Every list has an explanatory empty
+  state (`EmptyState` in `components/admin/ui.tsx`).
+- Primitives live in `components/admin/ui.tsx`; the icon set (24-box, 1.7px
+  stroke, `currentColor`, no icon library) in `components/admin/icons.tsx`; the
+  shell in `components/admin/admin-shell.tsx`; the order-detail boarding pass in
+  `components/admin/boarding-pass.tsx`.
+- Sidebar is 260px of `--color-ink-950`, groups the twelve areas into four
+  bands, marks the active item with a marine fill, and shows live unactioned
+  counts on Visa Queries and Parents Tickets. It goes off-canvas below 1024px
+  behind a hamburger + scrim.
+
 ### Auth screens — scoped exception (Claude Design "Auth Pages")
 /login, /signup, /forgot-password and /reset-password follow the Claude Design
 "Auth Pages" + "Brand System" files exactly, which use a different palette and

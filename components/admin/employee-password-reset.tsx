@@ -57,14 +57,14 @@ export function EmployeePasswordReset({ employeeId }: { employeeId: string }) {
       <Dialog open={tempPassword !== null} onOpenChange={(o) => !o && setTempPassword(null)}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle className="font-display">Temporary password</DialogTitle>
+            <DialogTitle className="font-poppins">Temporary password</DialogTitle>
             <DialogDescription>
               Share this with the employee. They can change it later in Settings.
               You won&apos;t be able to see it again.
             </DialogDescription>
           </DialogHeader>
-          <div className="flex items-center gap-2 rounded-xl border border-border bg-neutral-soft p-3">
-            <code className="flex-1 font-mono text-sm text-foreground">
+          <div className="flex items-center gap-2 rounded-xl border border-line-base bg-surface-1 p-3">
+            <code className="flex-1 font-mono text-sm text-ink-800">
               {tempPassword}
             </code>
             <Button type="button" variant="outline" size="sm" onClick={copy}>

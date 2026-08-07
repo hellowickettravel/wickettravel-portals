@@ -33,20 +33,20 @@ export default async function AdminConversationPage({
     <div className="space-y-5">
       <Link
         href="/admin/messages"
-        className="inline-flex items-center gap-1.5 text-sm font-medium text-brand transition-colors hover:text-brand-dark"
+        className="inline-flex items-center gap-1.5 text-sm font-medium text-marine-600 transition-colors hover:text-marine-600"
       >
         <ArrowLeft className="size-4" />
         Back to messages
       </Link>
 
-      <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-card">
+      <div className="overflow-hidden rounded-[12px] border border-line-base bg-white shadow-[0_1px_2px_oklch(0.205_0.038_258_/_0.04)]">
         {/* Header */}
-        <div className="flex items-center justify-between gap-3 border-b border-border px-5 py-4">
+        <div className="flex items-center justify-between gap-3 border-b border-line-base px-5 py-4">
           <div className="leading-tight">
-            <p className="font-display text-base font-semibold text-navy">
+            <p className="font-poppins text-base font-semibold text-ink-900">
               {conversation.customer?.name || "Unknown customer"}
             </p>
-            <p className="text-xs text-muted-foreground">
+            <p className="text-xs text-ink-600">
               {conversation.customer?.wa_phone ?? "No number"}
             </p>
           </div>
@@ -56,9 +56,9 @@ export default async function AdminConversationPage({
         </div>
 
         {/* Thread (read-only) */}
-        <div className="space-y-3 bg-neutral-soft/50 px-4 py-5 md:px-6">
+        <div className="space-y-3 bg-surface-1/50 px-4 py-5 md:px-6">
           {messages.length === 0 ? (
-            <p className="py-10 text-center text-sm text-muted-foreground">
+            <p className="py-10 text-center text-sm text-ink-600">
               No messages in this conversation yet.
             </p>
           ) : (
@@ -78,7 +78,7 @@ export default async function AdminConversationPage({
                     {showLabel ? (
                       <span
                         className={cn(
-                          "mb-1 block text-[11px] font-medium text-muted-foreground",
+                          "mb-1 block text-[11px] font-medium text-ink-600",
                           outgoing ? "text-right" : "text-left"
                         )}
                       >
@@ -87,17 +87,17 @@ export default async function AdminConversationPage({
                     ) : null}
                     <div
                       className={cn(
-                        "rounded-2xl px-3.5 py-2 text-sm shadow-sm",
+                        "rounded-[12px] px-3.5 py-2 text-sm shadow-sm",
                         outgoing
-                          ? "rounded-br-md bg-primary text-primary-foreground"
-                          : "rounded-bl-md border border-border bg-white text-foreground"
+                          ? "rounded-br-md bg-marine-500 text-white"
+                          : "rounded-bl-md border border-line-base bg-white text-ink-800"
                       )}
                     >
                       <MessageText text={m.body} mine={outgoing} />
                       <span
                         className={cn(
                           "mt-1 block text-right text-[10px]",
-                          outgoing ? "text-white/70" : "text-muted-foreground"
+                          outgoing ? "text-white/70" : "text-ink-600"
                         )}
                       >
                         {fmtRelative(m.created_at)}
@@ -110,9 +110,9 @@ export default async function AdminConversationPage({
           )}
         </div>
 
-        <div className="border-t border-border bg-muted/40 px-5 py-3 text-center text-xs text-muted-foreground">
+        <div className="border-t border-line-base bg-neutral-bg/40 px-5 py-3 text-center text-xs text-ink-600">
           Read-only snapshot.{" "}
-          <Link href="/admin/messages" className="font-medium text-brand hover:text-brand-dark">
+          <Link href="/admin/messages" className="font-medium text-marine-600 hover:text-marine-600">
             Open the inbox
           </Link>{" "}
           to reply or send attachments.

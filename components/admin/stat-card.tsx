@@ -1,5 +1,4 @@
-import { type LucideIcon, TrendingUp, TrendingDown } from "lucide-react";
-import { Card, CardContent } from "@/components/ui/card";
+import { type LucideIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 type Trend = { dir: "up" | "down"; value: string };
@@ -12,42 +11,43 @@ type StatCardProps = {
   hint?: string;
 };
 
-export function StatCard({ label, value, icon: Icon, trend, hint }: StatCardProps) {
+/**
+ * KPI card. Skin lives in `globals.css` (`.wt-card`, `.wt-stat-*`): the
+ * portals keep the navy/orange treatment, and inside `.admin-root` it becomes
+ * the design's card — tinted icon chip, 11px/0.11em uppercase label, and the
+ * figure in Poppins 500 at 24px tabular.
+ */
+export function StatCard({
+  label,
+  value,
+  icon: Icon,
+  trend,
+  hint,
+}: StatCardProps) {
   return (
-    <Card className="shadow-card">
-      <CardContent>
-        <div className="flex items-start justify-between gap-3">
-          <p className="font-label text-xs font-medium uppercase tracking-wide text-muted-foreground">
-            {label}
-          </p>
-          <div className="flex size-9 items-center justify-center rounded-xl bg-chip text-brand-dark">
-            <Icon className="size-[18px]" />
-          </div>
-        </div>
-        <p className="mt-3 font-display text-2xl font-semibold text-foreground">
-          {value}
-        </p>
-        {trend ? (
-          <div className="mt-1.5 flex items-center gap-1.5 text-xs">
+    <div className="wt-card">
+      <div className="wt-card-body flex flex-col gap-3">
+        <span className="wt-stat-chip flex size-9 items-center justify-center">
+          <Icon className="size-[18px]" />
+        </span>
+        <span className="wt-stat-label">{label}</span>
+        <span className="flex flex-wrap items-baseline gap-2.5">
+          <span className="wt-stat-value">{value}</span>
+          {trend ? (
             <span
               className={cn(
-                "inline-flex items-center gap-0.5 font-medium",
-                trend.dir === "up" ? "text-emerald-600" : "text-rose-600"
+                "inline-flex items-center gap-[3px] rounded-full px-2 py-0.5 text-[11px] font-semibold tabular-nums",
+                trend.dir === "up"
+                  ? "bg-ok-bg text-ok-ink"
+                  : "bg-danger-bg text-danger-ink"
               )}
             >
-              {trend.dir === "up" ? (
-                <TrendingUp className="size-3.5" />
-              ) : (
-                <TrendingDown className="size-3.5" />
-              )}
-              {trend.value}
+              {trend.dir === "up" ? "↑" : "↓"} {trend.value}
             </span>
-            <span className="text-muted-foreground">{hint ?? "vs last month"}</span>
-          </div>
-        ) : hint ? (
-          <p className="mt-1.5 text-xs text-muted-foreground">{hint}</p>
-        ) : null}
-      </CardContent>
-    </Card>
+          ) : null}
+        </span>
+        {hint ? <span className="wt-stat-hint text-pretty">{hint}</span> : null}
+      </div>
+    </div>
   );
 }
