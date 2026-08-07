@@ -95,20 +95,20 @@ export default function OrdersPage() {
     };
   }, [supabase, queryClient]);
 
-  // Sorted by the flight that departs next — the design's own rule. Orders with
-  // no travel date fall to the bottom; newest-created breaks any tie.
+  // Sorted by the flight that departs next — the design's own rule, which means
+  // the *soonest upcoming* departure, not the oldest date on file. Flights that
+  // have already gone sit below the upcoming ones (most recent first), and
+  // orders with no travel date fall to the bottom of all.
   const all = useMemo(() => {
     const rows = orders ?? [];
+    const today = new Date().toISOString().slice(0, 10);
+    const rank = (d: string | null) => (!d ? 2 : d >= today ? 0 : 1);
     return [...rows].sort((a, b) => {
-      const at = a.travel_date;
-      const bt = b.travel_date;
-      if (at && bt) {
-        if (at !== bt) return at < bt ? -1 : 1;
-      } else if (at) {
-        return -1;
-      } else if (bt) {
-        return 1;
-      }
+      const ra = rank(a.travel_date);
+      const rb = rank(b.travel_date);
+      if (ra !== rb) return ra - rb;
+      if (ra === 0) return a.travel_date! < b.travel_date! ? -1 : a.travel_date! > b.travel_date! ? 1 : 0;
+      if (ra === 1) return a.travel_date! > b.travel_date! ? -1 : a.travel_date! < b.travel_date! ? 1 : 0;
       return (b.created_at ?? "").localeCompare(a.created_at ?? "");
     });
   }, [orders]);

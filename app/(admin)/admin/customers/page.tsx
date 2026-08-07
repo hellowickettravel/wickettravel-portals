@@ -25,7 +25,7 @@ import {
   ViewButton,
   focusRing,
 } from "@/components/admin/ui";
-import { ExportIcon, PlusIcon } from "@/components/admin/icons";
+import { PlusIcon } from "@/components/admin/icons";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -38,8 +38,6 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { listCustomersWithStats, createCustomer } from "@/lib/actions/admin";
-import { downloadCsv } from "@/lib/csv";
-import { fmtDate } from "@/lib/format";
 import { cn } from "@/lib/utils";
 
 const CUSTOMERS_KEY = ["admin", "customers", "list"] as const;
@@ -121,38 +119,17 @@ export default function AdminCustomersPage() {
   const visible = rows.slice(0, limit);
   const remaining = Math.max(0, rows.length - limit);
 
-  function exportCsv() {
-    downloadCsv(
-      "customers.csv",
-      ["Name", "Email", "Phone", "Has account", "Orders", "Conversations", "Created"],
-      all.map((c) => [
-        c.name ?? "",
-        c.email ?? "",
-        c.wa_phone ?? "",
-        c.profile_id ? "Yes" : "No",
-        c.orderCount,
-        c.conversationCount,
-        fmtDate(c.created_at),
-      ])
-    );
-  }
-
   return (
     <Screen>
       <PageHead
         title="Customers"
         intro="Everyone with a customer account, whether they signed up themselves or an employee created the account for them."
         actions={
-          <>
-            <Btn onClick={exportCsv} disabled={all.length === 0}>
-              <ExportIcon size={15} />
-              Export CSV
-            </Btn>
-            <Btn variant="ember" onClick={() => setOpen(true)}>
-              <PlusIcon size={15} />
-              Add customer
-            </Btn>
-          </>
+          /* The design's people screens carry a single action. */
+          <Btn variant="ember" onClick={() => setOpen(true)}>
+            <PlusIcon size={15} />
+            Add customer
+          </Btn>
         }
       />
 

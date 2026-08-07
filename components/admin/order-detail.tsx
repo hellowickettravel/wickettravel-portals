@@ -40,7 +40,13 @@ import {
   iconForField,
 } from "@/components/admin/icons";
 import { updateOrder, setOrderStatus, assignOrder } from "@/lib/actions/admin";
-import type { OrderWithRelations, OrderStatus, Profile } from "@/lib/db/types";
+import type {
+  OrderWithRelations,
+  OrderStatus,
+  PaymentMethod,
+  PaymentStatus,
+  Profile,
+} from "@/lib/db/types";
 import type { SignedOrderAttachment } from "@/lib/db/order-messages";
 import type { CustomerSnapshot } from "@/lib/db/customers";
 import {
@@ -86,7 +92,12 @@ type EditKey =
   | "passengers"
   | "sellingPrice"
   | "costPrice"
-  | "commission";
+  | "commission"
+  | "airline"
+  | "flightNumbers"
+  | "budgetPerPerson"
+  | "paymentMethod"
+  | "paymentStatus";
 
 type EditField = {
   key: EditKey;
@@ -94,6 +105,8 @@ type EditField = {
   label: string;
   type?: string;
   required?: boolean;
+  /** Renders a select instead of an input. */
+  options?: { value: string; label: string }[];
 };
 
 const EDIT_ROWS: EditField[][] = [
@@ -113,6 +126,45 @@ const EDIT_ROWS: EditField[][] = [
     { key: "costPrice", id: "eo-cost", label: "Cost price (£)", type: "number" },
     { key: "commission", id: "eo-comm", label: "Commission (£)", type: "number" },
   ],
+  // ----- the design's own fields, stored by migration 0021 -----
+  [
+    { key: "airline", id: "eo-airline", label: "Airline" },
+    { key: "flightNumbers", id: "eo-flights", label: "Flight numbers" },
+  ],
+  [
+    {
+      key: "budgetPerPerson",
+      id: "eo-budget",
+      label: "Budget per person (£)",
+      type: "number",
+    },
+    {
+      key: "paymentMethod",
+      id: "eo-paymethod",
+      label: "Payment method",
+      options: [
+        { value: "", label: "Not recorded" },
+        { value: "card", label: "Card" },
+        { value: "bank_transfer", label: "Bank transfer" },
+        { value: "cash", label: "Cash" },
+        { value: "unpaid", label: "Not paid" },
+      ],
+    },
+  ],
+  [
+    {
+      key: "paymentStatus",
+      id: "eo-paystatus",
+      label: "Payment status",
+      options: [
+        { value: "", label: "Not recorded" },
+        { value: "paid_in_full", label: "Paid in full" },
+        { value: "deposit", label: "Deposit taken" },
+        { value: "unpaid", label: "Awaiting payment" },
+        { value: "refunded", label: "Refunded" },
+      ],
+    },
+  ],
 ];
 
 const CABIN_LABEL: Record<string, string> = {
@@ -121,6 +173,31 @@ const CABIN_LABEL: Record<string, string> = {
   business: "Business",
   first: "First",
 };
+
+const PAYMENT_METHOD_LABEL: Record<PaymentMethod, string> = {
+  card: "Card",
+  bank_transfer: "Bank transfer",
+  cash: "Cash",
+  unpaid: "Not paid",
+};
+
+const PAYMENT_STATUS_LABEL: Record<PaymentStatus, string> = {
+  paid_in_full: "paid in full",
+  deposit: "deposit taken",
+  unpaid: "awaiting payment",
+  refunded: "refunded",
+};
+
+/** The design's Payment row: "Card · paid in full". */
+function paymentLine(
+  method: PaymentMethod | null | undefined,
+  status: PaymentStatus | null | undefined
+): string {
+  const m = method ? PAYMENT_METHOD_LABEL[method] : null;
+  const s = status ? PAYMENT_STATUS_LABEL[status] : null;
+  if (m && s) return `${m} · ${s}`;
+  return m ?? (s ? titleCase(s) : "Not recorded");
+}
 
 /** "2 adults · 1 child" — falls back to the legacy passenger count. */
 function paxSummary(adults: number, children: number, passengers: number | null) {
@@ -181,6 +258,12 @@ export function OrderDetail({
     sellingPrice: order.selling_price != null ? String(order.selling_price) : "",
     costPrice: order.cost_price != null ? String(order.cost_price) : "",
     commission: order.commission != null ? String(order.commission) : "",
+    airline: order.airline ?? "",
+    flightNumbers: order.flight_numbers ?? "",
+    budgetPerPerson:
+      order.budget_per_person != null ? String(order.budget_per_person) : "",
+    paymentMethod: order.payment_method ?? "",
+    paymentStatus: order.payment_status ?? "",
   });
   const [notes, setNotes] = useState(order.notes ?? "");
 
@@ -224,6 +307,7 @@ export function OrderDetail({
           ? (CABIN_LABEL[order.cabin_class] ?? titleCase(order.cabin_class))
           : "Not set",
       },
+      { label: "Airline", value: order.airline?.trim() || "Any airline" },
       { label: "From", value: order.route_from ?? "—" },
       { label: "To", value: order.route_to ?? "—" },
       {
@@ -241,17 +325,14 @@ export function OrderDetail({
           : "Standard allowance",
       },
       {
-        label: "Wheelchair",
-        value: order.wheelchair ? "Assistance required" : "Not required",
-      },
-      {
-        label: "Children's ages",
+        // The design's ninth tile. Wheelchair and children's ages used to sit
+        // here, but the Passengers card already carries both — per traveller,
+        // which is where the design puts them too.
+        label: "Budget",
         value:
-          order.children > 0 && order.child_ages.length > 0
-            ? order.child_ages.join(", ")
-            : order.children > 0
-              ? `${order.children} — ages not given`
-              : "No children travelling",
+          order.budget_per_person != null
+            ? `${gbp(order.budget_per_person)} per person`
+            : "Not given",
       },
     ];
     return rows;
@@ -310,6 +391,11 @@ export function OrderDetail({
       costPrice: parseNum(edit.costPrice),
       commission: parseNum(edit.commission),
       notes: notes || null,
+      airline: edit.airline || null,
+      flightNumbers: edit.flightNumbers || null,
+      budgetPerPerson: parseNum(edit.budgetPerPerson),
+      paymentMethod: (edit.paymentMethod || null) as PaymentMethod | null,
+      paymentStatus: (edit.paymentStatus || null) as PaymentStatus | null,
     });
     setBusy(null);
     if (!res.ok) {
@@ -392,9 +478,15 @@ export function OrderDetail({
       </div>
 
       {/* ------------------------------------------------ boarding pass */}
+      {/* The design's pass names the carrier and its flight numbers. Until an
+          order has them it falls back to the trip shape and the order ref, so
+          the header is never blank. */}
       <BoardingPass
-        carrier={order.return_date ? "Return flight" : "One way"}
-        reference={order.order_number}
+        carrier={
+          order.airline?.trim() ||
+          (order.return_date ? "Return flight" : "One way")
+        }
+        reference={order.flight_numbers?.trim() || order.order_number}
         fromCode={from.code}
         fromCity={from.city}
         toCode={to.code}
@@ -561,11 +653,10 @@ export function OrderDetail({
                   value: order.commission != null ? gbp(order.commission) : "—",
                 },
                 {
-                  label: "Margin",
-                  value:
-                    order.commission != null && order.selling_price
-                      ? `${Math.round((order.commission / order.selling_price) * 1000) / 10}% of the sale`
-                      : "—",
+                  // The design's fourth row is Payment, not a margin — the
+                  // margin is readable from the three figures above it.
+                  label: "Payment",
+                  value: paymentLine(order.payment_method, order.payment_status),
                 },
               ].map((r) => (
                 <div
@@ -723,17 +814,35 @@ export function OrderDetail({
                     >
                       {f.label}
                     </label>
-                    <input
-                      id={f.id}
-                      type={f.type ?? "text"}
-                      value={edit[f.key]}
-                      required={f.required}
-                      disabled={busy === "edit"}
-                      onChange={(e) =>
-                        setEdit((s) => ({ ...s, [f.key]: e.target.value }))
-                      }
-                      className={cn(inputClass, focusRing)}
-                    />
+                    {f.options ? (
+                      <select
+                        id={f.id}
+                        value={edit[f.key]}
+                        disabled={busy === "edit"}
+                        onChange={(e) =>
+                          setEdit((s) => ({ ...s, [f.key]: e.target.value }))
+                        }
+                        className={cn(selectClass, focusRing)}
+                      >
+                        {f.options.map((o) => (
+                          <option key={o.value} value={o.value}>
+                            {o.label}
+                          </option>
+                        ))}
+                      </select>
+                    ) : (
+                      <input
+                        id={f.id}
+                        type={f.type ?? "text"}
+                        value={edit[f.key]}
+                        required={f.required}
+                        disabled={busy === "edit"}
+                        onChange={(e) =>
+                          setEdit((s) => ({ ...s, [f.key]: e.target.value }))
+                        }
+                        className={cn(inputClass, focusRing)}
+                      />
+                    )}
                   </div>
                 ))}
               </div>

@@ -6,8 +6,11 @@ import type { Order, OrderWithRelations } from "./types";
  * customers only their own.
  */
 
-const ORDER_COLUMNS =
-  "id, order_number, conversation_id, customer_id, route_from, route_to, travel_date, return_date, passengers, status, trip_type, adults, children, child_ages, wheelchair, extra_luggage, extra_luggage_kg, cabin_class, passenger_names, selling_price, cost_price, commission, notes, customer_note, created_by, assigned_employee_id, closed_at, created_at";
+// `*` rather than a hand-kept list: migration 0021 adds airline, flight
+// numbers, budget and payment columns, and a wildcard means the app runs
+// identically whether or not that migration has been applied yet. Orders carry
+// no column an admin/employee/customer must not see — RLS scopes the rows.
+const ORDER_COLUMNS = "*";
 
 // Two FKs point at profiles (created_by, assigned_employee_id), so each embed
 // is disambiguated with its source column (PostgREST relationship hint).

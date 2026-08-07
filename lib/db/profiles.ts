@@ -6,8 +6,8 @@ import type { Profile } from "./types";
  * what actually comes back (see supabase/migrations/0002_rls_policies.sql).
  */
 
-const PROFILE_COLUMNS =
-  "id, full_name, email, role, access_level, is_active, created_at";
+// `*` so job_title (migration 0021) appears the moment that migration runs.
+const PROFILE_COLUMNS = "*";
 
 /** All staff (role = 'employee'). Admin-only in practice via RLS. */
 export async function getEmployees(): Promise<Profile[]> {

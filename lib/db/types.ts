@@ -34,6 +34,8 @@ export type Profile = {
   full_name: string | null;
   role: UserRole | null;
   access_level: AccessLevel | null;
+  /** Human job title ("Ticketing agent"). Not a permission. Added in 0021. */
+  job_title?: string | null;
   is_active: boolean; // added in 0003 (not null default true)
   email: string | null; // added in 0003
   created_at: string;
@@ -74,6 +76,11 @@ export type Message = {
   created_at: string;
 };
 
+/** How a completed order was paid for (0021). */
+export type PaymentMethod = "card" | "bank_transfer" | "cash" | "unpaid";
+/** Where that payment got to (0021). */
+export type PaymentStatus = "paid_in_full" | "deposit" | "unpaid" | "refunded";
+
 export type Order = {
   id: string;
   order_number: string; // human ref "#7343490", auto-generated on insert (0016)
@@ -95,10 +102,20 @@ export type Order = {
   extra_luggage_kg: number | null;
   cabin_class: CabinClass | null;
   passenger_names: string[];
+  /** Carrier on the boarding pass, e.g. "Emirates". Added in 0021. */
+  airline?: string | null;
+  /** "EK 004 · EK 003" — both legs in one field. Added in 0021. */
+  flight_numbers?: string | null;
+  /** What the customer wanted to spend per traveller. Added in 0021. */
+  budget_per_person?: number | null;
   // ----- Pricing -----
   selling_price: number | null;
   cost_price: number | null;
   commission: number | null;
+  /** How they paid — card / transfer / cash / unpaid. Added in 0021. */
+  payment_method?: PaymentMethod | null;
+  /** paid_in_full / deposit / unpaid / refunded. Added in 0021. */
+  payment_status?: PaymentStatus | null;
   notes: string | null; // internal staff notes
   customer_note: string | null; // pre-order gate note from the customer (0016)
   created_by: string | null; // -> profiles.id (the employee/admin); null for customer-created
@@ -200,6 +217,11 @@ export type BusinessSettings = {
   business_address: string | null;
   default_commission: number | null;
   logo_url: string | null;
+  /** Trading identifiers the design's Business profile asks for (0021). */
+  company_number?: string | null;
+  atol_licence?: string | null;
+  iata_number?: string | null;
+  currency?: string | null;
   updated_at: string;
 };
 

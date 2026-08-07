@@ -216,7 +216,7 @@ export default function EmployeesPage() {
     const q = search.trim().toLowerCase();
     if (!q) return all;
     return all.filter((emp) =>
-      `${emp.full_name ?? ""} ${emp.email ?? ""} ${ACCESS_LEVEL_LABELS[normalizeAccess(emp.access_level)]}`
+      `${emp.full_name ?? ""} ${emp.email ?? ""} ${emp.job_title ?? ""} ${ACCESS_LEVEL_LABELS[normalizeAccess(emp.access_level)]}`
         .toLowerCase()
         .includes(q)
     );
@@ -369,7 +369,18 @@ export default function EmployeesPage() {
                             <span className="text-[13px] font-medium">{name}</span>
                           </Link>
                         </Td>
-                        <Td>{ACCESS_LEVEL_LABELS[level]}</Td>
+                        {/* The design's Role column is a job title; the access
+                            level is a permission tier and reads beneath it. */}
+                        <Td>
+                          <span className="flex flex-col gap-0.5">
+                            <span className="text-ink-800 text-[13px] font-medium">
+                              {emp.job_title?.trim() || "No title set"}
+                            </span>
+                            <span className="text-ink-500 text-[11.5px] font-normal">
+                              {ACCESS_LEVEL_LABELS[level]}
+                            </span>
+                          </span>
+                        </Td>
                         <Td className="text-ink-600 text-[13px]">
                           {emp.email ?? "—"}
                         </Td>

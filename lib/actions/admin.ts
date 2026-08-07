@@ -27,6 +27,8 @@ import type {
   AccessLevel,
   Message,
   BusinessSettings,
+  PaymentMethod,
+  PaymentStatus,
 } from "@/lib/db/types";
 import { normalizeOrderInput, type OrderFormInput } from "@/lib/orders/form";
 
@@ -35,6 +37,20 @@ import { normalizeOrderInput, type OrderFormInput } from "@/lib/orders/form";
  * policies grant all); privileged writes use the service-role client AFTER an
  * explicit admin check here, since service-role bypasses RLS.
  */
+
+/**
+ * True when PostgREST rejected a write because a column is not there yet —
+ * i.e. migration 0021 has not been applied to this database. Callers retry
+ * with the pre-0021 payload so the feature degrades instead of failing.
+ */
+function isMissingColumn(error: { message?: string; code?: string }): boolean {
+  return (
+    error?.code === "PGRST204" ||
+    /column .* does not exist|could not find the .* column/i.test(
+      error?.message ?? ""
+    )
+  );
+}
 
 type ActionResult = { ok: true } | { ok: false; error: string };
 type DataResult<T> = { ok: true; data: T } | { ok: false; error: string };
@@ -204,18 +220,30 @@ export async function createOrder(
     conversationId = opened?.id ?? null;
   }
 
-  const { data, error } = await supabase
-    .from("orders")
-    .insert({
-      ...normalized.fields,
-      customer_id: input.customerId,
-      conversation_id: conversationId,
-      created_by: user.id,
-    })
-    .select("id, order_number")
-    .single<{ id: string; order_number: string }>();
+  const row = {
+    ...normalized.fields,
+    customer_id: input.customerId,
+    conversation_id: conversationId,
+    created_by: user.id,
+  };
+  const insert = (payload: Record<string, unknown>) =>
+    supabase
+      .from("orders")
+      .insert(payload)
+      .select("id, order_number")
+      .single<{ id: string; order_number: string }>();
 
-  if (error) return { ok: false, error: error.message };
+  let { data, error } = await insert(row);
+  if (error && isMissingColumn(error)) {
+    // Migration 0021 not applied yet — drop its column and insert the rest, so
+    // creating an order never depends on a pending migration.
+    const { airline: _airline, ...legacy } = row;
+    ({ data, error } = await insert(legacy));
+  }
+
+  if (error || !data) {
+    return { ok: false, error: error?.message ?? "Couldn't create the order." };
+  }
   // The human ref is trigger-generated, so it only exists after the insert —
   // the create screen shows it back ("Order #7343490 created").
   return { ok: true, data: { orderId: data.id, orderNumber: data.order_number } };
@@ -238,6 +266,12 @@ export async function updateOrder(input: {
   costPrice: number | null;
   commission: number | null;
   notes: string | null;
+  // ----- added by migration 0021; optional so older databases still work -----
+  airline?: string | null;
+  flightNumbers?: string | null;
+  budgetPerPerson?: number | null;
+  paymentMethod?: PaymentMethod | null;
+  paymentStatus?: PaymentStatus | null;
 }): Promise<ActionResult> {
   try {
     await requireAdmin();
@@ -252,22 +286,44 @@ export async function updateOrder(input: {
   }
 
   const supabase = await createClient();
+  const base = {
+    route_from: routeFrom,
+    route_to: routeTo,
+    travel_date: input.travelDate,
+    return_date: input.returnDate,
+    passengers: input.passengers,
+    selling_price: input.sellingPrice,
+    cost_price: input.costPrice,
+    commission: input.commission,
+    notes: input.notes?.trim() || null,
+  };
+  const extended = {
+    ...base,
+    airline: input.airline?.trim() || null,
+    flight_numbers: input.flightNumbers?.trim() || null,
+    budget_per_person: input.budgetPerPerson ?? null,
+    payment_method: input.paymentMethod ?? null,
+    payment_status: input.paymentStatus ?? null,
+  };
+
   const { error } = await supabase
     .from("orders")
-    .update({
-      route_from: routeFrom,
-      route_to: routeTo,
-      travel_date: input.travelDate,
-      return_date: input.returnDate,
-      passengers: input.passengers,
-      selling_price: input.sellingPrice,
-      cost_price: input.costPrice,
-      commission: input.commission,
-      notes: input.notes?.trim() || null,
-    })
+    .update(extended)
     .eq("id", input.id);
 
-  if (error) return { ok: false, error: error.message };
+  if (error) {
+    // Migration 0021 not applied yet: save everything it does understand
+    // rather than failing the whole edit.
+    if (isMissingColumn(error)) {
+      const retry = await supabase
+        .from("orders")
+        .update(base)
+        .eq("id", input.id);
+      if (retry.error) return { ok: false, error: retry.error.message };
+      return { ok: true };
+    }
+    return { ok: false, error: error.message };
+  }
   return { ok: true };
 }
 
@@ -893,9 +949,9 @@ export async function getBusinessSettings(): Promise<BusinessSettings | null> {
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("business_settings")
-    .select(
-      "id, business_name, business_email, business_phone, business_address, default_commission, logo_url, updated_at"
-    )
+    // `*` so the four identifiers migration 0021 adds appear as soon as it
+    // runs, without this select needing a matching deploy.
+    .select("*")
     .eq("id", 1)
     .maybeSingle<BusinessSettings>();
 
@@ -909,6 +965,11 @@ export async function saveBusinessSettings(input: {
   businessPhone: string;
   businessAddress: string;
   defaultCommission: number | null;
+  // ----- added by migration 0021 -----
+  companyNumber?: string;
+  atolLicence?: string;
+  iataNumber?: string;
+  currency?: string;
 }): Promise<ActionResult> {
   try {
     await requireAdmin();
@@ -921,20 +982,37 @@ export async function saveBusinessSettings(input: {
   }
 
   const supabase = await createClient();
-  const { error } = await supabase.from("business_settings").upsert(
-    {
-      id: 1,
-      business_name: input.businessName.trim() || null,
-      business_email: input.businessEmail.trim() || null,
-      business_phone: input.businessPhone.trim() || null,
-      business_address: input.businessAddress.trim() || null,
-      default_commission: input.defaultCommission,
-      updated_at: new Date().toISOString(),
-    },
-    { onConflict: "id" }
-  );
+  const base = {
+    id: 1,
+    business_name: input.businessName.trim() || null,
+    business_email: input.businessEmail.trim() || null,
+    business_phone: input.businessPhone.trim() || null,
+    business_address: input.businessAddress.trim() || null,
+    default_commission: input.defaultCommission,
+    updated_at: new Date().toISOString(),
+  };
+  const extended = {
+    ...base,
+    company_number: input.companyNumber?.trim() || null,
+    atol_licence: input.atolLicence?.trim() || null,
+    iata_number: input.iataNumber?.trim() || null,
+    currency: input.currency?.trim() || "GBP",
+  };
 
-  if (error) return { ok: false, error: error.message };
+  const { error } = await supabase
+    .from("business_settings")
+    .upsert(extended, { onConflict: "id" });
+
+  if (error) {
+    if (isMissingColumn(error)) {
+      const retry = await supabase
+        .from("business_settings")
+        .upsert(base, { onConflict: "id" });
+      if (retry.error) return { ok: false, error: retry.error.message };
+      return { ok: true };
+    }
+    return { ok: false, error: error.message };
+  }
   return { ok: true };
 }
 

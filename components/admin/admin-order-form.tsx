@@ -701,6 +701,9 @@ export function AdminOrderForm({ customers }: { customers: AdminOrderCustomer[] 
       extraLuggage: draft.luggage !== LUGGAGE[0],
       extraLuggageKg: LUGGAGE_KG[draft.luggage] ?? null,
       customerNote: noteLines.join("\n") || null,
+      // Stored on its own column too, so the boarding pass and the Airline
+      // tile can name the carrier instead of digging it out of the note.
+      airline: draft.airline !== ANY_AIRLINE ? draft.airline : null,
     };
 
     const res = await createOrder(input);

@@ -25,6 +25,11 @@ export type OrderFormInput = {
   extraLuggage: boolean;
   extraLuggageKg: number | null;
   customerNote: string | null;
+  /**
+   * Preferred carrier, captured by the admin wizard. Optional so the shared
+   * employee/customer form is unaffected. Persisted by migration 0021.
+   */
+  airline?: string | null;
 };
 
 export const TRIP_TYPES: { value: TripType; label: string; hint: string }[] = [
@@ -137,6 +142,8 @@ export type OrderInsertFields = {
   passenger_names: string[];
   passengers: number;
   customer_note: string | null;
+  /** Preferred carrier — the column migration 0021 adds. */
+  airline: string | null;
   status: "new";
 };
 
@@ -219,6 +226,7 @@ export function normalizeOrderInput(
       passenger_names: passengerNames,
       passengers: adults + children,
       customer_note: sanitizeText(input.customerNote ?? "", LIMITS.ORDER_NOTE).trim() || null,
+      airline: sanitizeLine(input.airline ?? "", LIMITS.PASSENGER_NAME) || null,
       status: "new",
     },
   };
