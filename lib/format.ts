@@ -31,6 +31,32 @@ export function fmtDate(iso: string | null | undefined): string {
 }
 
 /**
+ * The design's conversation-list timestamp: a clock for today, "Yesterday",
+ * the weekday inside the last week, then a short date. Deliberately not
+ * `fmtRelative` — a list of "2d ago" reads worse than "Mon" at a glance.
+ */
+export function fmtInboxTime(iso: string | null | undefined): string {
+  if (!iso) return "";
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return "";
+  const startOf = (x: Date) =>
+    new Date(x.getFullYear(), x.getMonth(), x.getDate()).getTime();
+  const days = Math.round((startOf(new Date()) - startOf(d)) / 86_400_000);
+  if (days <= 0) {
+    return new Intl.DateTimeFormat("en-GB", {
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: false,
+    }).format(d);
+  }
+  if (days === 1) return "Yesterday";
+  if (days < 7) {
+    return new Intl.DateTimeFormat("en-GB", { weekday: "short" }).format(d);
+  }
+  return fmtDate(iso);
+}
+
+/**
  * "12 August 2026" — the design's long date without the weekday. Used by the
  * order screen's flight tiles and the order thread's day dividers, where
  * `fmtLongDate` would wrap the tile onto a second line.

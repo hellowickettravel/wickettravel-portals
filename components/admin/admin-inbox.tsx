@@ -23,7 +23,7 @@ import { MessageAttachment } from "@/components/portal/message-attachment";
 import { MessageText } from "@/components/portal/message-text";
 import type { InboxConversation } from "@/lib/db/conversations";
 import type { Message } from "@/lib/db/types";
-import { fmtRelative } from "@/lib/format";
+import { fmtInboxTime } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import {
   Avatar,
@@ -60,7 +60,14 @@ function dayKey(iso: string) {
   return new Date(iso).toDateString();
 }
 
-export function AdminInbox({ currentUserId }: { currentUserId: string }) {
+export function AdminInbox({
+  currentUserId,
+  currentUserName = "Wicket Travel",
+}: {
+  currentUserId: string;
+  /** The design names the person behind each staff bubble, not just the role. */
+  currentUserName?: string;
+}) {
   const queryClient = useQueryClient();
   const supabase = useMemo(() => createClient(), []);
 
@@ -302,7 +309,8 @@ export function AdminInbox({ currentUserId }: { currentUserId: string }) {
                   onClick={() => setActiveId(c.id)}
                   style={{ borderLeftColor: on ? "var(--color-marine-500)" : "transparent" }}
                   className={cn(
-                    "hover:bg-surface-1 relative flex w-full gap-3 border-0 border-l-[3px] p-4 text-left outline-none",
+                    // leading-normal keeps the row at the design's 67px.
+                    "hover:bg-surface-1 relative flex w-full gap-3 border-0 border-l-[3px] p-4 text-left leading-[normal] outline-none",
                     "after:bg-line-soft after:absolute after:right-0 after:bottom-0 after:left-[62px] after:h-px after:content-['']",
                     on ? "bg-marine-sel" : "bg-white"
                   )}
@@ -317,7 +325,7 @@ export function AdminInbox({ currentUserId }: { currentUserId: string }) {
                     <span className="flex items-baseline justify-between gap-2">
                       <span className="truncate text-[13px] font-medium">{name}</span>
                       <span className="text-ink-500 flex-none text-[11px] font-normal">
-                        {c.last_message_at ? fmtRelative(c.last_message_at) : ""}
+                        {fmtInboxTime(c.last_message_at)}
                       </span>
                     </span>
                     <span className="text-ink-500 truncate text-[12.5px] font-normal">
@@ -422,11 +430,18 @@ export function AdminInbox({ currentUserId }: { currentUserId: string }) {
               ) : (
                 (messages ?? []).map((m, i, arr) => {
                   const mine = m.direction === "outgoing";
+                  // Outgoing messages are named after whoever sent them —
+                  // an employee if we can resolve the id, otherwise the
+                  // signed-in admin. The caption is the design's own
+                  // vocabulary: User / Support / Admin.
+                  const staffName = employeeName(m.sender_id);
                   const who = mine
-                    ? { name: "Wicket Travel", role: "Admin" }
+                    ? staffName
+                      ? { name: staffName, role: "Support" }
+                      : { name: currentUserName, role: "Admin" }
                     : {
                         name: active.customer?.name ?? "Customer",
-                        role: "Customer",
+                        role: "User",
                       };
                   const tint = avatarFor(who.name);
                   const newDay =

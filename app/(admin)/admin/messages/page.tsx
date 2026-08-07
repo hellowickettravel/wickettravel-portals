@@ -4,7 +4,7 @@ import { InboxTools } from "@/components/admin/inbox-tools";
 import { AdminInbox } from "@/components/admin/admin-inbox";
 
 export default async function MessagesPage() {
-  const { user } = await getUserAndProfile();
+  const { user, profile } = await getUserAndProfile();
 
   return (
     <Screen>
@@ -15,7 +15,10 @@ export default async function MessagesPage() {
 
       <InboxTools />
 
-      <AdminInbox currentUserId={user?.id ?? ""} />
+      <AdminInbox
+        currentUserId={user?.id ?? ""}
+        currentUserName={profile?.full_name ?? "Wicket Travel"}
+      />
     </Screen>
   );
 }

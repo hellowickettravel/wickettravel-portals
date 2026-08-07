@@ -29,6 +29,16 @@ const BAR_CURRENT =
  * floating above each column, and the current (right-most, still-in-progress)
  * period picked out in ember while every settled period stays marine.
  */
+/** Next readable round number at or above `v`, with at least 10% headroom. */
+function niceCeil(v: number): number {
+  if (v <= 0) return 1;
+  const target = v * 1.1;
+  const exp = Math.pow(10, Math.floor(Math.log10(target)));
+  const steps = [1, 1.25, 1.5, 2, 2.5, 3, 4, 5, 6, 8, 10];
+  const f = target / exp;
+  return (steps.find((s) => s >= f) ?? 10) * exp;
+}
+
 function ColumnChart({
   data,
   format,
@@ -36,7 +46,11 @@ function ColumnChart({
   data: { label: string; value: number }[];
   format: (v: number) => string;
 }) {
-  const max = Math.max(1, ...data.map((d) => d.value));
+  // The design's axis tops out above its tallest bar (£5k for a £4.3k peak),
+  // which is what leaves room for the value pill that sits on top of it. A bar
+  // scaled to the raw maximum touches the ceiling and pushes its pill out of
+  // the plot, so round the ceiling up to the next readable step instead.
+  const max = niceCeil(Math.max(1, ...data.map((d) => d.value)));
   const axis = [1, 0.75, 0.5, 0.25, 0].map((f) => format(Math.round(max * f)));
 
   return (
