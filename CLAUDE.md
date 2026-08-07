@@ -51,6 +51,17 @@ file, which extends the auth design's system into the product interior. The
 employee, customer and driver portals are unchanged and stay on navy/orange.
 - Type: **Instrument Sans** everywhere, **Poppins 500** for page titles, the
   brand wordmark and headline metrics. Weights are 400 / 500 / 600 only.
+  The project-wide `h1..h4 { font-family: Jakarta }` base rule is cancelled
+  inside `.admin-root` (`:is(h1,…,h6)` → Instrument Sans, tracking cleared), so
+  a bare `<h2>` in an admin component gets the right face without a utility.
+- Page titles are **ink-700 at line-height 1.5** — the design's h1 declares
+  neither, so both come from the shell. Do not darken or tighten them.
+- Status labels are **sentence case** (`statusLabel()` in `lib/format.ts`):
+  "In progress", never "In Progress". `titleCase()` is for other enums.
+- Several design rows are `<button>`s, so their contents sit on the UA's
+  `line-height: normal`, not the shell's 1.5. Where a row's height has to
+  match (dashboard order rows, sidebar nav items) put `leading-[normal]` on
+  the row so its children inherit it.
 - Colour: the auth **Marine / Ink / Ember** namespace plus the interior tokens
   (`--color-ink-800…950`, `--color-line-*`, `--color-surface-*`,
   `--color-warn-*`, `--color-ok-*`, `--color-teal-*`, `--color-violet-*`,

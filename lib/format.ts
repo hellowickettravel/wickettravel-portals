@@ -81,6 +81,15 @@ export function routeLabel(
   return `${placeCode(from)} → ${placeCode(to)}`;
 }
 
+/**
+ * A lifecycle status as the design writes it: sentence case, not title case —
+ * "In progress", never "In Progress". Every status pill in /admin reads this.
+ */
+export function statusLabel(value: string): string {
+  const s = value.replace(/_/g, " ").trim().toLowerCase();
+  return s ? s[0].toUpperCase() + s.slice(1) : s;
+}
+
 /** Capitalize the first letter of each word (for lowercase enum display). */
 export function titleCase(value: string): string {
   return value

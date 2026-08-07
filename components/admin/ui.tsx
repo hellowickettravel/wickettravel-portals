@@ -87,7 +87,7 @@ export function PageTitle({
   return (
     <h1
       className={cn(
-        "font-poppins text-ink-900 m-0 text-[clamp(20px,1.5vw,24px)] leading-[1.25] font-medium tracking-[-0.02em]",
+        "font-poppins text-ink-700 m-0 text-[clamp(20px,1.5vw,24px)] leading-[1.5] font-medium tracking-[-0.02em]",
         className
       )}
     >
@@ -185,7 +185,7 @@ export function CardHead({
 
 export function CardTitle({ children }: { children: React.ReactNode }) {
   return (
-    <h2 className="text-ink-800 m-0 text-[13.5px] leading-[1.4] font-semibold tracking-[-0.008em]">
+    <h2 className="text-ink-800 m-0 min-w-0 text-[13.5px] leading-[1.5] font-semibold tracking-[-0.008em]">
       {children}
     </h2>
   );
@@ -278,7 +278,7 @@ export function Kpi({
       <span className="flex flex-wrap items-baseline gap-2.5">
         <span
           className={cn(
-            "font-poppins text-ink-880 text-[24px] leading-none font-medium tracking-[-0.022em] tabular-nums",
+            "font-poppins text-ink-800 text-[24px] leading-none font-medium tracking-[-0.022em] tabular-nums",
             valueClass
           )}
         >
@@ -316,8 +316,8 @@ const BTN_BASE =
 
 /** md — the design's default control: 40px tall, 13px/500 label. */
 export const btnMd = `${BTN_BASE} h-10 px-5 text-[13px]`;
-/** sm — filter chips and in-table actions: 34px, 12–12.5px label. */
-export const btnSm = `${BTN_BASE} h-[34px] px-4 text-[12.5px]`;
+/** sm — "Load more", table footers, in-card actions: 34px, 12px label. */
+export const btnSm = `${BTN_BASE} h-[34px] px-4 text-[12px]`;
 
 /** Primary CTA — Ember 600 fill. One spark per view. */
 export const btnEmber =

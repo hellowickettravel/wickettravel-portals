@@ -8,7 +8,7 @@ import {
   fmtLongDate,
   fmtRelative,
   routeLabel,
-  titleCase,
+  statusLabel,
 } from "@/lib/format";
 import {
   Btn,
@@ -144,7 +144,7 @@ export default async function AdminDashboardPage() {
             action={
               <Link
                 href="/admin/orders"
-                className="text-marine-600 text-[12.5px] font-medium whitespace-nowrap no-underline hover:no-underline"
+                className="text-marine-600 text-[12.5px] leading-[normal] font-medium whitespace-nowrap no-underline hover:no-underline"
               >
                 All orders
               </Link>
@@ -157,10 +157,14 @@ export default async function AdminDashboardPage() {
               </p>
             ) : (
               recentOrders.map((o) => (
+                /* leading-normal: the design's row is a <button>, so every
+                   line inside it sits on the UA's `normal` line-height and
+                   the row lands on 60px. Inheriting the shell's 1.5 made it
+                   67px and pushed the card 10px taller than the design. */
                 <Link
                   key={o.id}
                   href={`/admin/orders/${o.id}`}
-                  className="border-line-soft hover:bg-surface-1 flex w-full items-center gap-4 border-b px-5 py-3 text-left no-underline hover:no-underline"
+                  className="border-line-soft hover:bg-surface-1 flex w-full items-center gap-4 border-b bg-white px-5 py-3 text-left leading-[normal] no-underline hover:no-underline"
                 >
                   <span className="flex min-w-0 flex-1 flex-col gap-1">
                     <span className="flex flex-wrap items-center gap-2">
@@ -176,7 +180,7 @@ export default async function AdminDashboardPage() {
                       {o.travel_date ? fmtDate(o.travel_date) : "Date to confirm"}
                     </span>
                   </span>
-                  <Pill>{titleCase(o.status)}</Pill>
+                  <Pill>{statusLabel(o.status)}</Pill>
                   <span className="text-ink-800 min-w-[60px] flex-none text-right text-[13px] font-medium tabular-nums">
                     {o.selling_price != null ? gbp(o.selling_price) : "—"}
                   </span>
@@ -205,9 +209,12 @@ export default async function AdminDashboardPage() {
               </p>
             ) : (
               activity.items.map((a) => (
+                /* The design's rule is a ::after inset to left:24px — it
+                   starts past the dot and its 16px gap, never under them —
+                   and it is drawn on every row, the last one included. */
                 <div
                   key={a.id}
-                  className="border-line-soft flex gap-4 border-b py-3 last:border-b-0"
+                  className="after:bg-line-soft relative flex gap-4 py-3 after:absolute after:right-0 after:bottom-0 after:left-6 after:h-px after:content-['']"
                 >
                   <span
                     style={{ background: ACTIVITY_DOT[a.tone] }}

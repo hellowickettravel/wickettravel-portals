@@ -399,6 +399,17 @@
     background: var(--color-canvas);
     -webkit-font-smoothing: antialiased;
   }
+  /* The project-wide `h1..h4 { font-family: Jakarta }` in the base layer above
+     is for the navy/orange portals. Inside /admin every heading is the
+     design's own typeface — Poppins only where a `font-poppins` utility says
+     so (page titles, display figures), Instrument Sans everywhere else. The
+     base rule's -0.01em tracking is cleared for the same reason: the design
+     tracks each heading explicitly or not at all. Utilities still win, since
+     they sit in a later cascade layer. */
+  .admin-root :is(h1, h2, h3, h4, h5, h6) {
+    font-family: var(--font-instrument-sans), system-ui, sans-serif;
+    letter-spacing: normal;
+  }
   .admin-root a {
     color: var(--color-marine-500);
     text-decoration: none;
@@ -469,8 +480,11 @@
     font-family: var(--font-poppins-sans), system-ui, sans-serif;
     font-size: clamp(20px, 1.5vw, 24px);
     font-weight: 500;
-    line-height: 1.25;
-    color: var(--color-ink-900);
+    /* The design gives its h1 no colour and no line-height of its own: both
+       come from the shell (ink-700 at 1.5). Setting them darker/tighter is
+       what made the page head sit 5px short of the design. */
+    line-height: 1.5;
+    color: var(--color-ink-700);
   }
   .admin-root .wt-page-sub {
     font-size: 13.5px;

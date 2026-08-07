@@ -186,7 +186,11 @@ export function AdminShell({
                       href={item.href}
                       aria-current={active ? "page" : undefined}
                       className={cn(
-                        "flex h-10 w-full items-center gap-3 rounded-[10px] px-3 text-[13.5px] tracking-[0.4px] no-underline transition-[background-color,color,box-shadow] duration-[130ms] hover:no-underline",
+                        /* leading-normal so the label box is 16px tall, as
+                           it is in the design (its nav item is a <button>).
+                           The count is positioned off that box, so at 1.5 it
+                           floated too far above the word. */
+                        "flex h-10 w-full items-center gap-3 rounded-[10px] px-3 text-[13.5px] leading-[normal] tracking-[0.4px] no-underline transition-[background-color,color,box-shadow] duration-[130ms] hover:no-underline",
                         active
                           ? "bg-white/[0.10] font-semibold text-white shadow-[inset_3px_0_0_var(--color-ember-500)] hover:bg-white/[0.14]"
                           : cn(
@@ -212,7 +216,7 @@ export function AdminShell({
                               active ? "text-nav-count-on" : "text-nav-count"
                             )}
                           >
-                            {item.count}
+                            {item.count > 9 ? "9+" : item.count}
                           </span>
                         ) : null}
                       </span>
