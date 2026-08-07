@@ -268,12 +268,15 @@ export function AdminInbox({
   return (
     // The design gives both panes their own scroller (`om-scroll` + flex-1 +
     // min-height 0), which only works if the card itself is bounded — so the
-    // 560px floor is paired with a viewport-relative ceiling.
-    <Card className="grid h-[min(720px,calc(100dvh-13rem))] min-h-[560px] grid-cols-1 min-[940px]:grid-cols-[minmax(0,300px)_minmax(0,1fr)]">
+    // 560px floor is paired with a viewport-relative ceiling. Both grid items
+    // need min-h-0 as well: a grid item defaults to min-height:auto, which let
+    // the thread column grow past the card and pushed the composer out of the
+    // clipped area entirely.
+    <Card className="grid h-[min(860px,calc(100dvh-12rem))] min-h-[560px] grid-cols-1 min-[940px]:grid-cols-[minmax(0,300px)_minmax(0,1fr)]">
       {/* ------------------------------------------------ thread list */}
       <div
         className={cn(
-          "min-w-0 flex-col",
+          "min-h-0 min-w-0 flex-col overflow-hidden",
           threadOpen ? "hidden min-[940px]:flex" : "flex"
         )}
       >
@@ -347,7 +350,7 @@ export function AdminInbox({
       {/* ---------------------------------------------------- thread */}
       <div
         className={cn(
-          "border-line-pane min-w-0 flex-col min-[940px]:flex min-[940px]:border-l",
+          "border-line-pane min-h-0 min-w-0 flex-col overflow-hidden min-[940px]:flex min-[940px]:border-l",
           threadOpen ? "flex" : "hidden"
         )}
       >
@@ -385,7 +388,9 @@ export function AdminInbox({
                   }
                   aria-label="Assign to employee"
                   className={cn(
-                    "h-[34px] cursor-pointer rounded-full border bg-white pr-3 pl-3.5 text-[12px] font-medium outline-none",
+                    // appearance-none: at rest this reads as the design's
+                    // static pill, but it stays a one-click reassign.
+                    "h-[34px] cursor-pointer appearance-none rounded-full border bg-white px-3.5 text-[12px] font-medium outline-none",
                     active.assignedEmployeeId
                       ? "border-marine-200 text-marine-600"
                       : "border-warn-bg bg-warn-bg text-warn-ink"
