@@ -19,7 +19,8 @@ export function fmtDate(iso: string | null | undefined): string {
   if (Number.isNaN(d.getTime())) return "—";
   return (
     new Intl.DateTimeFormat("en-GB", {
-      day: "2-digit",
+      // The design writes "2 Sep 2026", never "02 Sep 2026".
+      day: "numeric",
       month: "short",
       year: "numeric",
     })
@@ -28,6 +29,27 @@ export function fmtDate(iso: string | null | undefined): string {
       // as three letters, so every short date lines up in a table column.
       .replace("Sept", "Sep")
   );
+}
+
+/**
+ * "Today, 09:04" / "Yesterday, 16:20" / "2 Aug 2026" — how the design stamps a
+ * row that reports when something arrived (a visa enquiry, a support ticket).
+ * It never writes "19h ago" in a list.
+ */
+export function fmtStamp(iso: string | null | undefined): string {
+  if (!iso) return "—";
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return "—";
+  const startOf = (x: Date) =>
+    new Date(x.getFullYear(), x.getMonth(), x.getDate()).getTime();
+  const days = Math.round((startOf(new Date()) - startOf(d)) / 86_400_000);
+  if (days > 1 || days < 0) return fmtDate(iso);
+  const time = new Intl.DateTimeFormat("en-GB", {
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false,
+  }).format(d);
+  return `${days === 0 ? "Today" : "Yesterday"}, ${time}`;
 }
 
 /**

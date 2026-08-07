@@ -11,7 +11,7 @@ import {
 } from "@/lib/actions/support";
 import { ADMIN_SUPPORT_TICKETS_KEY } from "@/lib/query-keys";
 import { createClient } from "@/lib/supabase/client";
-import { fmtRelative } from "@/lib/format";
+import { fmtStamp } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import {
   Btn,
@@ -234,7 +234,7 @@ export default function AdminSupportPage() {
                   <span className="text-ink-500 text-[11.5px] font-normal">
                     {submitterName(t)} ·{" "}
                     {t.submitter_role === "customer" ? "Customer" : "Employee"} ·{" "}
-                    {fmtRelative(t.created_at)}
+                    {fmtStamp(t.created_at)}
                   </span>
                 </span>
                 <span className="flex flex-none items-center gap-3">

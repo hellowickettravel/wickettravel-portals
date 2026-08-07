@@ -25,7 +25,8 @@ export const VISA_STATUSES: VisaEnquiryStatus[] = [
 export const VISA_STATUS_LABELS: Record<VisaEnquiryStatus, string> = {
   new: "New",
   contacted: "Contacted",
-  in_progress: "In Progress",
+  // Sentence case, as the design writes every status.
+  in_progress: "In progress",
   completed: "Completed",
   closed: "Closed",
 };
