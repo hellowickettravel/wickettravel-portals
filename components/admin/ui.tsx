@@ -440,7 +440,11 @@ export function Pill({
   return (
     <span
       className={cn(
-        "inline-flex items-center rounded-full px-3 py-1 text-[11px] font-medium whitespace-nowrap",
+        /* leading-normal keeps the pill 22px tall, which is what the design
+           renders in every context: in a table cell its span is `inline`, so
+           the fill takes the font's content box rather than the 1.5 line box,
+           and in a card row it sits inside a <button>. */
+        "inline-flex items-center rounded-full px-3 py-1 text-[11px] leading-[normal] font-medium whitespace-nowrap",
         PILL_TONE[t],
         className
       )}

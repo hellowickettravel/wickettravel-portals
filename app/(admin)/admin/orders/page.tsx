@@ -2,11 +2,12 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { createClient } from "@/lib/supabase/client";
 import { listOrders } from "@/lib/actions/admin";
 import type { OrderStatus } from "@/lib/db/types";
-import { gbp, fmtDate, routeLabel, titleCase } from "@/lib/format";
+import { gbp, fmtDate, routeLabel, statusLabel } from "@/lib/format";
 import { downloadCsv } from "@/lib/csv";
 import { cn } from "@/lib/utils";
 import {
@@ -55,7 +56,16 @@ export default function OrdersPage() {
   const queryClient = useQueryClient();
   const supabase = useMemo(() => createClient(), []);
   const [tab, setTab] = useState<Tab>("all");
-  const [query, setQuery] = useState("");
+
+  // The top bar's search hands this screen its term as ?q= (see SEARCH in
+  // admin-shell). It seeds the in-card box and re-syncs whenever the top bar
+  // submits again, since that is a soft navigation and never remounts us.
+  const topSearch = useSearchParams().get("q") ?? "";
+  const [query, setQuery] = useState(topSearch);
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setQuery(topSearch);
+  }, [topSearch]);
 
   const {
     data: orders,
@@ -350,17 +360,19 @@ export default function OrdersPage() {
                       {o.selling_price != null ? gbp(o.selling_price) : "—"}
                     </Td>
                     <Td>
-                      <Pill>{titleCase(o.status)}</Pill>
+                      <Pill>{statusLabel(o.status)}</Pill>
                     </Td>
                     <Td
                       className={cn(
                         "text-[12.5px]",
                         o.assigned_employee?.full_name
-                          ? "text-ink-700"
+                          ? "text-ink-600"
                           : "text-ink-450"
                       )}
                     >
-                      {o.assigned_employee?.full_name ?? "Unassigned"}
+                      {/* The design writes an unassigned row as an em dash in
+                          the placeholder ink, not the word "Unassigned". */}
+                      {o.assigned_employee?.full_name ?? "—"}
                     </Td>
                     <Td align="right">
                       <ViewButton href={`/admin/orders/${o.id}`} />
@@ -379,7 +391,12 @@ export default function OrdersPage() {
             noun="orders"
             action={
               hasMore ? (
-                <Btn onClick={() => setLimit((n) => n + PAGE_SIZE)}>
+                /* The design's table footer runs its 40px button at 12.5px,
+                   a half-step below the standard 13px control label. */
+                <Btn
+                  className="text-[12.5px]"
+                  onClick={() => setLimit((n) => n + PAGE_SIZE)}
+                >
                   Load {PAGE_SIZE} more — {filtered.length - limit} remaining
                 </Btn>
               ) : null
