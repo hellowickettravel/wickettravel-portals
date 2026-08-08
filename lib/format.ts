@@ -160,6 +160,15 @@ export function statusLabel(value: string): string {
   return s ? s[0].toUpperCase() + s.slice(1) : s;
 }
 
+/**
+ * The customer-facing name for an order status. Staff call a fresh order "New";
+ * the person who placed it needs to know it landed, so their portal says
+ * "Received". Everything else reads the same on both sides.
+ */
+export function customerStatusLabel(value: string): string {
+  return value === "new" ? "Received" : statusLabel(value);
+}
+
 /** Capitalize the first letter of each word (for lowercase enum display). */
 export function titleCase(value: string): string {
   return value

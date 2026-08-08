@@ -20,6 +20,7 @@ export function BoardingPass({
   cabin,
   passengers,
   price,
+  priceLabel = "Selling price",
   statusLabel,
   statusTone,
 }: {
@@ -34,6 +35,11 @@ export function BoardingPass({
   cabin: string;
   passengers: string;
   price: string;
+  /**
+   * "Selling price" is what staff call it. The customer portal renders the
+   * same pass and says "Total price" — one figure, two audiences.
+   */
+  priceLabel?: string;
   statusLabel: string;
   statusTone?: PillTone;
 }) {
@@ -112,7 +118,7 @@ export function BoardingPass({
       <div className="border-line-strong bg-surface-5 flex flex-[0_0_210px] flex-col justify-between gap-[18px] border-l-2 border-dashed px-[26px] py-6">
         <div className="flex flex-col gap-2">
           <span className="text-ink-500 text-[10.5px] font-semibold tracking-[0.1em] uppercase">
-            Selling price
+            {priceLabel}
           </span>
           <span className="font-poppins text-ink-880 text-[27px] leading-none font-semibold tracking-[-0.022em] tabular-nums">
             {price}

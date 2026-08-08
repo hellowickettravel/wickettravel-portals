@@ -3,47 +3,87 @@
 import { useEffect, useMemo } from "react";
 import Link from "next/link";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import {
-  Plane,
-  CheckCircle2,
-  Clock,
-  ArrowRight,
-  ArrowUpRight,
-} from "lucide-react";
-import { StatCard } from "@/components/admin/stat-card";
-import { SectionCard } from "@/components/admin/section-card";
-import { StatusBadge, type Tone } from "@/components/admin/status-badge";
 import { createClient } from "@/lib/supabase/client";
 import { listMyCustomerOrders } from "@/lib/actions/customer";
 import { CUSTOMER_ORDERS_KEY } from "@/lib/query-keys";
-import type { OrderStatus } from "@/lib/db/types";
-import { gbp, fmtDate } from "@/lib/format";
+import { cabinLabel } from "@/lib/orders/form";
+import { paxSummary, splitPlace } from "@/lib/orders/display";
+import {
+  gbp,
+  fmtDate,
+  fmtLongDate,
+  customerStatusLabel,
+  routeLabel,
+} from "@/lib/format";
+import type { Order, OrderStatus } from "@/lib/db/types";
+import { BoardingPass } from "@/components/admin/boarding-pass";
+import {
+  Btn,
+  Card,
+  CardHead,
+  EmptyState,
+  Kpi,
+  KpiGrid,
+  PageHead,
+  Pill,
+  Screen,
+  type PillTone,
+} from "@/components/admin/ui";
+import {
+  ArrowRightIcon,
+  ChatIcon,
+  CheckCircleIcon,
+  ClockIcon,
+  LifebuoyIcon,
+  OrdersIcon,
+  PlaneIcon,
+  PoundIcon,
+} from "@/components/admin/icons";
 
-const ORDER_TONE: Record<OrderStatus, Tone> = {
-  new: "blue",
-  in_progress: "amber",
-  completed: "green",
-  cancelled: "red",
+const PILL_TONE: Record<OrderStatus, PillTone> = {
+  new: "marine",
+  in_progress: "warn",
+  completed: "ok",
+  cancelled: "ink",
 };
 
-const STATUS_LABEL: Record<OrderStatus, string> = {
-  new: "Received",
-  in_progress: "In progress",
-  completed: "Completed",
-  cancelled: "Cancelled",
-};
+/** The soonest departure still ahead of us, on an order that is still alive. */
+function nextTripOf(orders: Order[], now: number): Order | null {
+  return (
+    orders
+      .filter(
+        (o) =>
+          o.status !== "cancelled" &&
+          o.travel_date &&
+          new Date(o.travel_date).getTime() >= now
+      )
+      .sort(
+        (a, b) =>
+          new Date(a.travel_date!).getTime() - new Date(b.travel_date!).getTime()
+      )[0] ?? null
+  );
+}
 
 /**
- * Live customer dashboard. Shares the CUSTOMER_ORDERS_KEY cache with My Orders so
- * both update together, and subscribes to realtime order changes (RLS scopes the
- * refetch to the caller's own orders) so a staff quote/price/status change shows
- * up here without a manual refresh. Stat cards + recent list update live.
+ * The traveller's home screen, on the same design system as the staff portals.
+ * Shares the CUSTOMER_ORDERS_KEY cache with My Orders so both update together,
+ * and subscribes to realtime order changes (RLS scopes the refetch to the
+ * caller's own orders) — so when the team adds a quote or moves an order on,
+ * the figures and the boarding pass change under the customer without a
+ * refresh.
  */
-export function CustomerDashboard({ firstName }: { firstName: string }) {
+export function CustomerDashboard({
+  firstName,
+  nowIso,
+}: {
+  firstName: string;
+  /** Request time, read on the server — the render itself stays pure. */
+  nowIso: string;
+}) {
   const queryClient = useQueryClient();
   const supabase = useMemo(() => createClient(), []);
 
-  const { data: orders } = useQuery({
+  const { data: orders, isLoading } = useQuery({
     queryKey: CUSTOMER_ORDERS_KEY,
     queryFn: listMyCustomerOrders,
   });
@@ -65,116 +105,202 @@ export function CustomerDashboard({ firstName }: { firstName: string }) {
 
   const active = rows.filter(
     (o) => o.status === "new" || o.status === "in_progress"
-  ).length;
-  const completed = rows.filter((o) => o.status === "completed").length;
-  const cancelled = rows.filter((o) => o.status === "cancelled").length;
-  const recent = rows.slice(0, 3);
+  );
+  const awaitingQuote = active.filter((o) => o.selling_price == null).length;
+  const completed = rows.filter((o) => o.status === "completed");
+  const spent = completed.reduce((s, o) => s + (o.selling_price ?? 0), 0);
+
+  const now = new Date(nowIso).getTime();
+  const nextTrip = nextTripOf(rows, now);
+  const recent = rows.slice(0, 5);
+
+  const from = nextTrip ? splitPlace(nextTrip.route_from) : null;
+  const to = nextTrip ? splitPlace(nextTrip.route_to) : null;
 
   return (
-    <div className="space-y-7 animate-in fade-in slide-in-from-bottom-2 duration-500 ease-out">
-      <div>
-        <h1 className="font-display text-xl font-semibold tracking-tight text-navy sm:text-2xl">
-          Welcome back, {firstName} 👋
-        </h1>
-        <p className="mt-1 text-sm text-muted-foreground">
-          Here&apos;s what&apos;s happening with your trips.
-        </p>
-      </div>
-
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-        <StatCard label="Active Orders" value={String(active)} icon={Plane} hint="in progress" />
-        <StatCard label="Completed Trips" value={String(completed)} icon={CheckCircle2} hint="all time" />
-        <StatCard label="Cancelled" value={String(cancelled)} icon={Clock} hint="cancelled requests" />
-      </div>
-
-      {/* CTA */}
-      <div className="relative overflow-hidden rounded-2xl bg-[linear-gradient(120deg,#1e3a5f_0%,#152c49_55%,#2c5282_100%)] p-7 shadow-card md:p-8">
-        <div className="bg-dot-grid pointer-events-none absolute inset-0 opacity-40 [mask-image:radial-gradient(120%_120%_at_20%_0%,black,transparent_75%)]" />
-        <div className="relative z-10 flex flex-col items-start justify-between gap-5 md:flex-row md:items-center">
-          <div className="max-w-md">
-            <h2 className="font-display text-xl font-semibold text-white md:text-2xl">
-              Planning your next trip?
-            </h2>
-            <p className="mt-1.5 text-sm text-white/75">
-              Tell us where you want to go and our team will find you the best fare.
-            </p>
-          </div>
-          <Link
-            href="/customer/book"
-            className="inline-flex h-11 items-center gap-2 rounded-[10px] bg-white px-5 text-sm font-semibold text-brand-dark shadow-sm outline-none transition-all hover:-translate-y-px hover:shadow-md focus-visible:ring-2 focus-visible:ring-white/70 focus-visible:ring-offset-2 focus-visible:ring-offset-navy"
-          >
-            Book a New Flight
-            <ArrowRight className="size-4" />
-          </Link>
-        </div>
-      </div>
-
-      {/* Recent orders */}
-      <SectionCard
-        title="Recent Orders"
-        action={
-          <Link
-            href="/customer/orders"
-            className="inline-flex items-center gap-1 text-sm font-medium text-brand transition-colors hover:text-brand-dark"
-          >
-            View all <ArrowRight className="size-4" />
-          </Link>
+    <Screen width={1240}>
+      <PageHead
+        title={`Welcome back, ${firstName}`}
+        intro={`Everything you have with us — ${fmtLongDate(nowIso)}.`}
+        actions={
+          <Btn as="link" href="/customer/book" variant="ember">
+            <PlaneIcon size={15} />
+            Book a flight
+          </Btn>
         }
-      >
-        {recent.length === 0 ? (
-          <p className="py-6 text-center text-sm text-muted-foreground">
-            No orders yet — request a quote to get started.
-          </p>
-        ) : (
-          <ul className="divide-y divide-border">
-            {recent.map((o) => (
-              <li
-                key={o.id}
-                className="flex flex-col gap-3 py-3.5 first:pt-0 last:pb-0 sm:flex-row sm:items-center sm:justify-between"
-              >
-                <div className="flex items-center gap-3">
-                  <div className="flex size-10 items-center justify-center rounded-xl bg-chip text-brand-dark">
-                    <Plane className="size-5 -rotate-45" />
-                  </div>
-                  <div className="leading-tight">
-                    <p className="font-medium text-foreground">
-                      {o.route_from ?? "?"} → {o.route_to ?? "?"}
-                    </p>
-                    <p className="text-xs text-muted-foreground">
-                      {fmtDate(o.travel_date)}
-                      {o.return_date ? ` · ${fmtDate(o.return_date)}` : ""} ·{" "}
-                      {o.passengers ?? 1} pax
-                    </p>
-                  </div>
-                </div>
-                <div className="flex items-center gap-4 pl-13 sm:pl-0">
-                  {o.selling_price != null ? (
-                    <span className="font-display text-sm font-semibold text-foreground">
-                      {gbp(o.selling_price)}
-                    </span>
-                  ) : null}
-                  <StatusBadge tone={ORDER_TONE[o.status]}>
-                    {STATUS_LABEL[o.status]}
-                  </StatusBadge>
-                </div>
-              </li>
-            ))}
-          </ul>
-        )}
-      </SectionCard>
+      />
 
-      {/* Help footer */}
-      <div className="flex items-center justify-between rounded-2xl border border-border bg-neutral-soft px-5 py-4">
-        <p className="text-sm text-muted-foreground">
-          Have a question? Chat with our team directly in the portal.
-        </p>
-        <Link
-          href="/customer/messages"
-          className="inline-flex items-center gap-1 text-sm font-medium text-brand hover:text-brand-dark"
-        >
-          Open messages <ArrowUpRight className="size-4" />
-        </Link>
+      <KpiGrid>
+        <Kpi
+          label="Active orders"
+          value={active.length}
+          meta="Received or being worked on"
+          tone="marine"
+          icon={<OrdersIcon size={18} />}
+        />
+        <Kpi
+          label="Awaiting a quote"
+          value={awaitingQuote}
+          meta="We'll message you the moment a fare is ready"
+          tone="warn"
+          icon={<ClockIcon size={18} />}
+        />
+        <Kpi
+          label="Completed trips"
+          value={completed.length}
+          meta="Booked and ticketed"
+          tone="ok"
+          icon={<CheckCircleIcon size={18} />}
+        />
+        <Kpi
+          label="Total spent"
+          value={gbp(spent)}
+          meta="Across every completed booking"
+          tone="ink"
+          icon={<PoundIcon size={18} />}
+        />
+      </KpiGrid>
+
+      {/* ----------------------------------------------------- next trip */}
+      {nextTrip && from && to ? (
+        <div className="flex flex-col gap-3">
+          <div className="flex flex-wrap items-baseline justify-between gap-3">
+            <span className="text-ember-700 text-[11px] font-medium tracking-[0.13em] uppercase">
+              Your next trip
+            </span>
+            <Link
+              href={`/customer/orders/${nextTrip.id}`}
+              className="text-marine-600 text-[12.5px] font-medium whitespace-nowrap no-underline hover:no-underline"
+            >
+              Open this order
+            </Link>
+          </div>
+          <BoardingPass
+            carrier={
+              nextTrip.airline?.trim() ||
+              (nextTrip.return_date ? "Return flight" : "One way")
+            }
+            reference={nextTrip.flight_numbers?.trim() || nextTrip.order_number}
+            fromCode={from.code}
+            fromCity={from.city}
+            toCode={to.code}
+            toCity={to.city}
+            departs={fmtDate(nextTrip.travel_date)}
+            returns={nextTrip.return_date ? fmtDate(nextTrip.return_date) : "—"}
+            cabin={cabinLabel(nextTrip.cabin_class)}
+            passengers={paxSummary(
+              nextTrip.adults,
+              nextTrip.children,
+              nextTrip.passengers
+            )}
+            price={
+              nextTrip.selling_price != null
+                ? gbp(nextTrip.selling_price)
+                : "Awaiting quote"
+            }
+            priceLabel="Total price"
+            statusLabel={customerStatusLabel(nextTrip.status)}
+            statusTone={PILL_TONE[nextTrip.status]}
+          />
+        </div>
+      ) : null}
+
+      <div className="grid grid-cols-[repeat(auto-fit,minmax(320px,1fr))] items-stretch gap-4">
+        {/* ---------------------------------------------- recent orders */}
+        <Card className="flex h-full flex-col min-[1000px]:col-span-2">
+          <CardHead
+            title="Recent orders"
+            action={
+              <Link
+                href="/customer/orders"
+                className="text-marine-600 text-[12.5px] leading-[normal] font-medium whitespace-nowrap no-underline hover:no-underline"
+              >
+                View all
+              </Link>
+            }
+          />
+          <div className="min-h-0 flex-1">
+            {isLoading ? (
+              <div className="text-ink-600 px-5 py-10 text-center text-[13px] font-normal">
+                Loading your orders…
+              </div>
+            ) : recent.length === 0 ? (
+              <EmptyState
+                title="No orders yet"
+                body="Tell us where you want to go and our team will come back with a fare. Everything you book then lives here."
+                action={
+                  <Btn as="link" href="/customer/book" variant="ember">
+                    <PlaneIcon size={15} />
+                    Book a flight
+                  </Btn>
+                }
+              />
+            ) : (
+              recent.map((o) => (
+                <Link
+                  key={o.id}
+                  href={`/customer/orders/${o.id}`}
+                  className="border-line-soft hover:bg-surface-1 flex w-full items-center gap-4 border-b bg-white px-5 py-3 text-left leading-[normal] no-underline hover:no-underline"
+                >
+                  <span className="flex min-w-0 flex-1 flex-col gap-1">
+                    <span className="flex flex-wrap items-center gap-2">
+                      <span className="text-ink-800 max-w-full truncate text-[13px] font-medium">
+                        {routeLabel(o.route_from, o.route_to)}
+                      </span>
+                      <span className="text-ink-500 text-[11.5px] font-normal tabular-nums">
+                        {o.order_number}
+                      </span>
+                    </span>
+                    <span className="text-ink-600 text-[12.5px] font-normal">
+                      {o.travel_date ? fmtDate(o.travel_date) : "Date to confirm"}
+                      {o.return_date ? ` → ${fmtDate(o.return_date)}` : ""} ·{" "}
+                      {paxSummary(o.adults, o.children, o.passengers)}
+                    </span>
+                  </span>
+                  <Pill tone={PILL_TONE[o.status]}>
+                    {customerStatusLabel(o.status)}
+                  </Pill>
+                  <span className="text-ink-800 min-w-[74px] flex-none text-right text-[13px] font-medium tabular-nums">
+                    {o.selling_price != null ? gbp(o.selling_price) : "—"}
+                  </span>
+                </Link>
+              ))
+            )}
+          </div>
+          {recent.length > 0 ? (
+            <div className="border-line-soft mt-auto flex flex-none items-center justify-between gap-3 border-t px-5 py-3.5">
+              <span className="text-ink-600 text-[12px] font-normal">
+                Showing {recent.length} of {rows.length} orders
+              </span>
+              <Btn as="link" href="/customer/orders" size="sm">
+                View all
+              </Btn>
+            </div>
+          ) : null}
+        </Card>
       </div>
-    </div>
+
+      {/* --------------------------------------------------- talk to us */}
+      <div className="bg-marine-50 border-marine-line grid grid-cols-[repeat(auto-fit,minmax(230px,1fr))] items-center gap-6 rounded-[12px] border px-[clamp(18px,2.2vw,24px)] py-6">
+        <div className="flex flex-col gap-2">
+          <span className="text-ember-700 text-[11px] font-medium tracking-[0.13em] uppercase">
+            Need a hand?
+          </span>
+          <span className="text-ink-600 max-w-[320px] text-[12.5px] leading-[1.55] font-normal text-pretty">
+            Our team is on the other end of your portal — no phone queues, no
+            waiting on email.
+          </span>
+        </div>
+        <Btn as="link" href="/customer/messages" variant="marine">
+          <ChatIcon size={15} />
+          Message the team
+        </Btn>
+        <Btn as="link" href="/customer/support">
+          <LifebuoyIcon size={15} />
+          Visit support
+          <ArrowRightIcon size={15} />
+        </Btn>
+      </div>
+    </Screen>
   );
 }
