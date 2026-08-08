@@ -34,10 +34,5 @@ export const CUSTOMER_SUPPORT_TICKETS_KEY = [
   "support-tickets",
 ] as const;
 
-// Admin dev/mock tools
+// "Route a conversation" on the Messages screen
 export const ADMIN_TOOLS_EMPLOYEES_KEY = ["admin", "tools", "employees"] as const;
-export const ADMIN_TOOLS_CONVERSATIONS_KEY = [
-  "admin",
-  "tools",
-  "conversations",
-] as const;
