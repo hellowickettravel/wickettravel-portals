@@ -1,37 +1,60 @@
 "use client";
 
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
-import { Plus, ShoppingBag, ChevronRight } from "lucide-react";
-import { PageHeader } from "@/components/admin/page-header";
-import { SectionCard } from "@/components/admin/section-card";
-import { StatusBadge, type Tone } from "@/components/admin/status-badge";
-import { Button } from "@/components/ui/button";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import { TableSkeleton } from "@/components/portal/skeletons";
-import { MobileRecordCard } from "@/components/portal/mobile-record-card";
 import { listMyOrders } from "@/lib/actions/employee";
 import { MY_ORDERS_KEY } from "@/lib/query-keys";
 import type { OrderStatus } from "@/lib/db/types";
 import { type AccessLevel, isReadOnly } from "@/lib/access";
-import { gbp, fmtDate, titleCase } from "@/lib/format";
+import { gbp, fmtDate, routeLabel, statusLabel } from "@/lib/format";
 import { cn } from "@/lib/utils";
+import {
+  Btn,
+  Card,
+  EmptyState,
+  Kpi,
+  KpiGrid,
+  PageHead,
+  Pill,
+  Screen,
+  Table,
+  TableFoot,
+  TableScroll,
+  TableSkeleton,
+  Td,
+  Th,
+  Thead,
+  Tr,
+  ViewButton,
+  inputInsetClass,
+} from "@/components/admin/ui";
+import {
+  ClockIcon,
+  OrdersIcon,
+  PercentIcon,
+  PlusIcon,
+  CheckCircleIcon,
+} from "@/components/admin/icons";
 
-const ORDER_TONE: Record<OrderStatus, Tone> = {
-  new: "blue",
-  in_progress: "amber",
-  completed: "green",
-  cancelled: "red",
-};
+const PAGE_SIZE = 10;
 
+const TABS: { label: string; value: "all" | OrderStatus }[] = [
+  { label: "All", value: "all" },
+  { label: "New", value: "new" },
+  { label: "In progress", value: "in_progress" },
+  { label: "Completed", value: "completed" },
+  { label: "Cancelled", value: "cancelled" },
+];
+type Tab = (typeof TABS)[number]["value"];
+
+/**
+ * The employee's order pipeline — the admin design's Orders screen, scoped by
+ * RLS to what this employee can see. Read-only levels lose the New order
+ * action; everything else is identical, because the design is the portal's,
+ * not the role's.
+ */
 export function EmployeeOrders({ accessLevel }: { accessLevel: AccessLevel }) {
   const router = useRouter();
   const readOnly = isReadOnly(accessLevel);
@@ -39,189 +62,300 @@ export function EmployeeOrders({ accessLevel }: { accessLevel: AccessLevel }) {
   const { data: orders, isLoading, isError } = useQuery({
     queryKey: MY_ORDERS_KEY,
     queryFn: listMyOrders,
+    refetchInterval: 60_000,
   });
 
-  const rows = orders ?? [];
-  const myOpen = rows.filter(
-    (o) => o.status === "new" || o.status === "in_progress"
-  ).length;
-  const myCommission = rows.reduce((s, o) => s + (o.commission ?? 0), 0);
+  const [tab, setTab] = useState<Tab>("all");
+
+  // The top bar hands this screen its term as ?q=; it seeds the in-card box.
+  const topSearch = useSearchParams().get("q") ?? "";
+  const [query, setQuery] = useState(topSearch);
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setQuery(topSearch);
+  }, [topSearch]);
+
+  // "Departs next": upcoming flights first, then the ones already gone, then
+  // orders with no travel date — the same rule the admin pipeline uses.
+  const all = useMemo(() => {
+    const rows = orders ?? [];
+    const today = new Date().toISOString().slice(0, 10);
+    const rank = (d: string | null) => (!d ? 2 : d >= today ? 0 : 1);
+    return [...rows].sort((a, b) => {
+      const ra = rank(a.travel_date);
+      const rb = rank(b.travel_date);
+      if (ra !== rb) return ra - rb;
+      if (ra === 0) return (a.travel_date ?? "").localeCompare(b.travel_date ?? "");
+      if (ra === 1) return (b.travel_date ?? "").localeCompare(a.travel_date ?? "");
+      return (b.created_at ?? "").localeCompare(a.created_at ?? "");
+    });
+  }, [orders]);
+
+  const [limit, setLimit] = useState(PAGE_SIZE);
+
+  const totals = useMemo(() => {
+    const open = all.filter(
+      (o) => o.status === "new" || o.status === "in_progress"
+    ).length;
+    const completed = all.filter((o) => o.status === "completed");
+    return {
+      total: all.length,
+      open,
+      completed: completed.length,
+      commission: completed.reduce((s, o) => s + (o.commission ?? 0), 0),
+    };
+  }, [all]);
+
+  const matchesQuery = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    return (o: (typeof all)[number]) =>
+      !q ||
+      [
+        o.order_number,
+        o.customer?.name ?? "",
+        o.route_from ?? "",
+        o.route_to ?? "",
+        o.status,
+        o.travel_date ?? "",
+      ]
+        .join(" ")
+        .toLowerCase()
+        .includes(q);
+  }, [query]);
+
+  const counts = useMemo(() => {
+    const searched = all.filter(matchesQuery);
+    return {
+      all: searched.length,
+      new: searched.filter((o) => o.status === "new").length,
+      in_progress: searched.filter((o) => o.status === "in_progress").length,
+      completed: searched.filter((o) => o.status === "completed").length,
+      cancelled: searched.filter((o) => o.status === "cancelled").length,
+    } as Record<Tab, number>;
+  }, [all, matchesQuery]);
+
+  const filtered = useMemo(
+    () =>
+      all.filter((o) => (tab === "all" || o.status === tab) && matchesQuery(o)),
+    [all, tab, matchesQuery]
+  );
+
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setLimit(PAGE_SIZE);
+  }, [tab, query]);
+
+  const visible = filtered.slice(0, limit);
+  const hasMore = filtered.length > limit;
 
   return (
-    <div className="space-y-7 animate-in fade-in slide-in-from-bottom-2 duration-500 ease-out">
-      <PageHeader
-        eyebrow="My work"
-        title="My Orders"
-        subtitle="Bookings you created or tied to your chats."
+    <Screen>
+      <PageHead
+        title="My orders"
+        intro="Orders you created or that are assigned to you, sorted by the flight that departs next."
         actions={
           readOnly ? undefined : (
-            <Button render={<Link href="/employee/orders/new" />}>
-              <Plus className="size-4" />
-              New Order
-            </Button>
+            <Btn as="link" href="/employee/orders/new" variant="ember">
+              <PlusIcon size={15} />
+              New order
+            </Btn>
           )
         }
       />
 
-      {/* Personal totals (NOT company-wide) */}
-      <div className="grid grid-cols-1 gap-4 rounded-2xl border border-border bg-card p-1 shadow-card sm:grid-cols-3">
-        {[
-          { label: "My orders", value: String(rows.length) },
-          { label: "My open", value: String(myOpen) },
-          { label: "My commission", value: gbp(myCommission) },
-        ].map((t, i) => (
-          <div key={t.label} className={cn("px-5 py-4", i > 0 && "sm:border-l sm:border-border")}>
-            <p className="font-label text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
-              {t.label}
-            </p>
-            <p className="mt-1 font-display text-xl font-semibold text-foreground">{t.value}</p>
-          </div>
-        ))}
-      </div>
+      <KpiGrid>
+        <Kpi
+          label="My orders"
+          value={totals.total}
+          meta="All time"
+          tone="marine"
+          icon={<OrdersIcon size={18} />}
+        />
+        <Kpi
+          label="Open"
+          value={totals.open}
+          meta="New and In progress"
+          tone="warn"
+          icon={<ClockIcon size={18} />}
+        />
+        <Kpi
+          label="Completed"
+          value={totals.completed}
+          meta="Closed and ticketed"
+          tone="teal"
+          icon={<CheckCircleIcon size={18} />}
+        />
+        <Kpi
+          label="Commission earned"
+          value={gbp(totals.commission)}
+          meta="On completed orders only"
+          tone="ok"
+          icon={<PercentIcon size={18} />}
+          valueClass="text-ok-ink"
+        />
+      </KpiGrid>
 
-      <SectionCard flush>
-        {isLoading ? (
-          <div className="p-4">
-            <TableSkeleton rows={5} columns={7} />
+      <Card>
+        <div className="border-line-soft flex flex-wrap items-center gap-3 border-b px-5 py-4">
+          <div className="relative flex min-w-0 flex-[1_1_260px]">
+            <input
+              type="search"
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder="Order number, customer or route"
+              aria-label="Search orders"
+              className={inputInsetClass}
+            />
           </div>
-        ) : isError ? (
-          <p className="px-6 py-10 text-center text-sm text-muted-foreground">
-            Couldn’t load your orders. Refresh to try again.
-          </p>
-        ) : rows.length === 0 ? (
-          <div className="flex flex-col items-center gap-2 px-6 py-14 text-center">
-            <div className="flex size-12 items-center justify-center rounded-2xl bg-chip text-brand-dark">
-              <ShoppingBag className="size-6" />
-            </div>
-            <p className="font-display text-base font-semibold text-foreground">
-              No orders yet
-            </p>
-            <p className="max-w-sm text-sm text-muted-foreground">
-              Orders are born from chats — open a conversation and click “Create
-              order”, or use New Order to pick one.
-            </p>
-            {!readOnly ? (
-              <Button className="mt-2" render={<Link href="/employee/orders/new" />}>
-                <Plus className="size-4" />
-                New Order
-              </Button>
-            ) : null}
-          </div>
-        ) : (
-          <>
-            {/* Mobile: stacked cards (no horizontal scroll). Whole card opens the
-                order detail; the chevron is the explicit "View" affordance. */}
-            <div className="space-y-3 p-4 md:hidden">
-              {rows.map((o) => (
-                <Link
-                  key={o.id}
-                  href={`/employee/orders/${o.id}`}
-                  className="block transition-opacity active:opacity-70"
-                  aria-label={`View order for ${o.customer?.name ?? "customer"}`}
+          <div className="flex flex-wrap gap-2">
+            {/* FilterChip is href-driven; this screen filters in place, so the
+                same 34px chip is rendered as a button. */}
+            {TABS.map((t) => {
+              const active = tab === t.value;
+              return (
+                <button
+                  key={t.value}
+                  type="button"
+                  onClick={() => setTab(t.value)}
+                  aria-pressed={active}
+                  className={cn(
+                    "flex h-[34px] items-center gap-2 rounded-full border px-4 text-[13px] font-medium whitespace-nowrap outline-none",
+                    active
+                      ? "border-ink-800 bg-ink-800 text-white"
+                      : "border-line-field text-ink-800 hover:bg-surface-1 bg-white"
+                  )}
                 >
-                <MobileRecordCard
-                  title={<span className="text-navy">{o.customer?.name ?? "—"}</span>}
-                  badge={
-                    <StatusBadge tone={ORDER_TONE[o.status]}>
-                      {titleCase(o.status)}
-                    </StatusBadge>
-                  }
-                  action={<ChevronRight className="size-4 text-muted-foreground" />}
-                  fields={[
-                    {
-                      label: "Route",
-                      value: `${o.route_from ?? "?"} → ${o.route_to ?? "?"}`,
-                      wide: true,
-                    },
-                    { label: "Travel date", value: fmtDate(o.travel_date) },
-                    { label: "Pax", value: o.passengers ?? "—" },
-                    {
-                      label: "Price",
-                      value: o.selling_price != null ? gbp(o.selling_price) : "—",
-                    },
-                    {
-                      label: "Commission",
-                      value: (
-                        <span className="text-emerald-600">
-                          {o.commission != null ? gbp(o.commission) : "—"}
-                        </span>
-                      ),
-                    },
-                  ]}
-                />
-                </Link>
-              ))}
-            </div>
+                  {t.label}
+                  <span className="text-[11px] font-medium tabular-nums opacity-[0.66]">
+                    {counts[t.value]}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+        </div>
 
-            {/* Desktop: full table */}
-            <div className="hidden md:block">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead className="pl-6">Customer</TableHead>
-                    <TableHead>Route</TableHead>
-                    <TableHead>Travel date</TableHead>
-                    <TableHead className="text-center">Pax</TableHead>
-                    <TableHead className="text-right">Price</TableHead>
-                    <TableHead className="text-right">Commission</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead className="pr-6 text-right">View</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {rows.map((o) => (
-                    <TableRow
-                      key={o.id}
-                      className="cursor-pointer"
-                      onClick={() => router.push(`/employee/orders/${o.id}`)}
+        {isLoading ? (
+          <TableSkeleton rows={6} />
+        ) : isError ? (
+          <EmptyState
+            title="Couldn't load your orders"
+            body="Something went wrong reading the list. Refresh the page to try again."
+          />
+        ) : filtered.length === 0 ? (
+          <EmptyState
+            title={
+              all.length === 0 ? "No orders yet" : "No orders match these filters"
+            }
+            body={
+              all.length === 0
+                ? "Orders are born from chats — open a conversation and create one, or start a new order from scratch."
+                : "Clear the status filter or try a different order number, customer or route."
+            }
+            action={
+              all.length === 0 ? (
+                readOnly ? undefined : (
+                  <Btn as="link" href="/employee/orders/new" variant="ember">
+                    <PlusIcon size={15} />
+                    New order
+                  </Btn>
+                )
+              ) : (
+                <Btn
+                  onClick={() => {
+                    setTab("all");
+                    setQuery("");
+                  }}
+                >
+                  Clear all filters
+                </Btn>
+              )
+            }
+          />
+        ) : (
+          <TableScroll>
+            <Table min={940}>
+              <Thead>
+                <Th>Order</Th>
+                <Th>Customer</Th>
+                <Th>Route</Th>
+                <Th>Travel date</Th>
+                <Th align="right">Pax</Th>
+                <Th align="right">Selling price</Th>
+                <Th align="right">Commission</Th>
+                <Th>Status</Th>
+                <Th align="right" />
+              </Thead>
+              <tbody>
+                {visible.map((o) => (
+                  <Tr
+                    key={o.id}
+                    className="cursor-pointer"
+                    onClick={() => router.push(`/employee/orders/${o.id}`)}
+                  >
+                    <Td className="text-marine-600 text-[12.5px] font-medium tabular-nums">
+                      <Link
+                        href={`/employee/orders/${o.id}`}
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        {o.order_number}
+                      </Link>
+                    </Td>
+                    <Td className="text-ink-800 font-medium">
+                      {o.customer?.name ?? "—"}
+                    </Td>
+                    <Td>{routeLabel(o.route_from, o.route_to)}</Td>
+                    <Td
+                      className={cn(
+                        "text-[12.5px]",
+                        o.travel_date ? "text-ink-800" : "text-ink-500"
+                      )}
                     >
-                      <TableCell className="pl-6 font-medium text-navy">
-                        {o.customer?.name ?? "—"}
-                      </TableCell>
-                      <TableCell className="font-medium text-muted-foreground">
-                        {o.route_from ?? "?"} → {o.route_to ?? "?"}
-                      </TableCell>
-                      <TableCell className="text-muted-foreground">
-                        {fmtDate(o.travel_date)}
-                      </TableCell>
-                      <TableCell className="text-center tabular-nums">
-                        {o.passengers ?? "—"}
-                      </TableCell>
-                      <TableCell className="text-right font-medium tabular-nums">
-                        {o.selling_price != null ? gbp(o.selling_price) : "—"}
-                      </TableCell>
-                      <TableCell className="text-right tabular-nums text-emerald-600">
-                        {o.commission != null ? gbp(o.commission) : "—"}
-                      </TableCell>
-                      <TableCell>
-                        <StatusBadge tone={ORDER_TONE[o.status]}>
-                          {titleCase(o.status)}
-                        </StatusBadge>
-                      </TableCell>
-                      <TableCell className="pr-6 text-right">
-                        <Link
-                          href={`/employee/orders/${o.id}`}
-                          onClick={(e) => e.stopPropagation()}
-                          className="inline-flex items-center gap-1 text-sm font-medium text-brand transition-colors hover:text-brand-dark"
-                        >
-                          View
-                          <ChevronRight className="size-3.5" />
-                        </Link>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </div>
-          </>
+                      {o.travel_date ? fmtDate(o.travel_date) : "No travel date"}
+                    </Td>
+                    <Td align="right" className="text-[12.5px] tabular-nums">
+                      {o.passengers ?? "—"}
+                    </Td>
+                    <Td align="right" className="font-medium tabular-nums">
+                      {o.selling_price != null ? gbp(o.selling_price) : "—"}
+                    </Td>
+                    <Td
+                      align="right"
+                      className="text-ok-ink text-[12.5px] font-medium tabular-nums"
+                    >
+                      {o.commission != null ? gbp(o.commission) : "—"}
+                    </Td>
+                    <Td>
+                      <Pill>{statusLabel(o.status)}</Pill>
+                    </Td>
+                    <Td align="right" onClick={(e) => e.stopPropagation()}>
+                      <ViewButton href={`/employee/orders/${o.id}`} />
+                    </Td>
+                  </Tr>
+                ))}
+              </tbody>
+            </Table>
+          </TableScroll>
         )}
-      </SectionCard>
 
-      {readOnly ? (
-        <p className="text-center text-xs text-muted-foreground">
-          You have read-only access — viewing is allowed, editing is disabled.
-        </p>
-      ) : null}
-    </div>
+        {visible.length > 0 ? (
+          <TableFoot
+            shown={visible.length}
+            total={filtered.length}
+            noun="orders"
+            action={
+              hasMore ? (
+                <Btn
+                  className="text-[12.5px]"
+                  onClick={() => setLimit((n) => n + PAGE_SIZE)}
+                >
+                  Load {PAGE_SIZE} more — {filtered.length - limit} remaining
+                </Btn>
+              ) : null
+            }
+          />
+        ) : null}
+      </Card>
+    </Screen>
   );
 }
