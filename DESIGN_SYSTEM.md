@@ -234,13 +234,32 @@ All in `components/admin/`:
 | `boarding-pass.tsx` | the order header pass                                       |
 | `message-bits.tsx`  | admin-skinned message text + attachment                     |
 
-### Two skins, one component
+### One component, three portals
 
-`PageHeader`, `SectionCard`, `StatCard`, `StatusBadge` and `UserCell` are
-imported by the other portals too. Their looks live in `globals.css` as
-`.wt-card`, `.wt-pill`, `.wt-stat-*`, `.wt-page-*`, `.wt-chip*`: the base rules
-are navy/orange, the `.admin-root` overrides are the admin design. **Never
-hard-code admin colours into those five files.**
+There is no longer a second skin. `PageHeader`, `SectionCard`, `StatCard`,
+`StatusBadge` and `UserCell` — and the paired `.wt-*` rules that gave them a
+navy/orange look outside `.admin-root` — were deleted once the customer portal
+moved onto this system. Everything in `components/admin/` is now simply *the*
+component.
+
+Where a portal genuinely needs different behaviour, the rule is: **generalise
+the component with a prop that defaults to the admin's behaviour**, never fork
+it or restyle it in place.
+
+| Component              | Props that carry a portal          |
+| ---------------------- | ---------------------------------- |
+| `admin-shell.tsx`      | `sections`, `roleLabel`, `homeHref`, `settingsHref`, `settingsLabel`, `supportHref`, `searchScreens`, `mobileTabs` |
+| `order-detail.tsx`     | `basePath`, `canEdit`, `canAssign`, `canViewCustomer` |
+| `order-thread.tsx`     | `viewerRole`, `canSend`, `lockedNotice` |
+| `admin-order-form.tsx` | `audience`, `basePath`, `onCreate`, `prefill`, `contactEmail`, `contactPhone`, `isGuest` |
+| `admin-notifications.tsx` | `basePath`, `settingsHref`            |
+| `boarding-pass.tsx`    | `priceLabel`                       |
+
+Only two screens are built fresh rather than shared, and both for a structural
+reason rather than a visual one: `components/employee/employee-inbox.tsx` (the
+admin inbox's reads all `requireAdmin()`, and its row shape differs) and
+`components/customer/messages-view.tsx` (a customer has exactly one
+conversation, so there is no list pane to render).
 
 ### The shell
 
@@ -250,7 +269,11 @@ hard-code admin colours into those five files.**
 - Active item: 10%-white fill plus a 3px **ember** inset bar — never a marine
   fill.
 - Queue counts are small warm figures (`nav-count`), capped at **9+**.
-- Off-canvas below 1024px behind a hamburger and a scrim.
+- Off-canvas below 1024px behind a hamburger and a scrim — **unless**
+  `mobileTabs` is supplied, which swaps the rail for a bottom tab bar below
+  1024px. Only the customer portal does this: staff sit at desks, travellers
+  arrive on a phone. Anything the tabs omit must stay reachable from the bell
+  or the account menu.
 - Top bar 64px, `white/0.88` with a 10px blur. Its search is **per-screen** —
   it renders only for screens listed in `SEARCH`, each with its own
   placeholder, and hands the term over as `?q=`, which the screen reads with
@@ -316,6 +339,12 @@ These differ from the design file on purpose:
 5. **Row actions.** The design's people table ends on a single View pill. Edit,
    deactivate and delete have to live somewhere, so they sit inline as 30px
    icon pills in the design's own control language.
+6. **Customer status vocabulary.** A customer sees `new` as **"Received"**,
+   not "New" — `customerStatusLabel()` in `lib/format.ts` is the only place
+   that translation lives. Every other status word is shared.
+7. **Reply-to-quote.** The old navy/orange chat let either side quote a
+   message. The design's thread has no quoting affordance, so it is gone from
+   every portal rather than working on one side only.
 
 ---
 
@@ -329,5 +358,14 @@ These differ from the design file on purpose:
    reports `lab(…)` for the same colour.
 3. Ignore three classes of false positive: `<a>` vs `<button>`,
    `rounded-full` vs `50%`, and `display:flex` vs `block` on a single-line box.
-4. Any new admin screen must render inside `AdminShell` to inherit
-   `.admin-root`.
+4. Any new screen in **any** of the three portals must render inside
+   `AdminShell` to inherit `.admin-root`.
+
+### What a customer must never see
+
+The customer portal renders the same order screens as staff, so the boundary is
+worth stating plainly. Cost price, commission, internal staff notes, the
+assignment card and every edit/status control are **absent from the markup**,
+not merely hidden — and RLS is the actual gate in each case. When adding a
+field to a shared order component, decide which side of that line it sits on
+before you decide where it goes on the page.

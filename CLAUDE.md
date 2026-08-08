@@ -21,6 +21,12 @@ A custom "Shared Team Inbox + Orders CRM + Admin panel" for a UK-based flight-ti
 - Supabase clients exist: lib/supabase/client.ts (browser), lib/supabase/server.ts (server), lib/supabase/middleware.ts + root middleware.ts (session + route protection for /admin and /employee).
 - DB schema live with 6 tables: profiles, customers, conversations, assignments, messages, orders. A trigger auto-creates a profile row on signup. RLS is ON; only a basic "own profile read" policy exists so far — fuller role policies come later.
 - Auth = Email + Password. "Confirm email" is OFF.
+- Migration `0022_person_fields.sql` is written but **not applied** to the live
+  DB — no DDL channel from here (the Supabase MCP connector is signed in to a
+  different account than the one owning this project). Until it is run,
+  `profiles.phone/start_date/commission_rate` and the new `customers` columns
+  silently don't persist; `createEmployee` steps its payload down 0022 → 0021 →
+  base so accounts still create.
 
 ## Roles
 - admin: full control (employees, access levels, all orders/chats, analytics)
@@ -30,7 +36,13 @@ A custom "Shared Team Inbox + Orders CRM + Admin panel" for a UK-based flight-ti
 ## Three portals
 - /admin — admin panel
 - /employee — employee portal (the heart: 2-pane chat inbox, create order from chat)
-- /customer — customer portal: place/track orders, chat with the team in real time
+- /customer — customer portal: book/track flights, chat with the team in real time.
+  Phone-first: below 1024px `AdminShell` renders a bottom tab bar instead of the
+  rail (`mobileTabs`). `/customer/book` is publicly viewable — a signed-out
+  visitor fills the wizard and makes an account at the last step.
+  A customer never sees cost price, commission, internal notes, the assignment
+  card or any edit/status control: those are absent from the markup, not
+  hidden, and RLS is the real gate.
 
 ## Design system (Navy + Orange — matches the public homepage)
 - Brand / primary = NAVY: #1E3A5F, primary-dark #152C49, primary-light #2C5282
@@ -45,10 +57,12 @@ A custom "Shared Team Inbox + Orders CRM + Admin panel" for a UK-based flight-ti
 - Rounded 14–16px cards, soft shadows, modern SaaS look
 - Portal shell: ~260px navy sidebar, active nav = solid ORANGE pill, content max ~1152px
 
-### Admin portal — scoped exception (Claude Design "Admin Portal All Pages")
-Everything under `/admin` follows the Claude Design **"Admin Portal All Pages"**
-file, which extends the auth design's system into the product interior. The
-employee, customer and driver portals are unchanged and stay on navy/orange.
+### The product interior — Claude Design "Admin Portal All Pages"
+`/admin`, `/employee` **and** `/customer` all follow the Claude Design
+**"Admin Portal All Pages"** file, which extends the auth design's system into
+the product interior. Only the **driver** portal is still on navy/orange.
+The employee and customer portals had no design file of their own; the user
+authorised building both from this one as the reference.
 - Type: **Instrument Sans** everywhere, **Poppins 500** for page titles, the
   brand wordmark and headline metrics. Weights are 400 / 500 / 600 only.
   The project-wide `h1..h4 { font-family: Jakarta }` base rule is cancelled
@@ -69,13 +83,14 @@ employee, customer and driver portals are unchanged and stay on navy/orange.
 - Scoping: `.admin-root` on `AdminShell` carries the design's base layer
   (typeface, canvas, link colour, focus ring, 44px mobile targets, scrollbars).
   Any new admin screen must render inside `AdminShell` to inherit it.
-- **Two skins, one component.** `PageHeader`, `SectionCard`, `StatCard`,
-  `StatusBadge` and `UserCell` are imported by the other portals too, so their
-  looks live in `globals.css` as `.wt-card`, `.wt-pill`, `.wt-stat-*`,
-  `.wt-page-*`, `.wt-chip*`: base rules = navy/orange, `.admin-root` overrides =
-  the design. Never hard-code admin colours into those five files.
-  The same file also retunes shared shadcn controls (`[data-slot="button"]`,
-  `input`, `textarea`, `table`, `card`) **inside `.admin-root` only**.
+- **One component, three portals.** The old "two skins" layer is gone —
+  `PageHeader`, `SectionCard`, `StatCard`, `StatusBadge`, `UserCell` and their
+  `.wt-*` CSS were deleted once the customer portal moved over. When a portal
+  needs different behaviour, **generalise the component with a prop that
+  defaults to the admin's behaviour** — never fork it or restyle it in place.
+  `globals.css` still retunes shared shadcn controls (`[data-slot="button"]`,
+  `input`, `textarea`, `table`, `card`) inside `.admin-root`, which now only
+  matters for the driver portal's copies.
 - Shape language: **buttons are pills (999px), containers are rectangles** —
   10px controls, 12px cards, 50% avatars. `--radius` is 0.75rem here, so
   Tailwind's `rounded-lg/xl` resolve to 12/16.8px — use `rounded-[10px]` /
@@ -95,8 +110,8 @@ employee, customer and driver portals are unchanged and stay on navy/orange.
   `components/admin/admin-shell.tsx`; the two-pane inbox in
   `components/admin/admin-inbox.tsx`; the order-detail boarding pass in
   `components/admin/boarding-pass.tsx`.
-- The **order screens are admin-only builds**, deliberately forked from the
-  shared navy/orange ones so the employee/customer portals are untouched:
+- The **order screens** are the design's own build, shared by all three
+  portals via props:
   `components/admin/order-detail.tsx` (back link → header with `#ref` + status
   pill + Edit / Message customer / Cancel / **Mark complete** → boarding pass →
   a `2.4fr / 1fr` split: Flight details tiles + the live `OrderThread` on the
@@ -106,8 +121,10 @@ employee, customer and driver portals are unchanged and stay on navy/orange.
   marine-500, 42px circular send) and `components/admin/admin-order-form.tsx`
   (the three-step Create-an-order wizard: step rail with Done/Current/Next
   tracks, flight-check radio cards, passenger blocks, Review rows with per-row
-  edit jumps, footer error summary). They call the same server actions as the
-  shared `components/orders/*` so the persisted record is identical.
+  edit jumps, footer error summary; `audience="customer"` drops the customer
+  picker, adds a contact block and a real uploader, and routes a signed-out
+  visitor through sign-up with their draft kept). Every portal writes the same
+  `OrderFormInput`, so the persisted record is identical whoever booked it.
 - Routes render as IATA codes in tables (`routeLabel()` in `lib/format.ts`) —
   the design's pipeline row assumes `LHR → DXB`, not the full place name, which
   is what the record itself shows.
@@ -186,6 +203,12 @@ type pairing from the portal interior. Both live side by side:
 4. Admin panel: employees, access levels, analytics — DONE
 5. Customer portal: orders + realtime chat — DONE
 6. Foundation: orders/order-messages/attachments schema, realtime + RLS — DONE
+7. Admin portal on the Claude Design, all 18 screens — DONE (2026-08-08)
+8. Employee portal moved onto that design system, 6 phases — DONE (2026-08-08)
+9. Customer portal moved onto it, 7 phases + the two-skin retirement — DONE (2026-08-08)
+
+Still on navy/orange: the **driver** portal (`components/driver/*`), untouched
+throughout and the only remaining consumer of `components/ui/` and lucide.
 
 ## Rules
 - One feature at a time. Keep code clean and typed.

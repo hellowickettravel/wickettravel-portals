@@ -103,8 +103,16 @@ payload, so a deploy is safe whether or not the SQL has been applied yet.
 | **Auth**     | `/login`, `/signup`, `/forgot-password`, `/reset-password` | everyone |
 | **Admin**    | `/admin`     | full control: orders, people, enquiries, analytics, settings |
 | **Employee** | `/employee`  | only what they are assigned                    |
-| **Customer** | `/customer`  | their own orders and threads                   |
+| **Customer** | `/customer`  | their own bookings, quotes and threads          |
 | **Driver**   | `/driver`    | a separate ground-transport surface            |
+
+### Customer screens
+
+`/customer` (Dashboard) · `book` · `orders` · `orders/[id]` · `messages` ·
+`support` · `profile` · `notifications`
+
+`/customer/book` is the one publicly viewable route — a signed-out visitor
+fills the whole wizard and makes an account at the last step.
 
 ### Admin screens
 
@@ -181,18 +189,24 @@ their own.
 
 ## Design system
 
-Two design languages live side by side, scoped by a root class so neither
-leaks:
+**Admin, employee and customer are one design system.** All three render
+inside `AdminShell`, which carries `.admin-root` — the scope that supplies the
+typeface, canvas, focus ring and control sizing. `/admin` follows the Claude
+Design **"Admin Portal All Pages"** file to the pixel; the employee and
+customer portals were built from that same system, since neither had a design
+file of its own.
 
-| Scope                   | Class         | Type                        | Colour            |
-| ----------------------- | ------------- | --------------------------- | ----------------- |
-| Employee / customer / driver | *(default)* | Plus Jakarta Sans      | Navy + Orange     |
-| **Admin**               | `.admin-root` | Instrument Sans + Poppins   | Marine / Ink / Ember |
-| **Auth**                | `.auth-root`  | Instrument Sans + Poppins   | Marine / Ink / Ember |
+| Scope        | Class         | Type                      | Colour               |
+| ------------ | ------------- | ------------------------- | -------------------- |
+| **Product**  | `.admin-root` | Instrument Sans + Poppins | Marine / Ink / Ember |
+| **Auth**     | `.auth-root`  | Instrument Sans + Poppins | Marine / Ink / Ember |
+| Driver       | *(default)*   | Plus Jakarta Sans         | Navy + Orange        |
 
-`/admin` follows the Claude Design **“Admin Portal All Pages”** file to the
-pixel. Full spec — tokens, type scale, control sizes, table rules, the icon
-system and every component — is in **[DESIGN_SYSTEM.md](./DESIGN_SYSTEM.md)`.
+The driver portal is the only surface still on the original navy/orange
+system. `.ds-root` is an alias for `.admin-root` in every scoped rule.
+
+Full spec — tokens, type scale, control sizes, table rules, the icon system and
+every component — is in **[DESIGN_SYSTEM.md](./DESIGN_SYSTEM.md)**.
 
 ---
 
@@ -207,11 +221,10 @@ app/
   (auth)/…             login / signup / password reset
   globals.css          every design token + both skins
 components/
-  admin/               the admin design system (see DESIGN_SYSTEM.md)
-  employee/ customer/  portal-specific screens
-  portal/              shared pieces used by more than one portal
-  orders/              the shared order form + inbox
-  ui/                  shadcn primitives (portals only — /admin no longer uses them)
+  admin/               the design system — shared by all three portals
+  employee/ customer/  the screens each portal does not share
+  driver/              the driver portal (still navy/orange)
+  ui/                  shadcn primitives (driver portal only)
 lib/
   actions/             server actions ("use server") — every write
   db/                  typed reads
