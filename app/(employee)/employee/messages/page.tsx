@@ -1,5 +1,6 @@
 import { getUserAndProfile } from "@/lib/auth";
 import { normalizeAccess } from "@/lib/access";
+import { PageHead, Screen } from "@/components/admin/ui";
 import { ConversationInbox } from "@/components/portal/conversation-inbox";
 
 export default async function EmployeeMessagesPage() {
@@ -7,20 +8,20 @@ export default async function EmployeeMessagesPage() {
   const access = normalizeAccess(profile?.access_level);
 
   return (
-    <div className="space-y-5 animate-in fade-in slide-in-from-bottom-2 duration-500 ease-out">
-      <div>
-        <h1 className="font-display text-xl font-semibold tracking-tight text-navy sm:text-2xl">
-          Messages
-        </h1>
-        <p className="mt-1 text-sm text-muted-foreground">
-          Your assigned conversations with customers.
-        </p>
-      </div>
+    <Screen>
+      <PageHead
+        title="Messages"
+        intro="Conversations routed to you. Anything you send reaches the customer in their portal instantly."
+      />
+      {/* The two-pane inbox itself is still the shared navy/orange component —
+          it is driven by the employee's own server actions, whose shapes differ
+          from the admin inbox's, so moving it onto the design needs the data
+          source parameterised rather than a restyle. */}
       <ConversationInbox
         scope="employee"
         accessLevel={access}
         currentUserId={user?.id ?? ""}
       />
-    </div>
+    </Screen>
   );
 }
