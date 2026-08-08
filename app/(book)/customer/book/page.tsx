@@ -1,7 +1,7 @@
-import { OrderForm } from "@/components/orders/order-form";
 import { getUserAndProfile } from "@/lib/auth";
 import { getCustomerByProfileId } from "@/lib/db/customers";
 import { parseBookPrefill } from "@/lib/orders/book-link";
+import { CustomerBook } from "@/components/customer/book-view";
 
 /**
  * The customer booking wizard. Publicly viewable (the (book) layout renders a
@@ -19,8 +19,8 @@ export default async function BookFlightPage({
     getUserAndProfile(),
   ]);
 
-  // Contact defaults for Step 3 — the signed-in customer's account email and
-  // any phone number already on their customer record.
+  // Contact defaults — the signed-in customer's account email and any phone
+  // number already on their customer record.
   let contactEmail: string | null = null;
   let contactPhone: string | null = null;
   if (user && profile?.role === "customer") {
@@ -30,8 +30,7 @@ export default async function BookFlightPage({
   }
 
   return (
-    <OrderForm
-      role="customer"
+    <CustomerBook
       isGuest={!user}
       prefill={parseBookPrefill(sp)}
       contactEmail={contactEmail}

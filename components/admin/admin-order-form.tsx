@@ -1,15 +1,22 @@
 "use client";
 
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { createOrder } from "@/lib/actions/admin";
+import { recordOrderAttachments } from "@/lib/actions/orders";
 import {
   AIRLINES,
   ANY_AIRLINE,
   CABIN_CLASSES,
   type OrderFormInput,
 } from "@/lib/orders/form";
+import { BOOK_PATH, type BookPrefill } from "@/lib/orders/book-link";
+import {
+  ATTACHMENT_ACCEPT,
+  uploadOrderAttachment,
+  validateAttachment,
+} from "@/lib/storage";
 import type { CabinClass } from "@/lib/db/types";
 import { fmtDate } from "@/lib/format";
 import { cn } from "@/lib/utils";
@@ -28,6 +35,7 @@ import {
   CheckCircleIcon,
   CheckIcon,
   ChildIcon,
+  CloseIcon,
   DocumentIcon,
   EditIcon,
   Ico,
@@ -38,12 +46,13 @@ import {
 } from "@/components/admin/icons";
 
 /**
- * The design's three-step "Create an order" wizard, admin skin.
+ * The design's three-step "Create an order" wizard. Every portal books through
+ * it, so a trip is captured the same way whoever is typing.
  *
- * It is deliberately a separate component from `components/orders/order-form.tsx`
- * — that one is shared by the employee and customer portals and stays on the
- * navy/orange system. Both write the same `OrderFormInput`, so the persisted
- * record is identical whoever places the order.
+ * `audience` is the one switch that matters. Staff choose a customer and are
+ * told the files go on the order thread; a traveller is the customer, gets a
+ * contact block and a real uploader for the flights they already found, and —
+ * signed out — fills the whole thing before being asked to make an account.
  */
 
 type Step = 1 | 2 | 3;
@@ -70,6 +79,8 @@ type Draft = {
   meal: string;
   assist: string;
   extra: string;
+  /** Customer audience only — a number the team can reach them on. */
+  phone: string;
 };
 
 const CHILD_AGES = [
@@ -141,7 +152,67 @@ function blank(): Draft {
     meal: MEALS[0],
     assist: ASSIST[0],
     extra: "",
+    phone: "",
   };
+}
+
+/** The draft a signed-out visitor leaves behind while they make an account. */
+const DRAFT_KEY = "wicket-booking-draft-v2";
+const DRAFT_TTL_MS = 24 * 60 * 60 * 1000;
+
+function readDraft(): Draft | null {
+  try {
+    const raw = window.localStorage.getItem(DRAFT_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw) as { at?: number; draft?: Draft };
+    if (!parsed?.draft || !parsed.at) return null;
+    if (Date.now() - parsed.at > DRAFT_TTL_MS) {
+      window.localStorage.removeItem(DRAFT_KEY);
+      return null;
+    }
+    return { ...blank(), ...parsed.draft };
+  } catch {
+    return null;
+  }
+}
+
+function writeDraft(draft: Draft) {
+  try {
+    window.localStorage.setItem(
+      DRAFT_KEY,
+      JSON.stringify({ at: Date.now(), draft })
+    );
+  } catch {
+    /* private mode / quota — the wizard still works, it just won't resume. */
+  }
+}
+
+function clearDraft() {
+  try {
+    window.localStorage.removeItem(DRAFT_KEY);
+  } catch {
+    /* ignore */
+  }
+}
+
+/** Seed Step 1 from the homepage search widget's (already validated) params. */
+function seed(prefill: BookPrefill | undefined, phone: string | null): Draft {
+  const d = blank();
+  d.phone = phone ?? "";
+  if (!prefill) return d;
+  if (prefill.from) d.from = prefill.from;
+  if (prefill.to) d.to = prefill.to;
+  if (prefill.depart) d.depart = prefill.depart;
+  if (prefill.return) d.ret = prefill.return;
+  if (prefill.tripType) d.trip = prefill.return ? "Round trip" : "One way";
+  if (prefill.cabin) {
+    d.cabin =
+      CABIN_CLASSES.find((c) => c.value === prefill.cabin)?.label ?? d.cabin;
+  }
+  if (prefill.airline) d.airline = prefill.airline;
+  if (prefill.adults) d.adults = String(prefill.adults);
+  if (prefill.children != null) d.children = String(prefill.children);
+  return d;
 }
 
 export type AdminOrderCustomer = { id: string; label: string };
@@ -302,15 +373,20 @@ function FieldRow({ f, err }: { f: FieldDef; err?: string }) {
 /* ----------------------------------------------------------------- wizard */
 
 export function AdminOrderForm({
-  customers,
+  customers = [],
   /* The employee portal renders this same wizard. Its create path is a
      different server action (createOrderFromChat, which needs the customer's
      conversation), and its links live under /employee — so both are props,
      defaulting to the admin behaviour. */
   basePath = "/admin",
   onCreate,
+  audience = "staff",
+  prefill,
+  contactEmail,
+  contactPhone,
+  isGuest = false,
 }: {
-  customers: AdminOrderCustomer[];
+  customers?: AdminOrderCustomer[];
   basePath?: string;
   onCreate?: (
     input: Parameters<typeof createOrder>[0]
@@ -318,16 +394,47 @@ export function AdminOrderForm({
     | { ok: true; data: { orderId: string; orderNumber?: string } }
     | { ok: false; error: string }
   >;
+  /** Who is filling this in. Staff book for someone; a customer books for
+      themselves, which changes the fields, the copy and the submit path. */
+  audience?: "staff" | "customer";
+  /** Homepage search widget query params, already validated server-side. */
+  prefill?: BookPrefill;
+  /** The signed-in customer's account email — shown read-only. */
+  contactEmail?: string | null;
+  /** Their phone on file, pre-filling the contact field. */
+  contactPhone?: string | null;
+  /** Signed-out visitor: fully fillable, but placing the order needs an account. */
+  isGuest?: boolean;
 }) {
   const router = useRouter();
   const topRef = useRef<HTMLDivElement>(null);
+  const fileRef = useRef<HTMLInputElement>(null);
+  const forCustomer = audience === "customer";
 
   const [step, setStep] = useState<Step>(1);
   const [maxStep, setMaxStep] = useState<Step>(1);
-  const [draft, setDraft] = useState<Draft>(blank);
+  const [draft, setDraft] = useState<Draft>(() =>
+    forCustomer ? seed(prefill, contactPhone ?? null) : blank()
+  );
+  const [files, setFiles] = useState<File[]>([]);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [busy, setBusy] = useState(false);
   const [created, setCreated] = useState<{ id: string; ref: string } | null>(null);
+
+  // A guest fills the whole wizard, then makes an account. Keep the draft alive
+  // across that round trip so they land back on the review step, not an empty
+  // form — the single most common way a booking is lost.
+  useEffect(() => {
+    if (!forCustomer) return;
+    const resume = new URLSearchParams(window.location.search).get("resume");
+    if (!resume) return;
+    const saved = readDraft();
+    if (!saved) return;
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setDraft({ ...saved, phone: saved.phone || (contactPhone ?? "") });
+    setStep(3);
+    setMaxStep(3);
+  }, [forCustomer, contactPhone]);
 
   const set = <K extends keyof Draft>(key: K) => (v: Draft[K]) =>
     setDraft((d) => ({ ...d, [key]: v }));
@@ -388,22 +495,27 @@ export function AdminOrderForm({
   const sections: SectionDef[] = useMemo(() => {
     if (step === 1) {
       return [
-        {
-          title: "Customer",
-          hint: "The order is filed against this customer's portal account.",
-          cols: 2,
-          fields: [
-            {
-              key: "customerId",
-              label: "Customer",
-              icon: "user",
-              kind: "select",
-              options: ["", ...customers.map((c) => c.id)],
-              value: draft.customerId,
-              onValue: setStr("customerId"),
-            },
-          ],
-        },
+        // A customer is the customer — there is nobody to choose.
+        ...(forCustomer
+          ? []
+          : [
+              {
+                title: "Customer",
+                hint: "The order is filed against this customer's portal account.",
+                cols: 2 as const,
+                fields: [
+                  {
+                    key: "customerId",
+                    label: "Customer",
+                    icon: "user" as IconName,
+                    kind: "select" as FieldKind,
+                    options: ["", ...customers.map((c) => c.id)],
+                    value: draft.customerId,
+                    onValue: setStr("customerId"),
+                  },
+                ],
+              },
+            ]),
         {
           title: "Where & when",
           hint: "Just like a flight search — we'll take the details from here.",
@@ -557,6 +669,38 @@ export function AdminOrderForm({
     }
 
     return [
+      ...(forCustomer
+        ? [
+            {
+              title: "How we reach you",
+              hint: "Where the team sends your quote and your tickets.",
+              cols: 2 as const,
+              fields: [
+                {
+                  key: "email",
+                  label: "Email",
+                  icon: "mail" as IconName,
+                  disabled: true,
+                  hint: contactEmail
+                    ? "Your account email. Change it in Profile."
+                    : "You'll confirm this when you make your account.",
+                  value: contactEmail ?? "",
+                  onValue: () => {},
+                },
+                {
+                  key: "phone",
+                  label: "Contact number",
+                  icon: "phone" as IconName,
+                  optional: true,
+                  ph: "e.g. 07700 900123",
+                  hint: "Handy if a fare needs a quick yes or no.",
+                  value: draft.phone,
+                  onValue: setStr("phone"),
+                },
+              ],
+            },
+          ]
+        : []),
       {
         title: "Extras",
         hint: "Everything the ticketing agent needs to know.",
@@ -613,14 +757,16 @@ export function AdminOrderForm({
         ],
       },
     ];
-  }, [step, draft, children, oneWay, customers]);
+  }, [step, draft, children, oneWay, customers, forCustomer, contactEmail]);
 
   /* ---------------------------------------------------------- validation */
 
   function validate(target: Step): boolean {
     const e: Record<string, string> = {};
     if (target >= 1) {
-      if (!draft.customerId) e.customerId = "Choose the customer this order is for.";
+      if (!forCustomer && !draft.customerId) {
+        e.customerId = "Choose the customer this order is for.";
+      }
       if (!draft.from.trim()) e.from = "Tell us where the trip starts.";
       if (!draft.to.trim()) e.to = "Tell us where the trip ends.";
       if (!draft.depart) e.depart = "A departure date is needed to price the fare.";
@@ -669,6 +815,19 @@ export function AdminOrderForm({
 
   async function submit() {
     if (!validate(3) || !validate(1) || !validate(2)) return;
+
+    // A signed-out visitor may fill the whole wizard; placing the order is what
+    // needs an account. Flush the draft first (the auto-save is debounced), then
+    // route through sign-up — most guests here are new customers, and existing
+    // ones are one click from sign-in.
+    if (isGuest) {
+      writeDraft(draft);
+      router.push(
+        `/signup?redirect=${encodeURIComponent(`${BOOK_PATH}?resume=1`)}`
+      );
+      return;
+    }
+
     setBusy(true);
 
     const noteLines: string[] = [];
@@ -692,6 +851,9 @@ export function AdminOrderForm({
     if (draft.meal !== MEALS[0]) noteLines.push(`Meal preference: ${draft.meal}`);
     if (draft.assist !== ASSIST[0])
       noteLines.push(`Special assistance: ${draft.assist}`);
+    if (forCustomer && draft.phone.trim()) {
+      noteLines.push(`Contact phone: ${draft.phone.trim()}`);
+    }
     if (draft.extra.trim()) noteLines.push(`Additional notes: ${draft.extra.trim()}`);
 
     const cabinValue =
@@ -723,14 +885,62 @@ export function AdminOrderForm({
       airline: draft.airline !== ANY_AIRLINE ? draft.airline : null,
     };
 
-    const res = onCreate ? await onCreate(input) : await createOrder(input);
-    setBusy(false);
+    let res;
+    try {
+      res = onCreate ? await onCreate(input) : await createOrder(input);
+    } catch (err) {
+      setBusy(false);
+      toast.error("Couldn't create the order", {
+        description:
+          err instanceof Error ? err.message : "Something went wrong. Please try again.",
+      });
+      return;
+    }
     if (!res.ok) {
+      setBusy(false);
       toast.error("Couldn't create the order", { description: res.error });
       return;
     }
+
+    // Files can only be uploaded once the order — and its access-scoped storage
+    // path — exists. A failure here must not strand the wizard: the order is
+    // already saved, so warn and carry on rather than rolling anything back.
+    if (files.length > 0) {
+      try {
+        const recorded = [];
+        for (const file of files) {
+          const up = await uploadOrderAttachment(file, res.data.orderId);
+          if (up.ok) {
+            recorded.push({
+              path: up.path,
+              name: file.name,
+              mime: file.type || null,
+              size: file.size,
+            });
+          }
+        }
+        if (recorded.length > 0) {
+          await recordOrderAttachments({
+            orderId: res.data.orderId,
+            attachments: recorded,
+          });
+        }
+        if (recorded.length < files.length) {
+          toast.warning("Some files didn't upload", {
+            description: "Your order was still created — share them in its thread.",
+          });
+        }
+      } catch {
+        toast.warning("Some files didn't upload", {
+          description: "Your order was still created — share them in its thread.",
+        });
+      }
+    }
+
+    setBusy(false);
+    if (forCustomer) clearDraft();
     setCreated({ id: res.data.orderId, ref: res.data.orderNumber ?? "" });
-    toast.success("Order created");
+    toast.success(forCustomer ? "Booking request sent" : "Order created");
     toTop();
   }
 
@@ -749,7 +959,9 @@ export function AdminOrderForm({
     return (
       <div className="flex max-w-[1080px] flex-col gap-5">
         <div ref={topRef} />
-        <BackLink href={`${basePath}/orders`}>All orders</BackLink>
+        <BackLink href={`${basePath}/orders`}>
+          {forCustomer ? "All my orders" : "All orders"}
+        </BackLink>
         <div
           role="status"
           className={cn(
@@ -763,19 +975,28 @@ export function AdminOrderForm({
           <div className="flex min-w-0 flex-[1_1_300px] flex-col gap-1.5">
             <span className="flex flex-wrap items-center gap-2.5">
               <h2 className="font-poppins text-ink-900 m-0 text-[17px] font-medium tracking-[-0.016em]">
-                Order {created.ref} created
+                {forCustomer
+                  ? created.ref
+                    ? `Booking request ${created.ref} sent`
+                    : "Booking request sent"
+                  : created.ref
+                    ? `Order ${created.ref} created`
+                    : "Order created"}
               </h2>
-              <Pill tone="ok">New</Pill>
+              <Pill tone="ok">{forCustomer ? "Received" : "New"}</Pill>
             </span>
             <p className="text-ink-600 m-0 text-[12.5px] leading-[1.55] font-normal text-pretty">
-              {routeLine} · {travellerLine} · {draft.trip}. Saved to the pipeline
-              for {customerLabel} and ready for a ticketing agent to price.
+              {routeLine} · {travellerLine} · {draft.trip}.{" "}
+              {forCustomer
+                ? "Our team is on it — we'll message you in the portal as soon as we have a fare."
+                : `Saved to the pipeline for ${customerLabel} and ready for a ticketing agent to price.`}
             </p>
           </div>
           <div className="flex flex-none flex-wrap gap-3">
             <Btn
               onClick={() => {
-                setDraft(blank());
+                setDraft(forCustomer ? seed(undefined, contactPhone ?? null) : blank());
+                setFiles([]);
                 setErrors({});
                 setStep(1);
                 setMaxStep(1);
@@ -783,13 +1004,13 @@ export function AdminOrderForm({
                 toTop();
               }}
             >
-              Create another
+              {forCustomer ? "Book another trip" : "Create another"}
             </Btn>
             <Btn
               variant="ember"
               onClick={() => router.push(`${basePath}/orders/${created.id}`)}
             >
-              View order
+              {forCustomer ? "Track this booking" : "View order"}
             </Btn>
           </div>
         </div>
@@ -800,15 +1021,21 @@ export function AdminOrderForm({
   return (
     <div className="flex max-w-[1080px] flex-col gap-5">
       <div ref={topRef} />
-      <BackLink href={`${basePath}/orders`}>All orders</BackLink>
+      {isGuest ? null : (
+        <BackLink href={`${basePath}/orders`}>
+          {forCustomer ? "All my orders" : "All orders"}
+        </BackLink>
+      )}
 
       <div className="flex flex-col gap-1.5">
-        <Eyebrow>New order</Eyebrow>
+        <Eyebrow>{forCustomer ? "New booking" : "New order"}</Eyebrow>
         <h1 className="font-poppins text-ink-700 m-0 text-[clamp(20px,1.5vw,24px)] leading-[1.5] font-medium tracking-[-0.02em]">
-          Create an order
+          {forCustomer ? "Book a flight" : "Create an order"}
         </h1>
         <p className="text-ink-600 m-0 mt-0.5 max-w-[640px] text-[13.5px] font-normal text-pretty">
-          Capture the trip, flight check and passenger details in three steps.
+          {forCustomer
+            ? "Three quick steps — tell us the trip and our team will come back with the best fare we can find."
+            : "Capture the trip, flight check and passenger details in three steps."}
         </p>
       </div>
 
@@ -919,9 +1146,10 @@ export function AdminOrderForm({
             <CardHead title="Have you already checked specific flights?" />
             <div className="flex flex-col gap-4 p-5">
               <p className="text-ink-600 m-0 max-w-[640px] text-[13px] leading-[1.6] font-normal text-pretty">
-                This helps us find the exact deal faster. If the customer has
-                spotted flights, dates or fares anywhere, share them and we&apos;ll
-                match or beat them — if not, we&apos;ll search from scratch.
+                This helps us find the exact deal faster.{" "}
+                {forCustomer
+                  ? "If you've spotted flights, dates or fares anywhere, share them and we'll match or beat them — if not, we'll search from scratch."
+                  : "If the customer has spotted flights, dates or fares anywhere, share them and we'll match or beat them — if not, we'll search from scratch."}
               </p>
               <div
                 role="radiogroup"
@@ -930,8 +1158,22 @@ export function AdminOrderForm({
               >
                 {(
                   [
-                    ["yes", "Yes, flights are already checked", "Details or screenshots can be shared"],
-                    ["no", "Not yet — find the best fare", "Search from scratch for this trip"],
+                    [
+                      "yes" as const,
+                      forCustomer
+                        ? "Yes, I've found some flights"
+                        : "Yes, flights are already checked",
+                      forCustomer
+                        ? "Share the details or a screenshot"
+                        : "Details or screenshots can be shared",
+                    ],
+                    [
+                      "no" as const,
+                      "Not yet — find the best fare",
+                      forCustomer
+                        ? "We'll search from scratch for you"
+                        : "Search from scratch for this trip",
+                    ],
                   ] as const
                 ).map(([key, title, sub]) => {
                   const on = draft.checked === key;
@@ -1157,16 +1399,86 @@ export function AdminOrderForm({
                   Screenshots or booking files
                   <span className="text-ink-450 font-normal">Optional</span>
                 </span>
-                <div className="border-line-strong bg-surface-1 flex flex-col items-center justify-center gap-2 rounded-[11px] border border-dashed px-4 py-5 text-center">
-                  <span className="text-marine-600 flex items-center gap-2 text-[12.5px] font-medium">
-                    <DocumentIcon size={15} />
-                    Attach them on the order once it exists
-                  </span>
-                  <span className="text-ink-500 text-[12px] font-normal text-pretty">
-                    The order&apos;s own thread takes PNG, JPG and PDF, and every
-                    file stays with the record.
-                  </span>
-                </div>
+                {forCustomer ? (
+                  /* The traveller has the screenshot in their hand right now —
+                     staff don't, which is why they get the note instead. */
+                  <>
+                    <input
+                      ref={fileRef}
+                      type="file"
+                      multiple
+                      accept={ATTACHMENT_ACCEPT}
+                      className="hidden"
+                      onChange={(e) => {
+                        const picked = Array.from(e.target.files ?? []);
+                        e.target.value = "";
+                        const good: File[] = [];
+                        for (const f of picked) {
+                          const check = validateAttachment(f);
+                          if (check.ok) good.push(f);
+                          else toast.error(`Can't attach ${f.name}`, { description: check.error });
+                        }
+                        if (good.length) setFiles((prev) => [...prev, ...good]);
+                      }}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => fileRef.current?.click()}
+                      className="border-line-strong bg-surface-1 hover:border-marine-500 hover:bg-marine-wash flex flex-col items-center justify-center gap-2 rounded-[11px] border border-dashed px-4 py-5 text-center outline-none transition-colors"
+                    >
+                      <span className="text-marine-600 flex items-center gap-2 text-[12.5px] font-medium">
+                        <DocumentIcon size={15} />
+                        Choose files
+                      </span>
+                      <span className="text-ink-500 text-[12px] font-normal text-pretty">
+                        PNG, JPG or PDF. Every file stays attached to the order.
+                      </span>
+                    </button>
+                    {files.length > 0 ? (
+                      <div className="flex flex-col gap-2">
+                        {files.map((f, i) => (
+                          <div
+                            key={`${f.name}-${i}`}
+                            className="border-line-hair flex min-w-0 items-center gap-3 rounded-[10px] border bg-white px-3.5 py-2.5"
+                          >
+                            <span className="bg-marine-tint text-marine-600 flex size-[30px] flex-none items-center justify-center rounded-[9px]">
+                              <DocumentIcon size={15} />
+                            </span>
+                            <span className="flex min-w-0 flex-1 flex-col gap-0.5">
+                              <span className="text-ink-800 truncate text-[12.5px] font-medium">
+                                {f.name}
+                              </span>
+                              <span className="text-ink-500 text-[11px] font-normal">
+                                {Math.max(1, Math.round(f.size / 1024))} KB
+                              </span>
+                            </span>
+                            <button
+                              type="button"
+                              aria-label={`Remove ${f.name}`}
+                              onClick={() =>
+                                setFiles((prev) => prev.filter((_, n) => n !== i))
+                              }
+                              className="text-ink-500 hover:bg-surface-1 hover:text-ink-800 flex size-7 flex-none items-center justify-center rounded-full outline-none"
+                            >
+                              <CloseIcon size={14} />
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    ) : null}
+                  </>
+                ) : (
+                  <div className="border-line-strong bg-surface-1 flex flex-col items-center justify-center gap-2 rounded-[11px] border border-dashed px-4 py-5 text-center">
+                    <span className="text-marine-600 flex items-center gap-2 text-[12.5px] font-medium">
+                      <DocumentIcon size={15} />
+                      Attach them on the order once it exists
+                    </span>
+                    <span className="text-ink-500 text-[12px] font-normal text-pretty">
+                      The order&apos;s own thread takes PNG, JPG and PDF, and every
+                      file stays with the record.
+                    </span>
+                  </div>
+                )}
               </div>
             ) : null}
           </Card>
@@ -1182,13 +1494,24 @@ export function AdminOrderForm({
             <div>
               {(
                 [
-                  {
-                    label: "Customer",
-                    icon: "user" as IconName,
-                    tint: "bg-neutral-bg text-ink-700",
-                    step: 1 as Step,
-                    lines: [[customerLabel || "Not chosen", false]],
-                  },
+                  forCustomer
+                    ? {
+                        label: "Contact",
+                        icon: "mail" as IconName,
+                        tint: "bg-neutral-bg text-ink-700",
+                        step: 3 as Step,
+                        lines: [
+                          [contactEmail || "Confirmed at sign-up", false],
+                          [draft.phone.trim() || "No phone given", true],
+                        ],
+                      }
+                    : {
+                        label: "Customer",
+                        icon: "user" as IconName,
+                        tint: "bg-neutral-bg text-ink-700",
+                        step: 1 as Step,
+                        lines: [[customerLabel || "Not chosen", false]],
+                      },
                   {
                     label: "Trip",
                     icon: "route" as IconName,
@@ -1244,13 +1567,14 @@ export function AdminOrderForm({
                         ? [
                             ["Already checked flights", false],
                             [
-                              // The design's own wording. Its "N files
-                              // attached" branch cannot arise here: this step
-                              // has no uploader — files go on the order's
-                              // thread once the record exists.
-                              draft.flightInfo.trim()
-                                ? "Details shared, no files"
-                                : "No details added yet",
+                              // The design's own wording. Staff have no
+                              // uploader on this step (files go on the order's
+                              // thread), so their branch never counts files.
+                              files.length > 0
+                                ? `${files.length} file${files.length === 1 ? "" : "s"} attached`
+                                : draft.flightInfo.trim()
+                                  ? "Details shared, no files"
+                                  : "No details added yet",
                               true,
                             ],
                           ]
@@ -1354,8 +1678,12 @@ export function AdminOrderForm({
             ) : (
               <span className="text-ink-500 text-[11.5px] font-normal text-pretty">
                 {last
-                  ? "Creating the order adds it to the pipeline and opens a customer thread."
-                  : "Nothing is saved until you create the order — you can go back at any point."}
+                  ? forCustomer
+                    ? isGuest
+                      ? "You'll make an account on the next screen — your answers are kept."
+                      : "Sending this opens a thread with the team so you can follow it."
+                    : "Creating the order adds it to the pipeline and opens a customer thread."
+                  : "Nothing is saved until you send it — you can go back at any point."}
               </span>
             )}
           </span>
@@ -1364,6 +1692,7 @@ export function AdminOrderForm({
                 wider than the standard 20px control padding. */}
             <Btn
               className="px-[22px]"
+              disabled={step === 1 && isGuest}
               onClick={() =>
                 step === 1
                   ? router.push(`${basePath}/orders`)
@@ -1379,8 +1708,14 @@ export function AdminOrderForm({
             >
               {last
                 ? busy
-                  ? "Creating order…"
-                  : "Create order"
+                  ? forCustomer
+                    ? "Sending…"
+                    : "Creating order…"
+                  : forCustomer
+                    ? isGuest
+                      ? "Create account & send"
+                      : "Send booking request"
+                    : "Create order"
                 : step === 1
                   ? "Continue to flight check"
                   : "Continue to passengers & review"}

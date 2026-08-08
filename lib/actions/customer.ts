@@ -109,7 +109,7 @@ export async function listMyCustomerOrders(): Promise<Order[]> {
  */
 export async function createCustomerOrder(
   input: OrderFormInput
-): Promise<ActionResult<{ orderId: string }>> {
+): Promise<ActionResult<{ orderId: string; orderNumber: string }>> {
   let customerId: string;
   let conversationId: string;
   try {
@@ -149,11 +149,14 @@ export async function createCustomerOrder(
       conversation_id: conversationId,
       created_by: null,
     })
-    .select("id")
-    .single<{ id: string }>();
+    .select("id, order_number")
+    .single<{ id: string; order_number: string }>();
 
   if (error) return { ok: false, error: error.message };
-  return { ok: true, data: { orderId: data.id } };
+  return {
+    ok: true,
+    data: { orderId: data.id, orderNumber: data.order_number },
+  };
 }
 
 // ----- Messages (internal realtime chat with the team) -----
