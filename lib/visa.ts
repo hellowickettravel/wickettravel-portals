@@ -1,4 +1,3 @@
-import type { Tone } from "@/components/admin/status-badge";
 
 /**
  * Shared types + constants for Dubai Visa enquiries (table: visa_enquiries,
@@ -29,15 +28,6 @@ export const VISA_STATUS_LABELS: Record<VisaEnquiryStatus, string> = {
   in_progress: "In progress",
   completed: "Completed",
   closed: "Closed",
-};
-
-/** Badge tone per enquiry status (same semantic palette as order badges). */
-export const VISA_STATUS_TONE: Record<VisaEnquiryStatus, Tone> = {
-  new: "blue",
-  contacted: "violet",
-  in_progress: "amber",
-  completed: "green",
-  closed: "slate",
 };
 
 export type PreferredContactMethod = "email" | "phone" | "whatsapp";

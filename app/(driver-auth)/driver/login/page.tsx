@@ -7,7 +7,7 @@ import { Loader2, Car, Star, ShieldCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { PasswordInput } from "@/components/portal/password-input";
+import { PasswordInput } from "@/components/driver/password-input";
 import { BrandLogo } from "@/components/brand/brand-logo";
 
 export default function DriverLoginPage() {

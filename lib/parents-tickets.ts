@@ -1,4 +1,3 @@
-import type { Tone } from "@/components/admin/status-badge";
 
 /**
  * Shared types + constants for Parents Tickets leads (table:
@@ -22,12 +21,6 @@ export const PARENT_TICKET_TYPE_LABELS: Record<ParentTicketType, string> = {
   requester: "Needs help",
 };
 
-/** Badge tone per side — traveller offers help (green), requester needs it (amber). */
-export const PARENT_TICKET_TYPE_TONE: Record<ParentTicketType, Tone> = {
-  traveller: "green",
-  requester: "amber",
-};
-
 export type ParentTicketStatus = "new" | "contacted" | "matched" | "closed";
 
 export const PARENT_TICKET_STATUSES: ParentTicketStatus[] = [
@@ -42,14 +35,6 @@ export const PARENT_TICKET_STATUS_LABELS: Record<ParentTicketStatus, string> = {
   contacted: "Contacted",
   matched: "Matched",
   closed: "Closed",
-};
-
-/** Badge tone per lead status (same semantic palette as order/visa badges). */
-export const PARENT_TICKET_STATUS_TONE: Record<ParentTicketStatus, Tone> = {
-  new: "blue",
-  contacted: "violet",
-  matched: "green",
-  closed: "slate",
 };
 
 /** One timestamped internal note stored on parent_ticket_enquiries.admin_notes. */
