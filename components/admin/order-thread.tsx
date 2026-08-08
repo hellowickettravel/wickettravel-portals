@@ -21,8 +21,10 @@ import {
   ImageIcon,
   SendIcon,
 } from "@/components/admin/icons";
-import { MessageAttachment } from "@/components/portal/message-attachment";
-import { MessageText } from "@/components/portal/message-text";
+import {
+  AdminMessageAttachment,
+  AdminMessageText,
+} from "@/components/admin/message-bits";
 import {
   avatarFor,
   focusRing,
@@ -307,11 +309,11 @@ export function OrderThread({
                       >
                         {m.body ? (
                           <span className="block text-[13px] leading-[1.55] font-normal text-pretty">
-                            <MessageText text={m.body} mine={mine} />
+                            <AdminMessageText text={m.body} mine={mine} />
                           </span>
                         ) : null}
                         {m.media_url ? (
-                          <MessageAttachment url={m.media_url} mine={mine} />
+                          <AdminMessageAttachment url={m.media_url} />
                         ) : null}
                         <span
                           className={cn(

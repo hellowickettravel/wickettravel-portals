@@ -4,15 +4,6 @@ import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import {
-  MoreHorizontal,
-  Pencil,
-  Ban,
-  CheckCircle2,
-  Eye,
-  Loader2,
-  Trash2,
-} from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import {
@@ -34,26 +25,16 @@ import {
   ViewButton,
   focusRing,
 } from "@/components/admin/ui";
-import { PlusIcon, UserPlusIcon } from "@/components/admin/icons";
+import {
+  CheckCircleIcon,
+  EditIcon,
+  PlusIcon,
+  PowerIcon,
+  TrashIcon,
+  UserPlusIcon,
+} from "@/components/admin/icons";
 import { AccessCard, PersonDialog } from "@/components/admin/person-dialog";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { ConfirmDialog } from "@/components/portal/confirm-dialog";
+import { ConfirmSheet } from "@/components/admin/sheet";
 import {
   listEmployees,
   listOrders,
@@ -259,54 +240,57 @@ export default function EmployeesPage() {
   const remaining = Math.max(0, rows.length - limit);
 
   // Shared row-actions menu, reused by the desktop table + mobile cards.
+  /**
+   * The design's people table ends on a single View pill and has no overflow
+   * menu at all. These actions have to live somewhere, so they sit inline as
+   * 30px icon pills in the design's own control language rather than in a
+   * shadcn dropdown wearing the other portals' skin.
+   */
+  const iconBtn =
+    "border-line-field hover:bg-surface-1 hover:border-ink-300 inline-flex size-[30px] items-center justify-center rounded-full border bg-white outline-none";
+
   const renderActions = (emp: Profile) => (
-    <DropdownMenu>
-      <DropdownMenuTrigger
-        aria-label={`Actions for ${emp.full_name || "employee"}`}
-        className="inline-flex size-9 items-center justify-center rounded-lg text-ink-600 outline-none transition-colors hover:bg-neutral-bg hover:text-ink-800 focus-visible:ring-[3px] focus-visible:ring-brand/25"
+    <span className="inline-flex items-center gap-1.5">
+      <button
+        type="button"
+        title="Edit employee"
+        aria-label={`Edit ${emp.full_name || "employee"}`}
+        onClick={() => openEdit(emp)}
+        className={cn(iconBtn, "text-ink-600", focusRing)}
       >
-        <MoreHorizontal className="size-4" />
-      </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-44">
-        <DropdownMenuItem
-          className="cursor-pointer"
-          onClick={() => router.push(`/admin/employees/${emp.id}`)}
+        <EditIcon size={14} />
+      </button>
+      {emp.is_active ? (
+        <button
+          type="button"
+          title="Deactivate account"
+          aria-label={`Deactivate ${emp.full_name || "employee"}`}
+          onClick={() => setDeactivating(emp)}
+          className={cn(iconBtn, "text-ink-600", focusRing)}
         >
-          <Eye className="size-4" />
-          View details
-        </DropdownMenuItem>
-        <DropdownMenuItem className="cursor-pointer" onClick={() => openEdit(emp)}>
-          <Pencil className="size-4" />
-          Edit employee
-        </DropdownMenuItem>
-        {emp.is_active ? (
-          <DropdownMenuItem
-            variant="destructive"
-            className="cursor-pointer"
-            onClick={() => setDeactivating(emp)}
-          >
-            <Ban className="size-4" />
-            Deactivate
-          </DropdownMenuItem>
-        ) : (
-          <DropdownMenuItem
-            className="cursor-pointer"
-            onClick={() => activeMutation.mutate({ id: emp.id, isActive: true })}
-          >
-            <CheckCircle2 className="size-4" />
-            Activate
-          </DropdownMenuItem>
-        )}
-        <DropdownMenuItem
-          variant="destructive"
-          className="cursor-pointer"
-          onClick={() => setDeleting(emp)}
+          <PowerIcon size={14} />
+        </button>
+      ) : (
+        <button
+          type="button"
+          title="Activate account"
+          aria-label={`Activate ${emp.full_name || "employee"}`}
+          onClick={() => activeMutation.mutate({ id: emp.id, isActive: true })}
+          className={cn(iconBtn, "text-ok-ink", focusRing)}
         >
-          <Trash2 className="size-4" />
-          Delete
-        </DropdownMenuItem>
-      </DropdownMenuContent>
-    </DropdownMenu>
+          <CheckCircleIcon size={14} />
+        </button>
+      )}
+      <button
+        type="button"
+        title="Delete employee"
+        aria-label={`Delete ${emp.full_name || "employee"}`}
+        onClick={() => setDeleting(emp)}
+        className={cn(iconBtn, "text-danger-ink", focusRing)}
+      >
+        <TrashIcon size={14} />
+      </button>
+    </span>
   );
 
   return (
@@ -578,130 +562,109 @@ export default function EmployeesPage() {
         }
       />
 
-      {/* Edit employee dialog */}
-      <Dialog open={editing !== null} onOpenChange={(o) => !o && setEditing(null)}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle className="font-poppins">Edit employee</DialogTitle>
-            <DialogDescription>
-              Update this team member’s details and access level.
-            </DialogDescription>
-          </DialogHeader>
-          <form
-            className="space-y-4"
-            onSubmit={(e) => {
-              e.preventDefault();
-              if (editing)
-                editMutation.mutate({
-                  id: editing.id,
-                  fullName: editName,
-                  email: editEmail,
-                  accessLevel: editAccess,
-                });
-            }}
-          >
-            <div className="space-y-2">
-              <Label htmlFor="edit-name" className="text-ink-500 text-[11px] font-medium uppercase tracking-[0.09em]">
-                Full name
-              </Label>
-              <Input
-                id="edit-name"
-                value={editName}
-                onChange={(e) => setEditName(e.target.value)}
-                placeholder="Jane Smith"
-                required
-                disabled={editMutation.isPending}
-                className="h-10 rounded-[10px] bg-surface-1"
-              />
+      {/* Edit employee — the same design sheet as Add */}
+      <PersonDialog
+        open={editing !== null}
+        onClose={() => setEditing(null)}
+        icon={<EditIcon size={20} />}
+        title="Edit employee"
+        subtitle="Change their name, sign-in email or what they can reach in the portal."
+        cta="Save changes"
+        note="Changing the email changes the address they sign in with."
+        busy={editMutation.isPending}
+        onSubmit={() =>
+          editing &&
+          editMutation.mutate({
+            id: editing.id,
+            fullName: editName,
+            email: editEmail,
+            accessLevel: editAccess,
+          })
+        }
+        sections={[
+          {
+            title: "Employee details",
+            fields: [
+              {
+                kind: "text",
+                id: "edit-emp-name",
+                label: "Full name",
+                required: true,
+                value: editName,
+                onChange: setEditName,
+              },
+              {
+                kind: "text",
+                id: "edit-emp-email",
+                label: "Work email",
+                type: "email",
+                required: true,
+                value: editEmail,
+                onChange: setEditEmail,
+              },
+            ],
+          },
+        ]}
+        extra={
+          <div className="flex flex-col gap-[14px] pt-6">
+            <span className="text-ink-500 text-[11px] font-semibold tracking-[0.11em] uppercase">
+              Access level
+            </span>
+            <div
+              role="radiogroup"
+              aria-label="Access level"
+              className="grid grid-cols-[repeat(auto-fit,minmax(260px,1fr))] gap-2.5"
+            >
+              {ACCESS_LEVELS.map((lvl) => (
+                <AccessCard
+                  key={lvl}
+                  label={ACCESS_LEVEL_LABELS[lvl]}
+                  hint={ACCESS_LEVEL_DESCRIPTIONS[lvl]}
+                  checked={editAccess === lvl}
+                  onSelect={() => setEditAccess(lvl)}
+                />
+              ))}
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="edit-email" className="text-ink-500 text-[11px] font-medium uppercase tracking-[0.09em]">
-                Email
-              </Label>
-              <Input
-                id="edit-email"
-                type="email"
-                value={editEmail}
-                onChange={(e) => setEditEmail(e.target.value)}
-                placeholder="jane@wicket.co.uk"
-                required
-                disabled={editMutation.isPending}
-                className="h-10 rounded-[10px] bg-surface-1"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="edit-access" className="text-ink-500 text-[11px] font-medium uppercase tracking-[0.09em]">
-                Access level
-              </Label>
-              <select
-                id="edit-access"
-                value={editAccess}
-                onChange={(e) => setEditAccess(e.target.value as AccessLevel)}
-                disabled={editMutation.isPending}
-                className="h-10 w-full rounded-[10px] border border-input bg-surface-1 px-3 text-sm text-ink-800 outline-none transition-[color,box-shadow,border-color] duration-150 focus-visible:border-marine-500 focus-visible:ring-[3px] focus-visible:ring-brand/25"
-              >
-                {ACCESS_LEVELS.map((lvl) => (
-                  <option key={lvl} value={lvl}>
-                    {ACCESS_LEVEL_LABELS[lvl]}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <DialogFooter className="gap-2">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => setEditing(null)}
-                disabled={editMutation.isPending}
-              >
-                Cancel
-              </Button>
-              <Button type="submit" disabled={editMutation.isPending}>
-                {editMutation.isPending ? (
-                  <>
-                    <Loader2 className="size-4 animate-spin" />
-                    Saving…
-                  </>
-                ) : (
-                  "Save changes"
-                )}
-              </Button>
-            </DialogFooter>
-          </form>
-        </DialogContent>
-      </Dialog>
+          </div>
+        }
+      />
 
       {/* Deactivate confirmation */}
-      <ConfirmDialog
+      <ConfirmSheet
         open={deactivating !== null}
-        onOpenChange={(o) => !o && setDeactivating(null)}
+        onClose={() => setDeactivating(null)}
+        onConfirm={() => {
+          if (deactivating) {
+            activeMutation.mutate({ id: deactivating.id, isActive: false });
+            setDeactivating(null);
+          }
+        }}
+        destructive
+        busy={activeMutation.isPending}
+        icon={<PowerIcon size={20} />}
         title="Deactivate employee?"
-        description={
+        body={
           deactivating
             ? `${deactivating.full_name || "This employee"} will lose access to the portal until reactivated. Their conversations and orders are kept.`
             : ""
         }
         confirmLabel="Deactivate"
-        destructive
-        onConfirm={() =>
-          deactivating &&
-          activeMutation.mutate({ id: deactivating.id, isActive: false })
-        }
       />
 
-      {/* Delete confirmation */}
-      <ConfirmDialog
+      <ConfirmSheet
         open={deleting !== null}
-        onOpenChange={(o) => !o && setDeleting(null)}
+        onClose={() => setDeleting(null)}
+        onConfirm={() => deleting && deleteMutation.mutate(deleting.id)}
+        destructive
+        busy={deleteMutation.isPending}
+        icon={<TrashIcon size={20} />}
         title="Delete employee?"
-        description={
+        body={
           deleting
-            ? `This permanently removes ${deleting.full_name || "this employee"} and their login — this cannot be undone. Orders they created and messages they sent are kept (un-attributed); their conversation assignments are removed.`
+            ? `This permanently removes ${deleting.full_name || "this employee"} and their login — it cannot be undone. Orders they created and messages they sent are kept but un-attributed, and their conversation assignments are removed.`
             : ""
         }
         confirmLabel="Delete permanently"
-        destructive
-        onConfirm={() => deleting && deleteMutation.mutate(deleting.id)}
       />
     </Screen>
   );

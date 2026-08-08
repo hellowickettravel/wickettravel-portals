@@ -2,9 +2,11 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
-import { Btn } from "@/components/admin/ui";
+import {
+  Btn,
+  Spinner,
+} from "@/components/admin/ui";
 import { PowerIcon } from "@/components/admin/icons";
 import { setEmployeeActive } from "@/lib/actions/admin";
 
@@ -36,7 +38,7 @@ export function EmployeeStatusButton({
 
   return (
     <Btn variant={isActive ? "danger" : "ghost"} disabled={busy} onClick={toggle}>
-      {busy ? <Loader2 className="size-4 animate-spin" /> : <PowerIcon size={15} />}
+      {busy ? <Spinner /> : <PowerIcon size={15} />}
       {isActive ? "Deactivate account" : "Activate account"}
     </Btn>
   );

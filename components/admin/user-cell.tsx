@@ -1,4 +1,3 @@
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { cn } from "@/lib/utils";
 
 function initialsOf(name: string) {
@@ -20,11 +19,17 @@ export function UserCell({
 }) {
   return (
     <div className="flex items-center gap-2.5">
-      <Avatar className={cn(size === "sm" ? "size-7" : "size-8")}>
-        <AvatarFallback className="wt-avatar-fallback text-[11px] font-semibold">
-          {initialsOf(name)}
-        </AvatarFallback>
-      </Avatar>
+      {/* A plain span, not the shadcn <Avatar>: the two skins are carried by
+          .wt-avatar-fallback, and /admin should not pull in a component the
+          rest of its screens no longer use. */}
+      <span
+        className={cn(
+          "wt-avatar-fallback flex flex-none items-center justify-center overflow-hidden rounded-full text-[11px] font-semibold",
+          size === "sm" ? "size-7" : "size-8"
+        )}
+      >
+        {initialsOf(name)}
+      </span>
       <div className="min-w-0 leading-tight">
         <p className="wt-user-name m-0 truncate">{name}</p>
         {sub ? <p className="wt-user-sub m-0 truncate">{sub}</p> : null}

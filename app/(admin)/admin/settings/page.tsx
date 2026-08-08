@@ -2,7 +2,6 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { createClient } from "@/lib/supabase/client";
 import {
@@ -23,6 +22,7 @@ import {
   CardHead,
   PageHead,
   Screen,
+  Spinner,
   focusRing,
   inputClass,
 } from "@/components/admin/ui";
@@ -356,7 +356,7 @@ export default function SettingsPage() {
                 onClick={() => logoInputRef.current?.click()}
               >
                 {uploadingLogo ? (
-                  <Loader2 className="size-4 animate-spin" />
+                  <Spinner />
                 ) : (
                   <UploadIcon size={15} />
                 )}
@@ -415,7 +415,7 @@ export default function SettingsPage() {
                 disabled={saveMutation.isPending || isLoading}
               >
                 {saveMutation.isPending ? (
-                  <Loader2 className="size-4 animate-spin" />
+                  <Spinner />
                 ) : (
                   <CheckIcon size={15} />
                 )}
@@ -461,7 +461,7 @@ export default function SettingsPage() {
               disabled={prefsMutation.isPending}
             >
               {prefsMutation.isPending ? (
-                <Loader2 className="size-4 animate-spin" />
+                <Spinner />
               ) : (
                 <CheckIcon size={15} />
               )}

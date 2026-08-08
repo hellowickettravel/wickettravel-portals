@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import {
   setVisaEnquiryStatus,
@@ -27,6 +26,7 @@ import {
   PageTitle,
   Pill,
   Screen,
+  Spinner,
   focusRing,
   textareaClass,
 } from "@/components/admin/ui";
@@ -432,7 +432,7 @@ export function VisaEnquiryDetail({ detail }: { detail: Detail }) {
                 className="self-start h-[38px] px-5 text-[12.5px]"
                 disabled={noteBusy || !noteDraft.trim()}
               >
-                {noteBusy ? <Loader2 className="size-4 animate-spin" /> : null}
+                {noteBusy ? <Spinner /> : null}
                 Add note
               </Btn>
             </form>

@@ -1,17 +1,14 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useId, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import { ConfirmDialog } from "@/components/portal/confirm-dialog";
+  ConfirmSheet,
+  Sheet,
+  SheetFoot,
+  SheetHead,
+} from "@/components/admin/sheet";
 import { BoardingPass } from "@/components/admin/boarding-pass";
 import { OrderThread } from "@/components/admin/order-thread";
 import {
@@ -37,6 +34,7 @@ import {
   EditIcon,
   Ico,
   RefreshIcon,
+  StaffIcon,
   iconForField,
 } from "@/components/admin/icons";
 import { updateOrder, setOrderStatus, assignOrder } from "@/lib/actions/admin";
@@ -247,6 +245,8 @@ export function OrderDetail({
   const [editOpen, setEditOpen] = useState(false);
   const [cancelOpen, setCancelOpen] = useState(false);
   const [assignOpen, setAssignOpen] = useState(false);
+  const assignTitleId = useId();
+  const editTitleId = useId();
   const [busy, setBusy] = useState<null | "status" | "assign" | "edit">(null);
 
   const [edit, setEdit] = useState<Record<EditKey, string>>({
@@ -749,17 +749,20 @@ export function OrderDetail({
       ) : null}
 
       {/* -------------------------------------------------- assign dialog */}
-      <Dialog
+      <Sheet
         open={assignOpen}
-        onOpenChange={(o) => busy !== "assign" && setAssignOpen(o)}
+        onClose={() => busy !== "assign" && setAssignOpen(false)}
+        labelledBy={assignTitleId}
+        width={460}
       >
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle className="font-poppins">Assign this order</DialogTitle>
-            <DialogDescription>
-              The employee sees the order and its thread the moment you save.
-            </DialogDescription>
-          </DialogHeader>
+        <SheetHead
+          icon={<StaffIcon size={20} />}
+          title="Assign this order"
+          subtitle="The employee sees the order and its thread the moment you save."
+          titleId={assignTitleId}
+          onClose={() => busy !== "assign" && setAssignOpen(false)}
+        />
+        <div className="min-h-0 flex-1 overflow-y-auto px-6 py-5">
           <select
             value={assignId}
             onChange={(e) => setAssignId(e.target.value)}
@@ -774,36 +777,40 @@ export function OrderDetail({
               </option>
             ))}
           </select>
-          <DialogFooter className="gap-2">
-            <Btn onClick={() => setAssignOpen(false)} disabled={busy === "assign"}>
-              Cancel
-            </Btn>
-            <Btn
-              variant="marine"
-              onClick={saveAssignment}
-              disabled={busy === "assign"}
-            >
-              {busy === "assign" ? "Saving…" : "Save assignment"}
-            </Btn>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+        </div>
+        <SheetFoot>
+          <Btn onClick={() => setAssignOpen(false)} disabled={busy === "assign"}>
+            Cancel
+          </Btn>
+          <Btn
+            variant="marine"
+            onClick={saveAssignment}
+            disabled={busy === "assign"}
+          >
+            {busy === "assign" ? "Saving…" : "Save assignment"}
+          </Btn>
+        </SheetFoot>
+      </Sheet>
 
       {/* ---------------------------------------------------- edit dialog */}
-      <Dialog
+      <Sheet
         open={editOpen}
-        onOpenChange={(o) => busy !== "edit" && setEditOpen(o)}
+        onClose={() => busy !== "edit" && setEditOpen(false)}
+        labelledBy={editTitleId}
+        width={620}
       >
-        <DialogContent className="sm:max-w-lg">
-          <DialogHeader>
-            <DialogTitle className="font-poppins">Edit order</DialogTitle>
-            <DialogDescription>
-              Update trip and pricing details. The customer can&apos;t be changed
-              here.
-            </DialogDescription>
-          </DialogHeader>
-
-          <form onSubmit={saveEdit} className="flex flex-col gap-4">
+        <SheetHead
+          icon={<EditIcon size={20} />}
+          title="Edit order"
+          subtitle="Update trip and pricing details. The customer cannot be changed here."
+          titleId={editTitleId}
+          onClose={() => busy !== "edit" && setEditOpen(false)}
+        />
+        <form
+          id="edit-order-form"
+          onSubmit={saveEdit}
+          className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto px-6 py-5"
+        >
             {EDIT_ROWS.map((row, i) => (
               <div key={i} className="grid grid-cols-2 gap-4">
                 {row.map((f) => (
@@ -865,30 +872,36 @@ export function OrderDetail({
               />
             </div>
 
-            <DialogFooter className="gap-2">
-              <Btn
-                type="button"
-                onClick={() => setEditOpen(false)}
-                disabled={busy === "edit"}
-              >
-                Cancel
-              </Btn>
-              <Btn type="submit" variant="ember" disabled={busy === "edit"}>
-                {busy === "edit" ? "Saving…" : "Save changes"}
-              </Btn>
-            </DialogFooter>
-          </form>
-        </DialogContent>
-      </Dialog>
+        </form>
+        <SheetFoot>
+          <Btn
+            type="button"
+            onClick={() => setEditOpen(false)}
+            disabled={busy === "edit"}
+          >
+            Cancel
+          </Btn>
+          <Btn
+            type="submit"
+            form="edit-order-form"
+            variant="ember"
+            disabled={busy === "edit"}
+          >
+            {busy === "edit" ? "Saving…" : "Save changes"}
+          </Btn>
+        </SheetFoot>
+      </Sheet>
 
-      <ConfirmDialog
+      <ConfirmSheet
         open={cancelOpen}
-        onOpenChange={setCancelOpen}
-        title="Cancel this order?"
-        description="The order is marked as cancelled and drops out of revenue. The customer can no longer message on it, and you can reopen it later."
-        confirmLabel="Cancel order"
-        destructive
+        onClose={() => setCancelOpen(false)}
         onConfirm={() => changeStatus("cancelled")}
+        destructive
+        icon={<CloseIcon size={20} />}
+        title="Cancel this order?"
+        body="The order is marked as cancelled and drops out of revenue. The customer can no longer message on it, and you can reopen it later."
+        confirmLabel="Cancel order"
+        cancelLabel="Keep it open"
       />
     </div>
   );

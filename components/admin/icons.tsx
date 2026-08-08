@@ -245,6 +245,16 @@ const GLYPHS = {
     ["path", { d: "M14 7l3 3" }],
   ],
   dot: [["circle", { cx: 12, cy: 12, r: 3 }]],
+  /* Not in the design's own table — drawn in the same idiom (24 box, round
+     caps) for controls the design never had to show. */
+  key: [
+    ["circle", { cx: 8.5, cy: 12, r: 3.5 }],
+    ["path", { d: "M12 12h8M17.5 12v3M20 12v2.5" }],
+  ],
+  copy: [
+    ["rect", { x: 9, y: 9, width: 10.5, height: 10.5, rx: 2 }],
+    ["path", { d: "M15 6.5A2 2 0 0 0 13 4.5H6.5a2 2 0 0 0-2 2V13a2 2 0 0 0 2 2" }],
+  ],
 
   /* --- glyphs the design writes inline in its markup rather than in ico() --- */
   search: [
@@ -382,6 +392,8 @@ export const PercentIcon = glyph("percent");
 export const DocumentIcon = glyph("file");
 export const EditIcon = glyph("edit", 1.8);
 export const DotIcon = glyph("dot");
+export const KeyIcon = glyph("key", 1.8);
+export const CopyIcon = glyph("copy", 1.7);
 
 /* --------------------------------------------------------------- travel */
 

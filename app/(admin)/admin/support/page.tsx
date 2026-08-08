@@ -3,7 +3,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import {
   listAllSupportTickets,
@@ -20,6 +19,7 @@ import {
   PageHead,
   Pill,
   Screen,
+  Spinner,
   TableSkeleton,
   focusRing,
 } from "@/components/admin/ui";
@@ -251,7 +251,7 @@ export default function AdminSupportPage() {
                     }
                   >
                     {busy ? (
-                      <Loader2 className="size-4 animate-spin" />
+                      <Spinner />
                     ) : resolved ? (
                       <RefreshIcon size={15} />
                     ) : (

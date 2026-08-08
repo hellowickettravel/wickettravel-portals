@@ -19,8 +19,10 @@ import {
   uploadAttachment,
   validateAttachment,
 } from "@/lib/storage";
-import { MessageAttachment } from "@/components/portal/message-attachment";
-import { MessageText } from "@/components/portal/message-text";
+import {
+  AdminMessageAttachment,
+  AdminMessageText,
+} from "@/components/admin/message-bits";
 import type { InboxConversation } from "@/lib/db/conversations";
 import type { Message } from "@/lib/db/types";
 import { fmtInboxTime } from "@/lib/format";
@@ -506,11 +508,11 @@ export function AdminInbox({
                             >
                               {m.body ? (
                                 <span className="block text-[13px] leading-[1.55] font-normal text-pretty">
-                                  <MessageText text={m.body} mine={mine} />
+                                  <AdminMessageText text={m.body} mine={mine} />
                                 </span>
                               ) : null}
                               {m.media_url ? (
-                                <MessageAttachment url={m.media_url} mine={mine} />
+                                <AdminMessageAttachment url={m.media_url} />
                               ) : null}
                               <span
                                 className={cn(

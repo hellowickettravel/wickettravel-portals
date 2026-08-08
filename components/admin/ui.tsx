@@ -31,6 +31,21 @@ export const focusRing =
 /* -------------------------------------------------------------- screens */
 
 /** Screen wrapper: the design's 24px section rhythm and content cap. */
+/**
+ * Busy indicator for any admin control. The design never draws a spinner, so
+ * this is a plain ring in `currentColor` — it inherits the button's own ink
+ * instead of importing an icon set the rest of /admin does not use.
+ */
+export function Spinner({ size = 15 }: { size?: number }) {
+  return (
+    <span
+      aria-hidden
+      style={{ width: size, height: size, borderWidth: Math.max(1.5, size / 8) }}
+      className="inline-block flex-none animate-spin rounded-full border-current border-t-transparent opacity-70"
+    />
+  );
+}
+
 export function Screen({
   children,
   width = 1400,
