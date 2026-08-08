@@ -3,7 +3,8 @@ import { getUserAndProfile } from "@/lib/auth";
 import { normalizeAccess, canAccessSection, canEditOrders } from "@/lib/access";
 import { getOrderById } from "@/lib/db/orders";
 import { getPreOrderAttachments } from "@/lib/db/order-messages";
-import { EmployeeOrderDetail } from "@/components/employee/order-detail";
+import { getCustomerSnapshot } from "@/lib/db/customers";
+import { OrderDetail } from "@/components/admin/order-detail";
 
 export default async function EmployeeOrderDetailPage({
   params,
@@ -26,16 +27,29 @@ export default async function EmployeeOrderDetailPage({
     redirect("/employee/orders");
   }
 
-  const attachments = await getPreOrderAttachments(id);
+  const [attachments, customer] = await Promise.all([
+    getPreOrderAttachments(id),
+    order.customer?.id ? getCustomerSnapshot(order.customer.id) : null,
+  ]);
 
-  // Edit/status controls only for semi_admin; everyone else sees it read-only.
+  /**
+   * The same screen /admin renders — the design belongs to the portal, not the
+   * role. What differs is what this employee may do with it: editing and the
+   * status controls need semi_admin, reassignment is an admin action, and
+   * there is no employee-facing customer profile to link to.
+   */
   return (
-    <EmployeeOrderDetail
+    <OrderDetail
       order={order}
-      canEdit={canEditOrders(access)}
+      employees={[]}
       attachments={attachments}
+      customer={customer}
       currentUserId={user?.id ?? ""}
-      accessLevel={access}
+      currentUserName={profile?.full_name ?? "Support"}
+      basePath="/employee"
+      canEdit={canEditOrders(access)}
+      canAssign={false}
+      canViewCustomer={false}
     />
   );
 }

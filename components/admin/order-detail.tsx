@@ -231,6 +231,10 @@ export function OrderDetail({
   customer,
   currentUserId,
   currentUserName,
+  basePath = "/admin",
+  canEdit = true,
+  canAssign = true,
+  canViewCustomer = true,
 }: {
   order: OrderWithRelations;
   employees: Profile[];
@@ -239,6 +243,18 @@ export function OrderDetail({
   customer: CustomerSnapshot | null;
   currentUserId: string;
   currentUserName: string;
+  /**
+   * Where the portal lives. The employee portal renders this same screen —
+   * the design belongs to the portal, not the role — so every internal link
+   * and every permission is a prop rather than a hard-coded /admin path.
+   */
+  basePath?: string;
+  /** Edit + status controls. Admin always; employees only at semi_admin. */
+  canEdit?: boolean;
+  /** Reassigning an order is an admin action. */
+  canAssign?: boolean;
+  /** Only admin has a customer-detail screen to link to. */
+  canViewCustomer?: boolean;
 }) {
   const router = useRouter();
 
@@ -409,7 +425,7 @@ export function OrderDetail({
 
   return (
     <div className="flex max-w-[1240px] flex-col gap-6">
-      <BackLink href="/admin/orders">All orders</BackLink>
+      <BackLink href={`${basePath}/orders`}>All orders</BackLink>
 
       {/* ------------------------------------------------------ header */}
       <div className="flex flex-wrap items-end justify-between gap-4">
@@ -432,20 +448,22 @@ export function OrderDetail({
         </div>
 
         <div className="flex flex-wrap items-center gap-3">
-          <Btn onClick={() => setEditOpen(true)}>
-            <EditIcon size={15} />
-            Edit order
-          </Btn>
+          {canEdit ? (
+            <Btn onClick={() => setEditOpen(true)}>
+              <EditIcon size={15} />
+              Edit order
+            </Btn>
+          ) : null}
           {order.conversation_id ? (
             <Btn
               as="link"
-              href={`/admin/messages?c=${order.conversation_id}`}
+              href={`${basePath}/messages?c=${order.conversation_id}`}
             >
               <ChatIcon size={15} />
               Message customer
             </Btn>
           ) : null}
-          {settled ? (
+          {!canEdit ? null : settled ? (
             <Btn
               variant="marine"
               onClick={() => changeStatus("in_progress")}
@@ -677,7 +695,7 @@ export function OrderDetail({
           </Card>
 
           <Card>
-            <CardHead title="Assign Employee" />
+            <CardHead title={canAssign ? "Assign Employee" : "Assigned to"} />
             <div className="flex flex-col gap-4 px-[18px] py-4">
               <div className="flex items-center gap-3">
                 <span
@@ -703,11 +721,13 @@ export function OrderDetail({
                   </span>
                 </span>
               </div>
-              <Btn onClick={() => setAssignOpen(true)} className="w-full">
-                {order.assigned_employee?.full_name
-                  ? "Reassign order"
-                  : "Assign an employee"}
-              </Btn>
+              {canAssign ? (
+                <Btn onClick={() => setAssignOpen(true)} className="w-full">
+                  {order.assigned_employee?.full_name
+                    ? "Reassign order"
+                    : "Assign an employee"}
+                </Btn>
+              ) : null}
             </div>
           </Card>
 
@@ -725,10 +745,10 @@ export function OrderDetail({
                     : "—"
                 }
               />
-              {order.customer?.id ? (
+              {canViewCustomer && order.customer?.id ? (
                 <Btn
                   as="link"
-                  href={`/admin/customers/${order.customer.id}`}
+                  href={`${basePath}/customers/${order.customer.id}`}
                   className="mt-auto w-full"
                 >
                   View customer profile
