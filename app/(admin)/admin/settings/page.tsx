@@ -23,6 +23,7 @@ import {
   PageHead,
   Screen,
   Spinner,
+  Toggle,
   focusRing,
   inputClass,
 } from "@/components/admin/ui";
@@ -33,33 +34,6 @@ const PREFS_KEY = ["notification-prefs"] as const;
 
 const TABS = ["Business profile", "Notifications", "Security"] as const;
 type Tab = (typeof TABS)[number];
-
-/** The design's 46×27 switch: marine track when on, 21px white thumb. */
-function Toggle({
-  checked,
-  onChange,
-  label,
-}: {
-  checked: boolean;
-  onChange: (v: boolean) => void;
-  label: string;
-}) {
-  return (
-    <button
-      type="button"
-      role="switch"
-      aria-checked={checked}
-      aria-label={label}
-      onClick={() => onChange(!checked)}
-      className={cn(
-        "flex h-[27px] w-[46px] flex-none rounded-full border-0 p-1 outline-none transition-colors duration-150",
-        checked ? "bg-marine-500 justify-end" : "bg-line-field justify-start"
-      )}
-    >
-      <span className="block size-[21px] rounded-full bg-white shadow-[0_4px_12px_oklch(0.205_0.038_258_/_0.07)]" />
-    </button>
-  );
-}
 
 export default function SettingsPage() {
   const queryClient = useQueryClient();

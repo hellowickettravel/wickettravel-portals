@@ -61,20 +61,25 @@ function sentence(title: string, actor: string | null) {
     : `${who} ${title.charAt(0).toLowerCase()}${title.slice(1)}`;
 }
 
-function fallbackLink(type: NotificationType): string {
+/**
+ * Where a notification goes when it carries no link of its own. The employee
+ * portal has no parent-ticket queue, so that type falls back to its home
+ * rather than a route it cannot open.
+ */
+function fallbackLink(type: NotificationType, basePath: string): string {
   switch (type) {
     case "new_order":
     case "status_change":
-      return "/admin/orders";
+      return `${basePath}/orders`;
     case "new_message":
     case "assignment":
-      return "/admin/messages";
+      return `${basePath}/messages`;
     case "support_ticket":
-      return "/admin/support";
+      return `${basePath}/support`;
     case "parent_ticket":
-      return "/admin/parents-tickets";
+      return basePath === "/admin" ? "/admin/parents-tickets" : basePath;
     default:
-      return "/admin";
+      return basePath;
   }
 }
 
@@ -83,7 +88,15 @@ function fallbackLink(type: NotificationType): string {
  * told you, newest first, banded by Orders / Messages / Enquiries, with a live
  * summary and a shortcut to the preference switches in Settings.
  */
-export function AdminNotifications({ userId }: { userId: string }) {
+export function AdminNotifications({
+  userId,
+  /* The employee portal renders this same screen; only its destinations
+     differ, so the base path is a prop defaulting to the admin's. */
+  basePath = "/admin",
+}: {
+  userId: string;
+  basePath?: string;
+}) {
   const router = useRouter();
   const queryClient = useQueryClient();
   const supabase = useMemo(() => createClient(), []);
@@ -153,7 +166,13 @@ export function AdminNotifications({ userId }: { userId: string }) {
 
   function open(id: string, isRead: boolean, type: NotificationType, link: string | null) {
     if (!isRead) readMutation.mutate(id);
-    router.push(link && link.startsWith("/") ? link : fallbackLink(type));
+        // A stored link is an admin path; rewrite it for whichever portal is
+    // rendering, so an employee is never sent somewhere they cannot open.
+    const target =
+      link && link.startsWith("/")
+        ? link.replace(/^\/admin/, basePath)
+        : fallbackLink(type, basePath);
+    router.push(target);
   }
 
   return (
@@ -308,7 +327,7 @@ export function AdminNotifications({ userId }: { userId: string }) {
                 Choose which alerts reach you and how often we send a digest.
               </p>
               <Link
-                href="/admin/settings"
+                href={`${basePath}/settings`}
                 className="border-line-field text-ink-800 hover:bg-surface-1 flex h-10 items-center justify-center rounded-full border bg-white text-[12.5px] font-medium no-underline hover:no-underline"
               >
                 Notification settings

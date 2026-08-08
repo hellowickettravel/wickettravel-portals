@@ -2,14 +2,7 @@
 
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Lock, BellRing, Loader2 } from "lucide-react";
 import { toast } from "sonner";
-import { PageHeader } from "@/components/admin/page-header";
-import { SectionCard } from "@/components/admin/section-card";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Switch } from "@/components/ui/switch";
 import { createClient } from "@/lib/supabase/client";
 import { updateMyName } from "@/lib/actions/account";
 import {
@@ -17,23 +10,46 @@ import {
   saveMyNotificationPrefs,
 } from "@/lib/actions/notifications";
 import { NOTIFICATION_PREFS_KEY } from "@/lib/query-keys";
+import { cn } from "@/lib/utils";
+import {
+  Btn,
+  Card,
+  CardHead,
+  FieldLabel,
+  PageHead,
+  Screen,
+  Spinner,
+  Toggle,
+  focusRing,
+  inputClass,
+} from "@/components/admin/ui";
+import { CheckIcon, LockIcon } from "@/components/admin/icons";
 
 type PrefKey = "new_message" | "new_order" | "status_change";
 
 const PREF_ITEMS: { key: PrefKey; label: string; desc: string }[] = [
-  { key: "new_message", label: "New customer messages", desc: "When a customer replies in one of your chats." },
-  { key: "new_order", label: "New order activity", desc: "When an order tied to you is created." },
-  { key: "status_change", label: "Order status changes", desc: "When one of your orders changes status." },
+  {
+    key: "new_message",
+    label: "New customer messages",
+    desc: "When a customer replies in one of your chats.",
+  },
+  {
+    key: "new_order",
+    label: "New order activity",
+    desc: "When an order tied to you is created.",
+  },
+  {
+    key: "status_change",
+    label: "Order status changes",
+    desc: "When one of your orders changes status.",
+  },
 ];
 
-function fieldLabel(text: string) {
-  return (
-    <span className="font-label text-xs font-medium uppercase tracking-wider text-slate-600">
-      {text}
-    </span>
-  );
-}
-
+/**
+ * The employee's own account settings — their name, their password and what
+ * they want to be told about. Nothing here reaches the business settings the
+ * admin owns; an employee can only change their own record.
+ */
 export function SettingsForm({
   initialName,
   email,
@@ -71,7 +87,9 @@ export function SettingsForm({
     },
     onError: (_e, _v, ctx) => {
       if (ctx?.prev) queryClient.setQueryData(NOTIFICATION_PREFS_KEY, ctx.prev);
-      toast.error("Couldn't save preference", { description: "Please try again." });
+      toast.error("Couldn't save preference", {
+        description: "Please try again.",
+      });
     },
     onSettled: () =>
       queryClient.invalidateQueries({ queryKey: NOTIFICATION_PREFS_KEY }),
@@ -126,120 +144,128 @@ export function SettingsForm({
   }
 
   return (
-    <div className="space-y-7 animate-in fade-in slide-in-from-bottom-2 duration-500 ease-out">
-      <PageHeader
-        eyebrow="Account"
+    <Screen width={1080}>
+      <PageHead
         title="Settings"
-        subtitle="Manage your personal details and preferences."
+        intro="Your name, your password, and what you want to be told about."
       />
 
-      {/* Profile */}
-      <SectionCard title="My profile">
+      {/* ------------------------------------------------------- profile */}
+      <Card>
+        <CardHead title="My profile" />
         <form onSubmit={saveName}>
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-            <div className="space-y-2">
-              <Label htmlFor="name">{fieldLabel("Full name")}</Label>
-              <Input
-                id="name"
+          <div className="grid grid-cols-[repeat(auto-fit,minmax(230px,1fr))] gap-4 p-5">
+            <label className="flex min-w-0 flex-col gap-2">
+              <FieldLabel htmlFor="set-name">Full name</FieldLabel>
+              <input
+                id="set-name"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                className="h-10 rounded-[10px] bg-neutral-soft"
+                className={cn(inputClass, focusRing)}
               />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="email">{fieldLabel("Email (read-only)")}</Label>
-              <Input
-                id="email"
+            </label>
+            <label className="flex min-w-0 flex-col gap-2">
+              <FieldLabel htmlFor="set-email">Email</FieldLabel>
+              <input
+                id="set-email"
                 value={email}
                 readOnly
-                className="h-10 cursor-not-allowed rounded-[10px] bg-muted text-muted-foreground"
+                aria-describedby="set-email-note"
+                className={cn(
+                  inputClass,
+                  "bg-surface-1 text-ink-600 cursor-not-allowed"
+                )}
               />
-            </div>
+              <span
+                id="set-email-note"
+                className="text-ink-500 text-[11.5px] font-normal"
+              >
+                Ask an administrator to change your sign-in address.
+              </span>
+            </label>
           </div>
-          <div className="mt-5 flex justify-end">
-            <Button type="submit" disabled={savingName || name.trim() === initialName.trim()}>
-              {savingName ? (
-                <>
-                  <Loader2 className="size-4 animate-spin" />
-                  Saving…
-                </>
-              ) : (
-                "Save changes"
-              )}
-            </Button>
+          <div className="px-5 pb-5">
+            <Btn
+              type="submit"
+              variant="ember"
+              disabled={savingName || name.trim() === initialName.trim()}
+            >
+              {savingName ? <Spinner /> : <CheckIcon size={15} />}
+              Save changes
+            </Btn>
           </div>
         </form>
-      </SectionCard>
+      </Card>
 
-      {/* Password */}
-      <SectionCard title="Password" description="Update your account password.">
+      {/* ------------------------------------------------------ password */}
+      <Card>
+        <CardHead
+          title="Password"
+          hint="Use at least 8 characters. You stay signed in on this device."
+        />
         <form onSubmit={savePassword}>
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-            <div className="space-y-2">
-              <Label htmlFor="new">{fieldLabel("New password")}</Label>
-              <Input
-                id="new"
+          <div className="grid grid-cols-[repeat(auto-fit,minmax(230px,1fr))] gap-4 p-5">
+            <label className="flex min-w-0 flex-col gap-2">
+              <FieldLabel htmlFor="set-new">New password</FieldLabel>
+              <input
+                id="set-new"
                 type="password"
                 value={newPassword}
                 onChange={(e) => setNewPassword(e.target.value)}
                 placeholder="At least 8 characters"
-                className="h-10 rounded-[10px] bg-neutral-soft"
+                className={cn(inputClass, focusRing)}
               />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="conf">{fieldLabel("Confirm")}</Label>
-              <Input
-                id="conf"
+            </label>
+            <label className="flex min-w-0 flex-col gap-2">
+              <FieldLabel htmlFor="set-conf">Confirm password</FieldLabel>
+              <input
+                id="set-conf"
                 type="password"
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
-                placeholder="Re-enter new password"
-                className="h-10 rounded-[10px] bg-neutral-soft"
+                placeholder="Re-enter the new password"
+                className={cn(inputClass, focusRing)}
               />
-            </div>
+            </label>
           </div>
-          <div className="mt-5 flex justify-end">
-            <Button type="submit" variant="outline" disabled={savingPassword || !newPassword}>
-              {savingPassword ? (
-                <>
-                  <Loader2 className="size-4 animate-spin" />
-                  Updating…
-                </>
-              ) : (
-                <>
-                  <Lock className="size-4" />
-                  Update password
-                </>
-              )}
-            </Button>
+          <div className="px-5 pb-5">
+            <Btn type="submit" disabled={savingPassword || !newPassword}>
+              {savingPassword ? <Spinner /> : <LockIcon size={15} />}
+              Update password
+            </Btn>
           </div>
         </form>
-      </SectionCard>
+      </Card>
 
-      {/* Notifications (real — persisted to notification_prefs) */}
-      <SectionCard
-        title="Notification preferences"
-        description="Choose what you'd like to be alerted about. Saved instantly."
-      >
-        <ul className="divide-y divide-border">
-          {PREF_ITEMS.map((p) => (
-            <li key={p.key} className="flex items-center justify-between gap-4 py-3.5 first:pt-0 last:pb-0">
-              <div className="flex items-start gap-3">
-                <BellRing className="mt-0.5 size-4 shrink-0 text-brand" />
-                <div>
-                  <p className="text-sm font-medium text-foreground">{p.label}</p>
-                  <p className="text-xs text-muted-foreground">{p.desc}</p>
-                </div>
-              </div>
-              <Switch
-                checked={prefs ? prefs[p.key] : true}
-                disabled={prefsLoading || prefsMutation.isPending}
-                onCheckedChange={() => togglePref(p.key)}
-              />
-            </li>
-          ))}
-        </ul>
-      </SectionCard>
-    </div>
+      {/* ------------------------------------------------- notifications */}
+      <Card>
+        <CardHead
+          title="Notification preferences"
+          hint="Saved the moment you switch one."
+        />
+        {PREF_ITEMS.map((p) => (
+          /* The design insets a row's rule past the label column. */
+          <div
+            key={p.key}
+            className="after:bg-line-soft relative flex flex-wrap items-center gap-4 px-5 py-4 after:absolute after:right-0 after:bottom-0 after:left-5 after:h-px after:content-[''] last:after:hidden"
+          >
+            <span className="flex min-w-0 flex-[1_1_260px] flex-col gap-1">
+              <span className="text-ink-800 text-[13px] font-medium">
+                {p.label}
+              </span>
+              <span className="text-ink-500 text-[12.5px] leading-[1.5] font-normal text-pretty">
+                {p.desc}
+              </span>
+            </span>
+            <Toggle
+              checked={prefs ? prefs[p.key] : true}
+              label={p.label}
+              disabled={prefsLoading || prefsMutation.isPending}
+              onChange={() => togglePref(p.key)}
+            />
+          </div>
+        ))}
+      </Card>
+    </Screen>
   );
 }

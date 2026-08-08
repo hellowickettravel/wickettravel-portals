@@ -2,28 +2,34 @@
 
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import {
-  ChevronDown,
-  Mail,
-  MessageCircleQuestion,
-  LifeBuoy,
-  Loader2,
-} from "lucide-react";
 import { toast } from "sonner";
-import { PageHeader } from "@/components/admin/page-header";
-import { SectionCard } from "@/components/admin/section-card";
-import { StatusBadge } from "@/components/admin/status-badge";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import {
   createSupportTicket,
   listMySupportTickets,
 } from "@/lib/actions/support";
 import { MY_SUPPORT_TICKETS_KEY } from "@/lib/query-keys";
-import { fmtRelative } from "@/lib/format";
+import { fmtStamp } from "@/lib/format";
 import { cn } from "@/lib/utils";
+import {
+  Btn,
+  Card,
+  CardHead,
+  EmptyState,
+  FieldLabel,
+  PageHead,
+  Pill,
+  Screen,
+  Spinner,
+  focusRing,
+  inputClass,
+  textareaClass,
+} from "@/components/admin/ui";
+import {
+  LifebuoyIcon,
+  MailIcon,
+  PlusIcon,
+  SendIcon,
+} from "@/components/admin/icons";
 
 const FAQS = [
   {
@@ -32,30 +38,27 @@ const FAQS = [
   },
   {
     q: "How do I create an order from a chat?",
-    a: "Inside a conversation, click “Create order” in the header. It pre-fills the order form with the customer's details so you only confirm the fare and dates.",
+    a: "Open the conversation, then start a new order — the customer is already selected, so you only confirm the trip, the fare and the passengers.",
   },
   {
     q: "What do the access levels mean?",
-    a: "Full — manage chats and create orders. Semi-admin — everything Full can do plus order editing & status management (open/close/cancel/reopen). Chat-only — conversations only, with no access to Orders. View-only — read-only: you can see conversations and orders but can't reply or edit.",
+    a: "Full — manage chats and create orders. Semi-admin — everything Full can do plus order editing and status management (close, cancel, reopen). Chat-only — conversations only, with no access to Orders. View-only — read-only: you can follow conversations and orders but cannot reply or edit.",
   },
   {
     q: "Why can't I edit an order or change its status?",
-    a: "Editing orders and changing their status (close/cancel/reopen) requires Semi-admin access. With Full access you can create and view orders but not edit them after the fact. Ask an admin to switch you to Semi-admin if you need it.",
+    a: "Editing an order and changing its status needs Semi-admin. With Full access you can create and view orders but not edit them after the fact. Ask an administrator to move you up if you need it.",
   },
   {
     q: "I can't see the Orders tab — why?",
-    a: "Your access level is set to Chat-only. Ask an admin to change it to Full or Semi-admin if you need to work with orders.",
+    a: "Your access level is Chat-only. Ask an administrator to change it to Full or Semi-admin if you need to work with orders.",
   },
 ];
 
-function fieldLabel(text: string) {
-  return (
-    <span className="font-label text-xs font-medium uppercase tracking-wider text-slate-600">
-      {text}
-    </span>
-  );
-}
-
+/**
+ * The employee's help screen: answers first, then the two ways to reach an
+ * administrator — email, or an internal ticket that lands in the admin's
+ * Support queue. `listMySupportTickets` is scoped to the tickets they raised.
+ */
 export function EmployeeSupport({ adminEmail }: { adminEmail: string }) {
   const queryClient = useQueryClient();
   const [open, setOpen] = useState<number | null>(0);
@@ -76,7 +79,7 @@ export function EmployeeSupport({ adminEmail }: { adminEmail: string }) {
         return;
       }
       toast.success("Issue submitted", {
-        description: "An admin has been notified and will follow up.",
+        description: "An administrator has been notified and will follow up.",
       });
       setSubject("");
       setDetails("");
@@ -100,142 +103,146 @@ export function EmployeeSupport({ adminEmail }: { adminEmail: string }) {
   )}`;
 
   return (
-    <div className="space-y-7 animate-in fade-in slide-in-from-bottom-2 duration-500 ease-out">
-      <PageHeader
-        eyebrow="Help"
+    <Screen width={1080}>
+      <PageHead
         title="Support"
-        subtitle="Find answers fast or reach your admin."
+        intro="Answers to the things that come up most, and two ways to reach an administrator."
       />
 
-      <div className="grid grid-cols-1 gap-5 lg:grid-cols-3">
-        {/* FAQ */}
-        <div className="lg:col-span-2">
-          <SectionCard
-            title="Frequently asked questions"
-            action={<MessageCircleQuestion className="size-5 text-brand" />}
-          >
-            <ul className="divide-y divide-border">
-              {FAQS.map((f, i) => {
-                const isOpen = open === i;
-                return (
-                  <li key={f.q}>
-                    <button
-                      type="button"
-                      onClick={() => setOpen(isOpen ? null : i)}
-                      className="flex w-full items-center justify-between gap-4 rounded-lg py-4 text-left outline-none transition-colors hover:text-brand focus-visible:ring-2 focus-visible:ring-primary/40"
-                    >
-                      <span className="text-sm font-medium text-foreground">{f.q}</span>
-                      <ChevronDown
-                        className={cn(
-                          "size-4 shrink-0 text-muted-foreground transition-transform",
-                          isOpen && "rotate-180"
-                        )}
-                      />
-                    </button>
-                    {isOpen ? (
-                      <p className="pb-4 text-sm leading-relaxed text-muted-foreground">
-                        {f.a}
-                      </p>
-                    ) : null}
-                  </li>
-                );
-              })}
-            </ul>
-          </SectionCard>
-        </div>
+      <div className="grid grid-cols-[repeat(auto-fit,minmax(300px,1fr))] items-start gap-4">
+        {/* ----------------------------------------------------- the FAQ */}
+        <Card className="min-[900px]:col-span-2">
+          <CardHead title="Frequently asked questions" />
+          {FAQS.map((f, i) => {
+            const isOpen = open === i;
+            return (
+              <div
+                key={f.q}
+                className="border-line-soft border-b last:border-b-0"
+              >
+                <button
+                  type="button"
+                  onClick={() => setOpen(isOpen ? null : i)}
+                  aria-expanded={isOpen}
+                  className="flex w-full items-center justify-between gap-4 px-5 py-4 text-left leading-[normal] outline-none"
+                >
+                  <span className="text-ink-800 text-[13px] font-medium">
+                    {f.q}
+                  </span>
+                  <span
+                    className={cn(
+                      "border-line-field text-ink-600 flex size-[26px] flex-none items-center justify-center rounded-full border transition-transform duration-150",
+                      isOpen && "bg-marine-tint border-marine-edge text-marine-600 rotate-45"
+                    )}
+                  >
+                    <PlusIcon size={14} />
+                  </span>
+                </button>
+                {isOpen ? (
+                  <p className="text-ink-600 m-0 px-5 pb-4 text-[13px] leading-[1.6] font-normal text-pretty">
+                    {f.a}
+                  </p>
+                ) : null}
+              </div>
+            );
+          })}
+        </Card>
 
-        {/* Contact admin */}
-        <SectionCard title="Contact admin">
-          <div className="flex flex-col items-start gap-3">
-            <div className="flex size-11 items-center justify-center rounded-xl bg-chip text-brand-dark">
-              <LifeBuoy className="size-5" />
-            </div>
-            <p className="text-sm text-muted-foreground">
-              Need something changed — access level, assignments or a bug? Email
-              your administrator directly.
+        {/* ------------------------------------------------ contact admin */}
+        <Card>
+          <CardHead title="Contact an administrator" />
+          <div className="flex flex-col items-start gap-3 p-5">
+            <span className="bg-marine-wash text-marine-600 flex size-11 flex-none items-center justify-center rounded-[11px]">
+              <LifebuoyIcon size={20} />
+            </span>
+            <p className="text-ink-600 m-0 text-[13px] leading-[1.6] font-normal text-pretty">
+              Need your access level changed, work reassigned, or something
+              fixed? Email an administrator directly — or raise a ticket below
+              so it is tracked.
             </p>
-            <Button variant="outline" className="w-full" render={<a href={mailtoHref} />}>
-              <Mail className="size-4" />
-              Email admin
-            </Button>
+            <Btn as="link" href={mailtoHref} className="w-full">
+              <MailIcon size={15} />
+              Email an administrator
+            </Btn>
           </div>
-        </SectionCard>
+        </Card>
       </div>
 
-      {/* Raise an issue */}
-      <SectionCard
-        title="Raise an internal issue"
-        description="Report a bug or request help — it lands in your admin's Support queue."
-      >
-        <form onSubmit={submitIssue} className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="subject">{fieldLabel("Subject")}</Label>
-            <Input
-              id="subject"
-              value={subject}
-              onChange={(e) => setSubject(e.target.value)}
-              placeholder="Short summary"
-              required
-              disabled={mutation.isPending}
-              className="h-10 rounded-[10px] bg-neutral-soft"
-            />
+      {/* --------------------------------------------------- raise a ticket */}
+      <Card>
+        <CardHead
+          title="Raise an internal issue"
+          hint="It lands in the administrators' Support queue, and you can follow it below."
+        />
+        <form onSubmit={submitIssue}>
+          <div className="flex flex-col gap-4 p-5">
+            <label className="flex min-w-0 flex-col gap-2">
+              <FieldLabel htmlFor="sup-subject">Subject</FieldLabel>
+              <input
+                id="sup-subject"
+                value={subject}
+                onChange={(e) => setSubject(e.target.value)}
+                placeholder="Short summary"
+                required
+                disabled={mutation.isPending}
+                className={cn(inputClass, focusRing)}
+              />
+            </label>
+            <label className="flex min-w-0 flex-col gap-2">
+              <FieldLabel htmlFor="sup-details">Details</FieldLabel>
+              <textarea
+                id="sup-details"
+                rows={4}
+                value={details}
+                onChange={(e) => setDetails(e.target.value)}
+                placeholder="What is happening, and what did you expect?"
+                required
+                disabled={mutation.isPending}
+                className={cn(textareaClass, focusRing)}
+              />
+            </label>
           </div>
-          <div className="space-y-2">
-            <Label htmlFor="details">{fieldLabel("Details")}</Label>
-            <Textarea
-              id="details"
-              value={details}
-              onChange={(e) => setDetails(e.target.value)}
-              placeholder="Describe what's happening…"
-              required
-              disabled={mutation.isPending}
-              className="min-h-28 rounded-[10px] bg-neutral-soft"
-            />
-          </div>
-          <div className="flex justify-end">
-            <Button type="submit" disabled={mutation.isPending}>
-              {mutation.isPending ? (
-                <>
-                  <Loader2 className="size-4 animate-spin" />
-                  Submitting…
-                </>
-              ) : (
-                "Submit issue"
-              )}
-            </Button>
+          <div className="px-5 pb-5">
+            <Btn type="submit" variant="ember" disabled={mutation.isPending}>
+              {mutation.isPending ? <Spinner /> : <SendIcon size={15} />}
+              Submit issue
+            </Btn>
           </div>
         </form>
-      </SectionCard>
+      </Card>
 
-      {/* My tickets */}
-      <SectionCard title={`My tickets (${myTickets.length})`} flush>
+      {/* ------------------------------------------------------ my tickets */}
+      <Card>
+        <CardHead title={`My tickets (${myTickets.length})`} />
         {myTickets.length === 0 ? (
-          <p className="px-6 py-8 text-center text-sm text-muted-foreground">
-            You haven&apos;t raised any issues yet.
-          </p>
+          <EmptyState
+            title="No tickets yet"
+            body="Anything you raise above appears here, with its status, so you can see when an administrator has picked it up."
+          />
         ) : (
-          <ul className="divide-y divide-border">
-            {myTickets.map((t) => (
-              <li key={t.id} className="flex items-start gap-4 px-5 py-3.5">
-                <div className="min-w-0 flex-1">
-                  <p className="truncate text-sm font-medium text-foreground">
-                    {t.subject}
-                  </p>
-                  <p className="line-clamp-2 text-xs text-muted-foreground">
-                    {t.message}
-                  </p>
-                  <p className="mt-0.5 text-[11px] text-muted-foreground">
-                    {fmtRelative(t.created_at)}
-                  </p>
-                </div>
-                <StatusBadge tone={t.status === "resolved" ? "green" : "amber"}>
-                  {t.status === "resolved" ? "Resolved" : "Open"}
-                </StatusBadge>
-              </li>
-            ))}
-          </ul>
+          myTickets.map((t) => (
+            <div
+              key={t.id}
+              className="border-line-soft flex items-start gap-4 border-b px-5 py-4 last:border-b-0"
+            >
+              <span className="flex min-w-0 flex-1 flex-col gap-1">
+                <span className="text-ink-800 truncate text-[13px] font-medium">
+                  {t.subject}
+                </span>
+                <span className="text-ink-600 line-clamp-2 text-[12.5px] leading-[1.5] font-normal">
+                  {t.message}
+                </span>
+                <span className="text-ink-500 text-[11.5px] font-normal">
+                  {fmtStamp(t.created_at)}
+                </span>
+              </span>
+              <Pill tone={t.status === "resolved" ? "ok" : "warn"}>
+                {t.status === "resolved" ? "Resolved" : "Open"}
+              </Pill>
+            </div>
+          ))
         )}
-      </SectionCard>
-    </div>
+      </Card>
+    </Screen>
   );
 }

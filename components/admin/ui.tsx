@@ -46,6 +46,39 @@ export function Spinner({ size = 15 }: { size?: number }) {
   );
 }
 
+/**
+ * The design's 46x27 switch: marine track when on, a 21px white thumb, and no
+ * label of its own — the row it sits in carries the wording.
+ */
+export function Toggle({
+  checked,
+  onChange,
+  label,
+  disabled,
+}: {
+  checked: boolean;
+  onChange: (v: boolean) => void;
+  label: string;
+  disabled?: boolean;
+}) {
+  return (
+    <button
+      type="button"
+      role="switch"
+      aria-checked={checked}
+      aria-label={label}
+      disabled={disabled}
+      onClick={() => onChange(!checked)}
+      className={cn(
+        "flex h-[27px] w-[46px] flex-none rounded-full border-0 p-1 outline-none transition-colors duration-150 disabled:opacity-60",
+        checked ? "bg-marine-500 justify-end" : "bg-line-field justify-start"
+      )}
+    >
+      <span className="block size-[21px] rounded-full bg-white shadow-[0_4px_12px_oklch(0.205_0.038_258_/_0.07)]" />
+    </button>
+  );
+}
+
 export function Screen({
   children,
   width = 1400,
