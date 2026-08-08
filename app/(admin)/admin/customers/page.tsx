@@ -4,7 +4,6 @@ import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Eye, EyeOff, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import {
   Avatar,
@@ -25,23 +24,27 @@ import {
   ViewButton,
   focusRing,
 } from "@/components/admin/ui";
-import { PlusIcon } from "@/components/admin/icons";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { PlusIcon, UserPlusIcon } from "@/components/admin/icons";
+import { PersonDialog } from "@/components/admin/person-dialog";
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import { listCustomersWithStats, createCustomer } from "@/lib/actions/admin";
+  listCustomersWithStats,
+  createCustomer,
+  listEmployees,
+} from "@/lib/actions/admin";
 import { cn } from "@/lib/utils";
 
 const CUSTOMERS_KEY = ["admin", "customers", "list"] as const;
 const PAGE_SIZE = 5;
+
+/** The design's own nationality list on the Add-customer form. */
+const NATIONALITIES = [
+  "United Kingdom",
+  "India",
+  "China",
+  "Nigeria",
+  "Ireland",
+  "Other",
+];
 
 export default function AdminCustomersPage() {
   const router = useRouter();
@@ -59,7 +62,20 @@ export default function AdminCustomersPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [waPhone, setWaPhone] = useState("");
-  const [showPassword, setShowPassword] = useState(false);
+  // The rest of the design's Add-customer form.
+  const [preferredName, setPreferredName] = useState("");
+  const [nationality, setNationality] = useState(NATIONALITIES[0]);
+  const [dob, setDob] = useState("");
+  const [address, setAddress] = useState("");
+  const [internalNote, setInternalNote] = useState("");
+  const [consultantId, setConsultantId] = useState("");
+  const [status, setStatus] = useState("active");
+
+  // Consultants for the "Assigned consultant" select.
+  const { data: employees } = useQuery({
+    queryKey: ["admin", "employees"],
+    queryFn: listEmployees,
+  });
 
   const createMutation = useMutation({
     mutationFn: createCustomer,
@@ -76,16 +92,33 @@ export default function AdminCustomersPage() {
       setEmail("");
       setPassword("");
       setWaPhone("");
-      setShowPassword(false);
+      setPreferredName("");
+      setNationality(NATIONALITIES[0]);
+      setDob("");
+      setAddress("");
+      setInternalNote("");
+      setConsultantId("");
+      setStatus("active");
       queryClient.invalidateQueries({ queryKey: CUSTOMERS_KEY });
     },
     onError: () =>
       toast.error("Couldn't create customer", { description: "Please try again." }),
   });
 
-  function handleCreate(e: React.FormEvent<HTMLFormElement>) {
-    e.preventDefault();
-    createMutation.mutate({ fullName, email, password, waPhone: waPhone || null });
+  function handleCreate() {
+    createMutation.mutate({
+      fullName,
+      email,
+      password,
+      waPhone: waPhone || null,
+      preferredName,
+      nationality,
+      dateOfBirth: dob,
+      address,
+      internalNote,
+      consultantId: consultantId || null,
+      active: status === "active",
+    });
   }
 
   // Newest customers first (the server sorts alphabetically for the order
@@ -254,110 +287,136 @@ export default function AdminCustomersPage() {
         )}
       </DesignCard>
 
-      {/* Add Customer dialog */}
-      <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle className="font-poppins">Add Customer</DialogTitle>
-            <DialogDescription>
-              Creates a portal login so the customer can sign in straight away.
-            </DialogDescription>
-          </DialogHeader>
+      {/* Add Customer — the design's own modal */}
+      <PersonDialog
+        open={open}
+        onClose={() => setOpen(false)}
+        icon={<UserPlusIcon size={20} />}
+        title="Add customer"
+        subtitle="Creates the customer record and their portal login. They can sign in with the temporary password you set."
+        cta="Create customer account"
+        note="They can change their own name and password from their portal settings."
+        busy={createMutation.isPending}
+        onSubmit={handleCreate}
+        sections={[
+          {
+            title: "Personal details",
+            fields: [
+              {
+                kind: "text",
+                id: "cust-name",
+                label: "Full name",
+                placeholder: "As shown on passport",
+                required: true,
+                value: fullName,
+                onChange: setFullName,
+              },
+              {
+                kind: "text",
+                id: "cust-preferred",
+                label: "Preferred name",
+                placeholder: "Optional",
+                value: preferredName,
+                onChange: setPreferredName,
+              },
+              {
+                kind: "text",
+                id: "cust-email",
+                label: "Email address",
+                type: "email",
+                placeholder: "name@example.com",
+                required: true,
+                value: email,
+                onChange: setEmail,
+              },
+              {
+                kind: "text",
+                id: "cust-phone",
+                label: "Phone number",
+                type: "tel",
+                placeholder: "+44 …",
+                value: waPhone,
+                onChange: setWaPhone,
+              },
+              {
+                kind: "select",
+                id: "cust-nationality",
+                label: "Nationality",
+                options: NATIONALITIES.map((n) => ({ value: n, label: n })),
+                value: nationality,
+                onChange: setNationality,
+              },
+              {
+                kind: "text",
+                id: "cust-dob",
+                label: "Date of birth",
+                type: "date",
+                value: dob,
+                onChange: setDob,
+              },
+              {
+                kind: "area",
+                id: "cust-address",
+                label: "Address",
+                placeholder: "Street, city, postcode",
+                full: true,
+                value: address,
+                onChange: setAddress,
+              },
+            ],
+          },
+          {
+            title: "Account & login",
+            fields: [
+              {
+                kind: "text",
+                id: "cust-pass",
+                label: "Temporary password",
+                type: "password",
+                placeholder: "At least 8 characters",
+                required: true,
+                value: password,
+                onChange: setPassword,
+              },
+              {
+                kind: "select",
+                id: "cust-status",
+                label: "Account status",
+                options: [
+                  { value: "active", label: "Active" },
+                  { value: "suspended", label: "Suspended" },
+                ],
+                value: status,
+                onChange: setStatus,
+              },
+              {
+                kind: "select",
+                id: "cust-consultant",
+                label: "Assigned consultant",
+                options: [
+                  { value: "", label: "Unassigned" },
+                  ...(employees ?? []).map((e) => ({
+                    value: e.id,
+                    label: e.full_name || e.email || "Employee",
+                  })),
+                ],
+                value: consultantId,
+                onChange: setConsultantId,
+              },
+              {
+                kind: "area",
+                id: "cust-note",
+                label: "Internal note",
+                placeholder: "How they found us, special requirements…",
+                full: true,
+                value: internalNote,
+                onChange: setInternalNote,
+              },
+            ],
+          },
+        ]}
+      />
 
-          <form onSubmit={handleCreate} className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="cust-name" className="text-ink-500 text-[11px] font-medium uppercase tracking-[0.09em]">
-                Full name
-              </Label>
-              <Input
-                id="cust-name"
-                value={fullName}
-                onChange={(e) => setFullName(e.target.value)}
-                placeholder="John Doe"
-                required
-                disabled={createMutation.isPending}
-                className="h-10 rounded-[10px] bg-surface-1"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="cust-email" className="text-ink-500 text-[11px] font-medium uppercase tracking-[0.09em]">
-                Email
-              </Label>
-              <Input
-                id="cust-email"
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="john@example.com"
-                required
-                disabled={createMutation.isPending}
-                className="h-10 rounded-[10px] bg-surface-1"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="cust-phone" className="text-ink-500 text-[11px] font-medium uppercase tracking-[0.09em]">
-                Phone number <span className="font-normal normal-case tracking-normal text-ink-600">(optional)</span>
-              </Label>
-              <Input
-                id="cust-phone"
-                type="tel"
-                value={waPhone}
-                onChange={(e) => setWaPhone(e.target.value)}
-                placeholder="+44 7700 900000"
-                disabled={createMutation.isPending}
-                className="h-10 rounded-[10px] bg-surface-1"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="cust-pass" className="text-ink-500 text-[11px] font-medium uppercase tracking-[0.09em]">
-                Temporary password
-              </Label>
-              <div className="relative">
-                <Input
-                  id="cust-pass"
-                  type={showPassword ? "text" : "password"}
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  placeholder="At least 8 characters"
-                  required
-                  minLength={8}
-                  disabled={createMutation.isPending}
-                  className="h-10 rounded-[10px] bg-surface-1 pr-10"
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword((s) => !s)}
-                  aria-label={showPassword ? "Hide password" : "Show password"}
-                  className="absolute right-2 top-1/2 -translate-y-1/2 rounded-md p-1 text-ink-600 transition-colors hover:text-ink-800"
-                >
-                  {showPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
-                </button>
-              </div>
-            </div>
-
-            <DialogFooter className="gap-2">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => setOpen(false)}
-                disabled={createMutation.isPending}
-              >
-                Cancel
-              </Button>
-              <Button type="submit" disabled={createMutation.isPending}>
-                {createMutation.isPending ? (
-                  <>
-                    <Loader2 className="size-4 animate-spin" />
-                    Creating…
-                  </>
-                ) : (
-                  "Create customer"
-                )}
-              </Button>
-            </DialogFooter>
-          </form>
-        </DialogContent>
-      </Dialog>
     </Screen>
   );
 }

@@ -85,6 +85,11 @@ export default function SettingsPage() {
   const [phone, setPhone] = useState("");
   const [address, setAddress] = useState("");
   const [commission, setCommission] = useState("");
+  // The trading identifiers the design's Business profile carries (0021).
+  const [companyNumber, setCompanyNumber] = useState("");
+  const [atolLicence, setAtolLicence] = useState("");
+  const [iataNumber, setIataNumber] = useState("");
+  const [currency, setCurrency] = useState("GBP");
 
   // Notification prefs form state.
   const [newOrder, setNewOrder] = useState(true);
@@ -104,6 +109,10 @@ export default function SettingsPage() {
           ? String(settings.default_commission)
           : ""
       );
+      setCompanyNumber(settings.company_number ?? "");
+      setAtolLicence(settings.atol_licence ?? "");
+      setIataNumber(settings.iata_number ?? "");
+      setCurrency(settings.currency ?? "GBP");
     }
   }, [settings]);
 
@@ -175,6 +184,10 @@ export default function SettingsPage() {
       businessPhone: phone,
       businessAddress: address,
       defaultCommission: parsed,
+      companyNumber,
+      atolLicence,
+      iataNumber,
+      currency,
     });
   }
 
@@ -216,17 +229,14 @@ export default function SettingsPage() {
 
   const logoUrl = settings?.logo_url ?? null;
 
+  // The design's nine Business-profile fields, in its own order.
   const FIELDS = [
     { id: "biz-name", label: "Trading name", value: name, set: setName, type: "text" },
+    { id: "biz-company", label: "Company number", value: companyNumber, set: setCompanyNumber, type: "text" },
+    { id: "biz-atol", label: "ATOL licence", value: atolLicence, set: setAtolLicence, type: "text" },
+    { id: "biz-iata", label: "IATA number", value: iataNumber, set: setIataNumber, type: "text" },
     { id: "biz-email", label: "Support email", value: email, set: setEmail, type: "email" },
     { id: "biz-phone", label: "Support phone", value: phone, set: setPhone, type: "text" },
-    {
-      id: "commission",
-      label: "Default commission (%)",
-      value: commission,
-      set: setCommission,
-      type: "number",
-    },
     {
       id: "biz-address",
       label: "Registered address",
@@ -235,6 +245,14 @@ export default function SettingsPage() {
       type: "text",
       span: "1 / -1",
     },
+    {
+      id: "commission",
+      label: "Default commission (%)",
+      value: commission,
+      set: setCommission,
+      type: "number",
+    },
+    { id: "biz-currency", label: "Currency", value: currency, set: setCurrency, type: "text" },
   ];
 
   const TOGGLES = [
@@ -344,6 +362,25 @@ export default function SettingsPage() {
                 )}
                 {logoUrl ? "Replace logo" : "Upload logo"}
               </Btn>
+              {/* The design pairs Upload with a Remove that only appears once
+                  something has been uploaded. */}
+              {logoUrl ? (
+                <Btn
+                  disabled={uploadingLogo}
+                  onClick={async () => {
+                    setLogoError("");
+                    const res = await saveBrandLogo(null);
+                    if (!res.ok) {
+                      setLogoError(res.error);
+                      return;
+                    }
+                    toast.success("Logo removed");
+                    queryClient.invalidateQueries({ queryKey: ADMIN_SETTINGS_KEY });
+                  }}
+                >
+                  Remove
+                </Btn>
+              ) : null}
               {logoUrl ? <Btn onClick={removeLogo}>Remove</Btn> : null}
             </div>
           </div>

@@ -39,6 +39,11 @@ export type Profile = {
   is_active: boolean; // added in 0003 (not null default true)
   email: string | null; // added in 0003
   created_at: string;
+  /* ---- added in 0022, all optional so the app runs before it is applied ---- */
+  phone?: string | null;
+  start_date?: string | null;
+  /** Commission band label, e.g. "Standard — 8%". Not a computed rate. */
+  commission_rate?: string | null;
 };
 
 export type Customer = {
@@ -47,6 +52,14 @@ export type Customer = {
   wa_phone: string | null; // made nullable in 0003 for portal signups
   name: string | null;
   created_at: string;
+  /* ---- added in 0022, all optional so the app runs before it is applied ---- */
+  preferred_name?: string | null;
+  nationality?: string | null;
+  date_of_birth?: string | null;
+  address?: string | null;
+  /** Staff-only. Never rendered in the customer portal. */
+  internal_note?: string | null;
+  assigned_consultant_id?: string | null;
 };
 
 export type Conversation = {

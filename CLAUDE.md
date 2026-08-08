@@ -114,6 +114,14 @@ employee, customer and driver portals are unchanged and stay on navy/orange.
 - People screens (Employees, Customers) carry **one search box and no filter
   pills** — the design gives them no status filter. Customers is
   `Customer · Email · Phone · Orders · Status · View`.
+- **Add employee / Add customer** are the design's own 780px sheet
+  (`components/admin/person-dialog.tsx`), not the shared shadcn `<Dialog>`:
+  marine glyph header, uppercase section headings over a
+  `minmax(240px,1fr)` grid of 42px controls, surface-1 footer with the note
+  and the ember CTA. Both screens pass a field model; only Employees passes
+  `extra` (the access cards). The design ticks **one area per row**; RLS here
+  enforces a single `access_level` tier, so the same cards are a radiogroup —
+  a per-area matrix would not be honoured.
 - The Messages screen opens the newest thread automatically above 940px; the
   thread badge counts customer messages **waiting on a reply** (there is no
   per-admin read receipt in the schema).

@@ -386,6 +386,13 @@ export async function createEmployee(input: {
   email: string;
   password: string;
   accessLevel: AccessLevel;
+  /* The rest are the design's Add-employee fields. All optional: an admin can
+     still create an account from a name, an email and a password alone. */
+  jobTitle?: string | null;
+  phone?: string | null;
+  startDate?: string | null;
+  commissionRate?: string | null;
+  active?: boolean;
 }): Promise<ActionResult> {
   try {
     await requireAdmin();
@@ -423,20 +430,37 @@ export async function createEmployee(input: {
 
   // 2) The signup trigger creates a profile row; force it to an employee with
   //    the chosen access level. upsert covers the case where the trigger is off.
-  const { error: profileError } = await admin.from("profiles").upsert(
-    {
-      id: data.user.id,
-      role: "employee",
-      access_level: input.accessLevel,
-      full_name: fullName,
-      email,
-      is_active: true,
-    },
-    { onConflict: "id" }
-  );
+  const base = {
+    id: data.user.id,
+    role: "employee" as const,
+    access_level: input.accessLevel,
+    full_name: fullName,
+    email,
+    is_active: input.active ?? true,
+  };
+  const with21 = { ...base, job_title: input.jobTitle?.trim() || null };
+  const with22 = {
+    ...with21,
+    phone: input.phone?.trim() || null,
+    start_date: input.startDate?.trim() || null,
+    commission_rate: input.commissionRate?.trim() || null,
+  };
+
+  // Step down one migration at a time rather than straight to base, so a
+  // database on 0021 still keeps the job title.
+  let profileError: { message?: string; code?: string } | null = null;
+  for (const payload of [with22, with21, base]) {
+    ({ error: profileError } = await admin
+      .from("profiles")
+      .upsert(payload, { onConflict: "id" }));
+    if (!profileError || !isMissingColumn(profileError)) break;
+  }
 
   if (profileError) {
-    return { ok: false, error: profileError.message };
+    return {
+      ok: false,
+      error: profileError.message ?? "Couldn't save the employee profile.",
+    };
   }
 
   return { ok: true };
@@ -455,6 +479,14 @@ export async function createCustomer(input: {
   email: string;
   password: string;
   waPhone?: string | null;
+  /* The rest are the design's Add-customer fields, all optional. */
+  preferredName?: string | null;
+  nationality?: string | null;
+  dateOfBirth?: string | null;
+  address?: string | null;
+  internalNote?: string | null;
+  consultantId?: string | null;
+  active?: boolean;
 }): Promise<ActionResult> {
   try {
     await requireAdmin();
@@ -503,7 +535,7 @@ export async function createCustomer(input: {
       role: "customer",
       full_name: fullName,
       email,
-      is_active: true,
+      is_active: input.active ?? true,
     },
     { onConflict: "id" }
   );
@@ -522,17 +554,40 @@ export async function createCustomer(input: {
     .maybeSingle<{ id: string }>();
   if (lookupError) return { ok: false, error: lookupError.message };
 
+  const base = { name: fullName, wa_phone: waPhone };
+  const extra = {
+    ...base,
+    preferred_name: input.preferredName?.trim() || null,
+    nationality: input.nationality?.trim() || null,
+    date_of_birth: input.dateOfBirth?.trim() || null,
+    address: input.address?.trim() || null,
+    internal_note: input.internalNote?.trim() || null,
+    assigned_consultant_id: input.consultantId || null,
+  };
+
   if (existing) {
-    const { error: updateError } = await admin
+    let { error } = await admin
       .from("customers")
-      .update({ name: fullName, wa_phone: waPhone })
+      .update(extra)
       .eq("id", existing.id);
-    if (updateError) return { ok: false, error: updateError.message };
+    // 0022 not applied here — keep the record, drop its columns.
+    if (error && isMissingColumn(error)) {
+      ({ error } = await admin
+        .from("customers")
+        .update(base)
+        .eq("id", existing.id));
+    }
+    if (error) return { ok: false, error: error.message };
   } else {
-    const { error: insertError } = await admin
+    let { error } = await admin
       .from("customers")
-      .insert({ profile_id: userId, name: fullName, wa_phone: waPhone });
-    if (insertError) return { ok: false, error: insertError.message };
+      .insert({ profile_id: userId, ...extra });
+    if (error && isMissingColumn(error)) {
+      ({ error } = await admin
+        .from("customers")
+        .insert({ profile_id: userId, ...base }));
+    }
+    if (error) return { ok: false, error: error.message };
   }
 
   return { ok: true };

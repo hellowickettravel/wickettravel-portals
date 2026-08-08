@@ -10,7 +10,6 @@ import {
   Ban,
   CheckCircle2,
   Eye,
-  EyeOff,
   Loader2,
   Trash2,
 } from "lucide-react";
@@ -35,7 +34,8 @@ import {
   ViewButton,
   focusRing,
 } from "@/components/admin/ui";
-import { PlusIcon } from "@/components/admin/icons";
+import { PlusIcon, UserPlusIcon } from "@/components/admin/icons";
+import { AccessCard, PersonDialog } from "@/components/admin/person-dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -74,6 +74,21 @@ import type { Profile } from "@/lib/db/types";
 const EMPLOYEES_KEY = ["admin", "employees"] as const;
 const PAGE_SIZE = 5;
 
+/** The design's own option lists on the Add-employee form. */
+const JOB_TITLES = [
+  "Ticketing agent",
+  "Senior consultant",
+  "Visa specialist",
+  "Customer support",
+  "Accounts",
+];
+const COMMISSION_BANDS = [
+  "Standard — 8%",
+  "Senior — 10%",
+  "Trainee — 5%",
+  "No commission",
+];
+
 export default function EmployeesPage() {
   const router = useRouter();
   const params = useSearchParams();
@@ -93,7 +108,12 @@ export default function EmployeesPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [accessLevel, setAccessLevel] = useState<AccessLevel>("full");
-  const [showPassword, setShowPassword] = useState(false);
+  // The rest of the design's Add-employee form.
+  const [jobTitle, setJobTitle] = useState(JOB_TITLES[0]);
+  const [phone, setPhone] = useState("");
+  const [startDate, setStartDate] = useState("");
+  const [commissionRate, setCommissionRate] = useState(COMMISSION_BANDS[0]);
+  const [status, setStatus] = useState("active");
 
   // Deactivate / delete / edit targets
   const [deactivating, setDeactivating] = useState<Profile | null>(null);
@@ -125,7 +145,11 @@ export default function EmployeesPage() {
       setEmail("");
       setPassword("");
       setAccessLevel("full");
-      setShowPassword(false);
+      setJobTitle(JOB_TITLES[0]);
+      setPhone("");
+      setStartDate("");
+      setCommissionRate(COMMISSION_BANDS[0]);
+      setStatus("active");
       invalidate();
     },
     onError: () =>
@@ -182,13 +206,17 @@ export default function EmployeesPage() {
       toast.error("Couldn't delete employee", { description: "Please try again." }),
   });
 
-  function handleCreate(e: React.FormEvent<HTMLFormElement>) {
-    e.preventDefault();
+  function handleCreate() {
     createMutation.mutate({
       fullName,
       email,
       password,
       accessLevel,
+      jobTitle,
+      phone,
+      startDate,
+      commissionRate,
+      active: status === "active",
     });
   }
 
@@ -421,114 +449,134 @@ export default function EmployeesPage() {
         )}
       </DesignCard>
 
-      {/* Add Employee dialog */}
-      <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle className="font-poppins">Add Employee</DialogTitle>
-            <DialogDescription>
-              Creates a login and team member with the access level you choose.
-            </DialogDescription>
-          </DialogHeader>
-
-          <form onSubmit={handleCreate} className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="emp-name" className="text-ink-500 text-[11px] font-medium uppercase tracking-[0.09em]">
-                Full name
-              </Label>
-              <Input
-                id="emp-name"
-                value={fullName}
-                onChange={(e) => setFullName(e.target.value)}
-                placeholder="Jane Smith"
-                required
-                disabled={createMutation.isPending}
-                className="h-10 rounded-[10px] bg-surface-1"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="emp-email" className="text-ink-500 text-[11px] font-medium uppercase tracking-[0.09em]">
-                Email
-              </Label>
-              <Input
-                id="emp-email"
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="jane@wicket.co.uk"
-                required
-                disabled={createMutation.isPending}
-                className="h-10 rounded-[10px] bg-surface-1"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="emp-access" className="text-ink-500 text-[11px] font-medium uppercase tracking-[0.09em]">
+      {/* Add Employee — the design's own modal, not the shared shadcn sheet */}
+      <PersonDialog
+        open={open}
+        onClose={() => setOpen(false)}
+        icon={<UserPlusIcon size={20} />}
+        title="Add employee"
+        subtitle="Creates the staff account, its login and the parts of the portal they can reach."
+        cta="Create employee account"
+        note="They can sign in with the email and temporary password you set here."
+        busy={createMutation.isPending}
+        onSubmit={handleCreate}
+        sections={[
+          {
+            title: "Employee details",
+            fields: [
+              {
+                kind: "text",
+                id: "emp-name",
+                label: "Full name",
+                placeholder: "First and last name",
+                required: true,
+                value: fullName,
+                onChange: setFullName,
+              },
+              {
+                kind: "select",
+                id: "emp-title",
+                label: "Job title",
+                options: JOB_TITLES.map((t) => ({ value: t, label: t })),
+                value: jobTitle,
+                onChange: setJobTitle,
+              },
+              {
+                kind: "text",
+                id: "emp-email",
+                label: "Work email",
+                type: "email",
+                placeholder: "name@wickettravel.co.uk",
+                required: true,
+                value: email,
+                onChange: setEmail,
+              },
+              {
+                kind: "text",
+                id: "emp-phone",
+                label: "Phone number",
+                type: "tel",
+                placeholder: "+44 …",
+                value: phone,
+                onChange: setPhone,
+              },
+              {
+                kind: "text",
+                id: "emp-start",
+                label: "Start date",
+                type: "date",
+                value: startDate,
+                onChange: setStartDate,
+              },
+              {
+                kind: "select",
+                id: "emp-commission",
+                label: "Commission rate",
+                options: COMMISSION_BANDS.map((c) => ({ value: c, label: c })),
+                value: commissionRate,
+                onChange: setCommissionRate,
+              },
+            ],
+          },
+          {
+            title: "Login",
+            fields: [
+              {
+                kind: "text",
+                id: "emp-pass",
+                label: "Temporary password",
+                type: "password",
+                placeholder: "At least 8 characters",
+                required: true,
+                value: password,
+                onChange: setPassword,
+              },
+              {
+                kind: "select",
+                id: "emp-status",
+                label: "Account status",
+                options: [
+                  { value: "active", label: "Active" },
+                  { value: "suspended", label: "Suspended" },
+                ],
+                value: status,
+                onChange: setStatus,
+              },
+            ],
+          },
+        ]}
+        extra={
+          <div className="flex flex-col gap-[14px] pt-6">
+            <div className="flex flex-col gap-1">
+              <span className="text-ink-500 text-[11px] font-semibold tracking-[0.11em] uppercase">
                 Access level
-              </Label>
-              <select
-                id="emp-access"
-                value={accessLevel}
-                onChange={(e) => setAccessLevel(e.target.value as AccessLevel)}
-                disabled={createMutation.isPending}
-                className="h-10 w-full rounded-[10px] border border-input bg-surface-1 px-3 text-sm text-ink-800 outline-none transition-[color,box-shadow,border-color] duration-150 focus-visible:border-marine-500 focus-visible:ring-[3px] focus-visible:ring-brand/25"
-              >
-                {ACCESS_LEVELS.map((lvl) => (
-                  <option key={lvl} value={lvl}>
-                    {ACCESS_LEVEL_LABELS[lvl]} — {ACCESS_LEVEL_DESCRIPTIONS[lvl]}
-                  </option>
-                ))}
-              </select>
+              </span>
+              {/* The design offers a tick per area. What RLS actually enforces
+                  here is one tier per employee, so the same cards are a single
+                  choice — a per-area matrix would not be honoured. */}
+              <span className="text-ink-600 text-[12.5px] font-normal text-pretty">
+                Pick the tier this employee works at. It decides what they can
+                open and what they can change.
+              </span>
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="emp-pass" className="text-ink-500 text-[11px] font-medium uppercase tracking-[0.09em]">
-                Temporary password
-              </Label>
-              <div className="relative">
-                <Input
-                  id="emp-pass"
-                  type={showPassword ? "text" : "password"}
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  placeholder="At least 8 characters"
-                  required
-                  minLength={8}
-                  disabled={createMutation.isPending}
-                  className="h-10 rounded-[10px] bg-surface-1 pr-10"
+            <div
+              role="radiogroup"
+              aria-label="Access level"
+              className="grid grid-cols-[repeat(auto-fit,minmax(260px,1fr))] gap-2.5"
+            >
+              {ACCESS_LEVELS.map((lvl) => (
+                <AccessCard
+                  key={lvl}
+                  label={ACCESS_LEVEL_LABELS[lvl]}
+                  hint={ACCESS_LEVEL_DESCRIPTIONS[lvl]}
+                  checked={accessLevel === lvl}
+                  onSelect={() => setAccessLevel(lvl)}
                 />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword((s) => !s)}
-                  aria-label={showPassword ? "Hide password" : "Show password"}
-                  className="absolute right-2 top-1/2 -translate-y-1/2 rounded-md p-1 text-ink-600 transition-colors hover:text-ink-800"
-                >
-                  {showPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
-                </button>
-              </div>
+              ))}
             </div>
-
-            <DialogFooter className="gap-2">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => setOpen(false)}
-                disabled={createMutation.isPending}
-              >
-                Cancel
-              </Button>
-              <Button type="submit" disabled={createMutation.isPending}>
-                {createMutation.isPending ? (
-                  <>
-                    <Loader2 className="size-4 animate-spin" />
-                    Creating…
-                  </>
-                ) : (
-                  "Create employee"
-                )}
-              </Button>
-            </DialogFooter>
-          </form>
-        </DialogContent>
-      </Dialog>
+          </div>
+        }
+      />
 
       {/* Edit employee dialog */}
       <Dialog open={editing !== null} onOpenChange={(o) => !o && setEditing(null)}>
