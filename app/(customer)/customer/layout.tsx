@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 import { getUserAndProfile, roleDashboardPath, isDeactivated } from "@/lib/auth";
-import { CustomerShell } from "@/components/customer/customer-shell";
+import { CustomerPortalShell } from "@/components/customer/customer-portal-shell";
 
 export default async function CustomerLayout({
   children,
@@ -24,8 +24,12 @@ export default async function CustomerLayout({
   const name = profile?.full_name?.trim() || user.email || "Traveller";
 
   return (
-    <CustomerShell userName={name} userId={user.id}>
+    <CustomerPortalShell
+      userId={user.id}
+      userName={name}
+      userEmail={user.email ?? ""}
+    >
       {children}
-    </CustomerShell>
+    </CustomerPortalShell>
   );
 }

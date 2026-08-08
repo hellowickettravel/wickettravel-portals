@@ -30,6 +30,20 @@ export type AdminNavItem = {
 
 export type AdminNavSection = { heading?: string; items: AdminNavItem[] };
 
+/**
+ * One destination in the bottom tab bar. Staff portals don't use these — they
+ * get the off-canvas sidebar — but the customer portal is a phone-first product
+ * for people who are not at a desk, so it navigates from the thumb instead.
+ */
+export type MobileTab = {
+  label: string;
+  href: string;
+  icon: NavIconName;
+  exact?: boolean;
+  /** The single elevated centre action. At most one tab should set this. */
+  primary?: boolean;
+};
+
 export type SearchScreen = {
   prefix: string;
   exact?: boolean;
@@ -77,8 +91,10 @@ export function AdminShell({
   roleLabel = "Administrator",
   homeHref = "/admin",
   settingsHref = "/admin/settings",
+  settingsLabel = "Settings",
   supportHref = "/admin/support",
   searchScreens = SEARCH,
+  mobileTabs,
 }: {
   sections: AdminNavSection[];
   userName: string;
@@ -89,8 +105,17 @@ export function AdminShell({
   roleLabel?: string;
   homeHref?: string;
   settingsHref?: string;
+  /** The account menu's first row. "Profile" in the customer portal. */
+  settingsLabel?: string;
   supportHref?: string;
   searchScreens?: SearchScreen[];
+  /**
+   * Supply these and the shell swaps its mobile navigation: the hamburger and
+   * the off-canvas sidebar go away below 1024px and a bottom tab bar takes
+   * over. Everything the tabs omit stays reachable from the bell and the
+   * account menu, so no destination is ever stranded.
+   */
+  mobileTabs?: MobileTab[];
 }) {
   const pathname = usePathname();
   const router = useRouter();
@@ -136,9 +161,11 @@ export function AdminShell({
 
   const initials = initialsOf(userName);
 
+  const hasTabs = !!mobileTabs?.length;
+
   return (
     <div className="admin-root flex min-h-dvh items-stretch">
-      {navOpen ? (
+      {navOpen && !hasTabs ? (
         <button
           type="button"
           aria-label="Close navigation"
@@ -155,7 +182,10 @@ export function AdminShell({
         }}
         className={cn(
           "fixed inset-y-0 left-0 z-50 flex w-64 flex-none flex-col text-white shadow-[0_24px_60px_oklch(0.205_0.038_258_/_0.42)] transition-transform duration-200 lg:sticky lg:top-0 lg:h-dvh lg:translate-x-0 lg:self-start lg:shadow-none",
-          navOpen ? "translate-x-0" : "-translate-x-[110%]"
+          navOpen && !hasTabs ? "translate-x-0" : "-translate-x-[110%]",
+          // With a tab bar there is no way to open the rail below lg, so keep
+          // it out of the tab order entirely rather than merely off-screen.
+          hasTabs && "max-lg:hidden"
         )}
       >
         <div className="flex h-16 flex-none items-center justify-between gap-3 border-b border-white/[0.13] px-6">
@@ -269,16 +299,39 @@ export function AdminShell({
       {/* ==================== CONTENT COLUMN ==================== */}
       <div className="flex min-w-0 flex-1 flex-col">
         <header className="border-line-soft sticky top-0 z-30 flex h-16 flex-none items-center gap-3 border-b bg-white/[0.88] px-[clamp(16px,2.4vw,32px)] backdrop-blur-[10px]">
-          <button
-            type="button"
-            onClick={() => setNavOpen(true)}
-            aria-label="Open navigation"
-            className="border-line-field flex size-10 flex-none flex-col items-center justify-center gap-1 rounded-[10px] border bg-white outline-none lg:hidden"
-          >
-            <span className="bg-ink-700 block h-[1.5px] w-[15px]" />
-            <span className="bg-ink-700 block h-[1.5px] w-[15px]" />
-            <span className="bg-ink-700 block h-[1.5px] w-[15px]" />
-          </button>
+          {hasTabs ? (
+            <Link
+              href={homeHref}
+              aria-label="Wicket Travel"
+              className="flex flex-none items-center gap-2.5 no-underline hover:no-underline lg:hidden"
+            >
+              {logoUrl ? (
+                <Image
+                  src={logoUrl}
+                  alt=""
+                  width={22}
+                  height={22}
+                  className="size-[22px] flex-none rounded-[6px] object-cover"
+                />
+              ) : (
+                <span className="bg-ember-500 block size-2.5 flex-none rounded-full" />
+              )}
+              <span className="font-poppins text-ink-800 truncate text-[15px] font-medium tracking-[-0.012em]">
+                Wicket Travel
+              </span>
+            </Link>
+          ) : (
+            <button
+              type="button"
+              onClick={() => setNavOpen(true)}
+              aria-label="Open navigation"
+              className="border-line-field flex size-10 flex-none flex-col items-center justify-center gap-1 rounded-[10px] border bg-white outline-none lg:hidden"
+            >
+              <span className="bg-ink-700 block h-[1.5px] w-[15px]" />
+              <span className="bg-ink-700 block h-[1.5px] w-[15px]" />
+              <span className="bg-ink-700 block h-[1.5px] w-[15px]" />
+            </button>
+          )}
 
           {search ? (
             <form
@@ -359,7 +412,7 @@ export function AdminShell({
                   href={settingsHref}
                   className="text-ink-800 hover:bg-surface-1 block w-full px-4 py-3 text-left text-[12.5px] font-normal no-underline hover:no-underline"
                 >
-                  Settings
+                  {settingsLabel}
                 </Link>
                 <form action={signOut} className="border-line-soft border-t">
                   <button
@@ -374,11 +427,73 @@ export function AdminShell({
           </div>
         </header>
 
-        <main className="om-scroll min-w-0 flex-1 px-[clamp(16px,2.4vw,32px)] pt-[clamp(20px,2.6vw,34px)] pb-16">
+        <main
+          className={cn(
+            "om-scroll min-w-0 flex-1 px-[clamp(16px,2.4vw,32px)] pt-[clamp(20px,2.6vw,34px)] pb-16",
+            // Clear the fixed tab bar (60px + the elevated CTA's overhang).
+            hasTabs && "max-lg:pb-32"
+          )}
+        >
           {children}
         </main>
       </div>
+
+      {hasTabs ? <TabBar tabs={mobileTabs!} pathname={pathname} /> : null}
     </div>
+  );
+}
+
+/**
+ * The customer portal's bottom navigation. Same palette as the rest of the
+ * system — marine marks the active destination, and the single ember circle is
+ * the portal's one primary action, exactly as ember is used everywhere else.
+ */
+function TabBar({ tabs, pathname }: { tabs: MobileTab[]; pathname: string }) {
+  const isOn = (t: MobileTab) =>
+    t.exact ? pathname === t.href : pathname === t.href || pathname.startsWith(t.href + "/");
+
+  return (
+    <nav
+      aria-label="Primary"
+      className="border-line-soft fixed inset-x-0 bottom-0 z-40 border-t bg-white/[0.94] pb-[env(safe-area-inset-bottom)] backdrop-blur-[10px] lg:hidden"
+    >
+      <div className="mx-auto flex max-w-[520px] items-stretch justify-around gap-1 px-2 pt-1.5 pb-1">
+        {tabs.map((t) => {
+          const active = isOn(t);
+          const Icon = NAV_ICONS[t.icon];
+
+          if (t.primary) {
+            return (
+              <div key={t.href} className="flex flex-1 justify-center">
+                <Link
+                  href={t.href}
+                  aria-label={t.label}
+                  aria-current={active ? "page" : undefined}
+                  className="bg-ember-600 hover:bg-ember-700 -mt-7 flex size-[56px] flex-none items-center justify-center rounded-full text-white no-underline shadow-[0_8px_20px_oklch(0.565_0.172_47_/_0.34)] ring-4 ring-white transition-colors hover:no-underline active:scale-95"
+                >
+                  <Icon size={24} />
+                </Link>
+              </div>
+            );
+          }
+
+          return (
+            <Link
+              key={t.href}
+              href={t.href}
+              aria-current={active ? "page" : undefined}
+              className={cn(
+                "flex min-h-[52px] flex-1 flex-col items-center justify-center gap-1 rounded-[10px] px-1 text-[10.5px] leading-[normal] font-medium no-underline transition-colors hover:no-underline",
+                active ? "text-marine-600" : "text-ink-500"
+              )}
+            >
+              <Icon size={21} />
+              <span className="truncate">{t.label}</span>
+            </Link>
+          );
+        })}
+      </div>
+    </nav>
   );
 }
 

@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 import { getUserAndProfile, roleDashboardPath, isDeactivated } from "@/lib/auth";
-import { CustomerShell } from "@/components/customer/customer-shell";
+import { CustomerPortalShell } from "@/components/customer/customer-portal-shell";
 import { GuestBookShell } from "@/components/customer/guest-shell";
 
 /**
@@ -33,8 +33,12 @@ export default async function BookLayout({
   const name = profile?.full_name?.trim() || user.email || "Traveller";
 
   return (
-    <CustomerShell userName={name} userId={user.id}>
+    <CustomerPortalShell
+      userId={user.id}
+      userName={name}
+      userEmail={user.email ?? ""}
+    >
       {children}
-    </CustomerShell>
+    </CustomerPortalShell>
   );
 }

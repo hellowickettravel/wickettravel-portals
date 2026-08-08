@@ -452,6 +452,9 @@ export const NAV_ICONS = {
   support: LifebuoyIcon,
   settings: SettingsIcon,
   notifications: NotificationsIcon,
+  /* Customer portal: booking a flight, and the traveller's own record. */
+  book: FlightIcon,
+  profile: UserIcon,
 } as const;
 
 export type NavIconName = keyof typeof NAV_ICONS;
