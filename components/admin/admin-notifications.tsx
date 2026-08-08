@@ -90,12 +90,15 @@ function fallbackLink(type: NotificationType, basePath: string): string {
  */
 export function AdminNotifications({
   userId,
-  /* The employee portal renders this same screen; only its destinations
-     differ, so the base path is a prop defaulting to the admin's. */
+  /* The employee and customer portals render this same screen; only its
+     destinations differ, so the base path is a prop defaulting to the
+     admin's. The customer keeps their switches on Profile, not Settings. */
   basePath = "/admin",
+  settingsHref,
 }: {
   userId: string;
   basePath?: string;
+  settingsHref?: string;
 }) {
   const router = useRouter();
   const queryClient = useQueryClient();
@@ -327,7 +330,7 @@ export function AdminNotifications({
                 Choose which alerts reach you and how often we send a digest.
               </p>
               <Link
-                href={`${basePath}/settings`}
+                href={settingsHref ?? `${basePath}/settings`}
                 className="border-line-field text-ink-800 hover:bg-surface-1 flex h-10 items-center justify-center rounded-full border bg-white text-[12.5px] font-medium no-underline hover:no-underline"
               >
                 Notification settings

@@ -2,14 +2,7 @@
 
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Lock, BellRing, Loader2 } from "lucide-react";
 import { toast } from "sonner";
-import { PageHeader } from "@/components/admin/page-header";
-import { SectionCard } from "@/components/admin/section-card";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Switch } from "@/components/ui/switch";
 import { createClient } from "@/lib/supabase/client";
 import { updateMyName } from "@/lib/actions/account";
 import {
@@ -17,26 +10,49 @@ import {
   saveMyNotificationPrefs,
 } from "@/lib/actions/notifications";
 import { NOTIFICATION_PREFS_KEY } from "@/lib/query-keys";
+import { cn } from "@/lib/utils";
+import {
+  Btn,
+  Card,
+  CardHead,
+  FieldLabel,
+  PageHead,
+  Screen,
+  Spinner,
+  Toggle,
+  focusRing,
+  inputClass,
+} from "@/components/admin/ui";
+import { CheckIcon, LockIcon } from "@/components/admin/icons";
 
-// Customer-facing labels mapped onto the shared notification_prefs columns. These
-// gate the customer notification loop (quote/price → new_order, status →
+// Customer-facing labels mapped onto the shared notification_prefs columns.
+// These gate the customer notification loop (quote/price → new_order, status →
 // status_change, team reply → new_message) created by the 0015 triggers.
 type PrefKey = "new_order" | "status_change" | "new_message";
 
 const PREF_ITEMS: { key: PrefKey; label: string; desc: string }[] = [
-  { key: "new_order", label: "Quotes & prices", desc: "When the team adds a quote or price to your order." },
-  { key: "status_change", label: "Order status updates", desc: "When your order is confirmed, completed or cancelled." },
-  { key: "new_message", label: "Messages from the team", desc: "When the Wicket Travel team replies in your chat." },
+  {
+    key: "new_order",
+    label: "Quotes & prices",
+    desc: "When the team adds a quote or price to one of your orders.",
+  },
+  {
+    key: "status_change",
+    label: "Order status updates",
+    desc: "When an order is confirmed, completed or cancelled.",
+  },
+  {
+    key: "new_message",
+    label: "Messages from the team",
+    desc: "When someone replies in your chat.",
+  },
 ];
 
-function fieldLabel(text: string) {
-  return (
-    <span className="font-label text-xs font-medium uppercase tracking-wider text-slate-600">
-      {text}
-    </span>
-  );
-}
-
+/**
+ * The traveller's own account — their name, their password and what they want
+ * to be told about. Email and phone are read-only: both are how the team
+ * reaches them about live bookings, so changing either goes through the team.
+ */
 export function CustomerProfileForm({
   initialName,
   email,
@@ -54,8 +70,6 @@ export function CustomerProfileForm({
   const [confirmPassword, setConfirmPassword] = useState("");
   const [savingPassword, setSavingPassword] = useState(false);
 
-  // Notification preferences — real backend (notification_prefs), gates which
-  // customer notifications the 0015 triggers actually deliver.
   const { data: prefs, isLoading: prefsLoading } = useQuery({
     queryKey: NOTIFICATION_PREFS_KEY,
     queryFn: getMyNotificationPrefs,
@@ -76,7 +90,9 @@ export function CustomerProfileForm({
     },
     onError: (_e, _v, ctx) => {
       if (ctx?.prev) queryClient.setQueryData(NOTIFICATION_PREFS_KEY, ctx.prev);
-      toast.error("Couldn't save preference", { description: "Please try again." });
+      toast.error("Couldn't save preference", {
+        description: "Please try again.",
+      });
     },
     onSettled: () =>
       queryClient.invalidateQueries({ queryKey: NOTIFICATION_PREFS_KEY }),
@@ -108,7 +124,9 @@ export function CustomerProfileForm({
   async function savePassword(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     if (newPassword.length < 8) {
-      toast.error("Password too short", { description: "Use at least 8 characters." });
+      toast.error("Password too short", {
+        description: "Use at least 8 characters.",
+      });
       return;
     }
     if (newPassword !== confirmPassword) {
@@ -128,130 +146,147 @@ export function CustomerProfileForm({
     toast.success("Password updated");
   }
 
+  const readOnly = cn(inputClass, "bg-surface-1 text-ink-600 cursor-not-allowed");
+
   return (
-    <div className="space-y-7 animate-in fade-in slide-in-from-bottom-2 duration-500 ease-out">
-      <PageHeader
-        eyebrow="Account"
+    <Screen width={1080}>
+      <PageHead
         title="Profile"
-        subtitle="Manage your details and preferences."
+        intro="Your details, your password, and what you want to hear from us about."
       />
 
-      {/* Personal info */}
-      <SectionCard title="Personal information">
+      {/* -------------------------------------------------- personal info */}
+      <Card>
+        <CardHead title="Your details" />
         <form onSubmit={saveName}>
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-            <div className="space-y-2">
-              <Label htmlFor="name">{fieldLabel("Full name")}</Label>
-              <Input
-                id="name"
+          <div className="grid grid-cols-[repeat(auto-fit,minmax(230px,1fr))] gap-4 p-5">
+            <label className="flex min-w-0 flex-col gap-2">
+              <FieldLabel htmlFor="cust-name">Full name</FieldLabel>
+              <input
+                id="cust-name"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                className="h-10 rounded-[10px] bg-neutral-soft"
+                className={cn(inputClass, focusRing)}
               />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="email">{fieldLabel("Email (read-only)")}</Label>
-              <Input
-                id="email"
+              <span className="text-ink-500 text-[11.5px] font-normal">
+                Use the name on your passport where you can.
+              </span>
+            </label>
+            <label className="flex min-w-0 flex-col gap-2">
+              <FieldLabel htmlFor="cust-email">Email</FieldLabel>
+              <input
+                id="cust-email"
                 value={email}
                 readOnly
-                className="h-10 cursor-not-allowed rounded-[10px] bg-muted text-muted-foreground"
+                aria-describedby="cust-email-note"
+                className={readOnly}
               />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="phone">{fieldLabel("Phone (read-only)")}</Label>
-              <Input
-                id="phone"
-                value={phone || "—"}
+              <span
+                id="cust-email-note"
+                className="text-ink-500 text-[11.5px] font-normal"
+              >
+                Your sign-in address. Ask the team to change it.
+              </span>
+            </label>
+            <label className="flex min-w-0 flex-col gap-2">
+              <FieldLabel htmlFor="cust-phone">Phone</FieldLabel>
+              <input
+                id="cust-phone"
+                value={phone || "Not on file"}
                 readOnly
-                className="h-10 cursor-not-allowed rounded-[10px] bg-muted text-muted-foreground"
+                aria-describedby="cust-phone-note"
+                className={readOnly}
               />
-            </div>
+              <span
+                id="cust-phone-note"
+                className="text-ink-500 text-[11.5px] font-normal"
+              >
+                Message the team to add or change this.
+              </span>
+            </label>
           </div>
-          <div className="mt-5 flex justify-end">
-            <Button type="submit" disabled={savingName || name.trim() === initialName.trim()}>
-              {savingName ? (
-                <>
-                  <Loader2 className="size-4 animate-spin" />
-                  Saving…
-                </>
-              ) : (
-                "Save changes"
-              )}
-            </Button>
+          <div className="px-5 pb-5">
+            <Btn
+              type="submit"
+              variant="ember"
+              disabled={savingName || name.trim() === initialName.trim()}
+            >
+              {savingName ? <Spinner /> : <CheckIcon size={15} />}
+              Save changes
+            </Btn>
           </div>
         </form>
-      </SectionCard>
+      </Card>
 
-      {/* Password */}
-      <SectionCard title="Password" description="Update the password for your account.">
+      {/* ------------------------------------------------------- password */}
+      <Card>
+        <CardHead
+          title="Password"
+          hint="Use at least 8 characters. You stay signed in on this device."
+        />
         <form onSubmit={savePassword}>
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-            <div className="space-y-2">
-              <Label htmlFor="new">{fieldLabel("New password")}</Label>
-              <Input
-                id="new"
+          <div className="grid grid-cols-[repeat(auto-fit,minmax(230px,1fr))] gap-4 p-5">
+            <label className="flex min-w-0 flex-col gap-2">
+              <FieldLabel htmlFor="cust-new">New password</FieldLabel>
+              <input
+                id="cust-new"
                 type="password"
                 value={newPassword}
                 onChange={(e) => setNewPassword(e.target.value)}
                 placeholder="At least 8 characters"
-                className="h-10 rounded-[10px] bg-neutral-soft"
+                className={cn(inputClass, focusRing)}
               />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="conf">{fieldLabel("Confirm")}</Label>
-              <Input
-                id="conf"
+            </label>
+            <label className="flex min-w-0 flex-col gap-2">
+              <FieldLabel htmlFor="cust-conf">Confirm password</FieldLabel>
+              <input
+                id="cust-conf"
                 type="password"
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
-                placeholder="Re-enter new password"
-                className="h-10 rounded-[10px] bg-neutral-soft"
+                placeholder="Re-enter the new password"
+                className={cn(inputClass, focusRing)}
               />
-            </div>
+            </label>
           </div>
-          <div className="mt-5 flex justify-end">
-            <Button type="submit" variant="outline" disabled={savingPassword || !newPassword}>
-              {savingPassword ? (
-                <>
-                  <Loader2 className="size-4 animate-spin" />
-                  Updating…
-                </>
-              ) : (
-                <>
-                  <Lock className="size-4" />
-                  Update password
-                </>
-              )}
-            </Button>
+          <div className="px-5 pb-5">
+            <Btn type="submit" disabled={savingPassword || !newPassword}>
+              {savingPassword ? <Spinner /> : <LockIcon size={15} />}
+              Update password
+            </Btn>
           </div>
         </form>
-      </SectionCard>
+      </Card>
 
-      {/* Notifications (real — persisted to notification_prefs) */}
-      <SectionCard
-        title="Notification preferences"
-        description="Choose what you'd like to be alerted about. Saved instantly."
-      >
-        <ul className="divide-y divide-border">
-          {PREF_ITEMS.map((p) => (
-            <li key={p.key} className="flex items-center justify-between gap-4 py-3.5 first:pt-0 last:pb-0">
-              <div className="flex items-start gap-3">
-                <BellRing className="mt-0.5 size-4 shrink-0 text-brand" />
-                <div>
-                  <p className="text-sm font-medium text-foreground">{p.label}</p>
-                  <p className="text-xs text-muted-foreground">{p.desc}</p>
-                </div>
-              </div>
-              <Switch
-                checked={prefs ? prefs[p.key] : true}
-                disabled={prefsLoading || prefsMutation.isPending}
-                onCheckedChange={() => togglePref(p.key)}
-              />
-            </li>
-          ))}
-        </ul>
-      </SectionCard>
-    </div>
+      {/* -------------------------------------------------- notifications */}
+      <Card>
+        <CardHead
+          title="Notification preferences"
+          hint="Saved the moment you switch one."
+        />
+        {PREF_ITEMS.map((p) => (
+          /* The design insets a row's rule past the label column. */
+          <div
+            key={p.key}
+            className="after:bg-line-soft relative flex flex-wrap items-center gap-4 px-5 py-4 after:absolute after:right-0 after:bottom-0 after:left-5 after:h-px after:content-[''] last:after:hidden"
+          >
+            <span className="flex min-w-0 flex-[1_1_260px] flex-col gap-1">
+              <span className="text-ink-800 text-[13px] font-medium">
+                {p.label}
+              </span>
+              <span className="text-ink-500 text-[12.5px] leading-[1.5] font-normal text-pretty">
+                {p.desc}
+              </span>
+            </span>
+            <Toggle
+              checked={prefs ? prefs[p.key] : true}
+              label={p.label}
+              disabled={prefsLoading || prefsMutation.isPending}
+              onChange={() => togglePref(p.key)}
+            />
+          </div>
+        ))}
+      </Card>
+    </Screen>
   );
 }
