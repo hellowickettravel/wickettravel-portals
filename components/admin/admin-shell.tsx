@@ -30,6 +30,13 @@ export type AdminNavItem = {
 
 export type AdminNavSection = { heading?: string; items: AdminNavItem[] };
 
+export type SearchScreen = {
+  prefix: string;
+  exact?: boolean;
+  placeholder: string;
+  label: string;
+};
+
 /**
  * Per-screen search, exactly as the design's `searchScreens` map declares it:
  * the field only appears on the screens listed, and each one names what it
@@ -64,6 +71,14 @@ export function AdminShell({
   userId,
   logoUrl,
   children,
+  /* Defaults are the admin portal's. The employee portal renders the same
+     shell with its own nav, search map and destinations — the design system
+     is the portal's, not the role's. */
+  roleLabel = "Administrator",
+  homeHref = "/admin",
+  settingsHref = "/admin/settings",
+  supportHref = "/admin/support",
+  searchScreens = SEARCH,
 }: {
   sections: AdminNavSection[];
   userName: string;
@@ -71,6 +86,11 @@ export function AdminShell({
   userId: string;
   logoUrl?: string | null;
   children: React.ReactNode;
+  roleLabel?: string;
+  homeHref?: string;
+  settingsHref?: string;
+  supportHref?: string;
+  searchScreens?: SearchScreen[];
 }) {
   const pathname = usePathname();
   const router = useRouter();
@@ -81,8 +101,11 @@ export function AdminShell({
   const acctRef = useRef<HTMLDivElement>(null);
 
   const search = useMemo(
-    () => SEARCH.find((s) => (s.exact ? pathname === s.prefix : pathname.startsWith(s.prefix))),
-    [pathname]
+    () =>
+      searchScreens.find((s) =>
+        s.exact ? pathname === s.prefix : pathname.startsWith(s.prefix)
+      ),
+    [pathname, searchScreens]
   );
 
   // Route change closes every transient surface — the design does the same in
@@ -137,7 +160,7 @@ export function AdminShell({
       >
         <div className="flex h-16 flex-none items-center justify-between gap-3 border-b border-white/[0.13] px-6">
           <Link
-            href="/admin"
+            href={homeHref}
             className="flex min-w-0 items-center gap-3 no-underline hover:no-underline"
           >
             {logoUrl ? (
@@ -262,7 +285,10 @@ export function AdminShell({
               onSubmit={(e) => {
                 e.preventDefault();
                 const q = query.trim();
-                const base = search.exact && search.prefix === "/admin" ? "/admin/orders" : search.prefix;
+                const base =
+                  search.exact && search.prefix === homeHref
+                    ? `${homeHref}/orders`
+                    : search.prefix;
                 router.push(q ? `${base}?q=${encodeURIComponent(q)}` : base);
               }}
               className="relative flex min-w-0 max-w-[480px] flex-1"
@@ -286,7 +312,7 @@ export function AdminShell({
           <AdminBell userId={userId} />
 
           <Link
-            href="/admin/support"
+            href={supportHref}
             aria-label="Support"
             className="border-line-field text-ink-700 hover:bg-surface-1 hover:border-ink-300 flex size-10 flex-none items-center justify-center rounded-[10px] border bg-white no-underline transition-colors hover:no-underline"
           >
@@ -308,7 +334,7 @@ export function AdminShell({
                   {userName}
                 </span>
                 <span className="text-ink-600 text-[11px] font-normal whitespace-nowrap">
-                  Administrator
+                  {roleLabel}
                 </span>
               </span>
             </button>
@@ -326,11 +352,11 @@ export function AdminShell({
                     {userEmail}
                   </span>
                   <span className="bg-marine-tint text-marine-600 mt-1.5 self-start rounded-full px-2 py-1 text-[11px] font-medium tracking-[0.04em] uppercase">
-                    Administrator
+                    {roleLabel}
                   </span>
                 </div>
                 <Link
-                  href="/admin/settings"
+                  href={settingsHref}
                   className="text-ink-800 hover:bg-surface-1 block w-full px-4 py-3 text-left text-[12.5px] font-normal no-underline hover:no-underline"
                 >
                   Settings

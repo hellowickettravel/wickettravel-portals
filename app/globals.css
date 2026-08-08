@@ -386,12 +386,12 @@
 /* =========================================================
    ADMIN PORTAL SCOPE — the "Admin Portal All Pages" design's own
    base layer. Same contract as .auth-root above: everything the
-   design declares on <body> is reproduced here under .admin-root so
+   design declares on <body> is reproduced here under :is(.admin-root, .ds-root) so
    /admin matches it 1:1 while the employee, customer and driver
    shells keep the navy/orange system.
    ========================================================= */
 @layer base {
-  .admin-root {
+  :is(.admin-root, .ds-root) {
     font-family: var(--font-instrument-sans), system-ui, sans-serif;
     line-height: 1.5;
     letter-spacing: 0;
@@ -406,33 +406,33 @@
      base rule's -0.01em tracking is cleared for the same reason: the design
      tracks each heading explicitly or not at all. Utilities still win, since
      they sit in a later cascade layer. */
-  .admin-root :is(h1, h2, h3, h4, h5, h6) {
+  :is(.admin-root, .ds-root) :is(h1, h2, h3, h4, h5, h6) {
     font-family: var(--font-instrument-sans), system-ui, sans-serif;
     letter-spacing: normal;
   }
-  .admin-root a {
+  :is(.admin-root, .ds-root) a {
     color: var(--color-marine-500);
     text-decoration: none;
   }
-  .admin-root a:hover {
+  :is(.admin-root, .ds-root) a:hover {
     color: var(--color-marine-600);
     text-decoration: underline;
   }
-  .admin-root ::placeholder {
+  :is(.admin-root, .ds-root) ::placeholder {
     color: var(--color-ink-500);
     font-weight: 400;
   }
-  .admin-root :focus-visible {
+  :is(.admin-root, .ds-root) :focus-visible {
     outline: 2px solid var(--color-marine-500) !important;
     outline-offset: 2px;
   }
   @media (max-width: 639px) {
     /* The design exempts icon-only buttons and switches: they are already
        square targets and growing them would break the control they sit in. */
-    .admin-root button:not([role="switch"]):not([aria-label]),
-    .admin-root input:not([type="checkbox"]):not([type="radio"]),
-    .admin-root select,
-    .admin-root textarea {
+    :is(.admin-root, .ds-root) button:not([role="switch"]):not([aria-label]),
+    :is(.admin-root, .ds-root) input:not([type="checkbox"]):not([type="radio"]),
+    :is(.admin-root, .ds-root) select,
+    :is(.admin-root, .ds-root) textarea {
       min-height: 44px;
     }
   }
@@ -444,7 +444,7 @@
    PageHeader, SectionCard, StatCard, StatusBadge and UserCell are
    imported by the employee and customer portals as well as /admin.
    The base rules below are the locked navy/orange look those portals
-   have always had; the `.admin-root` overrides put the Admin Portal
+   have always had; the `:is(.admin-root, .ds-root)` overrides put the Admin Portal
    design on the very same markup. Neither portal had to fork a
    component, and neither one leaks into the other.
    --------------------------------------------------------------- */
@@ -469,14 +469,14 @@
     font-size: 14px;
     color: var(--muted-foreground);
   }
-  .admin-root .wt-eyebrow {
+  :is(.admin-root, .ds-root) .wt-eyebrow {
     font-family: var(--font-instrument-sans), system-ui, sans-serif;
     font-size: 11px;
     font-weight: 500;
     letter-spacing: 0.13em;
     color: var(--color-ember-700);
   }
-  .admin-root .wt-page-title {
+  :is(.admin-root, .ds-root) .wt-page-title {
     font-family: var(--font-poppins-sans), system-ui, sans-serif;
     font-size: clamp(20px, 1.5vw, 24px);
     font-weight: 500;
@@ -486,7 +486,7 @@
     line-height: 1.5;
     color: var(--color-ink-700);
   }
-  .admin-root .wt-page-sub {
+  :is(.admin-root, .ds-root) .wt-page-sub {
     font-size: 13.5px;
     font-weight: 400;
     color: var(--color-ink-600);
@@ -529,33 +529,33 @@
   .wt-card-body[data-flush="true"] {
     padding: 16px 0 0;
   }
-  .admin-root .wt-card {
+  :is(.admin-root, .ds-root) .wt-card {
     border-radius: 12px;
     border: 1px solid var(--color-line-base);
     box-shadow: 0 1px 2px oklch(0.205 0.038 258 / 0.04);
     background: #fff;
     color: var(--color-ink-700);
   }
-  .admin-root .wt-card-head {
+  :is(.admin-root, .ds-root) .wt-card-head {
     align-items: center;
     padding: 16px 20px;
     border-bottom: 1px solid var(--color-line-soft);
   }
-  .admin-root .wt-card-title {
+  :is(.admin-root, .ds-root) .wt-card-title {
     font-family: var(--font-instrument-sans), system-ui, sans-serif;
     font-size: 13.5px;
     font-weight: 600;
     letter-spacing: -0.008em;
     color: var(--color-ink-800);
   }
-  .admin-root .wt-card-desc {
+  :is(.admin-root, .ds-root) .wt-card-desc {
     font-size: 12px;
     color: var(--color-ink-600);
   }
-  .admin-root .wt-card-body {
+  :is(.admin-root, .ds-root) .wt-card-body {
     padding: 20px;
   }
-  .admin-root .wt-card-body[data-flush="true"] {
+  :is(.admin-root, .ds-root) .wt-card-body[data-flush="true"] {
     padding: 0;
   }
 
@@ -582,17 +582,17 @@
     font-size: 12px;
     color: var(--muted-foreground);
   }
-  .admin-root .wt-stat-chip {
+  :is(.admin-root, .ds-root) .wt-stat-chip {
     background: var(--color-marine-50);
     color: var(--color-marine-600);
     border-radius: 10px;
   }
-  .admin-root .wt-stat-label {
+  :is(.admin-root, .ds-root) .wt-stat-label {
     font-size: 11px;
     letter-spacing: 0.11em;
     color: var(--color-ink-600);
   }
-  .admin-root .wt-stat-value {
+  :is(.admin-root, .ds-root) .wt-stat-value {
     font-family: var(--font-poppins-sans), system-ui, sans-serif;
     font-size: 24px;
     font-weight: 500;
@@ -601,7 +601,7 @@
     font-variant-numeric: tabular-nums;
     color: var(--color-ink-880);
   }
-  .admin-root .wt-stat-hint {
+  :is(.admin-root, .ds-root) .wt-stat-hint {
     font-size: 11.5px;
     color: var(--color-ink-600);
   }
@@ -665,35 +665,35 @@
     background: oklch(0.62 0.2 300);
   }
   /* The design's pills: tint fill + dark ink, no dot, 11px/500. */
-  .admin-root .wt-pill {
+  :is(.admin-root, .ds-root) .wt-pill {
     gap: 0;
     padding: 4px 12px;
     font-size: 11px;
   }
-  .admin-root .wt-pill-dot {
+  :is(.admin-root, .ds-root) .wt-pill-dot {
     display: none;
   }
-  .admin-root .wt-pill[data-tone="blue"] {
+  :is(.admin-root, .ds-root) .wt-pill[data-tone="blue"] {
     background: var(--color-marine-tint);
     color: var(--color-marine-600);
   }
-  .admin-root .wt-pill[data-tone="green"] {
+  :is(.admin-root, .ds-root) .wt-pill[data-tone="green"] {
     background: var(--color-ok-bg);
     color: var(--color-ok-ink);
   }
-  .admin-root .wt-pill[data-tone="amber"] {
+  :is(.admin-root, .ds-root) .wt-pill[data-tone="amber"] {
     background: var(--color-warn-bg);
     color: var(--color-warn-ink);
   }
-  .admin-root .wt-pill[data-tone="red"] {
+  :is(.admin-root, .ds-root) .wt-pill[data-tone="red"] {
     background: var(--color-danger-bg);
     color: var(--color-danger-ink);
   }
-  .admin-root .wt-pill[data-tone="slate"] {
+  :is(.admin-root, .ds-root) .wt-pill[data-tone="slate"] {
     background: var(--color-neutral-bg);
     color: var(--color-ink-700);
   }
-  .admin-root .wt-pill[data-tone="violet"] {
+  :is(.admin-root, .ds-root) .wt-pill[data-tone="violet"] {
     background: var(--color-violet-bg);
     color: var(--color-violet-ink);
   }
@@ -730,13 +730,13 @@
   /* The design drops the segmented track: chips become free-standing pills,
      with the selected one filled in solid ink so it never competes with the
      ember CTA. */
-  .admin-root .wt-chipbar {
+  :is(.admin-root, .ds-root) .wt-chipbar {
     gap: 8px;
     padding: 0;
     background: transparent;
     flex-wrap: wrap;
   }
-  .admin-root .wt-chip {
+  :is(.admin-root, .ds-root) .wt-chip {
     height: 34px;
     padding: 0 16px;
     border-radius: 999px;
@@ -745,18 +745,18 @@
     font-size: 13px;
     color: var(--color-ink-800);
   }
-  .admin-root .wt-chip.is-active {
+  :is(.admin-root, .ds-root) .wt-chip.is-active {
     border-color: var(--color-ink-800);
     background: var(--color-ink-800);
     color: #fff;
     box-shadow: none;
   }
-  .admin-root .wt-chip.is-idle:hover {
+  :is(.admin-root, .ds-root) .wt-chip.is-idle:hover {
     background: var(--color-surface-1);
     color: var(--color-ink-800);
   }
-  .admin-root .wt-chip-count-on,
-  .admin-root .wt-chip-count-off {
+  :is(.admin-root, .ds-root) .wt-chip-count-on,
+  :is(.admin-root, .ds-root) .wt-chip-count-off {
     background: transparent;
     padding: 0;
     font-weight: 500;
@@ -769,7 +769,7 @@
     background: var(--chip);
     color: var(--brand-dark);
   }
-  .admin-root .wt-avatar-fallback {
+  :is(.admin-root, .ds-root) .wt-avatar-fallback {
     background: var(--color-marine-tint);
     color: var(--color-marine-600);
   }
@@ -782,11 +782,11 @@
     font-size: 12px;
     color: var(--muted-foreground);
   }
-  .admin-root .wt-user-name {
+  :is(.admin-root, .ds-root) .wt-user-name {
     font-size: 13px;
     color: var(--color-ink-800);
   }
-  .admin-root .wt-user-sub {
+  :is(.admin-root, .ds-root) .wt-user-sub {
     font-size: 11.5px;
     color: var(--color-ink-600);
   }
@@ -802,19 +802,19 @@
    portals, which share the same components.
    --------------------------------------------------------------- */
 @layer components {
-  .admin-root [data-slot="button"] {
+  :is(.admin-root, .ds-root) [data-slot="button"] {
     border-radius: 999px;
     font-size: 13px;
     font-weight: 500;
     letter-spacing: 0;
   }
-  .admin-root [data-slot="button"]:not([class*="h-"]) {
+  :is(.admin-root, .ds-root) [data-slot="button"]:not([class*="h-"]) {
     height: 40px;
     padding-inline: 20px;
   }
-  .admin-root [data-slot="input"],
-  .admin-root [data-slot="textarea"],
-  .admin-root select {
+  :is(.admin-root, .ds-root) [data-slot="input"],
+  :is(.admin-root, .ds-root) [data-slot="textarea"],
+  :is(.admin-root, .ds-root) select {
     border-radius: 10px;
     border-color: var(--color-line-field);
     background: #fff;
@@ -822,19 +822,19 @@
     font-weight: 400;
     color: var(--color-ink-800);
   }
-  .admin-root [data-slot="input"]:not([class*="h-"]) {
+  :is(.admin-root, .ds-root) [data-slot="input"]:not([class*="h-"]) {
     height: 40px;
   }
-  .admin-root [data-slot="input"]:focus-visible,
-  .admin-root [data-slot="textarea"]:focus-visible,
-  .admin-root select:focus-visible {
+  :is(.admin-root, .ds-root) [data-slot="input"]:focus-visible,
+  :is(.admin-root, .ds-root) [data-slot="textarea"]:focus-visible,
+  :is(.admin-root, .ds-root) select:focus-visible {
     border-color: var(--color-marine-500);
     box-shadow: 0 0 0 3px var(--color-marine-200);
   }
-  .admin-root [data-slot="table"] {
+  :is(.admin-root, .ds-root) [data-slot="table"] {
     border-collapse: collapse;
   }
-  .admin-root [data-slot="table-head"] {
+  :is(.admin-root, .ds-root) [data-slot="table-head"] {
     height: 40px;
     background: var(--color-surface-2);
     font-size: 11px;
@@ -843,15 +843,15 @@
     text-transform: uppercase;
     color: var(--color-ink-600);
   }
-  .admin-root [data-slot="table-cell"] {
+  :is(.admin-root, .ds-root) [data-slot="table-cell"] {
     height: 54px;
     font-size: 13px;
     border-top: 1px solid var(--color-line-soft);
   }
-  .admin-root [data-slot="table-row"]:hover {
+  :is(.admin-root, .ds-root) [data-slot="table-row"]:hover {
     background: var(--color-marine-row);
   }
-  .admin-root [data-slot="card"] {
+  :is(.admin-root, .ds-root) [data-slot="card"] {
     border-radius: 12px;
     border-color: var(--color-line-base);
     box-shadow: 0 1px 2px oklch(0.205 0.038 258 / 0.04);
