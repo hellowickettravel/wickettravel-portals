@@ -301,7 +301,24 @@ function FieldRow({ f, err }: { f: FieldDef; err?: string }) {
 
 /* ----------------------------------------------------------------- wizard */
 
-export function AdminOrderForm({ customers }: { customers: AdminOrderCustomer[] }) {
+export function AdminOrderForm({
+  customers,
+  /* The employee portal renders this same wizard. Its create path is a
+     different server action (createOrderFromChat, which needs the customer's
+     conversation), and its links live under /employee — so both are props,
+     defaulting to the admin behaviour. */
+  basePath = "/admin",
+  onCreate,
+}: {
+  customers: AdminOrderCustomer[];
+  basePath?: string;
+  onCreate?: (
+    input: Parameters<typeof createOrder>[0]
+  ) => Promise<
+    | { ok: true; data: { orderId: string; orderNumber?: string } }
+    | { ok: false; error: string }
+  >;
+}) {
   const router = useRouter();
   const topRef = useRef<HTMLDivElement>(null);
 
@@ -706,13 +723,13 @@ export function AdminOrderForm({ customers }: { customers: AdminOrderCustomer[] 
       airline: draft.airline !== ANY_AIRLINE ? draft.airline : null,
     };
 
-    const res = await createOrder(input);
+    const res = onCreate ? await onCreate(input) : await createOrder(input);
     setBusy(false);
     if (!res.ok) {
       toast.error("Couldn't create the order", { description: res.error });
       return;
     }
-    setCreated({ id: res.data.orderId, ref: res.data.orderNumber });
+    setCreated({ id: res.data.orderId, ref: res.data.orderNumber ?? "" });
     toast.success("Order created");
     toTop();
   }
@@ -732,7 +749,7 @@ export function AdminOrderForm({ customers }: { customers: AdminOrderCustomer[] 
     return (
       <div className="flex max-w-[1080px] flex-col gap-5">
         <div ref={topRef} />
-        <BackLink href="/admin/orders">All orders</BackLink>
+        <BackLink href={`${basePath}/orders`}>All orders</BackLink>
         <div
           role="status"
           className={cn(
@@ -770,7 +787,7 @@ export function AdminOrderForm({ customers }: { customers: AdminOrderCustomer[] 
             </Btn>
             <Btn
               variant="ember"
-              onClick={() => router.push(`/admin/orders/${created.id}`)}
+              onClick={() => router.push(`${basePath}/orders/${created.id}`)}
             >
               View order
             </Btn>
@@ -783,7 +800,7 @@ export function AdminOrderForm({ customers }: { customers: AdminOrderCustomer[] 
   return (
     <div className="flex max-w-[1080px] flex-col gap-5">
       <div ref={topRef} />
-      <BackLink href="/admin/orders">All orders</BackLink>
+      <BackLink href={`${basePath}/orders`}>All orders</BackLink>
 
       <div className="flex flex-col gap-1.5">
         <Eyebrow>New order</Eyebrow>
@@ -1349,7 +1366,7 @@ export function AdminOrderForm({ customers }: { customers: AdminOrderCustomer[] 
               className="px-[22px]"
               onClick={() =>
                 step === 1
-                  ? router.push("/admin/orders")
+                  ? router.push(`${basePath}/orders`)
                   : (setStep((s) => (s - 1) as Step), toTop())
               }
             >
