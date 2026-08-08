@@ -19,6 +19,7 @@ import {
   AttachIcon,
   DownloadIcon,
   ImageIcon,
+  LockIcon,
   SendIcon,
 } from "@/components/admin/icons";
 import {
@@ -65,14 +66,20 @@ const dayKey = (iso: string) => iso.slice(0, 10);
  * same RLS gate; only the skin and the chrome (transcript button, day dividers,
  * two attach buttons, 42px circular send) follow the admin design.
  *
- * Admin can always send, including on a completed or cancelled order — the
- * customer is the one RLS locks out, and that is enforced server-side.
+ * All three portals render this one component. `viewerRole` decides which side
+ * of the thread is "mine" and rewrites the copy to match — staff are replying
+ * to a named customer, the customer is messaging the team. Staff can always
+ * send, including on a completed or cancelled order; the customer is the one
+ * RLS locks out, which `canSend` mirrors in the UI.
  */
 export function OrderThread({
   orderId,
   customerName,
   orderNumber,
   senderNames = {},
+  viewerRole = "admin",
+  canSend = true,
+  lockedNotice,
 }: {
   orderId: string;
   customerName: string;
@@ -83,6 +90,12 @@ export function OrderThread({
    * map falls back to the fixed role label.
    */
   senderNames?: Record<string, string>;
+  /** Who is reading. Decides the "mine" side and every piece of copy. */
+  viewerRole?: SenderRole;
+  /** False replaces the composer with `lockedNotice`. Defence-in-depth: RLS
+      is the actual gate, this only stops the customer typing into a wall. */
+  canSend?: boolean;
+  lockedNotice?: string;
 }) {
   const queryClient = useQueryClient();
   const supabase = useMemo(() => createClient(), []);
@@ -185,6 +198,7 @@ export function OrderThread({
   }
 
   const firstName = customerName.split(" ")[0] || "customer";
+  const asCustomer = viewerRole === "customer";
 
   return (
     <div
@@ -199,7 +213,9 @@ export function OrderThread({
             Messages
           </h2>
           <span className="text-ink-600 text-[11.5px] font-normal">
-            Order thread with {customerName}
+            {asCustomer
+              ? `Your thread about order ${orderNumber}`
+              : `Order thread with ${customerName}`}
           </span>
         </div>
         <button
@@ -232,17 +248,20 @@ export function OrderThread({
               No messages on this order yet
             </h3>
             <p className="text-ink-600 m-0 text-[13px] leading-[1.55] font-normal text-pretty">
-              Anything you send here reaches {firstName} in their portal
-              instantly, and every employee assigned to the order sees it too.
+              {asCustomer
+                ? "Anything you send here goes straight to the team handling this booking, and stays attached to this order."
+                : `Anything you send here reaches ${firstName} in their portal instantly, and every employee assigned to the order sees it too.`}
             </p>
           </div>
         ) : (
           thread.map((m: OrderMessage, i) => {
             // The design splits the thread by side, not by author: everything
             // from the team — support and admin alike — is the marine bubble on
-            // the right, and only the customer sits left in white.
+            // the right, and only the customer sits left in white. In the
+            // customer's own portal the sides swap: their words are the ones
+            // on the right.
             const role = m.sender_role;
-            const mine = role !== "customer";
+            const mine = asCustomer ? role === "customer" : role !== "customer";
             const name =
               role === "customer"
                 ? customerName
@@ -296,7 +315,9 @@ export function OrderThread({
                           {name}
                         </span>
                         <span className="text-ink-hush text-[9.5px] font-semibold tracking-[0.06em] uppercase">
-                          {THREAD_ROLE[role]}
+                          {asCustomer && role === "customer"
+                            ? "You"
+                            : THREAD_ROLE[role]}
                         </span>
                       </span>
                       <div
@@ -333,6 +354,17 @@ export function OrderThread({
         )}
       </div>
 
+      {!canSend ? (
+        <div className="border-line-soft bg-surface-1 flex flex-none items-center gap-2.5 border-t px-5 py-4">
+          <span className="text-ink-500 flex flex-none">
+            <LockIcon size={16} />
+          </span>
+          <span className="text-ink-600 text-[12.5px] leading-[1.5] font-normal text-pretty">
+            {lockedNotice ??
+              "This order is closed, so its thread is read-only. Message the team from Messages if you need anything else."}
+          </span>
+        </div>
+      ) : (
       <form
         onSubmit={submit}
         className="border-line-soft flex flex-none items-end gap-2.5 border-t bg-white px-5 py-3.5"
@@ -387,7 +419,11 @@ export function OrderThread({
               submit(e);
             }
           }}
-          placeholder={`Reply to ${firstName}…`}
+          placeholder={
+            asCustomer
+              ? "Message the team about this order…"
+              : `Reply to ${firstName}…`
+          }
           className={cn(
             "border-line-field bg-surface-1 text-ink-800 min-w-0 flex-1 resize-none rounded-[10px] border px-4 py-3 text-[13px] leading-[1.5] font-normal outline-none focus:bg-white",
             focusRing
@@ -402,6 +438,7 @@ export function OrderThread({
           <SendIcon size={17} />
         </button>
       </form>
+      )}
     </div>
   );
 }
