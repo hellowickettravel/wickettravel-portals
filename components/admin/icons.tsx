@@ -120,6 +120,13 @@ const GLYPHS = {
     ["rect", { x: 5, y: 10.5, width: 14, height: 9, rx: 2 }],
     ["path", { d: "M8 10.5V8a4 4 0 0 1 8 0v2.5" }],
   ],
+  /* Not in the design file. Drawn to the same contract as `lock` — identical
+     body, and the shackle is the same arc left un-closed on the right, so the
+     pair reads as one state changing rather than two different icons. */
+  unlock: [
+    ["rect", { x: 5, y: 10.5, width: 14, height: 9, rx: 2 }],
+    ["path", { d: "M8 10.5V8a4 4 0 0 1 7.8-1.3" }],
+  ],
   triptype: [
     ["path", { d: "M6 9h11l-2.6-2.6" }],
     ["path", { d: "M18 15H7l2.6 2.6" }],
@@ -434,6 +441,7 @@ export const ShieldIcon = glyph("shield");
 export const HomeIcon = glyph("home");
 export const BuildingIcon = glyph("building");
 export const LockIcon = glyph("lock");
+export const UnlockIcon = glyph("unlock");
 
 /* ------------------------------------------------------------------- nav */
 

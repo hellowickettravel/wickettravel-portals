@@ -274,8 +274,23 @@ on `/customer/parents`. Actions live in `lib/actions/parents-matches.ts`.
   here rides along in the RSC payload whether or not it is rendered, so it is
   not fetched at all. The customer's own match view shows the counterparty with
   no name either: flight, help and fee are enough to decide on.
-- Contact release is still **not built** — chunk 4, together with manual
-  payments. Accepting does not release anything.
+- Contact release lands in chunk 4. Accepting does not release anything.
+
+**Chunk 4 — contact release and manual payments, DONE 2026-08-09.**
+The payment and the introduction sit on **one card** on the match record,
+because they are one decision; `/admin/parents-payments` is the ledger.
+Actions live in `lib/actions/parents-payments.ts`.
+- **Release is irreversible and there is no un-release action anywhere.** The
+  card says so before the click, not after.
+- The gate — both accepted AND a payment marked paid — is stated once in
+  `canReleaseContact()`, read by both the button's disabled state and the
+  server action, so they cannot drift apart.
+- `payout_amount` is **derived, never typed** (gross − commission); commission
+  above gross is rejected rather than clamped, because that is a typo and a
+  silent zero would hide it. Payer and payee come from the match, not the form.
+- After release, contact details come **only** from the
+  `parent_ticket_match_contact` RPC. `profiles` stays unreadable across users
+  before and after — the flag is the gate, not an accident of RLS.
 
 Three rules that layer carries, worth knowing before extending it:
 - **RLS says which rows, a BEFORE-trigger says which columns.** An owner can
@@ -310,8 +325,11 @@ system. No provider integration.
 12. Parents Tickets marketplace, chunk 2 (listing + request forms, the customer
     dashboard, the admin approval workflow) — DONE 2026-08-09
 13. Parents Tickets marketplace, chunk 3 (search, ranking, matches and party
-    responses) — DONE 2026-08-09. Next: contact release + manual payments
-    (items 6 and 7) — one chunk, since release is gated on a recorded payment.
+    responses) — DONE 2026-08-09
+14. Parents Tickets marketplace, chunk 4 (contact release + Stage A manual
+    payments) — DONE 2026-08-09. **The full-scope loop is now closed**: items
+    1-8 are all built. What remains is item 9 (polish, security review,
+    testing) and the reports half of item 8.
 
 The **driver** portal migration is PART DONE and paused (2026-08-09). On the
 design system: the shell, Home, Job board, My rides, Earnings and their

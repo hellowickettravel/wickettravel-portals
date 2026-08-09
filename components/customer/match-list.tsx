@@ -12,6 +12,7 @@ import {
   type PartyResponse,
 } from "@/lib/parents-marketplace";
 import { respondToMatch, type MyMatch } from "@/lib/actions/parents-matches";
+import type { ReleasedContact } from "@/lib/parents-marketplace";
 import {
   Btn,
   Card,
@@ -27,7 +28,11 @@ import {
   CloseIcon,
   GlobeIcon,
   LockIcon,
+  MailIcon,
+  PhoneIcon,
   RouteIcon,
+  UnlockIcon,
+  UserIcon,
 } from "@/components/admin/icons";
 
 const RESPONSE_TONE: Record<PartyResponse, PillTone> = {
@@ -45,7 +50,14 @@ const RESPONSE_TONE: Record<PartyResponse, PillTone> = {
  * could return a counterparty's contact details, and the only route to them is
  * an admin releasing the match after a payment.
  */
-export function MatchList({ matches }: { matches: MyMatch[] }) {
+export function MatchList({
+  matches,
+  contacts,
+}: {
+  matches: MyMatch[];
+  /** matchId → the two parties' details. Only ever populated once released. */
+  contacts: Record<string, ReleasedContact[]>;
+}) {
   const router = useRouter();
   const [busy, setBusy] = useState<string | null>(null);
 
@@ -169,9 +181,11 @@ export function MatchList({ matches }: { matches: MyMatch[] }) {
 
                 {/* ------------------------------------------ the decision */}
                 {match.contact_released ? (
-                  <p className="border-ok-edge bg-ok-bg text-ok-ink m-0 rounded-[10px] border px-3.5 py-2.5 text-[12.5px] font-medium">
-                    You&apos;ve been introduced — check your email for their details.
-                  </p>
+                  <Introduced
+                    contact={(contacts[match.id] ?? []).find(
+                      (c) => c.side !== side
+                    )}
+                  />
                 ) : decided ? (
                   <div className="flex flex-wrap items-center gap-3">
                     <Pill tone={RESPONSE_TONE[myResponse]}>
@@ -223,5 +237,56 @@ export function MatchList({ matches }: { matches: MyMatch[] }) {
         </ul>
       )}
     </Card>
+  );
+}
+
+/**
+ * The counterparty's details, shown only after an admin has introduced the
+ * two of you.
+ *
+ * These come from the parent_ticket_match_contact RPC, which is the one route
+ * to them anywhere in the product — there is no query on this page that could
+ * have produced them a moment earlier.
+ */
+function Introduced({ contact }: { contact?: ReleasedContact }) {
+  if (!contact) {
+    return (
+      <p className="border-ok-edge bg-ok-bg text-ok-ink m-0 rounded-[10px] border px-3.5 py-2.5 text-[12.5px] font-medium">
+        You&apos;ve been introduced — we&apos;ll be in touch with their details.
+      </p>
+    );
+  }
+
+  return (
+    <div className="border-ok-edge bg-ok-bg flex flex-col gap-2.5 rounded-[10px] border px-4 py-3.5">
+      <span className="text-ok-ink inline-flex items-center gap-2 text-[12.5px] font-medium">
+        <UnlockIcon size={15} />
+        You&apos;ve been introduced — here&apos;s how to reach them.
+      </span>
+      <span className="flex flex-wrap items-center gap-x-5 gap-y-2">
+        <span className="text-ink-850 inline-flex items-center gap-2 text-[13px] font-medium">
+          <UserIcon size={14} />
+          {contact.full_name ?? "Your match"}
+        </span>
+        {contact.email ? (
+          <a
+            href={`mailto:${contact.email}`}
+            className="text-marine-600 inline-flex items-center gap-2 text-[12.5px] font-normal"
+          >
+            <MailIcon size={14} />
+            {contact.email}
+          </a>
+        ) : null}
+        {contact.phone ? (
+          <a
+            href={`tel:${contact.phone.replace(/[^+\d]/g, "")}`}
+            className="text-marine-600 inline-flex items-center gap-2 text-[12.5px] font-normal"
+          >
+            <PhoneIcon size={14} />
+            {contact.phone}
+          </a>
+        ) : null}
+      </span>
+    </div>
   );
 }

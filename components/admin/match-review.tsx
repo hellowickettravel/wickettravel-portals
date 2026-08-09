@@ -4,7 +4,6 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { toast } from "sonner";
-import { cn } from "@/lib/utils";
 import { fmtDate, fmtRelative } from "@/lib/format";
 import {
   ASSISTANCE_LABELS,
@@ -16,6 +15,9 @@ import {
   type PartyResponse,
 } from "@/lib/parents-marketplace";
 import { setMatchStatus, type AdminMatchRow } from "@/lib/actions/parents-matches";
+import type { MatchPayment as MatchPaymentRow } from "@/lib/actions/parents-payments";
+import { MatchPayment } from "@/components/admin/match-payment";
+import type { ReleasedContact } from "@/lib/parents-marketplace";
 import {
   Avatar,
   BackLink,
@@ -27,7 +29,6 @@ import {
   Pill,
   Screen,
   Spinner,
-  shadowE1,
   type PillTone,
 } from "@/components/admin/ui";
 import {
@@ -37,7 +38,6 @@ import {
   FamilyIcon,
   FlightIcon,
   GlobeIcon,
-  LockIcon,
   RouteIcon,
 } from "@/components/admin/icons";
 
@@ -72,10 +72,19 @@ export function scoreTone(score: number | null): PillTone {
  * it. The score and its reason lead, because that is what an admin is checking
  * before they put their name to an introduction.
  *
- * Contact details are absent from this screen entirely. Releasing them is a
- * separate act tied to a payment, and it isn't built yet.
+ * The payment and the introduction sit on one card below, in that order,
+ * because they are one decision — the release button is unreachable until a
+ * payment is marked paid.
  */
-export function MatchReview({ record }: { record: AdminMatchRow }) {
+export function MatchReview({
+  record,
+  payment,
+  contacts,
+}: {
+  record: AdminMatchRow;
+  payment: MatchPaymentRow | null;
+  contacts: ReleasedContact[];
+}) {
   const router = useRouter();
   const [busy, setBusy] = useState<string | null>(null);
 
@@ -119,7 +128,9 @@ export function MatchReview({ record }: { record: AdminMatchRow }) {
         <div className="flex flex-wrap items-center gap-3">
           {status !== "completed" && status !== "cancelled" ? (
             <>
-              {bothAccepted && status !== "accepted" ? (
+              {/* Only while the match is still awaiting a decision — once
+                  contact is released, "accepted" is a step backwards. */}
+              {bothAccepted && (status === "suggested" || status === "proposed") ? (
                 <Btn
                   variant="ember"
                   disabled={!!busy}
@@ -142,30 +153,7 @@ export function MatchReview({ record }: { record: AdminMatchRow }) {
         </div>
       </div>
 
-      {/* ---------------------------------------------- the release notice */}
-      <div
-        className={cn(
-          "border-line-base flex flex-wrap items-center gap-3 rounded-[12px] border bg-white px-4 py-3.5",
-          shadowE1
-        )}
-      >
-        <span className="bg-neutral-bg text-ink-600 flex size-9 flex-none items-center justify-center rounded-full">
-          <LockIcon size={17} />
-        </span>
-        <span className="flex min-w-0 flex-1 flex-col gap-0.5">
-          <span className="text-ink-850 text-[13px] font-medium">
-            Contact details are sealed
-          </span>
-          <span className="text-ink-500 text-[12px] leading-[1.5] font-normal text-pretty">
-            {bothAccepted
-              ? "Both sides have accepted. Releasing their details is a separate step, tied to a recorded payment — that screen isn't built yet."
-              : "Neither side can reach the other until both have accepted and a payment has been recorded."}
-          </span>
-        </span>
-        <Pill tone={record.contact_released ? "teal" : "ink"}>
-          {record.contact_released ? "Released" : "Not released"}
-        </Pill>
-      </div>
+      <MatchPayment match={record} payment={payment} contacts={contacts} />
 
       {/* ------------------------------------------------------ both sides */}
       <div className="grid grid-cols-1 items-start gap-4 min-[900px]:grid-cols-2">

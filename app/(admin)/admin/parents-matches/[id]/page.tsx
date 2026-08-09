@@ -1,6 +1,11 @@
 import { notFound } from "next/navigation";
 import { getMatchForAdmin } from "@/lib/actions/parents-matches";
+import {
+  getMatchPayment,
+  getReleasedContact,
+} from "@/lib/actions/parents-payments";
 import { MatchReview } from "@/components/admin/match-review";
+import type { ReleasedContact } from "@/lib/parents-marketplace";
 
 export default async function AdminMatchDetailPage({
   params,
@@ -11,5 +16,16 @@ export default async function AdminMatchDetailPage({
   const record = await getMatchForAdmin(id);
   if (!record) notFound();
 
-  return <MatchReview record={record} />;
+  const payment = await getMatchPayment(id);
+
+  // Only ask for contacts once the flag is set. The RPC would answer with
+  // nothing anyway, but not fetching is the honest expression of the rule —
+  // and keeps the details out of the payload of every unreleased match.
+  let contacts: ReleasedContact[] = [];
+  if (record.contact_released) {
+    const found = await getReleasedContact(id);
+    if (found.ok) contacts = found.data;
+  }
+
+  return <MatchReview record={record} payment={payment} contacts={contacts} />;
 }

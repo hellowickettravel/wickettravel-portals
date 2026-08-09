@@ -5,6 +5,7 @@ import { cn } from "@/lib/utils";
 import { fmtDate } from "@/lib/format";
 import { MatchList } from "@/components/customer/match-list";
 import type { MyMatch } from "@/lib/actions/parents-matches";
+import type { ReleasedContact } from "@/lib/parents-marketplace";
 import {
   LISTING_KIND_LABELS,
   LISTING_STATUS_LABELS,
@@ -58,10 +59,12 @@ export const LISTING_TONE: Record<ListingStatus, PillTone> = {
 export function ListingsView({
   listings,
   matches,
+  contacts,
   verificationStatus,
 }: {
   listings: ParentTicketListing[];
   matches: MyMatch[];
+  contacts: Record<string, ReleasedContact[]>;
   verificationStatus: VerificationStatus;
 }) {
   const verified = verificationStatus === "verified";
@@ -210,7 +213,7 @@ export function ListingsView({
 
       {/* ---------------------------------------------------- the matches */}
       {listings.length > 0 || matches.length > 0 ? (
-        <MatchList matches={matches} />
+        <MatchList matches={matches} contacts={contacts} />
       ) : null}
 
       {/* ------------------------------------------------------ what's next */}

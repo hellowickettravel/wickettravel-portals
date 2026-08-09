@@ -8,6 +8,7 @@ import { countNewParentTickets } from "@/lib/actions/parents-tickets";
 import { countPendingVerifications } from "@/lib/actions/parents-marketplace";
 import { countPendingListings } from "@/lib/actions/parents-listings";
 import { countOpenMatches } from "@/lib/actions/parents-matches";
+import { countUnsettledPayments } from "@/lib/actions/parents-payments";
 import {
   AdminShell,
   type AdminNavSection,
@@ -21,6 +22,7 @@ type NavCounts = {
   verifications: number;
   listings: number;
   matches: number;
+  payments: number;
   support: number;
 };
 
@@ -93,6 +95,12 @@ function buildNav(c: NavCounts): AdminNavSection[] {
           icon: "shield",
           count: c.verifications,
         },
+        {
+          label: "Parent payments",
+          href: "/admin/parents-payments",
+          icon: "transactions",
+          count: c.payments,
+        },
       ],
     },
     {
@@ -141,6 +149,7 @@ export default async function AdminLayout({
     pendingVerifications,
     pendingListings,
     openMatches,
+    unsettledPayments,
     activeOrders,
     openConversations,
     openTickets,
@@ -151,6 +160,7 @@ export default async function AdminLayout({
     countPendingVerifications(),
     countPendingListings(),
     countOpenMatches(),
+    countUnsettledPayments(),
     supabase
       .from("orders")
       .select("id", head)
@@ -181,6 +191,7 @@ export default async function AdminLayout({
           verifications: pendingVerifications,
           listings: pendingListings,
           matches: openMatches,
+          payments: unsettledPayments,
           support: openTickets,
         })}
         userName={userName}

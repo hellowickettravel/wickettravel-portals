@@ -3,8 +3,12 @@ import { getUserAndProfile } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { listMyListings } from "@/lib/actions/parents-listings";
 import { listMyMatches } from "@/lib/actions/parents-matches";
+import { getReleasedContact } from "@/lib/actions/parents-payments";
 import { ListingsView } from "@/components/customer/listings-view";
-import type { VerificationStatus } from "@/lib/parents-marketplace";
+import type {
+  ReleasedContact,
+  VerificationStatus,
+} from "@/lib/parents-marketplace";
 
 /**
  * The customer's Parents Tickets dashboard.
@@ -29,10 +33,23 @@ export default async function CustomerParentsPage() {
       .maybeSingle<{ verification_status: VerificationStatus }>(),
   ]);
 
+  // Contact details are fetched ONLY for matches already flagged released. The
+  // RPC would refuse the rest anyway, but asking only for what is unlocked
+  // keeps every other match's details out of the page's payload entirely.
+  const released = matches.filter((m) => m.match.contact_released);
+  const contacts: Record<string, ReleasedContact[]> = {};
+  await Promise.all(
+    released.map(async ({ match }) => {
+      const res = await getReleasedContact(match.id);
+      if (res.ok) contacts[match.id] = res.data;
+    })
+  );
+
   return (
     <ListingsView
       listings={listings}
       matches={matches}
+      contacts={contacts}
       verificationStatus={identity?.verification_status ?? "unverified"}
     />
   );
