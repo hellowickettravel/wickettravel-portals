@@ -214,16 +214,28 @@ per-real-IP rate limit through the relay-secret header) and
 `/admin/parents-tickets` + `[id]`, already on the product design system.
 SQL: `APPLY_PARENTS_TICKETS.sql`, `APPLY_PARENTS_PUBLIC.sql`.
 
-**Full scope (marketplace) — schema written, NOT YET APPLIED.**
-`APPLY_PARENTS_FULLSCOPE_0.sql` at the repo root adds four tables
+**Full scope (marketplace) — chunk 0 APPLIED 2026-08-09.**
+`APPLY_PARENTS_FULLSCOPE_0.sql` at the repo root added four tables
 (`parent_ticket_identities`, `parent_ticket_listings`, `parent_ticket_matches`,
 `parent_ticket_payments`), the private `parent-ticket-ids` bucket and the
-contact-release rule. It is additive — it does not touch
-`parent_ticket_enquiries`. `lib/parents-marketplace.ts` mirrors it in
-TypeScript (types, labels, and the pure `scoreMatch` ranking); **nothing
-imports it yet**, deliberately, because the DDL is not applied. Do not build
-screens on those tables until it is — that is exactly how migration 0022
-silently no-opped.
+contact-release rule. Additive — it does not touch `parent_ticket_enquiries`.
+`lib/parents-marketplace.ts` mirrors it in TypeScript (types, labels, and the
+pure `scoreMatch` ranking).
+
+**Chunk 1 — identity verification, DONE 2026-08-09.** `/customer/parents`
+("Get verified") is the traveller's side: a three-step checklist, details form
+and a private ID upload. `/admin/parents-verification` + `[id]` is the review
+queue, with a live count on the sidebar. Actions live in
+`lib/actions/parents-marketplace.ts`.
+- `email_verified` is a **cache of `auth.users.email_confirmed_at`**, not a
+  second verification system. Confirmation is ON for this project, so Auth is
+  the one source of truth; `refreshEmailVerified()` syncs it (the write needs
+  the service role because the column is admin-only by design).
+- The ID document is **never rendered back** — not even to its owner. It is
+  uploaded straight to the private bucket under `<uid>/…` (the storage policy
+  pins that first segment to `auth.uid()`), and only a reviewing admin sees it
+  via a one-hour signed URL minted on click. Nothing holds a document URL at
+  rest.
 
 Three rules that layer carries, worth knowing before extending it:
 - **RLS says which rows, a BEFORE-trigger says which columns.** An owner can
@@ -252,8 +264,10 @@ system. No provider integration.
 7. Admin portal on the Claude Design, all 18 screens — DONE (2026-08-08)
 8. Employee portal moved onto that design system, 6 phases — DONE (2026-08-08)
 9. Customer portal moved onto it, 7 phases + the two-skin retirement — DONE (2026-08-08)
-10. Parents Tickets marketplace, chunk 0 (schema) — WRITTEN 2026-08-09, awaiting
-    an SQL-editor run. See the Parents Tickets section above.
+10. Parents Tickets marketplace, chunk 0 (schema) — APPLIED 2026-08-09
+11. Parents Tickets marketplace, chunk 1 (identity verification, both sides) —
+    DONE 2026-08-09. Next: the full listing / request forms (item 2) and the
+    customer's listings dashboard (item 3), then search + matching (item 4).
 
 The **driver** portal migration is PART DONE and paused (2026-08-09). On the
 design system: the shell, Home, Job board, My rides, Earnings and their

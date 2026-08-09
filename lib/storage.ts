@@ -21,6 +21,12 @@ export const ATTACHMENT_BUCKET = "attachments";
 export const BRANDING_BUCKET = "branding";
 /** Private bucket for per-order inbox + pre-order note attachments (0016). */
 export const ORDER_ATTACHMENT_BUCKET = "order-attachments";
+/**
+ * Private bucket for Parents Tickets ID documents
+ * (APPLY_PARENTS_FULLSCOPE_0.sql). The storage policy pins every object to a
+ * folder named after the uploader's own uid, so the key MUST start `<uid>/`.
+ */
+export const ID_DOCUMENT_BUCKET = "parent-ticket-ids";
 export const MAX_ATTACHMENT_BYTES = 10 * 1024 * 1024; // 10MB
 export const ALLOWED_ATTACHMENT_TYPES = [
   "image/png",
@@ -119,6 +125,38 @@ export async function uploadOrderAttachment(
     .createSignedUrl(key, SIGNED_URL_TTL);
 
   return { ok: true, path: key, url: signed?.signedUrl ?? "", name: file.name };
+}
+
+/**
+ * Upload a Parents Tickets ID document into the PRIVATE 'parent-ticket-ids'
+ * bucket. Returns the stored PATH only — deliberately NOT a signed URL.
+ *
+ * An ID document is the most sensitive thing this product handles, so it is
+ * never rendered back to the person who uploaded it and never held in a URL
+ * that could end up in a log or a screenshot. The admin reviewing it gets a
+ * freshly signed, short-lived URL server-side at the moment they open the
+ * record (see signIdDocument in lib/actions/parents-marketplace.ts).
+ *
+ * The key is `<uid>/<file>`: the storage insert policy checks that first
+ * segment against auth.uid(), so a caller physically cannot write into anyone
+ * else's folder.
+ */
+export async function uploadIdDocument(
+  file: File,
+  profileId: string
+): Promise<{ ok: true; path: string; name: string } | { ok: false; error: string }> {
+  const valid = validateAttachment(file);
+  if (!valid.ok) return valid;
+
+  const supabase = createClient();
+  const key = objectKey(profileId, file.name);
+
+  const { error } = await supabase.storage
+    .from(ID_DOCUMENT_BUCKET)
+    .upload(key, file, { contentType: file.type, upsert: false });
+
+  if (error) return { ok: false, error: error.message };
+  return { ok: true, path: key, name: file.name };
 }
 
 /**

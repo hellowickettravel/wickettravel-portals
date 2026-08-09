@@ -455,6 +455,8 @@ export const NAV_ICONS = {
   messages: ChatIcon,
   visa: VisaIcon,
   parents: FamilyIcon,
+  /** Parents Tickets identity verification — the marketplace's trust gate. */
+  shield: ShieldIcon,
   employees: StaffIcon,
   customers: CustomersIcon,
   analytics: AnalyticsIcon,

@@ -5,6 +5,7 @@ import { getBrandLogoUrl } from "@/lib/db/branding";
 import { createClient } from "@/lib/supabase/server";
 import { countNewVisaEnquiries } from "@/lib/actions/visa";
 import { countNewParentTickets } from "@/lib/actions/parents-tickets";
+import { countPendingVerifications } from "@/lib/actions/parents-marketplace";
 import {
   AdminShell,
   type AdminNavSection,
@@ -15,6 +16,7 @@ type NavCounts = {
   messages: number;
   visa: number;
   parents: number;
+  verifications: number;
   support: number;
 };
 
@@ -69,6 +71,12 @@ function buildNav(c: NavCounts): AdminNavSection[] {
           icon: "parents",
           count: c.parents,
         },
+        {
+          label: "Verifications",
+          href: "/admin/parents-verification",
+          icon: "shield",
+          count: c.verifications,
+        },
       ],
     },
     {
@@ -114,6 +122,7 @@ export default async function AdminLayout({
     logoUrl,
     newVisaCount,
     newParentTicketCount,
+    pendingVerifications,
     activeOrders,
     openConversations,
     openTickets,
@@ -121,6 +130,7 @@ export default async function AdminLayout({
     getBrandLogoUrl(),
     countNewVisaEnquiries(),
     countNewParentTickets(),
+    countPendingVerifications(),
     supabase
       .from("orders")
       .select("id", head)
@@ -148,6 +158,7 @@ export default async function AdminLayout({
           messages: openConversations,
           visa: newVisaCount,
           parents: newParentTicketCount,
+          verifications: pendingVerifications,
           support: openTickets,
         })}
         userName={userName}
