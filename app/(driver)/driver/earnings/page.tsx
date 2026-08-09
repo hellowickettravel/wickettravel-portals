@@ -1,87 +1,117 @@
 "use client";
 
-import { Wallet, CalendarDays, CalendarRange, TrendingUp, Banknote } from "lucide-react";
-import { StatTile } from "@/components/driver/stat-tile";
 import { EarningsChart } from "@/components/driver/earnings-chart";
+import {
+  Card,
+  CardHead,
+  Kpi,
+  KpiGrid,
+  PageHead,
+  Screen,
+} from "@/components/admin/ui";
+import { PoundIcon, RouteIcon, WalletIcon } from "@/components/admin/icons";
 import {
   EARNINGS,
   EARNINGS_SUMMARY,
   EARNINGS_TREND,
-  netOf,
   inr,
+  netOf,
 } from "@/lib/driver/mock";
 
+/**
+ * Driver earnings. Money follows the system's rule everywhere on this screen:
+ * ink, tabular, never coloured — except the net figure, which is the driver's
+ * take-home and so gets the one success tint the system allows a commission.
+ */
 export default function EarningsPage() {
-  const weekNet = EARNINGS_TREND.reduce((s, d) => s + d.value, 0);
+  const weekNet = EARNINGS_TREND.reduce((sum, day) => sum + day.value, 0);
 
   return (
-    <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-500 ease-out">
-      <div>
-        <h1 className="font-display text-xl font-semibold tracking-tight text-navy sm:text-2xl">
-          Earnings
-        </h1>
-        <p className="mt-1 text-sm text-muted-foreground">
-          Your payouts after Wicket commission
-        </p>
-      </div>
+    <Screen width={1080}>
+      <PageHead
+        title="Earnings"
+        intro="Your payouts after the Wicket commission. Settled weekly, every Monday, to your registered bank account."
+      />
 
-      {/* Summary */}
-      <div className="grid grid-cols-2 gap-3">
-        <StatTile label="Today" value={inr(EARNINGS_SUMMARY.today)} icon={Wallet} accent />
-        <StatTile label="This week" value={inr(EARNINGS_SUMMARY.week)} icon={CalendarDays} />
-        <StatTile label="This month" value={inr(EARNINGS_SUMMARY.month)} icon={CalendarRange} />
-        <StatTile label="All time" value={inr(EARNINGS_SUMMARY.total)} icon={Banknote} />
-      </div>
+      <KpiGrid>
+        <Kpi
+          label="Today"
+          value={inr(EARNINGS_SUMMARY.today)}
+          meta="Net of the Wicket fee"
+          tone="ok"
+          icon={<WalletIcon size={18} />}
+        />
+        <Kpi
+          label="This week"
+          value={inr(EARNINGS_SUMMARY.week)}
+          meta="Monday to today"
+          tone="marine"
+          icon={<PoundIcon size={18} />}
+        />
+        <Kpi
+          label="This month"
+          value={inr(EARNINGS_SUMMARY.month)}
+          meta="Calendar month to date"
+          tone="marine"
+          icon={<PoundIcon size={18} />}
+        />
+        <Kpi
+          label="All time"
+          value={inr(EARNINGS_SUMMARY.total)}
+          meta="Since you joined"
+          tone="violet"
+          icon={<RouteIcon size={18} />}
+        />
+      </KpiGrid>
 
-      {/* Chart */}
-      <div className="rounded-2xl bg-card p-5 ring-1 ring-foreground/10 shadow-card">
-        <div className="mb-4 flex items-center justify-between">
-          <div>
-            <h2 className="font-display text-sm font-semibold text-navy">Last 7 days</h2>
-            <p className="text-xs text-muted-foreground">Net earnings per day</p>
-          </div>
-          <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-medium text-emerald-700">
-            <TrendingUp className="size-3.5" />
-            {inr(weekNet)}
-          </span>
+      {/* ------------------------------------------------------- the trend */}
+      <Card>
+        <CardHead
+          title="Last 7 days"
+          hint="Net earnings per day"
+          action={
+            <span className="bg-ok-bg text-ok-ink inline-flex items-center rounded-full px-3 py-1 text-[11px] font-medium whitespace-nowrap tabular-nums">
+              {inr(weekNet)} this week
+            </span>
+          }
+        />
+        <div className="px-5 py-5">
+          <EarningsChart data={EARNINGS_TREND} />
         </div>
-        <EarningsChart data={EARNINGS_TREND} />
-      </div>
+      </Card>
 
-      {/* Per-ride breakdown */}
-      <div className="rounded-2xl bg-card p-1.5 ring-1 ring-foreground/10 shadow-card">
-        <div className="flex items-center justify-between px-3.5 pb-1 pt-3">
-          <h2 className="font-display text-sm font-semibold text-navy">Recent payouts</h2>
-          <span className="text-xs text-muted-foreground">Fare − fee = net</span>
-        </div>
-        <ul className="divide-y divide-border">
-          {EARNINGS.map((e) => (
-            <li key={e.ref} className="flex items-center gap-3 px-3.5 py-3">
-              <div className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-chip text-brand-dark">
-                <Wallet className="size-[18px]" />
+      {/* ---------------------------------------------------- the payouts */}
+      <Card>
+        <CardHead title="Recent payouts" hint="Fare − Wicket fee = your net" />
+        <ul className="m-0 flex list-none flex-col p-0">
+          {EARNINGS.map((entry) => (
+            <li
+              key={entry.ref}
+              className="border-line-soft flex items-center gap-3.5 border-b px-5 py-3.5 last:border-b-0"
+            >
+              <span className="bg-marine-tint text-marine-600 flex size-9 flex-none items-center justify-center rounded-full">
+                <WalletIcon size={17} />
+              </span>
+              <div className="flex min-w-0 flex-1 flex-col">
+                <span className="text-ink-850 truncate text-[13.5px] font-medium">
+                  {entry.route}
+                </span>
+                <span className="text-ink-500 truncate text-[11.5px] font-normal tabular-nums">
+                  {entry.ref} · {entry.dateLabel}
+                </span>
               </div>
-              <div className="min-w-0 flex-1">
-                <p className="truncate text-sm font-medium text-navy">{e.route}</p>
-                <p className="text-xs text-muted-foreground">
-                  {e.ref} · {e.dateLabel}
-                </p>
-              </div>
-              <div className="text-right">
-                <p className="font-display text-sm font-semibold text-emerald-700">
-                  {inr(netOf(e))}
-                </p>
-                <p className="text-[11px] text-muted-foreground">
-                  {inr(e.fare)} − {inr(e.commission)}
-                </p>
+              <div className="flex flex-none flex-col items-end">
+                <span className="text-ok-ink text-[13.5px] font-semibold tabular-nums">
+                  {inr(netOf(entry))}
+                </span>
+                <span className="text-ink-500 text-[11.5px] font-normal tabular-nums">
+                  {inr(entry.fare)} − {inr(entry.commission)}
+                </span>
               </div>
             </li>
           ))}
         </ul>
-      </div>
-
-      <p className="text-center text-xs text-muted-foreground">
-        Payouts are settled weekly every Monday to your registered bank account.
-      </p>
-    </div>
+      </Card>
+    </Screen>
   );
 }

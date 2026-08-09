@@ -188,6 +188,14 @@ const GLYPHS = {
     ["path", { d: "M4 12h16" }],
     ["path", { d: "M12 4c2.4 2.1 3.6 4.9 3.6 8s-1.2 5.9-3.6 8c-2.4-2.1-3.6-4.9-3.6-8S9.6 6.1 12 4z" }],
   ],
+  /* Not in the design file — the driver portal has no design of its own, so
+     this is drawn to the same contract: 24-box, 1.7 stroke, round caps. */
+  car: [
+    ["path", { d: "M4.5 16.5v-3.2l1.8-4.4A1.6 1.6 0 0 1 7.8 8h8.4a1.6 1.6 0 0 1 1.5 1l1.8 4.3v3.2" }],
+    ["path", { d: "M4.5 13.5h15" }],
+    ["circle", { cx: 8, cy: 16.6, r: 1.6 }],
+    ["circle", { cx: 16, cy: 16.6, r: 1.6 }],
+  ],
   briefcase: [
     ["rect", { x: 3.5, y: 7.5, width: 17, height: 11, rx: 2 }],
     ["path", { d: "M8.5 7.5V6a1.5 1.5 0 0 1 1.5-1.5h4A1.5 1.5 0 0 1 15.5 6v1.5" }],
@@ -420,6 +428,7 @@ export const MailIcon = glyph("mail");
 export const PhoneIcon = glyph("phone");
 export const WhatsAppIcon = glyph("whatsapp");
 export const GlobeIcon = glyph("globe");
+export const CarIcon = glyph("car");
 export const BriefcaseIcon = glyph("briefcase");
 export const ShieldIcon = glyph("shield");
 export const HomeIcon = glyph("home");
@@ -455,6 +464,10 @@ export const NAV_ICONS = {
   /* Customer portal: booking a flight, and the traveller's own record. */
   book: FlightIcon,
   profile: UserIcon,
+  /* Driver portal. */
+  rides: RouteIcon,
+  earnings: WalletIcon,
+  car: CarIcon,
 } as const;
 
 export type NavIconName = keyof typeof NAV_ICONS;

@@ -1,38 +1,26 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { CalendarClock, Navigation, CircleCheck, Ban } from "lucide-react";
-import { RideCard } from "@/components/driver/ride-card";
 import { useDriverStore } from "@/lib/driver/store";
 import type { Ride } from "@/lib/driver/mock";
 import { cn } from "@/lib/utils";
+import { RideCard } from "@/components/driver/ride-card";
+import { Btn, Card, EmptyState, PageHead, Screen } from "@/components/admin/ui";
+import { CarIcon } from "@/components/admin/icons";
 
 type TabKey = "upcoming" | "active" | "completed" | "cancelled";
 
-const TAB_META: Record<
-  TabKey,
-  { label: string; empty: string; icon: typeof CalendarClock }
-> = {
+const TAB_META: Record<TabKey, { label: string; empty: string }> = {
   upcoming: {
     label: "Upcoming",
-    empty: "No upcoming rides. Accept one from the Job Board and it'll show up here.",
-    icon: CalendarClock,
+    empty: "Nothing accepted yet. Take a ride from the job board and it will show up here.",
   },
-  active: {
-    label: "Active",
-    empty: "No trip in progress right now.",
-    icon: Navigation,
-  },
+  active: { label: "Active", empty: "No trip in progress right now." },
   completed: {
     label: "Completed",
-    empty: "Your completed trips will appear here once you finish a ride.",
-    icon: CircleCheck,
+    empty: "Your finished trips land here, with what you earned on each one.",
   },
-  cancelled: {
-    label: "Cancelled",
-    empty: "No cancelled rides — nice and clean.",
-    icon: Ban,
-  },
+  cancelled: { label: "Cancelled", empty: "No cancelled rides — nice and clean." },
 };
 
 export default function MyRidesPage() {
@@ -51,25 +39,18 @@ export default function MyRidesPage() {
 
   const tabs: TabKey[] = ["upcoming", "active", "completed", "cancelled"];
   const rides = buckets[tab];
-  const EmptyIcon = TAB_META[tab].icon;
 
   return (
-    <div className="space-y-5 animate-in fade-in slide-in-from-bottom-2 duration-500 ease-out">
-      <div>
-        <h1 className="font-display text-xl font-semibold tracking-tight text-navy sm:text-2xl">
-          My Rides
-        </h1>
-        <p className="mt-1 text-sm text-muted-foreground">
-          Your accepted, active and past trips
-        </p>
-      </div>
+    <Screen width={1080}>
+      <PageHead
+        title="My rides"
+        intro="Everything you've accepted — in progress, finished and cancelled."
+      />
 
-      {/* Tabs — scrollable on phones */}
-      <div className="-mx-4 overflow-x-auto px-4 sm:mx-0 sm:px-0">
-        <div className="inline-flex w-max gap-1 rounded-xl bg-muted p-1 sm:w-full">
+      <Card>
+        <div className="border-line-soft flex flex-wrap items-center gap-2 border-b px-5 py-4">
           {tabs.map((t) => {
             const active = tab === t;
-            const count = buckets[t].length;
             return (
               <button
                 key={t}
@@ -77,54 +58,47 @@ export default function MyRidesPage() {
                 onClick={() => setTab(t)}
                 aria-pressed={active}
                 className={cn(
-                  "inline-flex h-9 flex-1 items-center justify-center gap-1.5 rounded-lg px-3 text-sm font-medium whitespace-nowrap outline-none transition-colors focus-visible:ring-2 focus-visible:ring-primary/40",
+                  "flex h-[34px] items-center gap-2 rounded-full border px-4 text-[13px] font-medium whitespace-nowrap outline-none",
                   active
-                    ? "bg-card text-navy shadow-sm"
-                    : "text-muted-foreground hover:text-foreground"
+                    ? "border-ink-800 bg-ink-800 text-white"
+                    : "border-line-field text-ink-800 hover:bg-surface-1 bg-white"
                 )}
               >
                 {TAB_META[t].label}
-                {count > 0 ? (
-                  <span
-                    className={cn(
-                      "rounded-full px-1.5 text-[10px] font-semibold",
-                      active ? "bg-chip text-brand-dark" : "bg-outline/60 text-muted-foreground"
-                    )}
-                  >
-                    {count}
-                  </span>
-                ) : null}
+                <span className="text-[11px] font-medium tabular-nums opacity-[0.66]">
+                  {buckets[t].length}
+                </span>
               </button>
             );
           })}
         </div>
-      </div>
 
-      {/* List */}
-      {rides.length === 0 ? (
-        <div className="rounded-2xl border border-dashed border-outline bg-neutral-soft/60 px-6 py-16 text-center">
-          <div className="mx-auto flex size-12 items-center justify-center rounded-2xl bg-chip text-brand-dark">
-            <EmptyIcon className="size-6" />
+        {rides.length === 0 ? (
+          <EmptyState
+            title="Nothing here yet"
+            body={TAB_META[tab].empty}
+            action={
+              tab === "upcoming" || tab === "active" ? (
+                <Btn as="link" href="/driver/jobs" variant="ember">
+                  <CarIcon size={15} />
+                  Open the job board
+                </Btn>
+              ) : undefined
+            }
+          />
+        ) : (
+          <div className="grid grid-cols-[repeat(auto-fit,minmax(320px,1fr))] gap-4 p-5">
+            {rides.map((ride) => (
+              <RideCard
+                key={ride.id}
+                ride={ride}
+                href={`/driver/rides/${ride.id}`}
+                showStatus
+              />
+            ))}
           </div>
-          <p className="mt-3 font-display text-sm font-semibold text-navy">
-            Nothing here yet
-          </p>
-          <p className="mx-auto mt-1 max-w-xs text-xs text-muted-foreground">
-            {TAB_META[tab].empty}
-          </p>
-        </div>
-      ) : (
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-          {rides.map((ride) => (
-            <RideCard
-              key={ride.id}
-              ride={ride}
-              href={`/driver/rides/${ride.id}`}
-              showStatus
-            />
-          ))}
-        </div>
-      )}
-    </div>
+        )}
+      </Card>
+    </Screen>
   );
 }

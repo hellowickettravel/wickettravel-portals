@@ -1,21 +1,34 @@
-import { Skeleton } from "@/components/ui/skeleton";
+import { Card, Screen, TableSkeleton } from "@/components/admin/ui";
 
-/** Route-transition fallback for driver screens — mirrors the card rhythm. */
+/** Route-transition fallback for driver screens, in the design's skeleton. */
 export default function DriverLoading() {
   return (
-    <div className="space-y-5">
-      <div className="space-y-2">
-        <Skeleton className="h-4 w-24" />
-        <Skeleton className="h-7 w-40" />
+    <Screen width={1080}>
+      <div className="flex animate-[wt-pulse_1.5s_ease-in-out_infinite] flex-col gap-3">
+        <span className="bg-line-field block h-5 w-[200px] rounded-full" />
+        <span className="bg-neutral-bg block h-3.5 w-[280px] rounded-full" />
       </div>
-      <Skeleton className="h-16 w-full rounded-2xl" />
-      <div className="grid grid-cols-3 gap-3">
-        <Skeleton className="h-28 rounded-2xl" />
-        <Skeleton className="h-28 rounded-2xl" />
-        <Skeleton className="h-28 rounded-2xl" />
+
+      <div className="grid grid-cols-[repeat(auto-fit,minmax(196px,1fr))] gap-4">
+        {[0, 1, 2].map((i) => (
+          <div
+            key={i}
+            style={{ animationDelay: `${i * 90}ms` }}
+            className="border-line-base flex animate-[wt-pulse_1.5s_ease-in-out_infinite] flex-col gap-3 rounded-[12px] border bg-white p-5 shadow-[0_1px_2px_oklch(0.205_0.038_258_/_0.04)]"
+          >
+            <span className="bg-neutral-bg block size-9 rounded-[10px]" />
+            <span className="bg-neutral-bg block h-2.5 w-[86px] rounded-full" />
+            <span className="bg-line-field block h-5 w-[62px] rounded-full" />
+          </div>
+        ))}
       </div>
-      <Skeleton className="h-40 w-full rounded-2xl" />
-      <Skeleton className="h-20 w-full rounded-2xl" />
-    </div>
+
+      <Card>
+        <div className="border-line-soft flex animate-[wt-pulse_1.5s_ease-in-out_infinite] items-center border-b px-5 py-4">
+          <span className="bg-line-field block h-3.5 w-[130px] rounded-full" />
+        </div>
+        <TableSkeleton rows={4} />
+      </Card>
+    </Screen>
   );
 }

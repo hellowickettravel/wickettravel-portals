@@ -1,13 +1,16 @@
 "use client";
 
-import { Switch } from "@/components/ui/switch";
 import { useDriverStore } from "@/lib/driver/store";
 import { cn } from "@/lib/utils";
+import { Toggle } from "@/components/admin/ui";
 
 /**
- * Online / Offline availability toggle. Shared across the app via the driver
- * store, so flipping it in the header also updates the dashboard hero. `size`
- * lets the dashboard render a larger, more prominent version.
+ * Online / Offline availability. Shared across the app via the driver store, so
+ * flipping it in the top bar also updates the dashboard.
+ *
+ * Availability is the one thing a driver changes constantly and the one thing
+ * that must never be ambiguous, so both sizes state it in words as well as
+ * colour: success tint when live, neutral when not.
  */
 export function OnlineToggle({
   size = "compact",
@@ -20,43 +23,51 @@ export function OnlineToggle({
 
   if (size === "full") {
     return (
-      <button
-        type="button"
-        onClick={() => setOnline(!online)}
-        aria-pressed={online}
+      <div
         className={cn(
-          "flex w-full items-center justify-between gap-3 rounded-2xl px-4 py-3.5 text-left ring-1 transition-colors outline-none focus-visible:ring-2 focus-visible:ring-primary/40",
+          "flex flex-wrap items-center justify-between gap-4 rounded-[12px] border px-5 py-4 transition-colors",
           online
-            ? "bg-emerald-50 ring-emerald-200"
-            : "bg-neutral-soft ring-outline",
+            ? "border-ok-edge bg-ok-wash"
+            : "border-line-base bg-surface-1",
           className
         )}
       >
-        <span className="flex items-center gap-3">
+        <span className="flex min-w-0 items-center gap-3.5">
           <span
             className={cn(
-              "flex size-9 items-center justify-center rounded-full",
-              online ? "bg-emerald-500/15" : "bg-slate-300/40"
+              "flex size-10 flex-none items-center justify-center rounded-full",
+              online ? "bg-ok-bg" : "bg-neutral-bg"
             )}
           >
             <span
               className={cn(
-                "size-3 rounded-full",
-                online ? "bg-emerald-500 animate-pulse" : "bg-slate-400"
+                "block size-3 rounded-full",
+                online ? "bg-ok-ink animate-pulse" : "bg-ink-450"
               )}
             />
           </span>
-          <span>
-            <span className={cn("block text-sm font-semibold", online ? "text-emerald-700" : "text-slate-600")}>
-              {online ? "You're Online" : "You're Offline"}
+          <span className="flex min-w-0 flex-col gap-0.5">
+            <span
+              className={cn(
+                "text-[13.5px] font-semibold",
+                online ? "text-ok-ink" : "text-ink-700"
+              )}
+            >
+              {online ? "You're online" : "You're offline"}
             </span>
-            <span className="block text-xs text-muted-foreground">
-              {online ? "Receiving new ride requests" : "Not receiving requests"}
+            <span className="text-ink-600 text-[12px] font-normal">
+              {online
+                ? "Receiving new ride requests"
+                : "Not receiving ride requests"}
             </span>
           </span>
         </span>
-        <Switch checked={online} onCheckedChange={setOnline} aria-label="Toggle availability" />
-      </button>
+        <Toggle
+          checked={online}
+          onChange={setOnline}
+          label="Toggle availability"
+        />
+      </div>
     );
   }
 
@@ -66,21 +77,20 @@ export function OnlineToggle({
       onClick={() => setOnline(!online)}
       aria-pressed={online}
       className={cn(
-        "inline-flex items-center gap-2 rounded-full py-1.5 pl-2.5 pr-1.5 text-xs font-semibold ring-1 transition-colors outline-none focus-visible:ring-2 focus-visible:ring-primary/40",
+        "inline-flex h-10 flex-none items-center gap-2 rounded-full border px-3.5 text-[12.5px] font-medium whitespace-nowrap outline-none transition-colors",
         online
-          ? "bg-emerald-50 text-emerald-700 ring-emerald-200"
-          : "bg-neutral-soft text-slate-600 ring-outline",
+          ? "border-ok-edge bg-ok-wash text-ok-ink"
+          : "border-line-field text-ink-600 bg-white",
         className
       )}
     >
       <span
         className={cn(
-          "size-2 rounded-full",
-          online ? "bg-emerald-500 animate-pulse" : "bg-slate-400"
+          "block size-2 flex-none rounded-full",
+          online ? "bg-ok-ink animate-pulse" : "bg-ink-450"
         )}
       />
-      <span className="hidden sm:inline">{online ? "Online" : "Offline"}</span>
-      <Switch checked={online} onCheckedChange={setOnline} size="sm" aria-label="Toggle availability" />
+      {online ? "Online" : "Offline"}
     </button>
   );
 }

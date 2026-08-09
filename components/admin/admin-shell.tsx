@@ -95,6 +95,9 @@ export function AdminShell({
   supportHref = "/admin/support",
   searchScreens = SEARCH,
   mobileTabs,
+  topBarExtra,
+  showBell = true,
+  signOutHref,
 }: {
   sections: AdminNavSection[];
   userName: string;
@@ -116,6 +119,14 @@ export function AdminShell({
    * account menu, so no destination is ever stranded.
    */
   mobileTabs?: MobileTab[];
+  /** Rendered in the top bar, left of the bell. The driver's availability
+      switch lives here — it has to be reachable from every screen. */
+  topBarExtra?: React.ReactNode;
+  /** The driver portal has no notifications table behind it yet. */
+  showBell?: boolean;
+  /** Set when the portal has no real session to end (the driver portal is
+      still UI-only): renders a link instead of the signOut server action. */
+  signOutHref?: string;
 }) {
   const pathname = usePathname();
   const router = useRouter();
@@ -282,17 +293,29 @@ export function AdminShell({
         </div>
 
         <div className="flex-none border-t border-white/[0.13] p-3">
-          <form action={signOut}>
-            <button
-              type="submit"
-              className="text-nav-ink flex h-[42px] w-full items-center gap-2.5 rounded-[10px] px-3 text-[13.5px] font-medium tracking-[0.4px] transition-colors hover:bg-white/[0.10] hover:text-white"
+          {signOutHref ? (
+            <Link
+              href={signOutHref}
+              className="text-nav-ink flex h-[42px] w-full items-center gap-2.5 rounded-[10px] px-3 text-[13.5px] font-medium tracking-[0.4px] no-underline transition-colors hover:bg-white/[0.10] hover:text-white hover:no-underline"
             >
               <span className="flex size-[18px] flex-none items-center justify-center opacity-85">
                 <SignOutIcon size={18} />
               </span>
               <span>Sign out</span>
-            </button>
-          </form>
+            </Link>
+          ) : (
+            <form action={signOut}>
+              <button
+                type="submit"
+                className="text-nav-ink flex h-[42px] w-full items-center gap-2.5 rounded-[10px] px-3 text-[13.5px] font-medium tracking-[0.4px] transition-colors hover:bg-white/[0.10] hover:text-white"
+              >
+                <span className="flex size-[18px] flex-none items-center justify-center opacity-85">
+                  <SignOutIcon size={18} />
+                </span>
+                <span>Sign out</span>
+              </button>
+            </form>
+          )}
         </div>
       </aside>
 
@@ -362,7 +385,11 @@ export function AdminShell({
 
           <div className="flex-1" />
 
-          <AdminBell userId={userId} />
+          {topBarExtra ? (
+            <div className="flex flex-none items-center">{topBarExtra}</div>
+          ) : null}
+
+          {showBell ? <AdminBell userId={userId} /> : null}
 
           <Link
             href={supportHref}
@@ -414,14 +441,23 @@ export function AdminShell({
                 >
                   {settingsLabel}
                 </Link>
-                <form action={signOut} className="border-line-soft border-t">
-                  <button
-                    type="submit"
-                    className="text-danger-ink hover:bg-surface-1 block w-full px-4 py-3 text-left text-[12.5px] font-medium"
+                {signOutHref ? (
+                  <Link
+                    href={signOutHref}
+                    className="border-line-soft text-danger-ink hover:bg-surface-1 block w-full border-t px-4 py-3 text-left text-[12.5px] font-medium no-underline hover:no-underline"
                   >
                     Sign out
-                  </button>
-                </form>
+                  </Link>
+                ) : (
+                  <form action={signOut} className="border-line-soft border-t">
+                    <button
+                      type="submit"
+                      className="text-danger-ink hover:bg-surface-1 block w-full px-4 py-3 text-left text-[12.5px] font-medium"
+                    >
+                      Sign out
+                    </button>
+                  </form>
+                )}
               </div>
             ) : null}
           </div>

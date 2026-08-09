@@ -9,7 +9,7 @@ export const metadata: Metadata = {
 /**
  * Driver Partner Portal shell (UI phase — no auth yet). Everything under
  * /driver (except the auth screens, which live outside this group) renders
- * inside the mobile-first driver app shell with shared mock state.
+ * inside the driver shell with shared mock state.
  */
 export default function DriverLayout({ children }: { children: React.ReactNode }) {
   return (
