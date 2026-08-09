@@ -6,6 +6,7 @@ import { createClient } from "@/lib/supabase/server";
 import { countNewVisaEnquiries } from "@/lib/actions/visa";
 import { countNewParentTickets } from "@/lib/actions/parents-tickets";
 import { countPendingVerifications } from "@/lib/actions/parents-marketplace";
+import { countPendingListings } from "@/lib/actions/parents-listings";
 import {
   AdminShell,
   type AdminNavSection,
@@ -17,6 +18,7 @@ type NavCounts = {
   visa: number;
   parents: number;
   verifications: number;
+  listings: number;
   support: number;
 };
 
@@ -72,6 +74,12 @@ function buildNav(c: NavCounts): AdminNavSection[] {
           count: c.parents,
         },
         {
+          label: "Parent listings",
+          href: "/admin/parents-listings",
+          icon: "board",
+          count: c.listings,
+        },
+        {
           label: "Verifications",
           href: "/admin/parents-verification",
           icon: "shield",
@@ -123,6 +131,7 @@ export default async function AdminLayout({
     newVisaCount,
     newParentTicketCount,
     pendingVerifications,
+    pendingListings,
     activeOrders,
     openConversations,
     openTickets,
@@ -131,6 +140,7 @@ export default async function AdminLayout({
     countNewVisaEnquiries(),
     countNewParentTickets(),
     countPendingVerifications(),
+    countPendingListings(),
     supabase
       .from("orders")
       .select("id", head)
@@ -159,6 +169,7 @@ export default async function AdminLayout({
           visa: newVisaCount,
           parents: newParentTicketCount,
           verifications: pendingVerifications,
+          listings: pendingListings,
           support: openTickets,
         })}
         userName={userName}

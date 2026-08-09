@@ -457,6 +457,8 @@ export const NAV_ICONS = {
   parents: FamilyIcon,
   /** Parents Tickets identity verification — the marketplace's trust gate. */
   shield: ShieldIcon,
+  /** Parents Tickets listings — a route glyph, since a listing IS a journey. */
+  board: RouteIcon,
   employees: StaffIcon,
   customers: CustomersIcon,
   analytics: AnalyticsIcon,

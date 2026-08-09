@@ -45,7 +45,8 @@ const NAV: AdminNavSection[] = [
   {
     heading: "Parents Tickets",
     items: [
-      { label: "Get verified", href: "/customer/parents", icon: "shield" },
+      { label: "My listings", href: "/customer/parents", icon: "board", exact: true },
+      { label: "Get verified", href: "/customer/parents/verify", icon: "shield" },
     ],
   },
   {

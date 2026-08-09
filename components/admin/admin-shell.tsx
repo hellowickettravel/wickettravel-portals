@@ -67,6 +67,7 @@ const SEARCH: { prefix: string; exact?: boolean; placeholder: string; label: str
   { prefix: "/admin/visa-queries", exact: true, placeholder: "Search visa queries", label: "Search visa queries" },
   { prefix: "/admin/parents-tickets", exact: true, placeholder: "Search tickets", label: "Search parent tickets" },
   { prefix: "/admin/parents-verification", exact: true, placeholder: "Search people", label: "Search verifications" },
+  { prefix: "/admin/parents-listings", exact: true, placeholder: "Search listings", label: "Search parent listings" },
   { prefix: "/admin/support", exact: true, placeholder: "Search tickets", label: "Search support tickets" },
 ];
 

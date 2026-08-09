@@ -195,6 +195,36 @@ export const ASSISTANCE_LABELS: Record<AssistanceKind, string> = {
   connection_transfer: "Help making a connection",
 };
 
+/**
+ * The language list both sides pick from.
+ *
+ * A controlled list rather than free text, because matching intersects these
+ * two arrays directly — "Punjabi", "punjabi" and "Panjabi" typed freehand
+ * would never meet. Ordered by how often they come up on this business's
+ * routes, not alphabetically.
+ */
+export const LANGUAGES = [
+  "English",
+  "Hindi",
+  "Punjabi",
+  "Urdu",
+  "Gujarati",
+  "Bengali",
+  "Tamil",
+  "Telugu",
+  "Malayalam",
+  "Marathi",
+  "Arabic",
+  "Pashto",
+  "Farsi",
+  "Somali",
+  "Turkish",
+  "Polish",
+  "Portuguese",
+  "Spanish",
+  "French",
+] as const;
+
 export type ParentTicketListing = {
   id: string;
   reference_number: string;

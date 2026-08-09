@@ -222,11 +222,11 @@ contact-release rule. Additive — it does not touch `parent_ticket_enquiries`.
 `lib/parents-marketplace.ts` mirrors it in TypeScript (types, labels, and the
 pure `scoreMatch` ranking).
 
-**Chunk 1 — identity verification, DONE 2026-08-09.** `/customer/parents`
-("Get verified") is the traveller's side: a three-step checklist, details form
-and a private ID upload. `/admin/parents-verification` + `[id]` is the review
-queue, with a live count on the sidebar. Actions live in
-`lib/actions/parents-marketplace.ts`.
+**Chunk 1 — identity verification, DONE 2026-08-09.**
+`/customer/parents/verify` ("Get verified") is the traveller's side: a
+three-step checklist, details form and a private ID upload.
+`/admin/parents-verification` + `[id]` is the review queue, with a live count
+on the sidebar. Actions live in `lib/actions/parents-marketplace.ts`.
 - `email_verified` is a **cache of `auth.users.email_confirmed_at`**, not a
   second verification system. Confirmation is ON for this project, so Auth is
   the one source of truth; `refreshEmailVerified()` syncs it (the write needs
@@ -236,6 +236,27 @@ queue, with a live count on the sidebar. Actions live in
   pins that first segment to `auth.uid()`), and only a reviewing admin sees it
   via a one-hour signed URL minted on click. Nothing holds a document URL at
   rest.
+
+**Chunk 2 — listings, the dashboard and the approval workflow, DONE
+2026-08-09.** `/customer/parents` is now the dashboard (item 3), with
+`new`, `[id]` and `[id]/edit` under it; `/admin/parents-listings` + `[id]` is
+the review queue. Actions live in `lib/actions/parents-listings.ts`.
+- **One form, both kinds.** `listing-form.tsx` writes a traveller listing or a
+  parent request from the same sectioned page — the two sides share route,
+  date, languages and fee, and only the middle section differs. Switching kind
+  blanks the other side rather than leaving stale values on a record that no
+  longer shows them.
+- Assistance types and languages are **controlled lists** (`ASSISTANCE_KINDS`,
+  `LANGUAGES`), not free text, because `scoreMatch` intersects the two arrays
+  directly — freehand "Punjabi"/"panjabi" would never meet.
+- A listing can be **drafted** unverified but not **sent**: the gate is in
+  `submitListing()`, not the database. Every listing is reviewed by a human who
+  can see the poster's verification state, so an unverified record reaching the
+  queue is untidy rather than unsafe. Revisit if listings ever auto-approve.
+- `parent_ticket_listings` and `parent_ticket_identities` both hang off
+  `profiles` but have **no FK between them**, so PostgREST cannot embed one in
+  the other ("Could not find a relationship"). `withIdentities()` stitches the
+  verification status on in a second query.
 
 Three rules that layer carries, worth knowing before extending it:
 - **RLS says which rows, a BEFORE-trigger says which columns.** An owner can
@@ -266,8 +287,11 @@ system. No provider integration.
 9. Customer portal moved onto it, 7 phases + the two-skin retirement — DONE (2026-08-08)
 10. Parents Tickets marketplace, chunk 0 (schema) — APPLIED 2026-08-09
 11. Parents Tickets marketplace, chunk 1 (identity verification, both sides) —
-    DONE 2026-08-09. Next: the full listing / request forms (item 2) and the
-    customer's listings dashboard (item 3), then search + matching (item 4).
+    DONE 2026-08-09
+12. Parents Tickets marketplace, chunk 2 (listing + request forms, the customer
+    dashboard, the admin approval workflow) — DONE 2026-08-09. Next: search +
+    matching (item 4), then contact release + manual payments (items 6 and 7),
+    which are the last two things the chunk 0 schema is already waiting for.
 
 The **driver** portal migration is PART DONE and paused (2026-08-09). On the
 design system: the shell, Home, Job board, My rides, Earnings and their

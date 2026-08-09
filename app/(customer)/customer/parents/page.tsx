@@ -1,51 +1,36 @@
 import { redirect } from "next/navigation";
 import { getUserAndProfile } from "@/lib/auth";
-import {
-  getOrCreateMyIdentity,
-  refreshEmailVerified,
-} from "@/lib/actions/parents-marketplace";
-import { VerificationView } from "@/components/customer/verification-view";
-import { Card, EmptyState, PageHead, Screen } from "@/components/admin/ui";
+import { createClient } from "@/lib/supabase/server";
+import { listMyListings } from "@/lib/actions/parents-listings";
+import { ListingsView } from "@/components/customer/listings-view";
+import type { VerificationStatus } from "@/lib/parents-marketplace";
 
 /**
- * Parents Tickets — the traveller's verification screen.
+ * The customer's Parents Tickets dashboard.
  *
- * Two writes happen on render, both deliberate: the identity record is created
- * on first visit, and email_verified is synced from Supabase Auth. Opening
- * "Get verified" IS the intent to start, and a stale email flag would show the
- * reviewing admin something untrue — so neither belongs behind a button.
+ * The verification state is read directly rather than through
+ * getOrCreateMyIdentity — this page only needs to KNOW the status, and a
+ * dashboard should not create a record as a side effect of being looked at.
+ * Starting verification happens on /customer/parents/verify.
  */
 export default async function CustomerParentsPage() {
   const { user } = await getUserAndProfile();
   if (!user) redirect("/login");
 
-  const [identity] = await Promise.all([
-    getOrCreateMyIdentity(),
-    refreshEmailVerified(),
+  const supabase = await createClient();
+  const [listings, { data: identity }] = await Promise.all([
+    listMyListings(),
+    supabase
+      .from("parent_ticket_identities")
+      .select("verification_status")
+      .eq("profile_id", user.id)
+      .maybeSingle<{ verification_status: VerificationStatus }>(),
   ]);
 
-  if (!identity.ok) {
-    return (
-      <Screen>
-        <PageHead
-          title="Get verified"
-          intro="Parents Tickets checks everyone by hand before they appear on the board."
-        />
-        <Card>
-          <EmptyState
-            title="Verification isn't available yet"
-            body={`We couldn't open your verification record. ${identity.error}`}
-          />
-        </Card>
-      </Screen>
-    );
-  }
-
   return (
-    <VerificationView
-      identity={identity.data}
-      accountEmail={user.email ?? ""}
-      emailConfirmed={!!user.email_confirmed_at}
+    <ListingsView
+      listings={listings}
+      verificationStatus={identity?.verification_status ?? "unverified"}
     />
   );
 }
