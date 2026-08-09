@@ -3,6 +3,8 @@
 import Link from "next/link";
 import { cn } from "@/lib/utils";
 import { fmtDate } from "@/lib/format";
+import { MatchList } from "@/components/customer/match-list";
+import type { MyMatch } from "@/lib/actions/parents-matches";
 import {
   LISTING_KIND_LABELS,
   LISTING_STATUS_LABELS,
@@ -55,9 +57,11 @@ export const LISTING_TONE: Record<ListingStatus, PillTone> = {
  */
 export function ListingsView({
   listings,
+  matches,
   verificationStatus,
 }: {
   listings: ParentTicketListing[];
+  matches: MyMatch[];
   verificationStatus: VerificationStatus;
 }) {
   const verified = verificationStatus === "verified";
@@ -203,6 +207,11 @@ export function ListingsView({
           </ul>
         )}
       </Card>
+
+      {/* ---------------------------------------------------- the matches */}
+      {listings.length > 0 || matches.length > 0 ? (
+        <MatchList matches={matches} />
+      ) : null}
 
       {/* ------------------------------------------------------ what's next */}
       <Card>

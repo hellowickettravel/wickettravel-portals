@@ -258,6 +258,25 @@ the review queue. Actions live in `lib/actions/parents-listings.ts`.
   the other ("Could not find a relationship"). `withIdentities()` stitches the
   verification status on in a second query.
 
+**Chunk 3 — search, ranking and matches, DONE 2026-08-09.**
+`/admin/parents-matches` + `[id]` is the queue; ranked candidates appear on an
+approved listing's review screen; the customer sees and answers their matches
+on `/customer/parents`. Actions live in `lib/actions/parents-matches.ts`.
+- **Matching is admin-driven by design.** The database refuses a party-created
+  match outright, because an introduction here is a brokered service someone is
+  paid for. A customer can only accept or decline.
+- **A score ranks, it never authorises.** `scoreMatch` runs in TypeScript, not
+  SQL, because it weighs five signals and has to explain itself in words; the
+  pool is narrowed in the DB first (opposite kind, approved, ±14 days). The
+  score on a match is recomputed server-side, never taken from the client.
+- The match screens fetch the owner's **name only** — no email. An admin is
+  entitled to it and it is one click away on the listing, but a column selected
+  here rides along in the RSC payload whether or not it is rendered, so it is
+  not fetched at all. The customer's own match view shows the counterparty with
+  no name either: flight, help and fee are enough to decide on.
+- Contact release is still **not built** — chunk 4, together with manual
+  payments. Accepting does not release anything.
+
 Three rules that layer carries, worth knowing before extending it:
 - **RLS says which rows, a BEFORE-trigger says which columns.** An owner can
   edit their own listing but silently cannot approve or publish it — the guard
@@ -289,9 +308,10 @@ system. No provider integration.
 11. Parents Tickets marketplace, chunk 1 (identity verification, both sides) —
     DONE 2026-08-09
 12. Parents Tickets marketplace, chunk 2 (listing + request forms, the customer
-    dashboard, the admin approval workflow) — DONE 2026-08-09. Next: search +
-    matching (item 4), then contact release + manual payments (items 6 and 7),
-    which are the last two things the chunk 0 schema is already waiting for.
+    dashboard, the admin approval workflow) — DONE 2026-08-09
+13. Parents Tickets marketplace, chunk 3 (search, ranking, matches and party
+    responses) — DONE 2026-08-09. Next: contact release + manual payments
+    (items 6 and 7) — one chunk, since release is gated on a recorded payment.
 
 The **driver** portal migration is PART DONE and paused (2026-08-09). On the
 design system: the shell, Home, Job board, My rides, Earnings and their

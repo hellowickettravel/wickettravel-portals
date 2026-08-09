@@ -459,6 +459,8 @@ export const NAV_ICONS = {
   shield: ShieldIcon,
   /** Parents Tickets listings — a route glyph, since a listing IS a journey. */
   board: RouteIcon,
+  /** Parents Tickets matches — two people paired. */
+  match: FamilyIcon,
   employees: StaffIcon,
   customers: CustomersIcon,
   analytics: AnalyticsIcon,

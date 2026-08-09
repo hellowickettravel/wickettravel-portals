@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { getUserAndProfile } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { listMyListings } from "@/lib/actions/parents-listings";
+import { listMyMatches } from "@/lib/actions/parents-matches";
 import { ListingsView } from "@/components/customer/listings-view";
 import type { VerificationStatus } from "@/lib/parents-marketplace";
 
@@ -18,8 +19,9 @@ export default async function CustomerParentsPage() {
   if (!user) redirect("/login");
 
   const supabase = await createClient();
-  const [listings, { data: identity }] = await Promise.all([
+  const [listings, matches, { data: identity }] = await Promise.all([
     listMyListings(),
+    listMyMatches(),
     supabase
       .from("parent_ticket_identities")
       .select("verification_status")
@@ -30,6 +32,7 @@ export default async function CustomerParentsPage() {
   return (
     <ListingsView
       listings={listings}
+      matches={matches}
       verificationStatus={identity?.verification_status ?? "unverified"}
     />
   );

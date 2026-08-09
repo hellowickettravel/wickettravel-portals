@@ -20,6 +20,8 @@ import {
   type AdminListingRow,
 } from "@/lib/actions/parents-listings";
 import { LISTING_TONE } from "@/components/customer/listings-view";
+import { MatchCandidates } from "@/components/admin/match-candidates";
+import type { Candidate } from "@/lib/actions/parents-matches";
 import {
   Avatar,
   BackLink,
@@ -52,7 +54,14 @@ import {
  * they haven't, rather than silently dropping the flag the way the database
  * would.
  */
-export function ListingReview({ record }: { record: AdminListingRow }) {
+export function ListingReview({
+  record,
+  candidates,
+}: {
+  record: AdminListingRow;
+  /** Ranked counterparts, computed server-side. Empty until approved. */
+  candidates: Candidate[];
+}) {
   const router = useRouter();
 
   const [busy, setBusy] = useState<string | null>(null);
@@ -66,6 +75,7 @@ export function ListingReview({ record }: { record: AdminListingRow }) {
     "unverified") as VerificationStatus;
   const verified = verification === "verified";
   const pending = status === "pending_review";
+  const matchable = status === "approved" || status === "matched";
 
   const assistance = (
     isTraveller ? record.assistance_offered : record.assistance_needed
@@ -375,6 +385,18 @@ export function ListingReview({ record }: { record: AdminListingRow }) {
           </Card>
         ) : null}
       </div>
+
+      <MatchCandidates
+        candidates={candidates}
+        subjectKind={record.listing_kind}
+        subjectId={record.id}
+        canMatch={matchable}
+        blockedReason={
+          matchable
+            ? undefined
+            : "Only an approved listing can be matched. Approve this one and its ranked candidates appear here."
+        }
+      />
 
       <p className="text-ink-500 m-0 text-[12px] font-normal">
         {LISTING_KIND_LABELS[record.listing_kind]} · created{" "}
