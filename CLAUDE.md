@@ -196,6 +196,52 @@ type pairing from the portal interior. Both live side by side:
 - Orders carry a human order number (e.g. `#7343490`) and a lifecycle status: `new → in_progress → completed / cancelled`. Customers cannot send messages on a completed/cancelled order — enforced server-side via RLS, not just the UI.
 - Realtime is enabled (publication `supabase_realtime`) on conversations, messages, orders, order_messages and order_attachments. RLS scopes every stream: admin sees everything, employee sees only assigned orders/conversations, customer sees only their own.
 
+## Parents Tickets
+A second product line inside the same portal: matching a traveller who can
+assist an elderly parent en route with someone who needs that help.
+
+**There is no public marketing site in this repo.** `app/page.tsx` is a
+redirect to `/login`. The homepage that carries the lead form and the masked
+listings board is a SEPARATE deployment (`https://wicket-travel.vercel.app`);
+this repo only owns the API it calls and the admin screens. So "check the
+homepage form" can never be answered from here — only the endpoint can.
+
+**Basic scope — LIVE.** `parent_ticket_enquiries`, refs `#PT-1001`.
+`POST /api/parent-ticket` (service-role write after validation, CORS-pinned,
+per-real-IP rate limit through the relay-secret header) and
+`GET /api/parent-ticket/public` (an explicit column allowlist, names masked by
+`maskDisplayName`, gated on `is_public AND consent_public`). Admin screens are
+`/admin/parents-tickets` + `[id]`, already on the product design system.
+SQL: `APPLY_PARENTS_TICKETS.sql`, `APPLY_PARENTS_PUBLIC.sql`.
+
+**Full scope (marketplace) — schema written, NOT YET APPLIED.**
+`APPLY_PARENTS_FULLSCOPE_0.sql` at the repo root adds four tables
+(`parent_ticket_identities`, `parent_ticket_listings`, `parent_ticket_matches`,
+`parent_ticket_payments`), the private `parent-ticket-ids` bucket and the
+contact-release rule. It is additive — it does not touch
+`parent_ticket_enquiries`. `lib/parents-marketplace.ts` mirrors it in
+TypeScript (types, labels, and the pure `scoreMatch` ranking); **nothing
+imports it yet**, deliberately, because the DDL is not applied. Do not build
+screens on those tables until it is — that is exactly how migration 0022
+silently no-opped.
+
+Three rules that layer carries, worth knowing before extending it:
+- **RLS says which rows, a BEFORE-trigger says which columns.** An owner can
+  edit their own listing but silently cannot approve or publish it — the guard
+  restores the old value rather than raising, so a hostile client gets a no-op.
+- **`is_privileged_writer()` and every `tg_guard_*` are SECURITY INVOKER, and
+  that is load-bearing.** Inside a SECURITY DEFINER function `current_user` is
+  the *owner*, so a DEFINER version reads `postgres` and returns true for
+  everyone, disabling every guard. Only `is_admin()` is DEFINER, because it
+  alone must read past `profiles`' RLS.
+- **Contact details have exactly one route:** the
+  `parent_ticket_match_contact(match_id)` RPC, which returns nothing unless the
+  match is released AND the caller is a party. There is no policy, view or
+  column that exposes a counterparty's email or phone.
+
+Payments are Stage A only — an admin records money that moved outside the
+system. No provider integration.
+
 ## Build order
 1. Auth + login + role-based redirect — DONE
 2. Employee portal: chat inbox UI + internal realtime send — DONE
@@ -206,9 +252,17 @@ type pairing from the portal interior. Both live side by side:
 7. Admin portal on the Claude Design, all 18 screens — DONE (2026-08-08)
 8. Employee portal moved onto that design system, 6 phases — DONE (2026-08-08)
 9. Customer portal moved onto it, 7 phases + the two-skin retirement — DONE (2026-08-08)
+10. Parents Tickets marketplace, chunk 0 (schema) — WRITTEN 2026-08-09, awaiting
+    an SQL-editor run. See the Parents Tickets section above.
 
-Still on navy/orange: the **driver** portal (`components/driver/*`), untouched
-throughout and the only remaining consumer of `components/ui/` and lucide.
+The **driver** portal migration is PART DONE and paused (2026-08-09). On the
+design system: the shell, Home, Job board, My rides, Earnings and their
+components. Still on navy/orange and still importing `components/ui/` + lucide:
+`messages`, `profile`, `rides/[id]`, and the two auth screens under
+`app/(driver-auth)/`. `DriverShell` wraps `AdminShell` in `<Suspense>` — the
+driver group has no auth layout, so its pages prerender and `useSearchParams`
+needs the bail-out boundary. Driver mock data is ₹ / India-based while the rest
+of the business is UK / £; that is a content decision still open.
 
 ## Rules
 - One feature at a time. Keep code clean and typed.
