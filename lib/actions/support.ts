@@ -2,6 +2,7 @@
 
 import { getUserAndProfile } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
+import { tooManyRecentRows } from "@/lib/security/rate-limit";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { LIMITS, sanitizeLine, sanitizeText } from "@/lib/security/limits";
 import type { SupportTicket, SupportTicketStatus } from "@/lib/db/types";
@@ -35,6 +36,20 @@ export async function createSupportTicket(input: {
 }): Promise<ActionResult> {
   const { user } = await getUserAndProfile();
   if (!user) return { ok: false, error: "Unauthorized" };
+
+  // One person opening dozens of tickets an hour is either a bug or abuse;
+  // either way the queue shouldn't absorb it. Fail-open.
+  if (
+    await tooManyRecentRows({
+      table: "support_tickets",
+      column: "employee_id",
+      value: user.id,
+      windowSec: 60 * 60,
+      max: 10,
+    })
+  ) {
+    return { ok: false, error: "You've opened several tickets already — we'll reply to those first." };
+  }
 
   const subject = sanitizeLine(input.subject, LIMITS.SUPPORT_SUBJECT);
   const message = sanitizeText(input.message, LIMITS.SUPPORT_BODY).trim();
@@ -76,6 +91,20 @@ export async function createCustomerSupportTicket(input: {
   if (!user) return { ok: false, error: "Unauthorized" };
   // Customer portal only — keeps submitter_role honest.
   if (profile?.role !== "customer") return { ok: false, error: "Unauthorized" };
+
+  // One person opening dozens of tickets an hour is either a bug or abuse;
+  // either way the queue shouldn't absorb it. Fail-open.
+  if (
+    await tooManyRecentRows({
+      table: "support_tickets",
+      column: "customer_id",
+      value: user.id,
+      windowSec: 60 * 60,
+      max: 10,
+    })
+  ) {
+    return { ok: false, error: "You've opened several tickets already — we'll reply to those first." };
+  }
 
   const subject = sanitizeLine(input.subject, LIMITS.SUPPORT_SUBJECT);
   const message = sanitizeText(input.message, LIMITS.SUPPORT_BODY).trim();

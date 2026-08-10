@@ -385,6 +385,44 @@ driver group has no auth layout, so its pages prerender and `useSearchParams`
 needs the bail-out boundary. Driver mock data is ₹ / India-based while the rest
 of the business is UK / £; that is a content decision still open.
 
+## Production readiness (audited 2026-08-10)
+
+A page-by-page functional audit drove all three portals as each role — 41
+screens, every one HTTP 200. It found exactly one functional bug; the rest of
+the work was polish, security and scale.
+
+- **`lib/supabase/client.ts` is a per-tab SINGLETON, and that is load-bearing.**
+  It used to return a fresh client per call, and each client opens its OWN
+  Realtime WebSocket — the always-mounted bell plus a per-screen channel meant
+  2–3 sockets per session. At 100 concurrent users that is 200–300 connections
+  against a ceiling of 200. Never go back to constructing one per component.
+- **A page that only redirects must do it in `next.config.ts`, not with a
+  server `redirect()`.** `/admin/messages/:id` redirecting into the SAME layout
+  tree threw "Rendered more hooks than during the previous render" from Next's
+  own Router. Routing-layer redirects never reach React.
+- Motion lives in `globals.css` (`wt-enter`, `wt-route`, `wt-row`) and is
+  neutralised wholesale by the existing `prefers-reduced-motion` block. Each
+  portal has a `template.tsx` (page entrance — a layout would fire once) and an
+  `error.tsx` (so a crash keeps the shell instead of falling to the root
+  boundary). `components/admin/nav-progress.tsx` uses `useLinkStatus` to answer
+  "did my click land?" on the item actually clicked.
+- The toast is the product's own (`components/ui/sonner.tsx` +
+  `toast-icons.tsx`), not sonner's default: Instrument Sans, 12px radius, our
+  shadow, the design's glyphs, offset clear of the 64px top bar.
+- **All 114 server actions authenticate** — verified by sweeping every
+  `export async function` in `lib/actions/`. `auth-guard` and `signOut` are
+  pre-auth by design.
+- Rate limiting uses `tooManyRecentRows()` from `lib/security/rate-limit.ts`
+  (fail-open). Covered: login/signup, messages, orders, listings, support
+  tickets. Add it to any new public-reachable write.
+- A replaced ID document is **deleted** from storage — an ID somebody already
+  superseded sitting there indefinitely is a retention problem, not a backup.
+
+Known and accepted at this scale: `listCustomersWithStats` reads every order
+and conversation row to count them (2 columns, fine into the thousands; revisit
+past ~50k). Detail routes share their portal's `loading.tsx` rather than each
+having a bespoke skeleton.
+
 ## Rules
 - One feature at a time. Keep code clean and typed.
 - Use the locked palette + fonts everywhere.

@@ -14,6 +14,26 @@ import type { NextConfig } from "next";
  * The Supabase origin is derived from NEXT_PUBLIC_SUPABASE_URL so connect-src
  * matches whatever project this deploys against.
  */
+/**
+ * Path rewrites that must happen BEFORE React renders.
+ *
+ * /admin/messages/:id is a legacy deep link (notifications, an order's "open
+ * chat") into what is now a single two-pane inbox. Doing that with a server
+ * `redirect()` inside the page threw "Rendered more hooks than during the
+ * previous render" from Next's own Router — redirecting into the SAME layout
+ * tree remounts the shell mid-render. A routing-layer redirect never reaches
+ * React at all, and is a round trip faster.
+ */
+async function redirects() {
+  return [
+    {
+      source: "/admin/messages/:id",
+      destination: "/admin/messages?c=:id",
+      permanent: false,
+    },
+  ];
+}
+
 function supabaseOrigin(): string {
   try {
     const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -75,6 +95,7 @@ const securityHeaders = [
 ];
 
 const nextConfig: NextConfig = {
+  redirects,
   // Don't advertise the framework — trims a header off every response.
   poweredByHeader: false,
   // Barrel-import optimization: pull ONLY the icons/components actually used

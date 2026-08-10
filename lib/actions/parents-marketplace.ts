@@ -153,6 +153,14 @@ export async function recordIdDocument(input: {
   }
 
   const supabase = await createClient();
+
+  // What is being replaced, if anything.
+  const { data: current } = await supabase
+    .from("parent_ticket_identities")
+    .select("id_document_path")
+    .eq("profile_id", me.user.id)
+    .maybeSingle<{ id_document_path: string | null }>();
+
   const { error } = await supabase
     .from("parent_ticket_identities")
     .update({
@@ -163,6 +171,17 @@ export async function recordIdDocument(input: {
     .eq("profile_id", me.user.id);
 
   if (error) return { ok: false, error: error.message };
+
+  // Delete the superseded document. Nothing references it any more, and an ID
+  // that someone has already replaced sitting in storage indefinitely is a
+  // retention problem, not a backup — the record only ever points at one file.
+  // Best-effort: the new document is saved either way, and a failed cleanup
+  // must not read to the person as a failed upload.
+  const previous = current?.id_document_path;
+  if (previous && previous !== input.path && previous.startsWith(`${me.user.id}/`)) {
+    await supabase.storage.from(ID_DOCUMENT_BUCKET).remove([previous]);
+  }
+
   return { ok: true };
 }
 

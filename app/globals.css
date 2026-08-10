@@ -570,3 +570,78 @@
   );
   background-size: 22px 22px;
 }
+
+/* ---------------------------------------------------------------- motion --
+   Three animations the product interior leans on. All of them are neutralised
+   by the reduced-motion block above, which zeroes every duration globally —
+   so nothing here needs its own guard.
+
+   The rule they follow: motion exists to explain a change (something arrived,
+   something is loading, something you pressed responded), never to decorate.
+   Durations stay under 400ms and easing is the design's own
+   cubic-bezier(0.16, 1, 0.3, 1) so a fast worker never waits on a flourish. */
+
+/* The navigation bar at the top of the viewport. Eases toward 90% and stops:
+   it completes by UNMOUNTING when the route arrives, so it cannot claim to be
+   finished while the page is still on its way. */
+@keyframes wt-route {
+  from {
+    transform: scaleX(0.02);
+  }
+  60% {
+    transform: scaleX(0.72);
+  }
+  to {
+    transform: scaleX(0.93);
+  }
+}
+
+/* Page entrance, fired by each portal's template.tsx on every navigation.
+   Small on purpose — 6px and 260ms reads as "this is new" without making
+   someone wait to read it. */
+@keyframes wt-enter {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.wt-page-enter {
+  animation: wt-enter 260ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+/* Rows arriving in a list. The delay is set inline per row and capped so a
+   long table never turns into a slow cascade. */
+@keyframes wt-row {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.wt-row-enter {
+  animation: wt-row 220ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+/* Sonner's own enter/exit are replaced so the toast moves like the rest of the
+   product rather than like the library. */
+[data-sonner-toast] {
+  animation: wt-enter 240ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+[data-sonner-toast][data-removed="true"] {
+  animation: wt-toast-out 180ms ease-in both;
+}
+@keyframes wt-toast-out {
+  to {
+    opacity: 0;
+    transform: translateY(-6px) scale(0.98);
+  }
+}

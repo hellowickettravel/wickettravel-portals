@@ -2,6 +2,7 @@
 
 import { getUserAndProfile } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
+import { tooManyRecentRows } from "@/lib/security/rate-limit";
 import {
   ASSISTANCE_KINDS,
   LANGUAGES,
@@ -215,6 +216,25 @@ export async function createListing(
 
   const valid = validate(input);
   if (!valid.ok) return valid;
+
+  // Abuse throttle. A real person posts a handful of these a month; a script
+  // could otherwise fill the review queue and the table overnight. Generous
+  // enough that nobody legitimate meets it, and fail-open so an infra hiccup
+  // never blocks a genuine listing.
+  if (
+    await tooManyRecentRows({
+      table: "parent_ticket_listings",
+      column: "profile_id",
+      value: me.user.id,
+      windowSec: 60 * 60,
+      max: 12,
+    })
+  ) {
+    return {
+      ok: false,
+      error: "That's a lot of listings in one go — try again in an hour.",
+    };
+  }
 
   const supabase = await createClient();
   const { data, error } = await supabase

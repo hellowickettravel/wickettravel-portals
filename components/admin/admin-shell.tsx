@@ -9,6 +9,11 @@ import { cn } from "@/lib/utils";
 import { AdminBell } from "@/components/admin/admin-bell";
 import { shadowE3 } from "@/components/admin/ui";
 import {
+  LinkPending,
+  LinkSpinner,
+  LinkTopBar,
+} from "@/components/admin/nav-progress";
+import {
   LifebuoyIcon,
   NAV_ICONS,
   SearchIcon,
@@ -267,27 +272,35 @@ export function AdminShell({
                             )
                       )}
                     >
-                      <span
-                        className={cn(
-                          "flex size-[18px] flex-none items-center justify-center",
-                          active ? "opacity-100" : "opacity-[0.78]"
-                        )}
-                      >
-                        <Icon size={18} />
-                      </span>
-                      <span className="flex min-w-0 flex-1 items-start gap-0.5">
-                        <span className="min-w-0 truncate">{item.label}</span>
-                        {item.count ? (
-                          <span
-                            className={cn(
-                              "-mt-0.5 flex-none text-[10px] leading-none font-bold tracking-normal tabular-nums",
-                              active ? "text-nav-count-on" : "text-nav-count"
-                            )}
-                          >
-                            {item.count > 9 ? "9+" : item.count}
-                          </span>
-                        ) : null}
-                      </span>
+                      {/* Answers "did my click land?" on the item that was
+                          actually clicked — the route itself can be a few
+                          hundred ms away, and an unmoving row reads as a dead
+                          button rather than as loading. */}
+                      <LinkTopBar />
+                      <LinkPending>
+                        <span
+                          className={cn(
+                            "flex size-[18px] flex-none items-center justify-center",
+                            active ? "opacity-100" : "opacity-[0.78]"
+                          )}
+                        >
+                          <Icon size={18} />
+                        </span>
+                        <span className="flex min-w-0 flex-1 items-start gap-0.5">
+                          <span className="min-w-0 truncate">{item.label}</span>
+                          {item.count ? (
+                            <span
+                              className={cn(
+                                "-mt-0.5 flex-none text-[10px] leading-none font-bold tracking-normal tabular-nums",
+                                active ? "text-nav-count-on" : "text-nav-count"
+                              )}
+                            >
+                              {item.count > 9 ? "9+" : item.count}
+                            </span>
+                          ) : null}
+                        </span>
+                        <LinkSpinner />
+                      </LinkPending>
                     </Link>
                   );
                 })}
@@ -511,6 +524,7 @@ function TabBar({ tabs, pathname }: { tabs: MobileTab[]; pathname: string }) {
                   aria-current={active ? "page" : undefined}
                   className="bg-ember-600 hover:bg-ember-700 -mt-7 flex size-[56px] flex-none items-center justify-center rounded-full text-white no-underline shadow-[0_8px_20px_oklch(0.565_0.172_47_/_0.34)] ring-4 ring-white transition-colors hover:no-underline active:scale-95"
                 >
+                  <LinkTopBar />
                   <Icon size={24} />
                 </Link>
               </div>
@@ -527,8 +541,11 @@ function TabBar({ tabs, pathname }: { tabs: MobileTab[]; pathname: string }) {
                 active ? "text-marine-600" : "text-ink-500"
               )}
             >
-              <Icon size={21} />
-              <span className="truncate">{t.label}</span>
+              <LinkTopBar />
+              <LinkPending>
+                <Icon size={21} />
+                <span className="truncate">{t.label}</span>
+              </LinkPending>
             </Link>
           );
         })}

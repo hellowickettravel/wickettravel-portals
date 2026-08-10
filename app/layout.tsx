@@ -64,7 +64,9 @@ export default function RootLayout({
           <link rel="preconnect" href={supabaseOrigin} crossOrigin="anonymous" />
         ) : null}
         <Providers>{children}</Providers>
-        <Toaster richColors position="top-right" />
+        {/* Styling lives in components/ui/sonner.tsx — the product's own,
+            not the library's defaults. */}
+        <Toaster />
       </body>
     </html>
   );
