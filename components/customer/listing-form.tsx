@@ -90,17 +90,33 @@ function toInput(listing: ParentTicketListing | null, kind: ListingKind): Listin
 export function ListingForm({
   listing,
   initialKind = "traveller",
+  basePath = "/customer/parents",
+  lockKind,
 }: {
   /** null when creating. */
   listing: ParentTicketListing | null;
   initialKind?: ListingKind;
+  /** Where this portal's Parents Tickets area lives. */
+  basePath?: string;
+  /**
+   * Fix the side and hide the chooser. The helper portal is only ever the
+   * traveller and the customer portal only ever the requester, so in both the
+   * question "which side are you on?" is answered by being there at all.
+   */
+  lockKind?: ListingKind;
 }) {
   const router = useRouter();
-  const [form, setForm] = useState<ListingInput>(() => toInput(listing, initialKind));
+  const [form, setForm] = useState<ListingInput>(() =>
+    toInput(listing, lockKind ?? initialKind)
+  );
   const [saving, setSaving] = useState(false);
 
   const isTraveller = form.listingKind === "traveller";
   const editing = !!listing;
+  // A helper posts a "trip"; a family posts a "request". Same record, and the
+  // word people actually use for it differs.
+  const noun = lockKind === "traveller" ? "trip" : lockKind ? "request" : "listing";
+  const backLabel = lockKind === "traveller" ? "My trips" : "My listings";
 
   function set<K extends keyof ListingInput>(key: K, value: ListingInput[K]) {
     setForm((f) => ({ ...f, [key]: value }));
@@ -130,7 +146,7 @@ export function ListingForm({
         return;
       }
       toast.success("Listing saved");
-      router.push(`/customer/parents/${listing.id}`);
+      router.push(`${basePath}/${listing.id}`);
       return;
     }
 
@@ -141,7 +157,7 @@ export function ListingForm({
       return;
     }
     toast.success(`Draft saved — ${res.data.reference}`);
-    router.push(`/customer/parents/${res.data.id}`);
+    router.push(`${basePath}/${res.data.id}`);
   }
 
   const assistanceKey = isTraveller ? "assistanceOffered" : "assistanceNeeded";
@@ -149,12 +165,12 @@ export function ListingForm({
 
   return (
     <Screen>
-      <BackLink href={editing ? `/customer/parents/${listing.id}` : "/customer/parents"}>
-        {editing ? listing.reference_number : "My listings"}
+      <BackLink href={editing ? `${basePath}/${listing.id}` : basePath}>
+        {editing ? listing.reference_number : backLabel}
       </BackLink>
 
       <PageHead
-        title={editing ? "Edit your listing" : "Create a listing"}
+        title={editing ? `Edit your ${noun}` : `Create a ${noun}`}
         intro={
           isTraveller
             ? "Tell us about your flight and the help you can give. Nothing goes on the board until our team has checked it."
@@ -164,6 +180,7 @@ export function ListingForm({
 
       <form onSubmit={onSubmit} className="flex flex-col gap-4">
         {/* ------------------------------------------------------ which side */}
+        {lockKind ? null : (
         <Card>
           <CardHead
             icon={<HeartIcon size={15} />}
@@ -187,6 +204,7 @@ export function ListingForm({
             />
           </div>
         </Card>
+        )}
 
         {/* ---------------------------------------------------------- flight */}
         <Card>
@@ -539,12 +557,13 @@ export function ListingForm({
           </Btn>
           <Btn
             as="link"
-            href={editing ? `/customer/parents/${listing.id}` : "/customer/parents"}
+            href={editing ? `${basePath}/${listing.id}` : basePath}
           >
             Cancel
           </Btn>
           <span className="text-ink-500 text-[12px] font-normal">
-            Saving keeps it private — you send it for review from the listing itself.
+            Saving keeps it private — you send it for review from the record
+            itself.
           </span>
         </div>
       </form>

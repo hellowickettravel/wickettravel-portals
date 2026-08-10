@@ -4,7 +4,9 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { LIMITS, sanitizeLine } from "@/lib/security/limits";
 
 /**
- * Finalizes a public sign-up by forcing the new profile's role to "customer".
+ * Finalizes a public sign-up by forcing the new profile's role to "customer"
+ * — or to "helper" when the caller asks for it, which is the only other value
+ * this endpoint will ever write. Staff roles are never reachable from here.
  * The DB trigger defaults new profiles to a staff role, so public signups must
  * be corrected here using the service-role key (server-only, never client).
  *
@@ -15,7 +17,7 @@ import { LIMITS, sanitizeLine } from "@/lib/security/limits";
  * A verified account with no matching session can never be touched here.
  */
 export async function POST(request: Request) {
-  let body: { userId?: string; fullName?: string | null };
+  let body: { userId?: string; fullName?: string | null; role?: string };
   try {
     body = await request.json();
   } catch {
@@ -30,6 +32,11 @@ export async function POST(request: Request) {
   // The value only ever renders as escaped React text, but we never trust raw
   // client input on a public-reachable write path.
   const fullName = body.fullName ? sanitizeLine(body.fullName, LIMITS.FULL_NAME) || null : null;
+
+  // The ONLY two values a public sign-up may produce. Anything else — most of
+  // all "admin" or "employee" — falls back to customer rather than erroring,
+  // because a tampered payload should be quietly ordinary, not informative.
+  const role = body.role === "helper" ? "helper" : "customer";
 
   // Path A: an active session that matches the user (confirmation disabled).
   const supabase = await createClient();
@@ -56,7 +63,7 @@ export async function POST(request: Request) {
   const { error } = await admin.from("profiles").upsert(
     {
       id: userId,
-      role: "customer",
+      role,
       full_name: fullName ?? null,
     },
     { onConflict: "id" }
@@ -69,12 +76,20 @@ export async function POST(request: Request) {
   // Link a customers row so customer-portal RLS resolves (owns_customer / own
   // conversations + orders all key off customers.profile_id). Best-effort: a
   // failure here shouldn't block account creation. Avoid duplicates on retry.
+  //
+  // Helpers get NO customers row. They never place an order or hold a
+  // conversation, so the row would resolve nothing — and it would put a
+  // service provider in the admin's Customers list, which is precisely the
+  // confusion the separate role exists to end.
   let customerLinked = true;
-  const { data: existingCustomer } = await admin
-    .from("customers")
-    .select("id")
-    .eq("profile_id", userId)
-    .maybeSingle();
+  const { data: existingCustomer } =
+    role === "customer"
+      ? await admin
+          .from("customers")
+          .select("id")
+          .eq("profile_id", userId)
+          .maybeSingle()
+      : { data: { id: "not-a-customer" } };
 
   if (!existingCustomer) {
     const { error: customerError } = await admin.from("customers").insert({

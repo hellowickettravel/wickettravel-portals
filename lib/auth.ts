@@ -1,7 +1,11 @@
 import { createClient } from "@/lib/supabase/server";
 import type { User } from "@supabase/supabase-js";
 
-export type UserRole = "admin" | "employee" | "customer";
+// Single definition, re-exported for the many call sites that import it from
+// here. It used to be declared in both files and they had already drifted —
+// adding 'helper' in one place left the other silently narrower.
+export type { UserRole } from "@/lib/db/types";
+import type { UserRole } from "@/lib/db/types";
 
 export type Profile = {
   id: string;
@@ -30,6 +34,10 @@ export function roleDashboardPath(
       return "/employee";
     case "customer":
       return "/customer";
+    case "helper":
+      // A Parents Tickets helper is a service provider, not a customer — they
+      // never book a flight, so they never see the customer portal.
+      return "/helper";
     default:
       return null;
   }

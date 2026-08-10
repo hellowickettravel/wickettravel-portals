@@ -3,7 +3,7 @@ import { getUserAndProfile } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { listMyListings } from "@/lib/actions/parents-listings";
 import { listMyMatches } from "@/lib/actions/parents-matches";
-import { getReleasedContact } from "@/lib/actions/parents-payments";
+import { getMyPayouts, getReleasedContact } from "@/lib/actions/parents-payments";
 import { ListingsView } from "@/components/customer/listings-view";
 import type {
   ReleasedContact,
@@ -11,21 +11,22 @@ import type {
 } from "@/lib/parents-marketplace";
 
 /**
- * The customer's Parents Tickets dashboard.
+ * The helper's home: their trips, their matches and what they've earned.
  *
- * The verification state is read directly rather than through
- * getOrCreateMyIdentity — this page only needs to KNOW the status, and a
- * dashboard should not create a record as a side effect of being looked at.
- * Starting verification happens on /customer/parents/verify.
+ * It renders the same ListingsView the customer portal does — one component,
+ * five portals — configured with audience="helper", which changes the
+ * vocabulary (a trip, not a request) and adds the earnings card. The records
+ * underneath are identical; only the side differs.
  */
-export default async function CustomerParentsPage() {
+export default async function HelperHomePage() {
   const { user } = await getUserAndProfile();
   if (!user) redirect("/login");
 
   const supabase = await createClient();
-  const [listings, matches, { data: identity }] = await Promise.all([
+  const [listings, matches, payouts, { data: identity }] = await Promise.all([
     listMyListings(),
     listMyMatches(),
+    getMyPayouts(),
     supabase
       .from("parent_ticket_identities")
       .select("verification_status")
@@ -33,9 +34,6 @@ export default async function CustomerParentsPage() {
       .maybeSingle<{ verification_status: VerificationStatus }>(),
   ]);
 
-  // Contact details are fetched ONLY for matches already flagged released. The
-  // RPC would refuse the rest anyway, but asking only for what is unlocked
-  // keeps every other match's details out of the page's payload entirely.
   const released = matches.filter((m) => m.match.contact_released);
   const contacts: Record<string, ReleasedContact[]> = {};
   await Promise.all(
@@ -51,7 +49,9 @@ export default async function CustomerParentsPage() {
       matches={matches}
       contacts={contacts}
       verificationStatus={identity?.verification_status ?? "unverified"}
-      audience="customer"
+      basePath="/helper"
+      audience="helper"
+      payouts={payouts}
     />
   );
 }

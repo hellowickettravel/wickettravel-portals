@@ -7,7 +7,15 @@
  * typescript` output once the CLI is wired up.
  */
 
-export type UserRole = "admin" | "employee" | "customer";
+/**
+ * Mirrors the profiles_role_check constraint (APPLY_HELPER_ROLE.sql).
+ *
+ * A customer BUYS — books flights, asks for help for a parent. A helper
+ * PROVIDES — offers to accompany someone's parent on a flight they were
+ * already taking, and is paid for it. They are different businesses to the
+ * company, so they are different roles and different portals.
+ */
+export type UserRole = "admin" | "employee" | "customer" | "helper";
 export type AccessLevel = "full" | "chat_only" | "view_only" | "semi_admin";
 
 export type ConversationStatus = "open" | "closed";

@@ -36,6 +36,10 @@ export default function SignupPage() {
   // A guest who started the booking wizard arrives with ?redirect= — keep it
   // through the sign-in links so they land back on their filled wizard.
   const [redirectParam, setRedirectParam] = useState<string | null>(null);
+  // ?as=helper makes this a Parents Tickets HELPER account — a service
+  // provider, not a customer. It is the only non-customer role a public
+  // sign-up can produce, and the server re-checks it.
+  const [asHelper, setAsHelper] = useState(false);
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -50,6 +54,8 @@ export default function SignupPage() {
     if (invitedEmail && EMAIL_RE.test(invitedEmail)) setEmail(invitedEmail);
     const invitedName = params.get("name")?.trim();
     if (invitedName) setFullName(invitedName.slice(0, 150));
+
+    setAsHelper(params.get("as") === "helper");
   }, []);
 
   const loginHref = redirectParam
@@ -135,12 +141,16 @@ export default function SignupPage() {
       return;
     }
 
-    // Provision the customer role server-side (service role). The user is not
-    // logged in yet — they must verify their email first.
+    // Provision the role server-side (service role). The user is not logged
+    // in yet — they must verify their email first.
     const res = await fetch("/api/signup-profile", {
       method: "POST",
       headers: { "content-type": "application/json" },
-      body: JSON.stringify({ userId: data.user.id, fullName: name }),
+      body: JSON.stringify({
+        userId: data.user.id,
+        fullName: name,
+        role: asHelper ? "helper" : "customer",
+      }),
     });
 
     if (!res.ok) {
@@ -179,11 +189,27 @@ export default function SignupPage() {
   return (
     <AuthShell screen="signup">
       <AuthHeading
-        title="Create account"
-        description="Place orders, track every booking and talk to the team in one place."
+        title={asHelper ? "Join as a helper" : "Create account"}
+        description={
+          asHelper
+            ? "Offer to keep an eye on someone's parent on a flight you're already taking, and be paid for it."
+            : "Place orders, track every booking and talk to the team in one place."
+        }
       />
 
       {error ? <AuthAlert>{error}</AuthAlert> : null}
+
+      {asHelper ? (
+        <div className="border-ink-300 bg-ink-100 text-ink-700 mb-5 flex items-start gap-3 rounded-[10px] border px-4 py-3 text-[13px] leading-[1.5]">
+          <Plane className="mt-0.5 size-4 shrink-0 -rotate-45" />
+          <span>
+            This is a <span className="text-ink-900 font-medium">helper</span>{" "}
+            account — for offering the service, not for booking flights. We
+            check everyone by hand, so you&apos;ll be asked for a photo ID
+            before your first trip goes on the board.
+          </span>
+        </div>
+      ) : null}
 
       {resumingBooking ? (
         <div className="border-ink-300 bg-ink-100 text-ink-700 mb-5 flex items-start gap-3 rounded-[10px] border px-4 py-3 text-[13px] leading-[1.5]">

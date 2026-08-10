@@ -31,6 +31,12 @@ A custom "Shared Team Inbox + Orders CRM + Admin panel" for a UK-based flight-ti
 ## Roles
 - admin: full control (employees, access levels, all orders/chats, analytics)
 - employee: only assigned conversations/orders. Sections: Orders, Messages, Dashboard, Support, Settings.
+- **helper**: a Parents Tickets SERVICE PROVIDER — offers to accompany someone's
+  parent on a flight they were already taking, and is paid for it. Never books
+  a flight, never places an order, and gets NO `customers` row (which is why
+  `/api/signup-profile` skips it for them — a helper in the admin's Customers
+  list is exactly the confusion this role ends). Portal: `/helper`.
+  Requires `APPLY_HELPER_ROLE.sql`.
 - customer: logs in to their own portal — places/tracks orders and chats with the team in real time. Cannot message on an order once it's completed/cancelled (enforced server-side via RLS).
 
 ## Three portals
@@ -309,7 +315,10 @@ Three rules that layer carries, worth knowing before extending it:
 Payments are Stage A only — an admin records money that moved outside the
 system. No provider integration.
 
-**The lead → listing bridge — code DONE 2026-08-10, SQL NOT YET APPLIED.**
+**The lead → listing bridge — DONE 2026-08-10, SQL APPLIED.** Verified 32/32
+end to end: the card finds the matching account, creates a draft the person
+owns, maps free-text languages onto the controlled list, and pointedly does
+not guess the assistance boxes.
 `APPLY_PARENTS_LEAD_BRIDGE.sql` adds `converted_listing_id` and `invited_at`
 to `parent_ticket_enquiries`. It exists because the two funnels never touched:
 the homepage form dropped a lead into a queue an admin phoned, and the
@@ -324,8 +333,26 @@ marketplace waited for people who already knew the URL.
   mapped onto `ASSISTANCE_KINDS` without inventing intent, and `scoreMatch`
   intersects those arrays directly. It is carried into the notes instead.
 - The bridge **fails soft**: `getLeadBridgeState` is caught in the page, so the
-  card simply doesn't render until the SQL is applied. Verified 15/15 in that
-  state — the full path is untested until the columns exist.
+  card simply doesn't render if the columns are missing.
+
+**Helper role + portal — code DONE 2026-08-10, `APPLY_HELPER_ROLE.sql` NOT YET
+APPLIED.** A customer BUYS (flights, help for a parent); a helper PROVIDES.
+- `/helper` renders the same `AdminShell` as every other portal, and its pages
+  reuse `ListingsView`, `ListingForm`, `ListingDetail` and `VerificationView`
+  via `basePath` / `audience` / `lockKind` props — per the one-component rule,
+  generalised rather than forked.
+- **`lockKind` removes the "which side are you on?" chooser in both portals.**
+  Being in `/helper` means traveller; being in `/customer/parents` means
+  requester. The question is answered by the door you came in.
+- Helper support is an honest contact card, NOT the customer ticket form:
+  `support_tickets` is gated to `role = 'customer'` in RLS as well as in the
+  action, so that form would fail every time. Opening it to helpers needs a
+  policy change on a table that works today — a separate small job.
+- `UserRole` was declared in BOTH `lib/auth.ts` and `lib/db/types.ts` and had
+  drifted; `lib/auth.ts` now re-exports the one in `db/types.ts`.
+- **One person is one role.** Somebody who both helps and needs help would need
+  two accounts. If that turns out to bite, the fix is a capability flag, not a
+  second role.
 
 ## Build order
 1. Auth + login + role-based redirect — DONE

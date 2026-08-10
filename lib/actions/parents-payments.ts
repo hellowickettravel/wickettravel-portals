@@ -297,3 +297,46 @@ export async function countUnsettledPayments(): Promise<number> {
     return 0;
   }
 }
+
+// ============================================================================
+// The helper's own earnings
+// ============================================================================
+
+export type MyPayouts = { paid: number; pending: number; currency: string };
+
+/**
+ * What the signed-in person has been paid and is still owed.
+ *
+ * Reads through the RLS-aware client: the party-read policy on
+ * parent_ticket_payments already scopes this to matches they are part of, and
+ * payee_profile_id narrows it to the side that gets paid. No admin privilege
+ * anywhere — a helper simply cannot see anyone else's money.
+ */
+export async function getMyPayouts(): Promise<MyPayouts> {
+  const empty: MyPayouts = { paid: 0, pending: 0, currency: "GBP" };
+  const { user } = await getUserAndProfile();
+  if (!user) return empty;
+
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("parent_ticket_payments")
+    .select("payout_amount, payment_status, currency")
+    .eq("payee_profile_id", user.id)
+    .returns<
+      { payout_amount: number; payment_status: PaymentStatus; currency: string }[]
+    >();
+
+  if (error || !data?.length) return empty;
+
+  let paid = 0;
+  let pending = 0;
+  for (const row of data) {
+    const amount = Number(row.payout_amount) || 0;
+    // "Paid" here means the family's money arrived. Whether Wicket has passed
+    // it on is payout_at, which Stage A does not track separately yet — so
+    // this is what they are owed, not what has reached their bank.
+    if (row.payment_status === "paid") paid += amount;
+    else if (row.payment_status === "pending") pending += amount;
+  }
+  return { paid, pending, currency: data[0]?.currency ?? "GBP" };
+}

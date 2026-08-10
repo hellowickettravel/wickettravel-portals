@@ -54,10 +54,16 @@ import {
 export function ListingDetail({
   listing,
   verificationStatus,
+  basePath = "/customer/parents",
+  audience = "customer",
 }: {
   listing: ParentTicketListing;
   verificationStatus: VerificationStatus;
+  /** Where this portal's Parents Tickets area lives. */
+  basePath?: string;
+  audience?: "customer" | "helper";
 }) {
+  const forHelper = audience === "helper";
   const router = useRouter();
   const [busy, setBusy] = useState<string | null>(null);
 
@@ -94,7 +100,7 @@ export function ListingDetail({
 
   return (
     <Screen>
-      <BackLink href="/customer/parents">My listings</BackLink>
+      <BackLink href={basePath}>{forHelper ? "My trips" : "My requests"}</BackLink>
 
       {/* -------------------------------------------------------- header */}
       <div className="flex flex-wrap items-end justify-between gap-4">
@@ -114,7 +120,7 @@ export function ListingDetail({
 
         <div className="flex flex-wrap items-center gap-3">
           {editable ? (
-            <Btn as="link" href={`/customer/parents/${listing.id}/edit`}>
+            <Btn as="link" href={`${basePath}/${listing.id}/edit`}>
               <EditIcon size={15} />
               Edit
             </Btn>
@@ -168,7 +174,7 @@ export function ListingDetail({
                   () => deleteDraftListing(listing.id),
                   "Draft deleted"
                 );
-                if (ok) router.push("/customer/parents");
+                if (ok) router.push(basePath);
               }}
             >
               {busy === "delete" ? <Spinner /> : null}
@@ -185,7 +191,7 @@ export function ListingDetail({
             <>
               {" "}
               <Link
-                href="/customer/parents/verify"
+                href={`${basePath}/verify`}
                 className="text-warn-ink font-medium underline underline-offset-2"
               >
                 Get verified

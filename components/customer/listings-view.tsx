@@ -28,6 +28,7 @@ import {
 import {
   ArrowRightIcon,
   CalendarIcon,
+  PoundIcon,
   CheckCircleIcon,
   FamilyIcon,
   FlightIcon,
@@ -61,12 +62,27 @@ export function ListingsView({
   matches,
   contacts,
   verificationStatus,
+  basePath = "/customer/parents",
+  audience = "customer",
+  payouts,
 }: {
   listings: ParentTicketListing[];
   matches: MyMatch[];
   contacts: Record<string, ReleasedContact[]>;
   verificationStatus: VerificationStatus;
+  /** Where this portal's Parents Tickets area lives. */
+  basePath?: string;
+  /**
+   * Who is looking. A helper is a service provider — they post trips and get
+   * paid — so the same records get a different vocabulary and an earnings
+   * line the customer has no use for.
+   */
+  audience?: "customer" | "helper";
+  /** Helper only: what they have been paid and are owed. */
+  payouts?: { paid: number; pending: number; currency: string };
 }) {
+  const forHelper = audience === "helper";
+  const noun = forHelper ? "trip" : "listing";
   const verified = verificationStatus === "verified";
   const live = listings.filter((l) =>
     ["pending_review", "approved", "matched"].includes(l.listing_status)
@@ -75,12 +91,16 @@ export function ListingsView({
   return (
     <Screen>
       <PageHead
-        title="Parents Tickets"
-        intro="Pair up with someone flying the same route — either to keep an eye on a parent travelling alone, or to be that person for someone else's family."
+        title={forHelper ? "Your trips" : "Parents Tickets"}
+        intro={
+          forHelper
+            ? "Post a flight you're already taking and we'll pair you with a family who needs someone to keep an eye on their parent."
+            : "Ask for someone to keep an eye on your parent on their flight — we pair you with a checked traveller going the same way."
+        }
         actions={
-          <Btn as="link" href="/customer/parents/new" variant="ember">
+          <Btn as="link" href={`${basePath}/new`} variant="ember">
             <PlusIcon size={15} />
-            New listing
+            New {noun}
           </Btn>
         }
       />
@@ -96,7 +116,7 @@ export function ListingsView({
           <CheckCircleIcon size={16} />
           You&apos;re verified — your listings can go to the board.
           <Link
-            href="/customer/parents/verify"
+            href={`${basePath}/verify`}
             className="text-ok-ink ml-auto text-[12.5px] font-medium underline underline-offset-2"
           >
             View
@@ -117,10 +137,10 @@ export function ListingsView({
             <p className="text-ink-600 m-0 min-w-[240px] flex-1 text-[13px] leading-[1.55] font-normal text-pretty">
               Families here are trusting a stranger with someone they love, so
               everyone on the board is checked by hand. You can write your
-              listing now — it just can&apos;t be sent for approval until
+              {noun} now — it just can&apos;t be sent for approval until
               you&apos;re verified.
             </p>
-            <Btn as="link" href="/customer/parents/verify" variant="ember">
+            <Btn as="link" href={`${basePath}/verify`} variant="ember">
               <ShieldIcon size={15} />
               {verificationStatus === "pending_review"
                 ? "Check progress"
@@ -130,10 +150,39 @@ export function ListingsView({
         </Card>
       )}
 
+      {/* ------------------------------------------------------ what you earn */}
+      {forHelper && payouts ? (
+        <Card>
+          <CardHead
+            icon={<PoundIcon size={15} />}
+            title="What you've earned"
+            hint="From matches where the family's payment has come in."
+          />
+          <div className="grid grid-cols-1 gap-3 px-5 py-5 min-[520px]:grid-cols-2">
+            <div className="border-line-hair bg-surface-4 flex flex-col gap-1 rounded-[11px] border px-4 py-3.5">
+              <span className="text-ink-tertiary text-[10.5px] font-semibold tracking-[0.08em] uppercase">
+                Owed to you
+              </span>
+              <span className="text-ok-ink text-[19px] leading-none font-medium tabular-nums">
+                £{payouts.paid.toFixed(2)}
+              </span>
+            </div>
+            <div className="border-line-hair bg-surface-4 flex flex-col gap-1 rounded-[11px] border px-4 py-3.5">
+              <span className="text-ink-tertiary text-[10.5px] font-semibold tracking-[0.08em] uppercase">
+                Not settled yet
+              </span>
+              <span className="text-ink-600 text-[19px] leading-none font-medium tabular-nums">
+                £{payouts.pending.toFixed(2)}
+              </span>
+            </div>
+          </div>
+        </Card>
+      ) : null}
+
       {/* ----------------------------------------------------- the listings */}
       <Card>
         <CardHead
-          title="My listings"
+          title={forHelper ? "My trips" : "My requests"}
           hint={
             listings.length === 0
               ? undefined
@@ -142,12 +191,16 @@ export function ListingsView({
         />
         {listings.length === 0 ? (
           <EmptyState
-            title="You haven't posted anything yet"
-            body="Create a listing to say you can help a parent on a flight you're already taking, or to ask for a companion for your own parent's journey."
+            title={`You haven't posted a ${noun} yet`}
+            body={
+              forHelper
+                ? "Post a flight you're already taking and tell us what help you could give on it."
+                : "Tell us about your parent's flight and the help they need, and we'll look for someone going the same way."
+            }
             action={
-              <Btn as="link" href="/customer/parents/new" variant="ember">
+              <Btn as="link" href={`${basePath}/new`} variant="ember">
                 <PlusIcon size={15} />
-                Create your first listing
+                Create your first {noun}
               </Btn>
             }
           />
@@ -156,7 +209,7 @@ export function ListingsView({
             {listings.map((l) => (
               <li key={l.id} className="border-line-soft border-b last:border-b-0">
                 <Link
-                  href={`/customer/parents/${l.id}`}
+                  href={`${basePath}/${l.id}`}
                   className="flex flex-wrap items-center gap-x-4 gap-y-2.5 px-5 py-4 leading-[normal] no-underline hover:bg-surface-1 hover:no-underline"
                 >
                   <span
@@ -222,7 +275,9 @@ export function ListingsView({
         <ol className="text-ink-600 m-0 flex list-none flex-col gap-3 px-5 py-5 p-0 text-[13px] leading-[1.55] font-normal">
           {[
             "Get verified — a photo ID and a confirmed email, checked by a person.",
-            "Write your listing: the flight, the help involved, and what you'd pay or charge.",
+            forHelper
+              ? "Post your trip: the flight, the help you can give, and your fee."
+              : "Write your request: the flight, the help your parent needs, and your budget.",
             "Send it for review. We check it before it can be matched or shown publicly.",
             "We introduce you to the other side. Contact details are only shared once both of you have accepted.",
           ].map((step, i) => (
