@@ -38,8 +38,18 @@ export default function SignupPage() {
   const [redirectParam, setRedirectParam] = useState<string | null>(null);
 
   useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
     // eslint-disable-next-line react-hooks/set-state-in-effect -- one-time read of the URL (external system), client-only
-    setRedirectParam(new URLSearchParams(window.location.search).get("redirect"));
+    setRedirectParam(params.get("redirect"));
+
+    // An admin inviting someone from a Parents Tickets enquiry sends them here
+    // with ?email=&name=, so they aren't asked to retype what they already
+    // told us on the public form. Prefilled, not locked — it's their account,
+    // and they may want a different address on it.
+    const invitedEmail = params.get("email")?.trim();
+    if (invitedEmail && EMAIL_RE.test(invitedEmail)) setEmail(invitedEmail);
+    const invitedName = params.get("name")?.trim();
+    if (invitedName) setFullName(invitedName.slice(0, 150));
   }, []);
 
   const loginHref = redirectParam

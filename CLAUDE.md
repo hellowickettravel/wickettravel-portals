@@ -309,6 +309,24 @@ Three rules that layer carries, worth knowing before extending it:
 Payments are Stage A only — an admin records money that moved outside the
 system. No provider integration.
 
+**The lead → listing bridge — code DONE 2026-08-10, SQL NOT YET APPLIED.**
+`APPLY_PARENTS_LEAD_BRIDGE.sql` adds `converted_listing_id` and `invited_at`
+to `parent_ticket_enquiries`. It exists because the two funnels never touched:
+the homepage form dropped a lead into a queue an admin phoned, and the
+marketplace waited for people who already knew the URL.
+- The admin lead detail gains a **"Bring into the marketplace"** card
+  (`components/admin/lead-bridge.tsx`), and `/signup?email=&name=` prefills
+  from an invite link.
+- **It cannot create an account.** A listing hangs off a verified profile, so a
+  lead becomes a listing only once its author holds one — otherwise the admin
+  sends a sign-up link and the lead waits.
+- **The assistance checkboxes are never guessed.** A lead's free text can't be
+  mapped onto `ASSISTANCE_KINDS` without inventing intent, and `scoreMatch`
+  intersects those arrays directly. It is carried into the notes instead.
+- The bridge **fails soft**: `getLeadBridgeState` is caught in the page, so the
+  card simply doesn't render until the SQL is applied. Verified 15/15 in that
+  state — the full path is untested until the columns exist.
+
 ## Build order
 1. Auth + login + role-based redirect — DONE
 2. Employee portal: chat inbox UI + internal realtime send — DONE

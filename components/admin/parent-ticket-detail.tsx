@@ -17,6 +17,8 @@ import {
   type ParentTicketStatus,
 } from "@/lib/parents-tickets";
 import { fmtDate, fmtRelative } from "@/lib/format";
+import { LeadBridge } from "@/components/admin/lead-bridge";
+import type { LeadBridgeState } from "@/lib/actions/parents-lead-bridge";
 import { cn } from "@/lib/utils";
 import {
   BackLink,
@@ -60,8 +62,11 @@ function amount(value: number | null): string {
  */
 export function ParentTicketDetail({
   enquiry,
+  bridge,
 }: {
   enquiry: ParentTicketEnquiry;
+  /** Null when APPLY_PARENTS_LEAD_BRIDGE.sql hasn't been run yet. */
+  bridge?: LeadBridgeState | null;
 }) {
   const router = useRouter();
 
@@ -192,6 +197,17 @@ export function ParentTicketDetail({
           </Btn>
         </div>
       </div>
+
+      {/* -------------------------------------- bring into the marketplace */}
+      {bridge ? (
+        <LeadBridge
+          leadId={enquiry.id}
+          leadRef={enquiry.reference_number}
+          leadName={enquiry.full_name}
+          leadEmail={enquiry.email}
+          state={bridge}
+        />
+      ) : null}
 
       {/* ------------------------------------------------ contact applicant */}
       <Card>
