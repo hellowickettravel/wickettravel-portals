@@ -40,8 +40,27 @@ between the audit and the build:
    the page in a real browser (Playwright), screenshot it at 390px / 768px /
    1440px, fix what looks wrong, then commit and push that phase on its own.
    Never batch several phases into one commit.
-4. Keep a running `HOMEPAGE.md` at the repo root documenting decisions, the
-   token set, and the API contract, so the next session doesn't re-derive it.
+4. Keep a running **`CLAUDE.md`** at the repo root documenting decisions, the
+   token set and the API contract, so the next session doesn't re-derive it.
+   Use that filename specifically — Claude Code loads it automatically, so a
+   fresh session starts already knowing this. Write it as you go, not at the
+   end.
+
+## What I've put in this repo for you
+
+Read all of these before the audit:
+
+- **`PORTAL_GLOBALS.css`** — the portal's real stylesheet. Its `@theme inline`
+  block is the design-token source of truth. Lift it; don't retype the values
+  from the summary below, and do NOT overwrite this repo's own
+  `app/globals.css` with it — merge the tokens in.
+- **`design-reference/*.png`** — screenshots of the live portal's public pages
+  at 1440px and 390px. This is what "matches the portal" means. Look at them
+  before you design anything: the type scale, the whitespace, the split hero,
+  the single ember CTA against a mostly ink-and-white page.
+- **`PORTAL_CLAUDE.md`** — the portal's own context file. Background only. Read
+  its "Design system" and "Parents Tickets" sections and ignore the rest; it
+  describes a codebase you don't have and can't change.
 
 ## The problem with the current homepage
 
@@ -54,8 +73,9 @@ whitespace, motion that means something.
 
 Use the `ui-ux-pro-max` skill for layout/typography/palette work, and the
 `dataviz` skill if any section shows numbers. Use them as tools, not as a
-substitute for judgement — the design system below is fixed and is not theirs
-to reinvent.
+substitute for judgement — **the design system below is fixed and is not
+theirs to reinvent.** If a skill proposes a palette or a font pairing, ignore
+that part and keep ours.
 
 ## The design system — FIXED, copy it exactly
 
@@ -63,8 +83,9 @@ The portal was rebuilt on this system and the homepage must be visibly the
 same product. Do not invent a palette. Do not use Tailwind's default blue/gray
 ramps.
 
-**Upload `globals.css` from the portal repo (I'll attach it) and lift the
-`@theme inline` block verbatim.** It is the source of truth. The essentials:
+**`PORTAL_GLOBALS.css` is in this repo — lift its `@theme inline` block
+verbatim.** It is the source of truth and the values below are only a summary
+of it. The essentials:
 
 **Colour — three families, in oklch:**
 
@@ -257,3 +278,9 @@ clicking through to `/login` feels like the same product.
 
 Start with the audit. Don't write any component code until I've approved the
 plan.
+
+---
+
+*Reference screenshots of the live portal are in `design-reference/`. Generated
+2026-08-11 from `https://wicket-travel-portal.vercel.app` — the public `/login`
+and `/join-as-helper` screens, at 1440px and 390px.*
