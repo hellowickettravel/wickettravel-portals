@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { clientIpFrom } from "@/lib/security/rate-limit";
+import { corsHeaders } from "@/lib/security/cors";
 import {
   PARENT_TICKET_TYPES,
   maskDisplayName,
@@ -39,13 +40,6 @@ import {
  * most traffic before it reaches the rate limiter below.
  */
 
-const ALLOWED_ORIGINS = new Set([
-  "https://wicket-travel.vercel.app", // public homepage
-  "http://localhost:3000", // local homepage dev
-  "http://localhost:3100",
-  "http://127.0.0.1:3000",
-]);
-
 const DEFAULT_LIMIT = 20;
 const MAX_LIMIT = 50;
 
@@ -75,21 +69,10 @@ function isRateLimited(ip: string): boolean {
   return recent.length > RATE_MAX_REQUESTS;
 }
 
-function corsHeaders(origin: string | null): Record<string, string> {
-  const headers: Record<string, string> = { Vary: "Origin" };
-  if (origin && ALLOWED_ORIGINS.has(origin)) {
-    headers["Access-Control-Allow-Origin"] = origin;
-    headers["Access-Control-Allow-Methods"] = "GET, OPTIONS";
-    headers["Access-Control-Allow-Headers"] = "Content-Type";
-    headers["Access-Control-Max-Age"] = "86400";
-  }
-  return headers;
-}
-
 export async function OPTIONS(request: Request) {
   return new NextResponse(null, {
     status: 204,
-    headers: corsHeaders(request.headers.get("origin")),
+    headers: corsHeaders(request.headers.get("origin"), "GET"),
   });
 }
 
@@ -129,7 +112,7 @@ function cleanFilter(value: string | null, maxLen: number): string | null {
 }
 
 export async function GET(request: Request) {
-  const headers = corsHeaders(request.headers.get("origin"));
+  const headers = corsHeaders(request.headers.get("origin"), "GET");
 
   const ip = clientIpFrom(request.headers);
   if (ip && isRateLimited(ip)) {

@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { createHash, timingSafeEqual } from "crypto";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { clientIpFrom } from "@/lib/security/rate-limit";
+import { corsHeaders } from "@/lib/security/cors";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { PreferredContactMethod, VisaDocument } from "@/lib/visa";
 import { PREFERRED_CONTACT_METHODS } from "@/lib/visa";
@@ -20,7 +21,8 @@ import { PREFERRED_CONTACT_METHODS } from "@/lib/visa";
  *                                   entries (PDF/JPG/PNG, max 10MB each)
  *
  * Security model:
- *   - CORS: only the homepage origin (+ localhost for testing) is allowed.
+ *   - CORS: only the homepage origins (+ localhost for testing) are allowed —
+ *     the one list lives in lib/security/cors.ts.
  *   - Writes use the service-role client AFTER validation; the table's RLS
  *     keeps anon read access impossible, so nothing ever leaks back out.
  *   - Rate limit: per REAL client IP (see below), keyed on a SHA-256 of the
@@ -45,13 +47,6 @@ import { PREFERRED_CONTACT_METHODS } from "@/lib/visa";
  *   it spoofs headers — is bucketed by its own connecting IP.
  */
 
-const ALLOWED_ORIGINS = new Set([
-  "https://wicket-travel.vercel.app", // public homepage
-  "http://localhost:3000", // local homepage dev
-  "http://localhost:3100",
-  "http://127.0.0.1:3000",
-]);
-
 const MAX_FILES = 5;
 const MAX_FILE_BYTES = 10 * 1024 * 1024; // 10MB — matches the bucket limit
 const ALLOWED_FILE_TYPES = new Set(["application/pdf", "image/jpeg", "image/png"]);
@@ -71,21 +66,10 @@ const RATE_WINDOWS = [
 const RELAY_SECRET_HEADER = "x-wicket-relay-secret";
 const RELAY_CLIENT_IP_HEADER = "x-wicket-client-ip";
 
-function corsHeaders(origin: string | null): Record<string, string> {
-  const headers: Record<string, string> = { Vary: "Origin" };
-  if (origin && ALLOWED_ORIGINS.has(origin)) {
-    headers["Access-Control-Allow-Origin"] = origin;
-    headers["Access-Control-Allow-Methods"] = "POST, OPTIONS";
-    headers["Access-Control-Allow-Headers"] = "Content-Type";
-    headers["Access-Control-Max-Age"] = "86400";
-  }
-  return headers;
-}
-
 export async function OPTIONS(request: Request) {
   return new NextResponse(null, {
     status: 204,
-    headers: corsHeaders(request.headers.get("origin")),
+    headers: corsHeaders(request.headers.get("origin"), "POST"),
   });
 }
 
@@ -289,7 +273,7 @@ async function rateLimitRetryAfter(
 // ----- Handler ---------------------------------------------------------------
 
 export async function POST(request: Request) {
-  const headers = corsHeaders(request.headers.get("origin"));
+  const headers = corsHeaders(request.headers.get("origin"), "POST");
   const json = (body: unknown, status: number) =>
     NextResponse.json(body, { status, headers });
 

@@ -1,17 +1,24 @@
 # Brief for Claude Code — Wicket Travel public homepage
 
-*Paste everything below the line into Claude Code in the **homepage** repo
-(`wicket-travel`, deployed at `https://wicket-travel.vercel.app`). Written from
-the portal repo, where the design system and every API this site calls actually
-live.*
+*Paste everything below the line into Claude Code in the **homepage** repo —
+the site live at `https://www.wickettravel.com`, deployed from a different
+Vercel account to the portal. Written from the portal repo, where the design
+system and every API this site calls actually live.*
 
 ---
 
 You are rebuilding the **public marketing homepage** for Wicket Travel, a
-UK-based flight-ticket reselling business. This repo is the public site only.
-The customer/employee/admin/helper **portal is a separate deployment** at
-`https://wicket-travel-portal.vercel.app` — you do not have its code and must
-not try to change it. You call its public API and link into it; that is all.
+UK-based flight-ticket reselling business. This repo is the public site only,
+live at `https://www.wickettravel.com` (the apex `wickettravel.com` 308s to
+`www`, so `www` is the canonical origin — keep it that way, canonical tags and
+Open Graph URLs included).
+
+The customer/employee/admin/helper **portal is a separate deployment on a
+separate Vercel account**, at `https://wicket-travel-portal.vercel.app` — you do
+not have its code and must not try to change it. You call its public API and
+link into it; that is all. Because the accounts are separate, nothing is shared
+automatically: env vars, domains and preview URLs all have to be set up on each
+side independently.
 
 ## How I want you to work
 
@@ -118,9 +125,16 @@ travellers being helped, UK/South-Asia routes. Specifically:
 Base URL: `https://wicket-travel-portal.vercel.app`
 
 CORS on the portal already allows exactly these origins:
+`https://www.wickettravel.com`, `https://wickettravel.com`,
 `https://wicket-travel.vercel.app`, `http://localhost:3000`,
-`http://localhost:3100`. If you deploy the homepage anywhere else, tell me —
-I have to add the origin on the portal side.
+`http://localhost:3100`, `http://127.0.0.1:3000`.
+
+**Vercel preview deployments are NOT on that list** — every push gets a fresh
+`*.vercel.app` URL and none of them can call these endpoints from a browser. So
+do your API testing against `localhost:3000` or the production domain, and
+don't be surprised when a preview build's forms fail CORS. If you need a
+specific extra origin allowed (a staging subdomain, say), tell me the exact
+origin and I'll add it on the portal side.
 
 ### 1. Parents Tickets lead form — `POST /api/parent-ticket`
 
@@ -179,10 +193,17 @@ x-wicket-relay-secret: <VISA_RELAY_SECRET>
 x-wicket-client-ip:    <the visitor's IP as you saw it>
 ```
 
-`VISA_RELAY_SECRET` must match the portal's env var — ask me for it, it is not
-in this repo. Without the secret the portal ignores the forwarded IP and
-buckets you by connecting IP. Limits are 8 per 15 min and 25 per 24 h per IP,
-counted only on *accepted* submissions.
+`VISA_RELAY_SECRET` must match the portal's env var exactly. The portal is on a
+different Vercel account, so nothing is shared — ask me for the value and set it
+by hand in this project's Vercel environment variables (Production, Preview and
+Development). It is not in this repo and must never reach the browser: read it
+only inside a route handler, never in a client component and never with a
+`NEXT_PUBLIC_` prefix.
+
+Without the secret the portal ignores the forwarded IP and buckets every one of
+your visitors together under the relay's IP — which means the site works fine in
+testing and then rate-limits real traffic once a few people submit. Limits are 8
+per 15 min and 25 per 24 h per IP, counted only on *accepted* submissions.
 
 ## Links into the portal — use these exact URLs
 

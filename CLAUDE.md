@@ -208,9 +208,21 @@ assist an elderly parent en route with someone who needs that help.
 
 **There is no public marketing site in this repo.** `app/page.tsx` is a
 redirect to `/login`. The homepage that carries the lead form and the masked
-listings board is a SEPARATE deployment (`https://wicket-travel.vercel.app`);
-this repo only owns the API it calls and the admin screens. So "check the
-homepage form" can never be answered from here — only the endpoint can.
+listings board is a SEPARATE deployment **on a separate Vercel account**, live
+at `https://www.wickettravel.com` (the apex 308s to `www`, and
+`https://wicket-travel.vercel.app` still serves it too); this repo only owns the
+API it calls and the admin screens. So "check the homepage form" can never be
+answered from here — only the endpoint can. `HOMEPAGE_BRIEF.md` at the root is
+the handover document for that repo.
+- The browser-facing allowlist is **`lib/security/cors.ts`, one list for all
+  three public endpoints** — it used to be copy-pasted into each route, so
+  adding a domain was three edits and missing one failed silently in browsers
+  only. `HOMEPAGE_ORIGINS` (comma-separated) extends it from the Vercel
+  dashboard without a deploy, which matters because the homepage's preview URLs
+  come from an account this project cannot see.
+- CORS is not the security boundary. Every public endpoint validates
+  server-side and rate-limits by real client IP regardless of origin, because
+  curl sends no preflight.
 
 **Basic scope — LIVE.** `parent_ticket_enquiries`, refs `#PT-1001`.
 `POST /api/parent-ticket` (service-role write after validation, CORS-pinned,
