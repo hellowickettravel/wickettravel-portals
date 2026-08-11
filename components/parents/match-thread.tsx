@@ -39,6 +39,7 @@ export function MatchThread({
   released,
   audience = "party",
   counterpartyLabel = "them",
+  partyIds,
 }: {
   matchId: string;
   viewerId: string;
@@ -48,6 +49,16 @@ export function MatchThread({
   audience?: "party" | "admin";
   /** What to call the other person before an admin has named them. */
   counterpartyLabel?: string;
+  /**
+   * The two people the match is between.
+   *
+   * Needed because a party CANNOT read an admin's profiles row — RLS only
+   * grants own-profile reads — so the embedded `sender` comes back null for
+   * anything staff wrote, and the bubble would otherwise attribute Wicket's
+   * message to the other family. Anyone sending who isn't one of these two is
+   * our team, and that is decidable without reading a row we're not allowed.
+   */
+  partyIds?: string[];
 }) {
   const queryClient = useQueryClient();
   const supabase = useMemo(() => createClient(), []);
@@ -135,6 +146,7 @@ export function MatchThread({
               mine={m.sender_id === viewerId}
               audience={audience}
               counterpartyLabel={counterpartyLabel}
+              partyIds={partyIds}
               showDay={
                 i === 0 ||
                 fmtDate(messages[i - 1].created_at) !== fmtDate(m.created_at)
@@ -191,15 +203,23 @@ function Bubble({
   mine,
   audience,
   counterpartyLabel,
+  partyIds,
   showDay,
 }: {
   message: MatchMessage;
   mine: boolean;
   audience: "party" | "admin";
   counterpartyLabel: string;
+  partyIds?: string[];
   showDay: boolean;
 }) {
-  const isStaff = message.sender?.role === "admin";
+  // Two ways to know this came from Wicket. The embedded profile works for an
+  // admin, who can read every profiles row; a party cannot, so for them it is
+  // decided by elimination — a sender who is neither of the two people in the
+  // match is our team.
+  const isStaff =
+    message.sender?.role === "admin" ||
+    (!!partyIds?.length && !partyIds.includes(message.sender_id));
   // A party never learns a name from the thread that the introduction hasn't
   // already given them; an admin, who arbitrates, sees both.
   const who = mine

@@ -197,6 +197,7 @@ export function MatchList({
                     <MatchThread
                       matchId={match.id}
                       viewerId={viewerId}
+                      partyIds={[mine.profile_id, theirs.profile_id]}
                       released
                       counterpartyLabel={
                         (contacts[match.id] ?? []).find((c) => c.side !== side)
