@@ -5,6 +5,9 @@ import type { User } from "@supabase/supabase-js";
 // here. It used to be declared in both files and they had already drifted —
 // adding 'helper' in one place left the other silently narrower.
 export type { UserRole } from "@/lib/db/types";
+// The role → portal map lives with the role type so client components (the
+// login form) can import it without pulling in next/headers.
+export { roleDashboardPath } from "@/lib/db/types";
 import type { UserRole } from "@/lib/db/types";
 
 export type Profile = {
@@ -20,28 +23,6 @@ export type AuthResult = {
   profile: Profile | null;
 };
 
-/**
- * Map a profile role to its portal landing route. Returns null for unknown
- * roles so callers can decide on a fallback.
- */
-export function roleDashboardPath(
-  role: string | null | undefined
-): string | null {
-  switch (role) {
-    case "admin":
-      return "/admin";
-    case "employee":
-      return "/employee";
-    case "customer":
-      return "/customer";
-    case "helper":
-      // A Parents Tickets helper is a service provider, not a customer — they
-      // never book a flight, so they never see the customer portal.
-      return "/helper";
-    default:
-      return null;
-  }
-}
 
 /**
  * Server-side helper. Returns the current authenticated user together with

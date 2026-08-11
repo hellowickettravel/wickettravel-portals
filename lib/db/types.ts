@@ -16,6 +16,34 @@
  * company, so they are different roles and different portals.
  */
 export type UserRole = "admin" | "employee" | "customer" | "helper";
+
+/**
+ * The one map from a role to its portal. Client-safe on purpose: the login
+ * form needs it too, and it used to be duplicated there as a hardcoded ladder
+ * that fell through to "/customer" — so adding the helper role sent helpers to
+ * the wrong portal until the layout bounced them back.
+ *
+ * Returns null for a role with no portal, which is how the login screen tells
+ * an unrecognised account apart from a valid one.
+ */
+export function roleDashboardPath(
+  role: string | null | undefined
+): string | null {
+  switch (role) {
+    case "admin":
+      return "/admin";
+    case "employee":
+      return "/employee";
+    case "customer":
+      return "/customer";
+    case "helper":
+      // A Parents Tickets helper is a service provider, not a customer — they
+      // never book a flight, so they never see the customer portal.
+      return "/helper";
+    default:
+      return null;
+  }
+}
 export type AccessLevel = "full" | "chat_only" | "view_only" | "semi_admin";
 
 export type ConversationStatus = "open" | "closed";

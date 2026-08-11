@@ -7,6 +7,7 @@ import { toast } from "sonner";
 import { createClient } from "@/lib/supabase/client";
 import { guardLogin, recordLogin } from "@/lib/actions/auth-guard";
 import { safeInternalPath } from "@/lib/security/redirect";
+import { roleDashboardPath } from "@/lib/db/types";
 import { setKeepSignedIn } from "@/lib/auth/session-persistence";
 import { AuthShell } from "@/components/auth/auth-shell";
 import { AuthHeading } from "@/components/auth/auth-heading";
@@ -161,23 +162,19 @@ export default function LoginPage() {
       return;
     }
 
-    const role = profile?.role;
+    // roleDashboardPath is the ONE place a role maps to a portal. This used to
+    // be a hardcoded ladder here that fell through to "/customer", so adding
+    // the helper role sent helpers to the customer portal to be bounced back —
+    // the same drift that had UserRole declared in two files.
+    const home = roleDashboardPath(profile?.role);
 
-    if (role === "admin" || role === "employee" || role === "customer") {
+    if (home) {
       // Honour a safe ?redirect= target (e.g. a shared booking link) so the user
       // lands where they were headed; otherwise their role dashboard. Only same-
       // origin relative paths are allowed; the destination's own layout guards
       // the role. Full navigation so the server picks up the fresh session.
       const redirect = new URLSearchParams(window.location.search).get("redirect");
-      const safeRedirect = safeInternalPath(redirect);
-      window.location.assign(
-        safeRedirect ??
-          (role === "admin"
-            ? "/admin"
-            : role === "employee"
-              ? "/employee"
-              : "/customer")
-      );
+      window.location.assign(safeInternalPath(redirect) ?? home);
       return;
     }
 

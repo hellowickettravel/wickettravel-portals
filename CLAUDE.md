@@ -35,8 +35,10 @@ A custom "Shared Team Inbox + Orders CRM + Admin panel" for a UK-based flight-ti
   parent on a flight they were already taking, and is paid for it. Never books
   a flight, never places an order, and gets NO `customers` row (which is why
   `/api/signup-profile` skips it for them — a helper in the admin's Customers
-  list is exactly the confusion this role ends). Portal: `/helper`.
-  Requires `APPLY_HELPER_ROLE.sql`.
+  list is exactly the confusion this role ends). Portal: `/helper`, front door
+  `/join-as-helper`. `APPLY_HELPER_ROLE.sql` is APPLIED (2026-08-10) and the
+  whole journey is verified 30/30: sign up → verify with a photo ID → post a
+  trip → approved → matched → accepted → introduced → paid.
 - customer: logs in to their own portal — places/tracks orders and chats with the team in real time. Cannot message on an order once it's completed/cancelled (enforced server-side via RLS).
 
 ## Three portals
@@ -391,6 +393,11 @@ A page-by-page functional audit drove all three portals as each role — 41
 screens, every one HTTP 200. It found exactly one functional bug; the rest of
 the work was polish, security and scale.
 
+- **`roleDashboardPath()` lives in `lib/db/types.ts`, not `lib/auth.ts`**, and
+  is the ONLY role → portal map. The login form is a client component and
+  cannot import `lib/auth` (it pulls `next/headers`), so it used to carry a
+  hardcoded ladder that fell through to `/customer` — which sent every helper
+  to the wrong portal. `lib/auth` re-exports it for server callers.
 - **`lib/supabase/client.ts` is a per-tab SINGLETON, and that is load-bearing.**
   It used to return a fresh client per call, and each client opens its OWN
   Realtime WebSocket — the always-mounted bell plus a per-screen channel meant
