@@ -17,6 +17,7 @@ import {
 import { setMatchStatus, type AdminMatchRow } from "@/lib/actions/parents-matches";
 import type { MatchPayment as MatchPaymentRow } from "@/lib/actions/parents-payments";
 import { MatchPayment } from "@/components/admin/match-payment";
+import { MatchThread } from "@/components/parents/match-thread";
 import type { ReleasedContact } from "@/lib/parents-marketplace";
 import {
   Avatar,
@@ -80,10 +81,13 @@ export function MatchReview({
   record,
   payment,
   contacts,
+  viewerId,
 }: {
   record: AdminMatchRow;
   payment: MatchPaymentRow | null;
   contacts: ReleasedContact[];
+  /** The admin reading this — so their own posts render as theirs. */
+  viewerId: string;
 }) {
   const router = useRouter();
   const [busy, setBusy] = useState<string | null>(null);
@@ -168,6 +172,16 @@ export function MatchReview({
           response={record.requester_response}
         />
       </div>
+
+      {/* The thread the two parties are using. An admin can read it and step
+          in — this is a brokered service, and when a trip goes wrong the
+          business has to be able to see what was arranged. */}
+      <MatchThread
+        matchId={record.id}
+        viewerId={viewerId}
+        released={record.contact_released}
+        audience="admin"
+      />
 
       <p className="text-ink-500 m-0 text-[12px] font-normal">
         Created {fmtDate(record.created_at)}

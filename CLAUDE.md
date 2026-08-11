@@ -68,8 +68,7 @@ A custom "Shared Team Inbox + Orders CRM + Admin panel" for a UK-based flight-ti
 ### The product interior — Claude Design "Admin Portal All Pages"
 `/admin`, `/employee` **and** `/customer` all follow the Claude Design
 **"Admin Portal All Pages"** file, which extends the auth design's system into
-the product interior. Only the **driver** portal is still on navy/orange.
-The employee and customer portals had no design file of their own; the user
+the product interior. The employee and customer portals had no design file of their own; the user
 authorised building both from this one as the reference.
 - Type: **Instrument Sans** everywhere, **Poppins 500** for page titles, the
   brand wordmark and headline metrics. Weights are 400 / 500 / 600 only.
@@ -96,9 +95,8 @@ authorised building both from this one as the reference.
   `.wt-*` CSS were deleted once the customer portal moved over. When a portal
   needs different behaviour, **generalise the component with a prop that
   defaults to the admin's behaviour** — never fork it or restyle it in place.
-  `globals.css` still retunes shared shadcn controls (`[data-slot="button"]`,
-  `input`, `textarea`, `table`, `card`) inside `.admin-root`, which now only
-  matters for the driver portal's copies.
+  `globals.css` still retunes shared shadcn controls inside `.admin-root`;
+  only `button`, `skeleton` and `sonner` survive in `components/ui/`.
 - Shape language: **buttons are pills (999px), containers are rectangles** —
   10px controls, 12px cards, 50% avatars. `--radius` is 0.75rem here, so
   Tailwind's `rounded-lg/xl` resolve to 12/16.8px — use `rounded-[10px]` /
@@ -378,14 +376,6 @@ APPLIED.** A customer BUYS (flights, help for a parent); a helper PROVIDES.
     1-8 are all built. What remains is item 9 (polish, security review,
     testing) and the reports half of item 8.
 
-The **driver** portal migration is PART DONE and paused (2026-08-09). On the
-design system: the shell, Home, Job board, My rides, Earnings and their
-components. Still on navy/orange and still importing `components/ui/` + lucide:
-`messages`, `profile`, `rides/[id]`, and the two auth screens under
-`app/(driver-auth)/`. `DriverShell` wraps `AdminShell` in `<Suspense>` — the
-driver group has no auth layout, so its pages prerender and `useSearchParams`
-needs the bail-out boundary. Driver mock data is ₹ / India-based while the rest
-of the business is UK / £; that is a content decision still open.
 
 ## Production readiness (audited 2026-08-10)
 
@@ -452,6 +442,30 @@ Known and accepted at this scale: `listCustomersWithStats` reads every order
 and conversation row to count them (2 columns, fine into the thousands; revisit
 past ~50k). Detail routes share their portal's `loading.tsx` rather than each
 having a bespoke skeleton.
+
+**Matched parties talk in the portal — DONE 2026-08-10,
+`APPLY_PARENTS_MESSAGES.sql` NOT YET APPLIED.** One thread per match
+(`parent_ticket_messages`), rendered by `components/parents/match-thread.tsx`
+in all three portals.
+- **The thread opens at RELEASE, not at acceptance.** Opening it on mutual
+  acceptance would be friendlier and would also let two people arrange the
+  whole trip and swap details without the payment release depends on — which
+  is the business model, not a technicality. The gate is the INSERT policy, so
+  it holds for a hostile client exactly as for the UI.
+- **Nobody can edit or delete a message — not even an admin.** There is no
+  UPDATE or DELETE policy at all. A thread that settles "what did we agree" is
+  worth nothing if it can be rewritten afterwards.
+- An admin reads every thread and can post in one, and sees both real names;
+  a party sees "You" and the counterparty. The guard trigger overwrites
+  `sender_id` with `auth.uid()`, so a forged sender becomes the caller's own.
+- `listMatchMessages` returns `[]` on PGRST205 so the portal renders before
+  the SQL is applied.
+
+**The driver portal was REMOVED 2026-08-10** at the client's request — it was
+mock-only, had no auth, was half-migrated, and its ₹/India content never
+matched this UK business. `app/(driver)`, `app/(driver-auth)`,
+`components/driver`, `lib/driver` and thirteen orphaned `components/ui/*`
+files went with it. Recoverable from git history if it is ever wanted back.
 
 ## Rules
 - One feature at a time. Keep code clean and typed.

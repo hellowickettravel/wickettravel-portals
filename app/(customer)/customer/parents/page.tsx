@@ -51,6 +51,7 @@ export default async function CustomerParentsPage() {
       matches={matches}
       contacts={contacts}
       verificationStatus={identity?.verification_status ?? "unverified"}
+      viewerId={user.id}
       audience="customer"
     />
   );

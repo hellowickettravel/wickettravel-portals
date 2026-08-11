@@ -49,6 +49,7 @@ export default async function HelperHomePage() {
       matches={matches}
       contacts={contacts}
       verificationStatus={identity?.verification_status ?? "unverified"}
+      viewerId={user.id}
       basePath="/helper"
       audience="helper"
       payouts={payouts}

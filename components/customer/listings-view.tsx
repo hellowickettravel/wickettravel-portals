@@ -62,6 +62,7 @@ export function ListingsView({
   matches,
   contacts,
   verificationStatus,
+  viewerId,
   basePath = "/customer/parents",
   audience = "customer",
   payouts,
@@ -70,6 +71,8 @@ export function ListingsView({
   matches: MyMatch[];
   contacts: Record<string, ReleasedContact[]>;
   verificationStatus: VerificationStatus;
+  /** Who is reading — the match thread needs it to mark their own messages. */
+  viewerId: string;
   /** Where this portal's Parents Tickets area lives. */
   basePath?: string;
   /**
@@ -266,7 +269,7 @@ export function ListingsView({
 
       {/* ---------------------------------------------------- the matches */}
       {listings.length > 0 || matches.length > 0 ? (
-        <MatchList matches={matches} contacts={contacts} />
+        <MatchList matches={matches} contacts={contacts} viewerId={viewerId} />
       ) : null}
 
       {/* ------------------------------------------------------ what's next */}

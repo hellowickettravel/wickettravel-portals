@@ -1,4 +1,5 @@
 import { notFound } from "next/navigation";
+import { getUserAndProfile } from "@/lib/auth";
 import { getMatchForAdmin } from "@/lib/actions/parents-matches";
 import {
   getMatchPayment,
@@ -16,6 +17,8 @@ export default async function AdminMatchDetailPage({
   const record = await getMatchForAdmin(id);
   if (!record) notFound();
 
+  const { user } = await getUserAndProfile();
+
   const payment = await getMatchPayment(id);
 
   // Only ask for contacts once the flag is set. The RPC would answer with
@@ -27,5 +30,12 @@ export default async function AdminMatchDetailPage({
     if (found.ok) contacts = found.data;
   }
 
-  return <MatchReview record={record} payment={payment} contacts={contacts} />;
+  return (
+    <MatchReview
+      record={record}
+      payment={payment}
+      contacts={contacts}
+      viewerId={user?.id ?? ""}
+    />
+  );
 }

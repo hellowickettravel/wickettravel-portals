@@ -12,6 +12,7 @@ import {
   type PartyResponse,
 } from "@/lib/parents-marketplace";
 import { respondToMatch, type MyMatch } from "@/lib/actions/parents-matches";
+import { MatchThread } from "@/components/parents/match-thread";
 import type { ReleasedContact } from "@/lib/parents-marketplace";
 import {
   Btn,
@@ -53,10 +54,13 @@ const RESPONSE_TONE: Record<PartyResponse, PillTone> = {
 export function MatchList({
   matches,
   contacts,
+  viewerId,
 }: {
   matches: MyMatch[];
   /** matchId → the two parties' details. Only ever populated once released. */
   contacts: Record<string, ReleasedContact[]>;
+  /** Who is reading — so their own messages render as theirs. */
+  viewerId: string;
 }) {
   const router = useRouter();
   const [busy, setBusy] = useState<string | null>(null);
@@ -181,11 +185,25 @@ export function MatchList({
 
                 {/* ------------------------------------------ the decision */}
                 {match.contact_released ? (
-                  <Introduced
-                    contact={(contacts[match.id] ?? []).find(
-                      (c) => c.side !== side
-                    )}
-                  />
+                  <>
+                    <Introduced
+                      contact={(contacts[match.id] ?? []).find(
+                        (c) => c.side !== side
+                      )}
+                    />
+                    {/* Keep the conversation here rather than in somebody's
+                        inbox: both of you get a record of what was agreed, and
+                        if it goes wrong our team can actually see it. */}
+                    <MatchThread
+                      matchId={match.id}
+                      viewerId={viewerId}
+                      released
+                      counterpartyLabel={
+                        (contacts[match.id] ?? []).find((c) => c.side !== side)
+                          ?.full_name ?? "Your match"
+                      }
+                    />
+                  </>
                 ) : decided ? (
                   <div className="flex flex-wrap items-center gap-3">
                     <Pill tone={RESPONSE_TONE[myResponse]}>
