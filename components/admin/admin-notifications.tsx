@@ -37,6 +37,11 @@ const BAND_OF: Record<NotificationType, Band> = {
   assignment: "Messages",
   support_ticket: "Enquiries",
   parent_ticket: "Enquiries",
+  // Everything the marketplace emits is an enquiry-shaped event: somebody
+  // waiting on Wicket, or Wicket coming back to them.
+  listing_review: "Enquiries",
+  match: "Enquiries",
+  contact_released: "Enquiries",
 };
 
 const BAND_TINT: Record<Band, { pill: string; dot: string }> = {
@@ -78,6 +83,13 @@ function fallbackLink(type: NotificationType, basePath: string): string {
       return `${basePath}/support`;
     case "parent_ticket":
       return basePath === "/admin" ? "/admin/parents-tickets" : basePath;
+    // Marketplace events always carry their own link (the action knows the
+    // record); these are the last resorts if one ever arrives without.
+    case "listing_review":
+      return basePath === "/admin" ? "/admin/parents-listings" : basePath;
+    case "match":
+    case "contact_released":
+      return basePath === "/admin" ? "/admin/parents-matches" : basePath;
     default:
       return basePath;
   }

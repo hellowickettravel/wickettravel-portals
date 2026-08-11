@@ -3,6 +3,7 @@
 import { getUserAndProfile } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { tooManyRecentRows } from "@/lib/security/rate-limit";
+import { notify, notifyAdmins } from "@/lib/notify";
 import {
   ASSISTANCE_KINDS,
   LANGUAGES,
@@ -356,6 +357,63 @@ export async function submitListing(id: string): Promise<ActionResult> {
     .eq("profile_id", me.user.id);
 
   if (error) return { ok: false, error: error.message };
+
+  // The queue is the admin's job list; it should not depend on them refreshing
+  // a page to discover work arrived.
+  await notifyAdmins({
+    type: "listing_review",
+    title: "A listing is waiting for review",
+    body: `${listing.from_airport} → ${listing.to_airport}${
+      listing.travel_date ? ` on ${listing.travel_date}` : ""
+    }`,
+    link: `/admin/parents-listings/${id}`,
+    actorId: me.user.id,
+    actorName: me.profile?.full_name ?? null,
+  });
+
+  return { ok: true };
+}
+
+/**
+ * Turn public display on or off for a listing you own, at any point in its
+ * life.
+ *
+ * Consent is the owner's to give and to withdraw, and until now it could only
+ * be changed by editing — which an approved listing does not allow. That meant
+ * somebody who changed their mind about being on the public board had no way
+ * to say so short of withdrawing the whole listing. Turning consent OFF also
+ * takes it off the board immediately, via the sync trigger; turning it ON is a
+ * request, not a publication, because an admin still decides what is shown.
+ */
+export async function setMyListingConsent(input: {
+  id: string;
+  consent: boolean;
+}): Promise<ActionResult> {
+  const me = await currentUser();
+  if (!me) return { ok: false, error: "Not signed in." };
+
+  const supabase = await createClient();
+  const { error } = await supabase
+    .from("parent_ticket_listings")
+    .update({ consent_public: input.consent })
+    .eq("id", input.id)
+    .eq("profile_id", me.user.id);
+
+  if (error) return { ok: false, error: error.message };
+
+  // Asking to be listed is worth telling an admin about; withdrawing consent
+  // needs no action from anyone — the trigger has already taken it down.
+  if (input.consent) {
+    await notifyAdmins({
+      type: "listing_review",
+      title: "Someone asked to go on the public board",
+      body: "They've opted in — approve the listing's visibility if it's suitable.",
+      link: `/admin/parents-listings/${input.id}`,
+      actorId: me.user.id,
+      actorName: me.profile?.full_name ?? null,
+    });
+  }
+
   return { ok: true };
 }
 
@@ -525,7 +583,7 @@ export async function reviewListing(input: {
     publish = true;
   }
 
-  const { error } = await supabase
+  const { data: updated, error } = await supabase
     .from("parent_ticket_listings")
     .update({
       listing_status: input.decision,
@@ -534,10 +592,54 @@ export async function reviewListing(input: {
       reviewed_by: user.id,
       reviewed_at: new Date().toISOString(),
     })
-    .eq("id", input.id);
+    .eq("id", input.id)
+    .select("id, profile_id, reference_number, from_airport, to_airport, is_public")
+    .single<{
+      id: string;
+      profile_id: string;
+      reference_number: string;
+      from_airport: string;
+      to_airport: string;
+      is_public: boolean;
+    }>();
 
-  if (error) return { ok: false, error: error.message };
+  if (error || !updated) {
+    return { ok: false, error: error?.message ?? "Could not save the decision." };
+  }
+
+  // Tell the person. Without this they would have to keep opening the portal
+  // to find out whether anything happened — which is the whole reason a
+  // review queue feels slow even when it isn't.
+  const base = await listingBasePath(updated.profile_id);
+  await notify({
+    recipientId: updated.profile_id,
+    type: "listing_review",
+    title:
+      input.decision === "approved"
+        ? `${updated.reference_number} is approved`
+        : `${updated.reference_number} needs a change`,
+    body:
+      input.decision === "approved"
+        ? updated.is_public
+          ? `${updated.from_airport} → ${updated.to_airport} is live on the board and can be matched.`
+          : `${updated.from_airport} → ${updated.to_airport} can now be matched.`
+        : reason,
+    link: `${base}/${updated.id}`,
+    actorId: user.id,
+  });
+
   return { ok: true };
+}
+
+/** A helper manages listings at /helper; everyone else at /customer/parents. */
+async function listingBasePath(profileId: string): Promise<string> {
+  const supabase = await createClient();
+  const { data } = await supabase
+    .from("profiles")
+    .select("role")
+    .eq("id", profileId)
+    .maybeSingle<{ role: string }>();
+  return data?.role === "helper" ? "/helper" : "/customer/parents";
 }
 
 /** Toggle an already-approved listing on or off the public board. */

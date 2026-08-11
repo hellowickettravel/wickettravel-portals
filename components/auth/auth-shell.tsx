@@ -5,7 +5,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
 
-export type AuthScreen = "signin" | "signup" | "forgot" | "sent" | "reset";
+export type AuthScreen = "signin" | "signup" | "forgot" | "sent" | "reset" | "helper";
 
 type PanelCopy = { eyebrow: string; headline: string; subcopy: string };
 
@@ -44,6 +44,15 @@ const PANEL_COPY: Record<AuthScreen, PanelCopy> = {
     subcopy:
       "Signing in again on your other devices may be required — changing a password ends every other active session.",
   },
+  // The helper is being asked to do something quite unlike buying a flight, so
+  // the panel has to say so — the customer's "tell us where you're going"
+  // actively contradicts the page beside it.
+  helper: {
+    eyebrow: "Parents Tickets",
+    headline: "Someone's mother is flying alone. You're on that plane anyway.",
+    subcopy:
+      "Help her through the airport, sit nearby, and be paid for it. Every helper is checked by a person before a family ever sees them.",
+  },
 };
 
 /**
@@ -62,6 +71,7 @@ const HERO_IMAGE: Record<AuthScreen, string> = {
   forgot: "/auth/hero-forgot.png",
   sent: "/auth/hero-sent.jpg",
   reset: "/auth/hero-reset.jpg",
+  helper: "/auth/hero-helper.jpg",
 };
 
 const HERO_FALLBACK = "/auth/hero-flight.jpg";

@@ -418,6 +418,29 @@ the work was polish, security and scale.
 - A replaced ID document is **deleted** from storage — an ID somebody already
   superseded sitting there indefinitely is a retention problem, not a backup.
 
+**Round two (2026-08-10) — notifications, loading and the helper front door.**
+- **The marketplace had no notifications at all.** Listings, verifications,
+  matches and introductions all changed state silently, so the only way to find
+  out was to keep reopening the portal. `lib/notify.ts` now fires from the
+  server actions rather than a trigger: the action already knows who to tell
+  and what to say, where a trigger would re-derive both from a row diff and
+  need a migration per message. Delivery is best-effort — a failed
+  notification must never roll back the approval it was announcing.
+- `notifications.type` is **free text in the database**, so `listing_review`,
+  `match` and `contact_released` needed no SQL. The TS union and the two UI
+  maps (bell + notifications page) are the only places that constrain it.
+- **48 `loading.tsx` files**, one per route shape rather than one per portal.
+  `components/admin/skeletons.tsx` holds four: list, detail, inbox, form. A
+  single generic skeleton is worse than none — it shows a KPI grid on a screen
+  with no KPIs and the layout jumps when real content lands.
+- `/join-as-helper` is the helper's own front door, with its own hero copy
+  (`AuthScreen` gained a `helper` variant). `/signup?as=helper` still works and
+  is what the page hands off to — a query string is not something you can put
+  on a poster.
+- A listing owner can now turn public display on or off **at any point**
+  (`setMyListingConsent`). It used to be editable only while a draft, which
+  left someone who changed their mind with no way to say so.
+
 Known and accepted at this scale: `listCustomersWithStats` reads every order
 and conversation row to count them (2 columns, fine into the thousands; revisit
 past ~50k). Detail routes share their portal's `loading.tsx` rather than each

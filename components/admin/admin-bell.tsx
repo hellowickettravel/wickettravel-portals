@@ -20,7 +20,9 @@ import {
   OrdersIcon,
   RefreshIcon,
   FamilyIcon,
+  RouteIcon,
   StaffIcon,
+  UnlockIcon,
 } from "@/components/admin/icons";
 
 const KEY = ["notifications"] as const;
@@ -36,6 +38,9 @@ const LOOK: Record<
   status_change: { Icon: RefreshIcon, chip: "bg-warn-wash text-warn-ink" },
   support_ticket: { Icon: LifebuoyIcon, chip: "bg-teal-bg/60 text-teal-ink" },
   parent_ticket: { Icon: FamilyIcon, chip: "bg-marine-50 text-marine-600" },
+  listing_review: { Icon: RouteIcon, chip: "bg-warn-wash text-warn-ink" },
+  match: { Icon: FamilyIcon, chip: "bg-violet-bg/60 text-violet-ink" },
+  contact_released: { Icon: UnlockIcon, chip: "bg-ok-wash text-ok-ink" },
 };
 
 /**

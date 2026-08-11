@@ -185,7 +185,16 @@ export type NotificationType =
   | "assignment"
   | "status_change"
   | "support_ticket"
-  | "parent_ticket";
+  /** A lead from the public Parents Tickets form. */
+  | "parent_ticket"
+  /* --- Parents Tickets marketplace. `notifications.type` is free text in the
+     database, so these needed no migration; the UI maps them below. --- */
+  /** A listing or an identity check was approved or sent back. */
+  | "listing_review"
+  /** A pairing was proposed, or the other side answered one. */
+  | "match"
+  /** The introduction was made — the one event people wait for. */
+  | "contact_released";
 
 export type Notification = {
   id: string;

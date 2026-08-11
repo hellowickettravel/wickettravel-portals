@@ -2,6 +2,7 @@
 
 import { getUserAndProfile } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
+import { notify } from "@/lib/notify";
 import {
   MATCH_CONTACT_RPC,
   PAYMENT_METHODS,
@@ -228,6 +229,39 @@ export async function releaseMatchContact(
     .eq("id", matchId);
 
   if (error) return { ok: false, error: error.message };
+
+  // The one event both people have actually been waiting for. Send it to each
+  // party — the details themselves stay behind the RPC, so this only says the
+  // introduction has happened and where to look.
+  const { data: parties } = await supabase
+    .from("parent_ticket_matches")
+    .select(
+      "traveller:parent_ticket_listings!parent_ticket_matches_traveller_listing_id_fkey(profile_id), " +
+        "requester:parent_ticket_listings!parent_ticket_matches_requester_listing_id_fkey(profile_id)"
+    )
+    .eq("id", matchId)
+    .maybeSingle<{
+      traveller: { profile_id: string } | null;
+      requester: { profile_id: string } | null;
+    }>();
+
+  const recipients = [
+    parties?.traveller?.profile_id,
+    parties?.requester?.profile_id,
+  ].filter((v): v is string => !!v);
+
+  await Promise.all(
+    recipients.map((recipientId) =>
+      notify({
+        recipientId,
+        type: "contact_released",
+        title: "You've been introduced",
+        body: "Their name, email and phone are on your match now. Say hello.",
+        actorId: user.id,
+      })
+    )
+  );
+
   return { ok: true };
 }
 

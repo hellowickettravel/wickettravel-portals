@@ -4,6 +4,7 @@ import { getUserAndProfile } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { ID_DOCUMENT_BUCKET, SIGNED_URL_TTL } from "@/lib/storage";
+import { notify, notifyAdmins } from "@/lib/notify";
 import {
   ID_DOCUMENT_TYPES,
   type IdDocumentType,
@@ -233,6 +234,16 @@ export async function submitIdentityForReview(): Promise<ActionResult> {
     .eq("profile_id", me.user.id);
 
   if (error) return { ok: false, error: error.message };
+
+  await notifyAdmins({
+    type: "listing_review",
+    title: "An ID is waiting for review",
+    body: identity.legal_name ?? null,
+    link: `/admin/parents-verification/${me.user.id}`,
+    actorId: me.user.id,
+    actorName: me.profile?.full_name ?? null,
+  });
+
   return { ok: true };
 }
 
@@ -402,6 +413,31 @@ export async function reviewIdentity(input: {
     .eq("profile_id", input.profileId);
 
   if (error) return { ok: false, error: error.message };
+
+  // Verification gates everything else they can do here, so being told the
+  // moment it lands is the difference between carrying on and giving up.
+  const { data: who } = await supabase
+    .from("profiles")
+    .select("role")
+    .eq("id", input.profileId)
+    .maybeSingle<{ role: string }>();
+  const base = who?.role === "helper" ? "/helper" : "/customer/parents";
+
+  await notify({
+    recipientId: input.profileId,
+    type: "listing_review",
+    title:
+      input.decision === "verified"
+        ? "You're verified"
+        : "We couldn't verify your ID",
+    body:
+      input.decision === "verified"
+        ? "Your listings can now go to the board and be matched."
+        : reason,
+    link: `${base}/verify`,
+    actorId: user.id,
+  });
+
   return { ok: true };
 }
 

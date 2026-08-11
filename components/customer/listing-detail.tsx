@@ -16,6 +16,7 @@ import {
 import {
   deleteDraftListing,
   reopenListing,
+  setMyListingConsent,
   submitListing,
   withdrawListing,
 } from "@/lib/actions/parents-listings";
@@ -324,7 +325,8 @@ export function ListingDetail({
               </span>
             }
           />
-          <p className="text-ink-600 m-0 px-5 py-4 text-[13px] leading-[1.55] font-normal text-pretty">
+          <div className="flex flex-col gap-3.5 px-5 py-4">
+          <p className="text-ink-600 m-0 text-[13px] leading-[1.55] font-normal text-pretty">
             {listing.is_public ? (
               <>
                 <span className="text-ok-ink inline-flex items-center gap-1.5 font-medium">
@@ -336,9 +338,43 @@ export function ListingDetail({
             ) : listing.consent_public ? (
               "You've agreed to public display; our team decides whether to show it once the listing is approved."
             ) : (
-              "This will never be shown publicly. You can turn that on by editing the listing — it doesn't affect matching either way."
+              "This won't be shown publicly. Turning it on is a request — our team still decides what goes on the board, and it doesn't affect matching either way."
             )}
           </p>
+
+          {/* Consent is theirs to give and to withdraw, at any point in the
+              listing's life. It used to be editable only while the listing
+              was a draft, which left somebody who changed their mind about
+              being publicly listed with no way to say so. */}
+          <div className="flex flex-wrap items-center gap-3">
+            <Btn
+              disabled={!!busy}
+              onClick={() =>
+                run(
+                  "consent",
+                  () =>
+                    setMyListingConsent({
+                      id: listing.id,
+                      consent: !listing.consent_public,
+                    }),
+                  listing.consent_public
+                    ? "Taken off the public board"
+                    : "Asked to be listed — our team will review it"
+                )
+              }
+            >
+              {busy === "consent" ? <Spinner /> : <GlobeIcon size={15} />}
+              {listing.consent_public
+                ? "Don't show this publicly"
+                : "Ask to be shown publicly"}
+            </Btn>
+            <span className="text-ink-500 text-[12px] font-normal">
+              {listing.consent_public
+                ? "Turning this off takes it down straight away."
+                : "Matching works either way — this is only about the public board."}
+            </span>
+          </div>
+          </div>
         </Card>
 
         {listing.notes ? (

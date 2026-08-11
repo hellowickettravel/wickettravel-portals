@@ -2,6 +2,7 @@
 
 import { getUserAndProfile } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
+import { notify, notifyAdmins } from "@/lib/notify";
 import {
   scoreMatch,
   type MatchStatus,
@@ -279,6 +280,26 @@ export async function createMatch(input: {
     };
   }
 
+  // Both sides need to know there is something to answer — a match nobody is
+  // told about is a match nobody accepts. Neither message names the other
+  // person: that stays sealed until an introduction is released.
+  await Promise.all([
+    notify({
+      recipientId: traveller.profile_id,
+      type: "match",
+      title: "We've found someone for one of your trips",
+      body: `A family travelling ${requester.from_airport} → ${requester.to_airport}. Accept to let us introduce you.`,
+      actorId: user.id,
+    }),
+    notify({
+      recipientId: requester.profile_id,
+      type: "match",
+      title: "We've found a traveller for your request",
+      body: `Someone going ${traveller.from_airport} → ${traveller.to_airport}. Accept to let us introduce you.`,
+      actorId: user.id,
+    }),
+  ]);
+
   return { ok: true, data: { id: data.id, reference: data.reference_number } };
 }
 
@@ -465,5 +486,20 @@ export async function respondToMatch(input: {
     .eq("id", input.matchId);
 
   if (error) return { ok: false, error: error.message };
+
+  // An answer is the signal an admin acts on — once both sides are in, the
+  // introduction is theirs to make.
+  await notifyAdmins({
+    type: "match",
+    title: `A ${column === "traveller_response" ? "traveller" : "family"} ${input.response} a match`,
+    body:
+      input.response === "accepted"
+        ? "If both sides have now accepted, the introduction can be released."
+        : null,
+    link: `/admin/parents-matches/${input.matchId}`,
+    actorId: me.user.id,
+    actorName: me.profile?.full_name ?? null,
+  });
+
   return { ok: true };
 }
