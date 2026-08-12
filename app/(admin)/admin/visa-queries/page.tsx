@@ -2,7 +2,8 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { createClient } from "@/lib/supabase/client";
 import { listVisaEnquiries } from "@/lib/actions/visa";
 import {
   VISA_STATUSES,
@@ -29,6 +30,7 @@ import {
   ViewButton,
   focusRing,
 } from "@/components/admin/ui";
+import { LoadMore } from "@/components/admin/load-more";
 
 const ENQUIRIES_KEY = ["admin", "visa-enquiries", "list"] as const;
 const PAGE_SIZE = 5;
@@ -48,12 +50,35 @@ const TABS: { label: string; value: Tab }[] = [
 export default function AdminVisaQueriesPage() {
   const router = useRouter();
   const params = useSearchParams();
+  const queryClient = useQueryClient();
+  const supabase = useMemo(() => createClient(), []);
   const q = (params.get("q") ?? "").trim().toLowerCase();
 
   const { data, isLoading, isError } = useQuery({
     queryKey: ENQUIRIES_KEY,
     queryFn: listVisaEnquiries,
   });
+
+  /**
+   * Live queue. This screen is fed by a PUBLIC form on the marketing site, so
+   * it is the one place in the portal where a row can appear with nobody in
+   * the portal having done anything — and it was the only queue with no
+   * realtime subscription at all. An enquiry landing while an admin sat on
+   * this page stayed invisible until they navigated away and back.
+   */
+  useEffect(() => {
+    const channel = supabase
+      .channel("admin-visa-enquiries")
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "visa_enquiries" },
+        () => queryClient.invalidateQueries({ queryKey: ENQUIRIES_KEY })
+      )
+      .subscribe();
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [supabase, queryClient]);
 
   const [tab, setTab] = useState<Tab>("all");
   const [visaType, setVisaType] = useState("all");
@@ -239,10 +264,12 @@ export default function AdminVisaQueriesPage() {
               noun="enquiries"
               action={
                 remaining > 0 ? (
-                  <Btn onClick={() => setLimit((l) => l + PAGE_SIZE)}>
-                    Load {Math.min(PAGE_SIZE, remaining)} more — {remaining}{" "}
-                    remaining
-                  </Btn>
+                  <LoadMore
+                    remaining={remaining}
+                    pageSize={PAGE_SIZE}
+                    noun="queries"
+                    onLoad={() => setLimit((l) => l + PAGE_SIZE)}
+                  />
                 ) : undefined
               }
             />

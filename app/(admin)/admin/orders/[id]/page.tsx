@@ -4,6 +4,8 @@ import { getOrderById } from "@/lib/db/orders";
 import { getPreOrderAttachments } from "@/lib/db/order-messages";
 import { getEmployees } from "@/lib/db/profiles";
 import { getCustomerSnapshot } from "@/lib/db/customers";
+import { hasDeliveryTracking } from "@/lib/orders/lifecycle";
+import { sweepAutoCompleteOrders } from "@/lib/actions/order-lifecycle";
 import { OrderDetail } from "@/components/admin/order-detail";
 
 export default async function AdminOrderDetailPage({
@@ -13,12 +15,19 @@ export default async function AdminOrderDetailPage({
 }) {
   const { id } = await params;
 
-  const [order, employees, attachments, { user, profile }] = await Promise.all([
-    getOrderById(id),
-    getEmployees(),
-    getPreOrderAttachments(id),
-    getUserAndProfile(),
-  ]);
+  // Settle anything whose 24-hour approval window has run out before reading
+  // the record, so the screen never shows a stale "In progress" for an order
+  // the clock has already closed. No-ops on an unmigrated database.
+  await sweepAutoCompleteOrders();
+
+  const [order, employees, attachments, { user, profile }, canDeliver] =
+    await Promise.all([
+      getOrderById(id),
+      getEmployees(),
+      getPreOrderAttachments(id),
+      getUserAndProfile(),
+      hasDeliveryTracking(),
+    ]);
 
   if (!order) notFound();
 
@@ -36,6 +45,7 @@ export default async function AdminOrderDetailPage({
       customer={customer}
       currentUserId={user?.id ?? ""}
       currentUserName={profile?.full_name ?? "Admin"}
+      canDeliver={canDeliver}
     />
   );
 }

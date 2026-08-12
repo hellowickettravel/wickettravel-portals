@@ -94,8 +94,29 @@ const securityHeaders = [
   },
 ];
 
+function supabaseHost(): string {
+  try {
+    const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    return url ? new URL(url).hostname : "*.supabase.co";
+  } catch {
+    return "*.supabase.co";
+  }
+}
+
 const nextConfig: NextConfig = {
   redirects,
+  /**
+   * The sidebar renders the business logo through `next/image`, and the logo
+   * lives in the public Supabase storage bucket. `next/image` THROWS on an
+   * external src whose hostname isn't listed here — so the moment an admin
+   * uploaded a logo in Settings, every portal shell would have crashed into
+   * its error boundary. It has been latent only because no logo is set.
+   */
+  images: {
+    remotePatterns: [
+      { protocol: "https", hostname: supabaseHost(), pathname: "/storage/v1/object/public/**" },
+    ],
+  },
   // Don't advertise the framework — trims a header off every response.
   poweredByHeader: false,
   // Barrel-import optimization: pull ONLY the icons/components actually used

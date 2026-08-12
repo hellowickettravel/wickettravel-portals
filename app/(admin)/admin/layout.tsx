@@ -198,6 +198,9 @@ export default async function AdminLayout({
         userEmail={user.email ?? ""}
         userId={user.id}
         logoUrl={logoUrl}
+        /* The COMPANY mark above; the PERSON's picture here. Two different
+           images from two different tables, and that separation is the point. */
+        avatarUrl={profile?.avatar_url ?? null}
       >
         {children}
       </AdminShell>

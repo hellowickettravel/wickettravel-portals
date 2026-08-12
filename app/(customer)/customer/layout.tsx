@@ -28,6 +28,7 @@ export default async function CustomerLayout({
       userId={user.id}
       userName={name}
       userEmail={user.email ?? ""}
+      avatarUrl={profile?.avatar_url ?? null}
     >
       {children}
     </CustomerPortalShell>

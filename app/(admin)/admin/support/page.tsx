@@ -19,11 +19,11 @@ import {
   PageHead,
   Pill,
   Screen,
-  Spinner,
   TableSkeleton,
   focusRing,
 } from "@/components/admin/ui";
-import { CheckIcon, RefreshIcon } from "@/components/admin/icons";
+import { ChatIcon, CheckIcon, RefreshIcon } from "@/components/admin/icons";
+import { SupportThread } from "@/components/admin/support-thread";
 
 const TABS = ["All", "Open", "Resolved"] as const;
 type Tab = (typeof TABS)[number];
@@ -52,6 +52,9 @@ export default function AdminSupportPage() {
   const supabase = useMemo(() => createClient(), []);
   const [tab, setTab] = useState<Tab>("All");
   const [submitter, setSubmitter] = useState<Submitter>("all");
+  // Which ticket has its thread open. One at a time: the queue is a list, not
+  // a set of accordions, and two open threads make it impossible to scan.
+  const [replyingTo, setReplyingTo] = useState<string | null>(null);
 
   const { data, isLoading, isError } = useQuery({
     queryKey: ADMIN_SUPPORT_TICKETS_KEY,
@@ -214,52 +217,69 @@ export default function AdminSupportPage() {
             const resolved = t.status === "resolved";
             const busy =
               statusMutation.isPending && statusMutation.variables?.id === t.id;
+            const open = replyingTo === t.id;
             return (
               <div
                 key={t.id}
-                className="border-line-soft flex flex-wrap items-start gap-4 border-b px-5 py-4 last:border-b-0"
+                className="border-line-soft flex flex-col gap-4 border-b px-5 py-4 last:border-b-0"
               >
-                <span className="flex min-w-0 flex-[1_1_320px] flex-col gap-1">
-                  <span className="block leading-[1.45]">
-                    <span className="text-marine-600 mr-2.5 text-[12.5px] font-medium tabular-nums">
-                      {ticketRef(t.id)}
+                <div className="flex flex-wrap items-start gap-4">
+                  <span className="flex min-w-0 flex-[1_1_320px] flex-col gap-1">
+                    <span className="block leading-[1.45]">
+                      <span className="text-marine-600 mr-2.5 text-[12.5px] font-medium tabular-nums">
+                        {ticketRef(t.id)}
+                      </span>
+                      <span className="text-ink-880 text-[13.5px] font-medium tracking-[-0.008em]">
+                        {t.subject}
+                      </span>
                     </span>
-                    <span className="text-ink-880 text-[13.5px] font-medium tracking-[-0.008em]">
-                      {t.subject}
+                    <span className="text-ink-600 text-[12.5px] leading-[1.55] font-normal whitespace-pre-wrap text-pretty">
+                      {t.message}
+                    </span>
+                    <span className="text-ink-500 text-[11.5px] font-normal">
+                      {submitterName(t)} ·{" "}
+                      {t.submitter_role === "customer" ? "Customer" : "Employee"}{" "}
+                      · {fmtStamp(t.created_at)}
                     </span>
                   </span>
-                  <span className="text-ink-600 text-[12.5px] leading-[1.55] font-normal whitespace-pre-wrap text-pretty">
-                    {t.message}
+                  <span className="flex flex-none flex-wrap items-center gap-3">
+                    <Pill tone={resolved ? "ok" : "marine"}>
+                      {resolved ? "Resolved" : "Open"}
+                    </Pill>
+                    {/* The control that was missing entirely: an answer, in
+                        the portal, attached to the ticket. */}
+                    <Btn
+                      aria-expanded={open}
+                      onClick={() => setReplyingTo(open ? null : t.id)}
+                    >
+                      <ChatIcon size={15} />
+                      {open ? "Close thread" : "Reply"}
+                    </Btn>
+                    <Btn
+                      pending={busy}
+                      pendingLabel={resolved ? "Reopening…" : "Resolving…"}
+                      onClick={() =>
+                        statusMutation.mutate({
+                          id: t.id,
+                          status: resolved ? "open" : "resolved",
+                        })
+                      }
+                    >
+                      {resolved ? (
+                        <RefreshIcon size={15} />
+                      ) : (
+                        <CheckIcon size={15} />
+                      )}
+                      {resolved ? "Reopen" : "Mark resolved"}
+                    </Btn>
                   </span>
-                  <span className="text-ink-500 text-[11.5px] font-normal">
-                    {submitterName(t)} ·{" "}
-                    {t.submitter_role === "customer" ? "Customer" : "Employee"} ·{" "}
-                    {fmtStamp(t.created_at)}
-                  </span>
-                </span>
-                <span className="flex flex-none items-center gap-3">
-                  <Pill tone={resolved ? "ok" : "marine"}>
-                    {resolved ? "Resolved" : "Open"}
-                  </Pill>
-                  <Btn
-                    disabled={busy}
-                    onClick={() =>
-                      statusMutation.mutate({
-                        id: t.id,
-                        status: resolved ? "open" : "resolved",
-                      })
-                    }
-                  >
-                    {busy ? (
-                      <Spinner />
-                    ) : resolved ? (
-                      <RefreshIcon size={15} />
-                    ) : (
-                      <CheckIcon size={15} />
-                    )}
-                    {resolved ? "Reopen" : "Mark resolved"}
-                  </Btn>
-                </span>
+                </div>
+
+                {open ? (
+                  <div className="border-line-soft bg-surface-1 wt-fade-in rounded-[12px] border p-4">
+                    <SupportThread ticketId={t.id} audience="admin" />
+                  </div>
+                ) : null}
               </div>
             );
           })

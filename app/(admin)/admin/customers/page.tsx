@@ -24,6 +24,7 @@ import {
   ViewButton,
   focusRing,
 } from "@/components/admin/ui";
+import { LoadMore } from "@/components/admin/load-more";
 import { PlusIcon, UserPlusIcon } from "@/components/admin/icons";
 import { PersonDialog } from "@/components/admin/person-dialog";
 import {
@@ -276,10 +277,12 @@ export default function AdminCustomersPage() {
               noun="customers"
               action={
                 remaining > 0 ? (
-                  <Btn onClick={() => setLimit((l) => l + PAGE_SIZE)}>
-                    Load {Math.min(PAGE_SIZE, remaining)} more — {remaining}{" "}
-                    remaining
-                  </Btn>
+                  <LoadMore
+                    remaining={remaining}
+                    pageSize={PAGE_SIZE}
+                    noun="customers"
+                    onLoad={() => setLimit((l) => l + PAGE_SIZE)}
+                  />
                 ) : undefined
               }
             />

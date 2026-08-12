@@ -31,6 +31,10 @@ import {
   inputInsetClass,
 } from "@/components/admin/ui";
 import {
+  LoadMore,
+  arrivedInLastPage,
+} from "@/components/admin/load-more";
+import {
   ExportIcon,
   OrdersIcon,
   PercentIcon,
@@ -332,8 +336,18 @@ export default function OrdersPage() {
                 <Th align="right" />
               </Thead>
               <tbody>
-                {visible.map((o) => (
-                  <Tr key={o.id}>
+                {visible.map((o, i) => (
+                  <Tr
+                    key={o.id}
+                    /* Rows added by the last "Load more" animate in; the ones
+                       already on screen don't move, so the eye is told exactly
+                       what changed. */
+                    className={
+                      arrivedInLastPage(i, limit, PAGE_SIZE)
+                        ? "wt-row-enter"
+                        : undefined
+                    }
+                  >
                     <Td className="text-marine-600 text-[12.5px] font-medium tabular-nums">
                       <Link href={`/admin/orders/${o.id}`}>
                         {o.order_number}
@@ -393,12 +407,12 @@ export default function OrdersPage() {
               hasMore ? (
                 /* The design's table footer runs its 40px button at 12.5px,
                    a half-step below the standard 13px control label. */
-                <Btn
-                  className="text-[12.5px]"
-                  onClick={() => setLimit((n) => n + PAGE_SIZE)}
-                >
-                  Load {PAGE_SIZE} more — {filtered.length - limit} remaining
-                </Btn>
+                <LoadMore
+                  remaining={filtered.length - limit}
+                  pageSize={PAGE_SIZE}
+                  noun="orders"
+                  onLoad={() => setLimit((n) => n + PAGE_SIZE)}
+                />
               ) : null
             }
           />

@@ -93,6 +93,7 @@ export function AdminShell({
   userEmail,
   userId,
   logoUrl,
+  avatarUrl,
   children,
   /* Defaults are the admin portal's. The employee portal renders the same
      shell with its own nav, search map and destinations — the design system
@@ -112,7 +113,15 @@ export function AdminShell({
   userName: string;
   userEmail: string;
   userId: string;
+  /**
+   * The COMPANY mark, from `business_settings.logo_url`. Sidebar only.
+   * Deliberately unrelated to `avatarUrl` below — one is the business, the
+   * other is a person, and wiring them together is what made a member of
+   * staff's photo look like it had replaced the product's branding.
+   */
   logoUrl?: string | null;
+  /** The signed-in person's own picture, from `profiles.avatar_url`. */
+  avatarUrl?: string | null;
   children: React.ReactNode;
   roleLabel?: string;
   homeHref?: string;
@@ -406,7 +415,7 @@ export function AdminShell({
             <div className="flex flex-none items-center">{topBarExtra}</div>
           ) : null}
 
-          {showBell ? <AdminBell userId={userId} /> : null}
+          {showBell ? <AdminBell userId={userId} basePath={homeHref} /> : null}
 
           <Link
             href={supportHref}
@@ -423,8 +432,17 @@ export function AdminShell({
               aria-expanded={acctOpen}
               className="border-line-field hover:bg-surface-1 flex h-11 items-center gap-2.5 rounded-full border bg-white py-0 pr-3 pl-[5px] outline-none"
             >
-              <span className="bg-marine-500 flex size-[34px] flex-none items-center justify-center rounded-full text-[12px] font-medium text-white">
-                {initials}
+              <span className="bg-marine-500 relative flex size-[34px] flex-none items-center justify-center overflow-hidden rounded-full text-[12px] font-medium text-white">
+                {avatarUrl ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={avatarUrl}
+                    alt=""
+                    className="absolute inset-0 size-full object-cover"
+                  />
+                ) : (
+                  initials
+                )}
               </span>
               <span className="hidden flex-col items-start leading-[1.2] min-[1180px]:flex">
                 <span className="text-ink-800 max-w-[140px] truncate text-[12.5px] font-medium tracking-[-0.005em] whitespace-nowrap">

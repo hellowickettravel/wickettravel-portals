@@ -38,7 +38,16 @@ import {
   iconForField,
 } from "@/components/admin/icons";
 import { updateOrder, setOrderStatus, assignOrder } from "@/lib/actions/admin";
-import { paxSummary, splitPlace } from "@/lib/orders/display";
+import {
+  setEmployeeOrderStatus,
+  updateEmployeeOrder,
+} from "@/lib/actions/employee";
+import { markOrderDelivered } from "@/lib/actions/order-lifecycle";
+import {
+  AUTO_COMPLETE_HOURS,
+  paxSummary,
+  splitPlace,
+} from "@/lib/orders/display";
 import type {
   OrderWithRelations,
   OrderStatus,
@@ -84,6 +93,7 @@ const selectClass =
   "border-line-field text-ink-800 h-10 w-full cursor-pointer rounded-[10px] border bg-white px-3.5 text-[13.5px] font-normal outline-none transition-[border-color,box-shadow] duration-[130ms] disabled:opacity-50";
 
 type EditKey =
+  | "status"
   | "routeFrom"
   | "routeTo"
   | "travelDate"
@@ -109,6 +119,22 @@ type EditField = {
 };
 
 const EDIT_ROWS: EditField[][] = [
+  [
+    {
+      // The single most-asked-for control on this screen: change the status
+      // from the edit sheet instead of hunting for the header buttons, which
+      // only ever offered "complete" and "cancel".
+      key: "status",
+      id: "eo-status",
+      label: "Order status",
+      options: [
+        { value: "new", label: "New" },
+        { value: "in_progress", label: "In progress" },
+        { value: "completed", label: "Completed" },
+        { value: "cancelled", label: "Cancelled" },
+      ],
+    },
+  ],
   [
     { key: "routeFrom", id: "eo-from", label: "From", required: true },
     { key: "routeTo", id: "eo-to", label: "To", required: true },
@@ -216,6 +242,7 @@ export function OrderDetail({
   canEdit = true,
   canAssign = true,
   canViewCustomer = true,
+  canDeliver = false,
 }: {
   order: OrderWithRelations;
   employees: Profile[];
@@ -236,6 +263,12 @@ export function OrderDetail({
   canAssign?: boolean;
   /** Only admin has a customer-detail screen to link to. */
   canViewCustomer?: boolean;
+  /**
+   * Show the "Mark as delivered" hand-off. Passed as `hasDeliveryTracking()`
+   * by the page, so the control simply doesn't exist on a database where the
+   * `delivered_at` column hasn't been added yet.
+   */
+  canDeliver?: boolean;
 }) {
   const router = useRouter();
 
@@ -244,9 +277,20 @@ export function OrderDetail({
   const [assignOpen, setAssignOpen] = useState(false);
   const assignTitleId = useId();
   const editTitleId = useId();
-  const [busy, setBusy] = useState<null | "status" | "assign" | "edit">(null);
+  const [busy, setBusy] = useState<
+    null | "status" | "assign" | "edit" | "deliver"
+  >(null);
 
-  const [edit, setEdit] = useState<Record<EditKey, string>>({
+  /**
+   * The edit sheet's values, derived from the record. Seeding `useState` once
+   * was the bug behind "the popup isn't editable": after any save the screen
+   * calls `router.refresh()`, the server sends new values, and the sheet went
+   * on showing the ones it captured on first mount — so a second edit silently
+   * re-submitted stale data. `snapshot()` + a re-seed on open keeps the form
+   * and the record in step.
+   */
+  const snapshot = (): Record<EditKey, string> => ({
+    status: order.status,
     routeFrom: order.route_from ?? "",
     routeTo: order.route_to ?? "",
     travelDate: order.travel_date ?? "",
@@ -262,7 +306,15 @@ export function OrderDetail({
     paymentMethod: order.payment_method ?? "",
     paymentStatus: order.payment_status ?? "",
   });
+
+  const [edit, setEdit] = useState<Record<EditKey, string>>(snapshot);
   const [notes, setNotes] = useState(order.notes ?? "");
+
+  function openEdit() {
+    setEdit(snapshot());
+    setNotes(order.notes ?? "");
+    setEditOpen(true);
+  }
 
   const activeEmployees = employees.filter((e) => e.is_active);
   const [assignId, setAssignId] = useState(order.assigned_employee_id ?? "");
@@ -337,9 +389,24 @@ export function OrderDetail({
 
   const paxNames = order.passenger_names ?? [];
 
+  /**
+   * Which write path this portal uses.
+   *
+   * `setOrderStatus` / `updateOrder` in lib/actions/admin.ts both start with
+   * `requireAdmin()`. The employee portal renders this exact component, so a
+   * semi-admin employee pressing "Mark complete" or saving the edit sheet was
+   * getting a flat "Unauthorized" — the controls were visible (canEdit is true
+   * at semi_admin) but nothing behind them could ever succeed. The employee
+   * actions enforce the same rules through RLS, so the fix is to call the ones
+   * that belong to the portal doing the calling.
+   */
+  const asEmployee = basePath === "/employee";
+
   async function changeStatus(status: OrderStatus) {
     setBusy("status");
-    const res = await setOrderStatus({ id: order.id, status });
+    const res = asEmployee
+      ? await setEmployeeOrderStatus({ id: order.id, status })
+      : await setOrderStatus({ id: order.id, status });
     setBusy(null);
     if (!res.ok) {
       toast.error("Couldn't update status", { description: res.error });
@@ -365,8 +432,27 @@ export function OrderDetail({
       toast.error("Couldn't assign", { description: res.error });
       return;
     }
-    toast.success(assignId ? "Order assigned" : "Order unassigned");
+    toast.success(assignId ? "Order assigned" : "Order unassigned", {
+      description:
+        assignId && order.status === "new"
+          ? "The order moved to In progress."
+          : undefined,
+    });
     setAssignOpen(false);
+    router.refresh();
+  }
+
+  async function deliver() {
+    setBusy("deliver");
+    const res = await markOrderDelivered(order.id);
+    setBusy(null);
+    if (!res.ok) {
+      toast.error("Couldn't mark as delivered", { description: res.error });
+      return;
+    }
+    toast.success("Marked as delivered", {
+      description: `The customer can approve it now, and it completes on its own in ${AUTO_COMPLETE_HOURS} hours.`,
+    });
     router.refresh();
   }
 
@@ -377,7 +463,21 @@ export function OrderDetail({
       return;
     }
     setBusy("edit");
-    const res = await updateOrder({
+    // The status select is applied first and separately: `updateOrder` writes
+    // trip + pricing and deliberately does not touch the lifecycle, which
+    // stamps closed_at and raises its own notification.
+    if (edit.status && edit.status !== order.status) {
+      const status = edit.status as OrderStatus;
+      const s = asEmployee
+        ? await setEmployeeOrderStatus({ id: order.id, status })
+        : await setOrderStatus({ id: order.id, status });
+      if (!s.ok) {
+        setBusy(null);
+        toast.error("Couldn't change the status", { description: s.error });
+        return;
+      }
+    }
+    const payload = {
       id: order.id,
       routeFrom: edit.routeFrom,
       routeTo: edit.routeTo,
@@ -393,7 +493,10 @@ export function OrderDetail({
       budgetPerPerson: parseNum(edit.budgetPerPerson),
       paymentMethod: (edit.paymentMethod || null) as PaymentMethod | null,
       paymentStatus: (edit.paymentStatus || null) as PaymentStatus | null,
-    });
+    };
+    const res = asEmployee
+      ? await updateEmployeeOrder(payload)
+      : await updateOrder(payload);
     setBusy(null);
     if (!res.ok) {
       toast.error("Couldn't save order", { description: res.error });
@@ -430,7 +533,7 @@ export function OrderDetail({
 
         <div className="flex flex-wrap items-center gap-3">
           {canEdit ? (
-            <Btn onClick={() => setEditOpen(true)}>
+            <Btn onClick={openEdit}>
               <EditIcon size={15} />
               Edit order
             </Btn>
@@ -448,7 +551,8 @@ export function OrderDetail({
             <Btn
               variant="marine"
               onClick={() => changeStatus("in_progress")}
-              disabled={busy === "status"}
+              pending={busy === "status"}
+              pendingLabel="Reopening…"
             >
               <RefreshIcon size={15} />
               Reopen order
@@ -458,23 +562,55 @@ export function OrderDetail({
               <Btn
                 variant="danger"
                 onClick={() => setCancelOpen(true)}
-                disabled={busy === "status"}
+                disabled={busy !== null}
               >
                 <CloseIcon size={15} />
                 Cancel
               </Btn>
+              {/* Hand-off to the customer. Only offered while delivery
+                  tracking exists in the database AND the order hasn't already
+                  been handed over — a second click would just restart the
+                  24-hour clock. */}
+              {canDeliver && !order.delivered_at ? (
+                <Btn
+                  onClick={deliver}
+                  pending={busy === "deliver"}
+                  pendingLabel="Notifying customer…"
+                  disabled={busy !== null}
+                >
+                  <DocumentIcon size={15} />
+                  Mark as delivered
+                </Btn>
+              ) : null}
               <Btn
                 variant="marine"
                 onClick={() => changeStatus("completed")}
-                disabled={busy === "status"}
+                pending={busy === "status"}
+                pendingLabel="Completing…"
+                disabled={busy !== null}
               >
                 <CheckCircleIcon size={15} />
-                {busy === "status" ? "Saving…" : "Mark complete"}
+                Mark complete
               </Btn>
             </>
           )}
         </div>
       </div>
+
+      {/* Awaiting-approval banner. An order that has been delivered is in a
+          real state the status pill has no word for, so it is said out loud
+          rather than left to be inferred from a timestamp nobody sees. */}
+      {order.delivered_at && !settled ? (
+        <div className="border-warn-bg bg-warn-wash text-warn-ink flex flex-wrap items-center gap-x-2 gap-y-1 rounded-[12px] border px-4 py-3 text-[12.5px] font-medium">
+          <span>
+            Delivered {fmtDate(order.delivered_at)} — waiting on the customer.
+          </span>
+          <span className="font-normal opacity-80">
+            It completes on its own {AUTO_COMPLETE_HOURS} hours after delivery
+            if they don&apos;t approve it first.
+          </span>
+        </div>
+      ) : null}
 
       {/* ------------------------------------------------ boarding pass */}
       {/* The design's pass names the carrier and its flight numbers. Until an
@@ -779,16 +915,23 @@ export function OrderDetail({
             ))}
           </select>
         </div>
-        <SheetFoot>
+        <SheetFoot
+          note={
+            assignId && order.status === "new"
+              ? "Assigning moves this order to In progress."
+              : undefined
+          }
+        >
           <Btn onClick={() => setAssignOpen(false)} disabled={busy === "assign"}>
             Cancel
           </Btn>
           <Btn
             variant="marine"
             onClick={saveAssignment}
-            disabled={busy === "assign"}
+            pending={busy === "assign"}
+            pendingLabel="Saving…"
           >
-            {busy === "assign" ? "Saving…" : "Save assignment"}
+            Save assignment
           </Btn>
         </SheetFoot>
       </Sheet>
@@ -802,79 +945,94 @@ export function OrderDetail({
       >
         <SheetHead
           icon={<EditIcon size={20} />}
-          title="Edit order"
-          subtitle="Update trip and pricing details. The customer cannot be changed here."
+          title={`Edit order ${order.order_number}`}
+          subtitle="Status, trip and pricing. The customer on the order cannot be changed here."
           titleId={editTitleId}
           onClose={() => busy !== "edit" && setEditOpen(false)}
         />
         <form
           id="edit-order-form"
           onSubmit={saveEdit}
-          className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto px-6 py-5"
+          className={cn(
+            "om-scroll flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto px-6 py-5",
+            busy === "edit" && "is-busy"
+          )}
         >
-            {EDIT_ROWS.map((row, i) => (
-              <div key={i} className="grid grid-cols-2 gap-4">
-                {row.map((f) => (
-                  <div key={f.id} className="flex min-w-0 flex-col gap-2">
-                    <label
-                      htmlFor={f.id}
-                      className="text-ink-700 text-[11.5px] font-medium"
+          {EDIT_ROWS.map((row, i) => (
+            <div
+              key={i}
+              /* Rows were a hard 2-column grid, so on a narrow viewport every
+                 field was squeezed to ~110px and the date inputs clipped their
+                 own text — the "not proper smooth display" half of the
+                 complaint. auto-fit lets a row fall to one column instead. */
+              className="grid grid-cols-[repeat(auto-fit,minmax(190px,1fr))] gap-4"
+            >
+              {row.map((f) => (
+                <div key={f.id} className="flex min-w-0 flex-col gap-2">
+                  <label
+                    htmlFor={f.id}
+                    className="text-ink-700 text-[11.5px] font-medium"
+                  >
+                    {f.label}
+                  </label>
+                  {f.options ? (
+                    <select
+                      id={f.id}
+                      value={edit[f.key]}
+                      disabled={busy === "edit"}
+                      onChange={(e) =>
+                        setEdit((s) => ({ ...s, [f.key]: e.target.value }))
+                      }
+                      className={cn(selectClass, focusRing)}
                     >
-                      {f.label}
-                    </label>
-                    {f.options ? (
-                      <select
-                        id={f.id}
-                        value={edit[f.key]}
-                        disabled={busy === "edit"}
-                        onChange={(e) =>
-                          setEdit((s) => ({ ...s, [f.key]: e.target.value }))
-                        }
-                        className={cn(selectClass, focusRing)}
-                      >
-                        {f.options.map((o) => (
-                          <option key={o.value} value={o.value}>
-                            {o.label}
-                          </option>
-                        ))}
-                      </select>
-                    ) : (
-                      <input
-                        id={f.id}
-                        type={f.type ?? "text"}
-                        value={edit[f.key]}
-                        required={f.required}
-                        disabled={busy === "edit"}
-                        onChange={(e) =>
-                          setEdit((s) => ({ ...s, [f.key]: e.target.value }))
-                        }
-                        className={cn(inputClass, focusRing)}
-                      />
-                    )}
-                  </div>
-                ))}
-              </div>
-            ))}
-
-            <div className="flex flex-col gap-2">
-              <label
-                htmlFor="eo-notes"
-                className="text-ink-700 text-[11.5px] font-medium"
-              >
-                Internal notes
-              </label>
-              <textarea
-                id="eo-notes"
-                rows={3}
-                value={notes}
-                disabled={busy === "edit"}
-                onChange={(e) => setNotes(e.target.value)}
-                className={cn(textareaClass, focusRing)}
-              />
+                      {f.options.map((o) => (
+                        <option key={o.value} value={o.value}>
+                          {o.label}
+                        </option>
+                      ))}
+                    </select>
+                  ) : (
+                    <input
+                      id={f.id}
+                      type={f.type ?? "text"}
+                      value={edit[f.key]}
+                      required={f.required}
+                      disabled={busy === "edit"}
+                      onChange={(e) =>
+                        setEdit((s) => ({ ...s, [f.key]: e.target.value }))
+                      }
+                      className={cn(inputClass, focusRing)}
+                    />
+                  )}
+                </div>
+              ))}
             </div>
+          ))}
 
+          <div className="flex flex-col gap-2">
+            <label
+              htmlFor="eo-notes"
+              className="text-ink-700 text-[11.5px] font-medium"
+            >
+              Internal notes
+            </label>
+            <textarea
+              id="eo-notes"
+              rows={3}
+              value={notes}
+              disabled={busy === "edit"}
+              onChange={(e) => setNotes(e.target.value)}
+              className={cn(textareaClass, focusRing)}
+            />
+          </div>
         </form>
-        <SheetFoot>
+        <SheetFoot
+          note={
+            edit.status !== order.status
+              ? `Status will change to "${statusLabel(edit.status as OrderStatus)}".`
+              : undefined
+          }
+        >
           <Btn
             type="button"
             onClick={() => setEditOpen(false)}
@@ -886,9 +1044,10 @@ export function OrderDetail({
             type="submit"
             form="edit-order-form"
             variant="ember"
-            disabled={busy === "edit"}
+            pending={busy === "edit"}
+            pendingLabel="Saving…"
           >
-            {busy === "edit" ? "Saving…" : "Save changes"}
+            Save changes
           </Btn>
         </SheetFoot>
       </Sheet>
@@ -896,7 +1055,11 @@ export function OrderDetail({
       <ConfirmSheet
         open={cancelOpen}
         onClose={() => setCancelOpen(false)}
-        onConfirm={() => changeStatus("cancelled")}
+        onConfirm={async () => {
+          await changeStatus("cancelled");
+          setCancelOpen(false);
+        }}
+        busy={busy === "status"}
         destructive
         icon={<CloseIcon size={20} />}
         title="Cancel this order?"

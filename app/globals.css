@@ -296,6 +296,12 @@
   }
   html {
     color-scheme: light;
+    /* Reserve the scrollbar's width at all times. Without this, opening any
+       modal (which sets `body { overflow: hidden }`) removes the scrollbar and
+       the whole page — sticky header, sidebar, every card — jumps ~15px wider
+       behind the scrim. That sideways lurch under a blurred overlay is what
+       reads as the dialog "crashing around the screen". */
+    scrollbar-gutter: stable;
   }
   body {
     @apply bg-background text-foreground;
@@ -304,6 +310,48 @@
        only opted-in elements (overflow-x-auto regions) scroll. `clip` keeps
        position: sticky working, unlike `hidden`. */
     overflow-x: clip;
+  }
+
+  /* ------------------------------------------------------------- cursors --
+     Tailwind v4's preflight dropped `button { cursor: pointer }` (it was a
+     documented v3→v4 breaking change), so EVERY button in this project has
+     been showing the text/arrow cursor unless a `cursor-pointer` utility was
+     added by hand — which only 35 of them had. This restores the affordance
+     platform-wide: anything that responds to a click says so.
+
+     `:disabled` and `[aria-disabled]` are excluded so a dead control still
+     reads as dead, and `[data-scrim]` opts the modal backdrop out. */
+  button:not(:disabled):not([aria-disabled="true"]):not([data-scrim]),
+  summary,
+  label:has(> input[type="checkbox"]),
+  label:has(> input[type="radio"]),
+  select:not(:disabled),
+  [role="button"]:not([aria-disabled="true"]),
+  [role="switch"]:not([aria-disabled="true"]),
+  [role="tab"]:not([aria-disabled="true"]),
+  [role="radio"]:not([aria-disabled="true"]),
+  [role="option"]:not([aria-disabled="true"]),
+  input[type="checkbox"]:not(:disabled),
+  input[type="radio"]:not(:disabled),
+  input[type="file"]:not(:disabled),
+  input[type="range"]:not(:disabled),
+  input[type="submit"]:not(:disabled),
+  input[type="reset"]:not(:disabled),
+  input[type="color"]:not(:disabled),
+  a[href] {
+    cursor: pointer;
+  }
+  button:disabled,
+  button[aria-disabled="true"],
+  select:disabled,
+  input:disabled,
+  textarea:disabled,
+  [aria-disabled="true"] {
+    cursor: not-allowed;
+  }
+  /* A control mid-flight is neither clickable nor dead — it is busy. */
+  [aria-busy="true"] {
+    cursor: progress;
   }
   h1,
   h2,
@@ -629,6 +677,149 @@
 
 .wt-row-enter {
   animation: wt-row 220ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+/* ------------------------------------------------------- interaction motion --
+   The design declares colours and sizes but not the *feel* of a control. This
+   block supplies it once, scoped to the product interior, so every button,
+   row, chip, tile and nav item in all three portals answers a pointer the same
+   way instead of each screen inventing (or forgetting) its own hover.
+
+   Three rules:
+   1. Hover is a colour/elevation change, never a size change — a growing
+      button under the cursor makes a dense table feel unstable.
+   2. Press IS a size change (0.97–0.99), because that is the one moment the
+      user wants physical confirmation their click landed.
+   3. Everything is ≤160ms. A control that takes longer to acknowledge a click
+      than the click itself feels laggy, not polished.
+
+   The reduced-motion block above zeroes every duration here, so none of this
+   needs its own guard. */
+@layer components {
+  :is(.admin-root, .ds-root, .auth-root) :is(button, [role="button"], [role="switch"], [role="radio"], [role="tab"], a[href], summary, select, label:has(> input[type="checkbox"]), label:has(> input[type="radio"])) {
+    transition-property: background-color, border-color, color, box-shadow,
+      opacity, transform, filter;
+    transition-duration: 140ms;
+    transition-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  /* Press. Excluded: the composer's textarea-adjacent icon buttons keep their
+     own scale, and anything opting out with data-no-press (table rows, where a
+     shrinking row would drag its neighbours). */
+  :is(.admin-root, .ds-root, .auth-root)
+    :is(button, [role="button"])
+    :not(:disabled):not([aria-disabled="true"]):not([data-scrim]):not([data-no-press]):active {
+    transform: scale(0.97);
+  }
+  :is(.admin-root, .ds-root, .auth-root)
+    a[href]:not([data-no-press]):active {
+    transform: scale(0.985);
+  }
+  /* Filled CTAs lift a hair on hover and settle on press — the only elevation
+     change in the system, reserved for the one primary action per view. */
+  :is(.admin-root, .ds-root, .auth-root) [data-lift]:not(:disabled):hover {
+    box-shadow: 0 6px 16px oklch(0.205 0.038 258 / 0.14);
+  }
+  /* Rows: a table row that highlights on hover but not on press reads as
+     decoration. This makes the whole row acknowledge the click. */
+  :is(.admin-root, .ds-root) [data-row]:active {
+    background: var(--color-marine-sel);
+  }
+}
+
+/* A control that is waiting on the server dims and stops accepting hover, so
+   "I clicked it, is it doing anything?" never has to be asked. */
+@utility is-busy {
+  opacity: 0.72;
+  pointer-events: none;
+}
+
+/* ------------------------------------------------------------- skeletons --
+   `wt-pulse` (above) fades a block in place. A shimmer reads as *streaming
+   data* rather than as a broken element, which is what a first paint needs:
+   the difference between "this list is empty" and "this list is arriving". */
+@keyframes wt-shimmer {
+  from {
+    background-position: 200% 0;
+  }
+  to {
+    background-position: -200% 0;
+  }
+}
+
+@utility wt-skeleton {
+  background-image: linear-gradient(
+    90deg,
+    var(--color-neutral-bg) 0%,
+    var(--color-surface-1) 42%,
+    var(--color-neutral-bg) 84%
+  );
+  background-size: 200% 100%;
+  animation: wt-shimmer 1.4s linear infinite;
+  border-radius: 999px;
+}
+
+/* ---------------------------------------------------------------- dialogs --
+   The scrim fades and the sheet rises. Without this a modal simply *is* there
+   between two frames, which is the other half of why the edit dialogs felt
+   like the screen was breaking rather than opening. */
+@keyframes wt-scrim-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes wt-sheet-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px) scale(0.985);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.wt-scrim {
+  animation: wt-scrim-in 160ms ease-out both;
+}
+
+.wt-sheet {
+  animation: wt-sheet-in 220ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+/* Analytics columns grow out of the axis. `transform-origin: bottom` rather
+   than animating `height`, so the browser can do it on the compositor and a
+   long chart never janks. */
+@keyframes wt-bar-grow {
+  from {
+    transform: scaleY(0);
+  }
+  to {
+    transform: scaleY(1);
+  }
+}
+
+.wt-bar-grow {
+  transform-origin: bottom;
+  animation: wt-bar-grow 520ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+/* Newly loaded rows announce themselves without re-animating the rows that
+   were already on screen — see LoadMore in components/admin/ui.tsx. */
+@keyframes wt-fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.wt-fade-in {
+  animation: wt-fade-in 200ms ease-out both;
 }
 
 /* Sonner's own enter/exit are replaced so the toast moves like the rest of the

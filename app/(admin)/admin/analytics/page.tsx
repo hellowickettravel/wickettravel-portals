@@ -12,6 +12,7 @@ import {
   PageHead,
   Screen,
 } from "@/components/admin/ui";
+import { LiveRefresh } from "@/components/admin/live-refresh";
 
 const RANGES = [
   { key: "7d", label: "7 days", days: 7 },
@@ -82,9 +83,16 @@ function ColumnChart({
               className="relative flex h-full min-w-0 flex-1 flex-col items-stretch gap-2.5"
             >
               <span className="bg-surface-1 relative flex min-h-0 flex-1 items-end rounded-t-[8px]">
+                {/* Bars grow from the axis on arrival, staggered left to
+                    right. The chart used to simply appear at full height,
+                    which reads as a static image rather than as data. */}
                 <span
-                  style={{ height: h, background: current ? BAR_CURRENT : BAR_SETTLED }}
-                  className="block w-full rounded-t-[8px] transition-[filter] duration-[140ms] hover:brightness-[1.08]"
+                  style={{
+                    height: h,
+                    background: current ? BAR_CURRENT : BAR_SETTLED,
+                    animationDelay: `${i * 45}ms`,
+                  }}
+                  className="wt-bar-grow block w-full rounded-t-[8px] transition-[filter] duration-[140ms] hover:brightness-[1.08]"
                 />
                 <span
                   style={{ bottom: h }}
@@ -256,6 +264,13 @@ export default async function AnalyticsPage({
         intro="Where the business is coming from and who is closing it."
         actions={
           <div className="flex flex-wrap items-center gap-2">
+            {/* Analytics is computed during the server render, so it had no
+                way to know an order had completed. This subscribes to the
+                tables the figures come from and re-runs that render. */}
+            <LiveRefresh
+              channel="admin-analytics"
+              tables={["orders", "customers", "conversations"]}
+            />
             {RANGES.map((r) => (
               <Link
                 key={r.key}

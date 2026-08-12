@@ -3,7 +3,37 @@
 import { useEffect, useId, useRef } from "react";
 import { cn } from "@/lib/utils";
 import { CloseIcon } from "@/components/admin/icons";
-import { Spinner } from "@/components/admin/ui";
+import { Btn } from "@/components/admin/ui";
+
+/**
+ * Lock the page behind a modal WITHOUT moving it.
+ *
+ * `body { overflow: hidden }` on its own removes the vertical scrollbar, the
+ * viewport gets ~15px wider, and every fixed/sticky/centred thing on the page
+ * — sidebar, top bar, cards — jumps sideways behind the scrim. Under a
+ * blurred overlay that lurch is what reads as the dialog "breaking the
+ * screen". `scrollbar-gutter: stable` on <html> (globals.css) reserves the
+ * space permanently; this is the belt-and-braces for browsers that ignore it
+ * and for the case where a scrollbar was actually present.
+ *
+ * Returns the undo function so the caller's effect cleanup stays a one-liner.
+ */
+function lockScroll(): () => void {
+  const gap = window.innerWidth - document.documentElement.clientWidth;
+  const prevOverflow = document.body.style.overflow;
+  const prevPad = document.body.style.paddingRight;
+  document.body.style.overflow = "hidden";
+  if (gap > 0) {
+    const current = parseFloat(getComputedStyle(document.body).paddingRight) || 0;
+    document.body.style.paddingRight = `${current + gap}px`;
+  }
+  return () => {
+    document.body.style.overflow = prevOverflow;
+    document.body.style.paddingRight = prevPad;
+  };
+}
+
+export { lockScroll };
 
 /**
  * The admin design's overlay sheet — the chrome behind every /admin modal.
@@ -33,10 +63,26 @@ export function Sheet({
     if (!open) return;
     const onKey = (e: KeyboardEvent) => {
       if (e.key === "Escape") onClose();
+      /* Focus trap. Without it, tabbing past the last control walks out of the
+         dialog and into the page behind the scrim — which the user can see
+         highlighting but cannot reach, another reason the sheets felt broken. */
+      if (e.key !== "Tab" || !ref.current) return;
+      const focusable = ref.current.querySelectorAll<HTMLElement>(
+        'a[href],button:not(:disabled),input:not(:disabled),select:not(:disabled),textarea:not(:disabled),[tabindex]:not([tabindex="-1"])'
+      );
+      if (focusable.length === 0) return;
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+      if (e.shiftKey && document.activeElement === first) {
+        e.preventDefault();
+        last.focus();
+      } else if (!e.shiftKey && document.activeElement === last) {
+        e.preventDefault();
+        first.focus();
+      }
     };
     document.addEventListener("keydown", onKey);
-    const prev = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
+    const unlock = lockScroll();
     ref.current
       ?.querySelector<HTMLElement>(
         "input, select, textarea, button:not([data-sheet-close])"
@@ -44,19 +90,20 @@ export function Sheet({
       ?.focus();
     return () => {
       document.removeEventListener("keydown", onKey);
-      document.body.style.overflow = prev;
+      unlock();
     };
   }, [open, onClose]);
 
   if (!open) return null;
 
   return (
-    <div className="fixed inset-0 z-90 flex items-center justify-center bg-[oklch(0.205_0.038_258_/_0.42)] p-[clamp(12px,3vw,40px)] backdrop-blur-[3px]">
+    <div className="wt-scrim fixed inset-0 z-90 flex items-center justify-center bg-[oklch(0.205_0.038_258_/_0.42)] p-[clamp(12px,3vw,40px)] backdrop-blur-[3px]">
       <button
         type="button"
         aria-label="Close"
         tabIndex={-1}
         data-sheet-close
+        data-scrim
         onClick={onClose}
         className="absolute inset-0 cursor-default"
       />
@@ -67,7 +114,7 @@ export function Sheet({
         aria-labelledby={labelledBy}
         style={{ maxWidth: width }}
         className={cn(
-          "relative flex max-h-[90vh] w-full flex-col overflow-hidden rounded-2xl bg-white shadow-[0_24px_70px_oklch(0.205_0.038_258_/_0.28)]",
+          "wt-sheet relative flex max-h-[90vh] w-full flex-col overflow-hidden rounded-2xl bg-white shadow-[0_24px_70px_oklch(0.205_0.038_258_/_0.28)]",
           className
         )}
       >
@@ -197,28 +244,22 @@ export function ConfirmSheet({
         </p>
       </div>
       <SheetFoot>
-        <button
-          type="button"
-          onClick={onClose}
-          disabled={busy}
-          className="border-line-field text-ink-800 h-10 rounded-full border bg-white px-5 text-[13px] font-medium outline-none hover:bg-[var(--color-surface-2)] disabled:opacity-60"
-        >
+        <Btn onClick={onClose} disabled={busy}>
           {cancelLabel}
-        </button>
-        <button
-          type="button"
+        </Btn>
+        <Btn
           onClick={onConfirm}
-          disabled={busy}
+          pending={busy}
+          pendingLabel="Working…"
+          variant={destructive ? "danger" : "ember"}
           className={cn(
-            "inline-flex h-10 items-center gap-2 rounded-full border-0 px-6 text-[13px] font-medium whitespace-nowrap text-white outline-none disabled:opacity-60",
-            destructive
-              ? "bg-danger-strong hover:bg-danger-ink"
-              : "bg-ember-600 hover:bg-ember-700"
+            "px-6",
+            destructive &&
+              "bg-danger-strong hover:bg-danger-ink border-0 text-white"
           )}
         >
-          {busy ? <Spinner /> : null}
           {confirmLabel}
-        </button>
+        </Btn>
       </SheetFoot>
     </Sheet>
   );

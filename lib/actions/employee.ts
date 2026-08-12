@@ -11,7 +11,14 @@ import {
   canCreateOrders,
   canEditOrders,
 } from "@/lib/access";
-import type { Message, OrderWithRelations, OrderStatus } from "@/lib/db/types";
+import { isMissingColumn } from "@/lib/db/errors";
+import type {
+  Message,
+  OrderWithRelations,
+  OrderStatus,
+  PaymentMethod,
+  PaymentStatus,
+} from "@/lib/db/types";
 import { normalizeOrderInput, type OrderFormInput } from "@/lib/orders/form";
 import { LIMITS, sanitizeText } from "@/lib/security/limits";
 import { tooManyRecentRows } from "@/lib/security/rate-limit";
@@ -186,6 +193,15 @@ export async function updateEmployeeOrder(input: {
   costPrice: number | null;
   commission: number | null;
   notes: string | null;
+  // The 0021 fields. The employee portal renders the SAME edit sheet as
+  // /admin, so it has to be able to save the same fields — without these the
+  // airline, flight numbers, budget and payment selects were silently dropped
+  // on save for every employee.
+  airline?: string | null;
+  flightNumbers?: string | null;
+  budgetPerPerson?: number | null;
+  paymentMethod?: PaymentMethod | null;
+  paymentStatus?: PaymentStatus | null;
 }): Promise<ActionResult> {
   const { profile } = await requireUser();
   const access = normalizeAccess(profile?.access_level);
@@ -200,24 +216,44 @@ export async function updateEmployeeOrder(input: {
   }
 
   const supabase = await createClient();
-  const { data, error } = await supabase
+  const base = {
+    route_from: routeFrom,
+    route_to: routeTo,
+    travel_date: input.travelDate,
+    return_date: input.returnDate,
+    passengers: input.passengers,
+    selling_price: input.sellingPrice,
+    cost_price: input.costPrice,
+    commission: input.commission,
+    notes: input.notes?.trim() || null,
+  };
+  const extended = {
+    ...base,
+    airline: input.airline?.trim() || null,
+    flight_numbers: input.flightNumbers?.trim() || null,
+    budget_per_person: input.budgetPerPerson ?? null,
+    payment_method: input.paymentMethod ?? null,
+    payment_status: input.paymentStatus ?? null,
+  };
+
+  let result = await supabase
     .from("orders")
-    .update({
-      route_from: routeFrom,
-      route_to: routeTo,
-      travel_date: input.travelDate,
-      return_date: input.returnDate,
-      passengers: input.passengers,
-      selling_price: input.sellingPrice,
-      cost_price: input.costPrice,
-      commission: input.commission,
-      notes: input.notes?.trim() || null,
-    })
+    .update(extended)
     .eq("id", input.id)
     .select("id");
 
-  if (error) return { ok: false, error: error.message };
-  if (!data || data.length === 0) {
+  // Migration 0021 not applied: save everything the database does understand
+  // rather than failing the whole edit. Same contract as the admin action.
+  if (result.error && isMissingColumn(result.error)) {
+    result = await supabase
+      .from("orders")
+      .update(base)
+      .eq("id", input.id)
+      .select("id");
+  }
+
+  if (result.error) return { ok: false, error: result.error.message };
+  if (!result.data || result.data.length === 0) {
     return { ok: false, error: "You can't edit this order." };
   }
   return { ok: true };

@@ -181,3 +181,46 @@ export async function uploadBrandingLogo(file: File): Promise<UploadResult> {
   const { data } = supabase.storage.from(BRANDING_BUCKET).getPublicUrl(key);
   return { ok: true, url: data.publicUrl, name: file.name };
 }
+
+/**
+ * Upload a personal profile picture.
+ *
+ * Deliberately a SEPARATE key prefix from the business logo, in the same public
+ * bucket. The two are different things that were being conflated: the sidebar
+ * mark is the company's identity and is set once by an admin for everybody,
+ * while this is one person's face and appears only where that person appears —
+ * the account button, the inbox rows, their chat bubbles. Uploading a photo
+ * here must never change what the sidebar shows, and replacing the company
+ * logo must never change anyone's avatar.
+ *
+ * The key is namespaced by uid so one person's uploads are enumerable and
+ * removable as a set.
+ */
+export async function uploadProfileAvatar(file: File): Promise<UploadResult> {
+  const type = file.type.toLowerCase();
+  if (!["image/png", "image/jpeg", "image/jpg", "image/webp"].includes(type)) {
+    return { ok: false, error: "Profile pictures must be PNG, JPG or WebP." };
+  }
+  if (file.size > 4 * 1024 * 1024) {
+    return { ok: false, error: "Image is too large — max 4MB." };
+  }
+
+  const supabase = createClient();
+  // The uid comes from the live session, never from a caller-supplied prop:
+  // the folder is the only thing separating one person's uploads from
+  // another's, so it must not be something a screen can get wrong.
+  const { data: auth } = await supabase.auth.getUser();
+  const uid = auth.user?.id;
+  if (!uid) return { ok: false, error: "You're signed out — sign in and retry." };
+
+  const key = objectKey(`avatar/${uid}`, file.name);
+
+  const { error } = await supabase.storage
+    .from(BRANDING_BUCKET)
+    .upload(key, file, { contentType: file.type, upsert: false });
+
+  if (error) return { ok: false, error: error.message };
+
+  const { data } = supabase.storage.from(BRANDING_BUCKET).getPublicUrl(key);
+  return { ok: true, url: data.publicUrl, name: file.name };
+}

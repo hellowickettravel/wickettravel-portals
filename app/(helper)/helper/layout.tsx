@@ -25,6 +25,7 @@ export default async function HelperLayout({
       userId={user.id}
       userName={profile?.full_name?.trim() || user.email || "Helper"}
       userEmail={user.email ?? ""}
+      avatarUrl={profile?.avatar_url ?? null}
     >
       {children}
     </HelperPortalShell>

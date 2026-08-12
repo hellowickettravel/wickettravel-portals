@@ -31,6 +31,8 @@ import {
   Tr,
   ViewButton,
 } from "@/components/admin/ui";
+import { HowItWorks } from "@/components/admin/how-it-works";
+import { LoadMore } from "@/components/admin/load-more";
 import { GlobeIcon } from "@/components/admin/icons";
 
 const KEY = ["admin", "parent-listings"] as const;
@@ -122,6 +124,29 @@ export default function AdminParentsListingsPage() {
       <PageHead
         title="Parent listings"
         intro="Traveller listings and parent requests from verified customers. Every one is approved by hand before it can be matched or shown on the public board."
+      />
+
+      <HowItWorks
+        title="How listings work"
+        cta={{ href: "/admin/parents-verification", label: "Open verifications" }}
+        steps={[
+          {
+            label: "Someone posts",
+            body: "A traveller offers to accompany a parent on a flight they were already taking, or a family asks for that help.",
+          },
+          {
+            label: "You review it",
+            body: "Approve, or send it back with a reason. The poster's verification state is shown on the record so you can weigh it.",
+          },
+          {
+            label: "Ranked candidates appear",
+            body: "An approved listing gets scored candidates from the opposite side — same route, dates within 14 days, overlapping languages and help.",
+          },
+          {
+            label: "You propose a match",
+            body: "The score ranks; it never authorises. Proposing creates a match, which is where the payment and introduction live.",
+          },
+        ]}
       />
 
       <Card>
@@ -266,9 +291,12 @@ export default function AdminParentsListingsPage() {
               noun="listings"
               action={
                 remaining > 0 ? (
-                  <Btn onClick={() => setLimit((l) => l + PAGE_SIZE)}>
-                    Load {Math.min(PAGE_SIZE, remaining)} more — {remaining} remaining
-                  </Btn>
+                  <LoadMore
+                    remaining={remaining}
+                    pageSize={PAGE_SIZE}
+                    noun="listings"
+                    onLoad={() => setLimit((l) => l + PAGE_SIZE)}
+                  />
                 ) : undefined
               }
             />

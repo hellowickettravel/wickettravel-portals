@@ -12,6 +12,7 @@ import {
 } from "@/lib/format";
 import { BoardingPass } from "@/components/admin/boarding-pass";
 import { OrderThread } from "@/components/admin/order-thread";
+import { ApproveOrder } from "@/components/customer/approve-order";
 import {
   BackLink,
   Btn,
@@ -129,6 +130,11 @@ export function CustomerOrderDetail({
           .join(" · ")
       : null;
 
+  const awaitingApproval =
+    !!order.delivered_at &&
+    order.status !== "completed" &&
+    order.status !== "cancelled";
+
   return (
     <Screen width={1240}>
       <BackLink href="/customer/orders">All my orders</BackLink>
@@ -145,7 +151,10 @@ export function CustomerOrderDetail({
             </Pill>
           </div>
           <p className="text-ink-600 m-0 max-w-[68ch] text-[13.5px] font-normal text-pretty">
-            {STATUS_LINE[order.status]} Placed {fmtDate(order.created_at)}.
+            {awaitingApproval
+              ? "Your booking is confirmed and waiting for you to approve it."
+              : STATUS_LINE[order.status]}{" "}
+            Placed {fmtDate(order.created_at)}.
           </p>
         </div>
 
@@ -160,6 +169,10 @@ export function CustomerOrderDetail({
           </Btn>
         </div>
       </div>
+
+      {awaitingApproval ? (
+        <ApproveOrder orderId={order.id} deliveredAt={order.delivered_at!} />
+      ) : null}
 
       {/* ------------------------------------------------ boarding pass */}
       <BoardingPass

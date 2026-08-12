@@ -4,6 +4,8 @@ import { normalizeAccess, canAccessSection, canEditOrders } from "@/lib/access";
 import { getOrderById } from "@/lib/db/orders";
 import { getPreOrderAttachments } from "@/lib/db/order-messages";
 import { getCustomerSnapshot } from "@/lib/db/customers";
+import { hasDeliveryTracking } from "@/lib/orders/lifecycle";
+import { sweepAutoCompleteOrders } from "@/lib/actions/order-lifecycle";
 import { OrderDetail } from "@/components/admin/order-detail";
 
 export default async function EmployeeOrderDetailPage({
@@ -27,9 +29,12 @@ export default async function EmployeeOrderDetailPage({
     redirect("/employee/orders");
   }
 
-  const [attachments, customer] = await Promise.all([
+  await sweepAutoCompleteOrders();
+
+  const [attachments, customer, deliveryTracking] = await Promise.all([
     getPreOrderAttachments(id),
     order.customer?.id ? getCustomerSnapshot(order.customer.id) : null,
+    hasDeliveryTracking(),
   ]);
 
   /**
@@ -50,6 +55,7 @@ export default async function EmployeeOrderDetailPage({
       canEdit={canEditOrders(access)}
       canAssign={false}
       canViewCustomer={false}
+      canDeliver={deliveryTracking && canEditOrders(access)}
     />
   );
 }

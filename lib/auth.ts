@@ -10,12 +10,24 @@ export type { UserRole } from "@/lib/db/types";
 export { roleDashboardPath } from "@/lib/db/types";
 import type { UserRole } from "@/lib/db/types";
 
+/**
+ * The narrow session profile — deliberately NOT `db/types.ts`'s full `Profile`.
+ * This is read on every authenticated request, so it carries only what the
+ * shells and guards need. Anything else is fetched by the screen that wants it.
+ */
 export type Profile = {
   id: string;
   full_name: string | null;
   role: UserRole | null;
   access_level: string | null;
   is_active: boolean | null;
+  /**
+   * The person's own picture. Here rather than fetched per-screen because the
+   * top bar renders it on every single page, so a second query would be a
+   * round trip on every navigation. Optional: the column arrives with
+   * APPLY_ADMIN_ROUND3.sql, and the select below tolerates its absence.
+   */
+  avatar_url?: string | null;
 };
 
 export type AuthResult = {
@@ -40,11 +52,23 @@ export async function getUserAndProfile(): Promise<AuthResult> {
     return { user: null, profile: null };
   }
 
-  const { data: profile } = await supabase
+  const COLUMNS = "id, full_name, role, access_level, is_active";
+  // Ask for avatar_url, and fall back to the base columns if the database
+  // hasn't had APPLY_ADMIN_ROUND3.sql run yet. Every authenticated request
+  // goes through here, so it must not be able to fail on a missing column.
+  let { data: profile } = await supabase
     .from("profiles")
-    .select("id, full_name, role, access_level, is_active")
+    .select(`${COLUMNS}, avatar_url`)
     .eq("id", user.id)
-    .single<Profile>();
+    .maybeSingle<Profile>();
+
+  if (!profile) {
+    ({ data: profile } = await supabase
+      .from("profiles")
+      .select(COLUMNS)
+      .eq("id", user.id)
+      .maybeSingle<Profile>());
+  }
 
   return { user, profile: profile ?? null };
 }

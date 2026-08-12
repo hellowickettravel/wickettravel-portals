@@ -1,4 +1,11 @@
-import { Card, Screen, TableSkeleton } from "@/components/admin/ui";
+import {
+  Card,
+  KpiSkeleton,
+  RowsSkeleton,
+  Screen,
+  Shimmer,
+  TableSkeleton,
+} from "@/components/admin/ui";
 
 /**
  * Route-level loading shapes.
@@ -13,11 +20,90 @@ import { Card, Screen, TableSkeleton } from "@/components/admin/ui";
  */
 
 export function Bar({ w, h = 9 }: { w: number | string; h?: number }) {
+  /* A travelling shimmer rather than a pulse: a pulse reads as a disabled
+     element, a shimmer reads as data on its way. See `Shimmer` in ui.tsx. */
+  return <Shimmer w={w} h={h} />;
+}
+
+/**
+ * Analytics: KPI row, then a tall chart card with two side panels. Shaped like
+ * the real screen so the figures don't shove the chart down when they land —
+ * this route had no loading file at all, so a slow order query left the whole
+ * page blank.
+ */
+export function AnalyticsSkeleton() {
   return (
-    <span
-      style={{ width: w, height: h }}
-      className="bg-neutral-bg block animate-[wt-pulse_1.5s_ease-in-out_infinite] rounded-full"
-    />
+    <Screen>
+      <Head />
+      <KpiSkeleton count={4} />
+      <Card>
+        <div className="border-line-soft flex items-center justify-between gap-3 border-b px-5 py-4">
+          <Bar w={160} h={13} />
+          <Bar w={120} h={13} />
+        </div>
+        <div className="flex h-[clamp(280px,34vw,400px)] items-end gap-[clamp(6px,1.6vw,20px)] p-5">
+          {[62, 78, 45, 88, 70, 95, 58, 82].map((h, i) => (
+            <span
+              key={i}
+              style={{ height: `${h}%`, animationDelay: `${i * 60}ms` }}
+              className="wt-skeleton block min-w-0 flex-1 rounded-t-[8px] rounded-b-none"
+            />
+          ))}
+        </div>
+      </Card>
+      <div className="grid grid-cols-1 gap-4 min-[1100px]:grid-cols-2">
+        <Card>
+          <div className="border-line-soft border-b px-5 py-4">
+            <Bar w={140} h={13} />
+          </div>
+          <RowsSkeleton rows={4} />
+        </Card>
+        <Card>
+          <div className="border-line-soft border-b px-5 py-4">
+            <Bar w={140} h={13} />
+          </div>
+          <RowsSkeleton rows={4} />
+        </Card>
+      </div>
+    </Screen>
+  );
+}
+
+/** Settings: tab row, then one tall card of paired fields. */
+export function SettingsSkeleton() {
+  return (
+    <Screen width={1080}>
+      <Head />
+      <div className="flex flex-wrap gap-2">
+        {[128, 112, 84].map((w, i) => (
+          <span
+            key={i}
+            style={{ width: w, animationDelay: `${i * 70}ms` }}
+            className="wt-skeleton block h-10"
+          />
+        ))}
+      </div>
+      <Card>
+        <div className="border-line-soft border-b px-5 py-4">
+          <Bar w={150} h={13} />
+        </div>
+        <div className="border-line-soft flex items-center gap-5 border-b p-5">
+          <Shimmer w={76} h={76} className="rounded-full" />
+          <span className="flex flex-1 flex-col gap-2">
+            <Bar w={140} />
+            <Bar w="70%" h={8} />
+          </span>
+        </div>
+        <div className="grid grid-cols-[repeat(auto-fit,minmax(230px,1fr))] gap-4 p-5">
+          {Array.from({ length: 8 }, (_, i) => (
+            <span key={i} className="flex flex-col gap-2">
+              <Bar w={110} h={8} />
+              <Shimmer w="100%" h={40} className="rounded-[10px]" />
+            </span>
+          ))}
+        </div>
+      </Card>
+    </Screen>
   );
 }
 

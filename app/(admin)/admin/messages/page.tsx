@@ -18,6 +18,7 @@ export default async function MessagesPage() {
       <AdminInbox
         currentUserId={user?.id ?? ""}
         currentUserName={profile?.full_name ?? "Wicket Travel"}
+        currentUserAvatar={profile?.avatar_url ?? null}
       />
     </Screen>
   );

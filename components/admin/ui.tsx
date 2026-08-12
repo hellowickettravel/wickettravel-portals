@@ -387,6 +387,9 @@ export function Btn({
   size = "md",
   className,
   children,
+  pending,
+  pendingLabel,
+  disabled,
   ...rest
 }: {
   as?: "link";
@@ -395,6 +398,19 @@ export function Btn({
   size?: "md" | "sm";
   className?: string;
   children: React.ReactNode;
+  /**
+   * The button is waiting on the server. It swaps to a spinner, blocks a
+   * second click, and marks itself `aria-busy` so the cursor turns to
+   * `progress` and screen readers announce the wait.
+   *
+   * Every mutation in the portal routes through this rather than each screen
+   * inventing its own `{busy ? "Saving…" : "Save"}` — a control that looks
+   * identical before and after the click is the single biggest reason this
+   * portal felt frozen.
+   */
+  pending?: boolean;
+  /** Replaces the label while pending. Omit to keep the label beside the spinner. */
+  pendingLabel?: string;
 } & React.ButtonHTMLAttributes<HTMLButtonElement>) {
   const look = cn(
     size === "sm" ? btnSm : btnMd,
@@ -405,18 +421,31 @@ export function Btn({
         : variant === "danger"
           ? btnDanger
           : btnGhost,
+    pending && "cursor-progress",
     className
   );
   if (as === "link" && href) {
     return (
-      <Link href={href} className={cn(look, "no-underline hover:no-underline")}>
+      <Link
+        href={href}
+        data-lift={variant === "ember" || variant === "marine" ? "" : undefined}
+        className={cn(look, "no-underline hover:no-underline")}
+      >
         {children}
       </Link>
     );
   }
   return (
-    <button type="button" className={look} {...rest}>
-      {children}
+    <button
+      type="button"
+      aria-busy={pending || undefined}
+      disabled={disabled || pending}
+      data-lift={variant === "ember" || variant === "marine" ? "" : undefined}
+      className={look}
+      {...rest}
+    >
+      {pending ? <Spinner size={size === "sm" ? 13 : 15} /> : null}
+      {pending && pendingLabel ? pendingLabel : children}
     </button>
   );
 }
@@ -632,7 +661,15 @@ export function Tr({
   return (
     <tr
       onClick={onClick}
-      className={cn("hover:bg-marine-row transition-colors", className)}
+      /* A row that reacts to a click gets the pointer and the pressed tint;
+         a purely presentational row keeps the arrow, so the two are told
+         apart before the click rather than after it. */
+      data-row={onClick ? "" : undefined}
+      className={cn(
+        "hover:bg-marine-row transition-colors duration-[140ms]",
+        onClick && "cursor-pointer",
+        className
+      )}
     >
       {children}
     </tr>
@@ -690,24 +727,123 @@ export function EmptyState({
   );
 }
 
+/**
+ * One shimmering placeholder bar. Deliberately a *travelling* highlight rather
+ * than a pulse: a pulse reads as a disabled element, a shimmer reads as data
+ * on its way, which is the whole point of showing one.
+ */
+export function Shimmer({
+  w,
+  h = 9,
+  className,
+  style,
+}: {
+  /** Any CSS width — `72` (px), `"40%"`, `"12ch"`. */
+  w?: number | string;
+  h?: number;
+  className?: string;
+  style?: React.CSSProperties;
+}) {
+  return (
+    <span
+      aria-hidden
+      style={{ width: w, height: h, ...style }}
+      className={cn("wt-skeleton block flex-none", className)}
+    />
+  );
+}
+
 /** The design's loading skeleton for a table body. */
 export function TableSkeleton({ rows = 8 }: { rows?: number }) {
   return (
-    <div>
+    <div aria-hidden>
       {Array.from({ length: rows }, (_, i) => (
         <div
           key={i}
-          style={{ animationDelay: `${i * 90}ms` }}
-          className="border-line-soft flex h-[54px] animate-[wt-pulse_1.5s_ease-in-out_infinite] items-center gap-6 border-t px-5"
+          style={{ animationDelay: `${i * 70}ms` }}
+          className="border-line-soft wt-fade-in flex h-[54px] items-center gap-6 border-t px-5"
         >
-          <span className="bg-line-field block h-[9px] w-[72px] flex-none rounded-full" />
-          <span className="bg-neutral-bg block h-[9px] w-[124px] flex-none rounded-full" />
-          <span className="bg-neutral-bg block h-[9px] w-[92px] flex-none rounded-full" />
-          <span className="bg-neutral-bg block h-[9px] min-w-0 flex-1 rounded-full" />
-          <span className="bg-neutral-bg block h-5 w-[68px] flex-none rounded-full" />
+          <Shimmer w={72} />
+          <Shimmer w={124} />
+          <Shimmer w={92} />
+          <Shimmer w="100%" className="min-w-0 flex-1" />
+          <Shimmer w={68} h={20} />
         </div>
       ))}
     </div>
+  );
+}
+
+/** KPI row placeholder — same 4-up grid so nothing jumps when figures land. */
+export function KpiSkeleton({ count = 4 }: { count?: number }) {
+  return (
+    <KpiGrid>
+      {Array.from({ length: count }, (_, i) => (
+        <div
+          key={i}
+          style={{ animationDelay: `${i * 60}ms` }}
+          className={cn(
+            "border-line-base wt-fade-in flex flex-col gap-3 rounded-[12px] border bg-white p-5",
+            shadowE1
+          )}
+        >
+          <Shimmer w={36} h={36} className="rounded-[10px]" />
+          <Shimmer w={84} h={8} />
+          <Shimmer w={110} h={22} className="rounded-[8px]" />
+          <Shimmer w={130} h={8} />
+        </div>
+      ))}
+    </KpiGrid>
+  );
+}
+
+/**
+ * Placeholder for a card that holds prose or stacked rows rather than a table
+ * (the analytics side panels, a detail card, the notification list).
+ */
+export function RowsSkeleton({
+  rows = 5,
+  className,
+}: {
+  rows?: number;
+  className?: string;
+}) {
+  return (
+    <div aria-hidden className={cn("flex flex-col", className)}>
+      {Array.from({ length: rows }, (_, i) => (
+        <div
+          key={i}
+          style={{ animationDelay: `${i * 70}ms` }}
+          className="border-line-soft wt-fade-in flex items-center gap-4 border-b px-5 py-4 last:border-b-0"
+        >
+          <Shimmer w={32} h={32} className="rounded-full" />
+          <span className="flex min-w-0 flex-1 flex-col gap-2">
+            <Shimmer w="62%" />
+            <Shimmer w="38%" h={8} />
+          </span>
+          <Shimmer w={64} h={20} />
+        </div>
+      ))}
+    </div>
+  );
+}
+
+/**
+ * A live region that says what is happening while a screen fetches. Sighted
+ * users get the skeletons; this is what a screen reader gets, and it is also
+ * the honest thing to show above a list that has *no* rows yet — "Loading" is
+ * true, "No results" is not.
+ */
+export function LoadingNote({ children }: { children: React.ReactNode }) {
+  return (
+    <p
+      role="status"
+      aria-live="polite"
+      className="text-ink-600 m-0 flex items-center justify-center gap-2.5 px-5 py-10 text-center text-[13px] font-normal"
+    >
+      <Spinner size={14} />
+      {children}
+    </p>
   );
 }
 
@@ -977,10 +1113,19 @@ export function Avatar({
   name,
   size = 30,
   className,
+  src,
 }: {
   name: string;
   size?: number;
   className?: string;
+  /**
+   * The person's own uploaded picture (`profiles.avatar_url`). Falls back to
+   * the deterministic initials tint when they haven't set one — which is most
+   * people, so the tinted initials stay the default look rather than a
+   * placeholder. NOT the business logo: that is the sidebar's, and the two are
+   * deliberately unconnected.
+   */
+  src?: string | null;
 }) {
   const { bg, ink } = avatarFor(name);
   return (
@@ -993,11 +1138,20 @@ export function Avatar({
         fontSize: Math.max(10, Math.round(size * 0.37)),
       }}
       className={cn(
-        "flex flex-none items-center justify-center rounded-full font-semibold",
+        "relative flex flex-none items-center justify-center overflow-hidden rounded-full font-semibold",
         className
       )}
     >
-      {initialsOf(name)}
+      {src ? (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img
+          src={src}
+          alt=""
+          className="absolute inset-0 size-full object-cover"
+        />
+      ) : (
+        initialsOf(name)
+      )}
     </span>
   );
 }

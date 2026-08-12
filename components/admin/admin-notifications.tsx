@@ -20,6 +20,7 @@ import {
   CardHead,
   EmptyState,
   PageHead,
+  RowsSkeleton,
   Screen,
 } from "@/components/admin/ui";
 import { CheckIcon } from "@/components/admin/icons";
@@ -140,8 +141,32 @@ export function AdminNotifications({
     };
   }, [supabase, queryClient, userId]);
 
+  /**
+   * Both mutations roll the cache forward before the request goes out.
+   * Awaiting the round trip and only then invalidating meant a visible gap
+   * where the row you just clicked still looked unread and the page appeared
+   * frozen — nothing was wrong, the UI simply had not been told yet.
+   */
   const readMutation = useMutation({
     mutationFn: markNotificationRead,
+    onMutate: async (id: string) => {
+      await queryClient.cancelQueries({ queryKey: ALL_KEY });
+      const previous = queryClient.getQueryData<typeof data>(ALL_KEY);
+      queryClient.setQueryData(ALL_KEY, (old: typeof data) =>
+        old
+          ? {
+              items: old.items.map((n) =>
+                n.id === id ? { ...n, is_read: true } : n
+              ),
+              unreadCount: Math.max(0, old.unreadCount - 1),
+            }
+          : old
+      );
+      return { previous };
+    },
+    onError: (_e, _v, ctx) => {
+      if (ctx?.previous) queryClient.setQueryData(ALL_KEY, ctx.previous);
+    },
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: ALL_KEY });
       queryClient.invalidateQueries({ queryKey: BELL_KEY });
@@ -150,12 +175,31 @@ export function AdminNotifications({
 
   const readAllMutation = useMutation({
     mutationFn: markAllNotificationsRead,
+    onMutate: async () => {
+      await queryClient.cancelQueries({ queryKey: ALL_KEY });
+      const previous = queryClient.getQueryData<typeof data>(ALL_KEY);
+      queryClient.setQueryData(ALL_KEY, (old: typeof data) =>
+        old
+          ? {
+              items: old.items.map((n) => ({ ...n, is_read: true })),
+              unreadCount: 0,
+            }
+          : old
+      );
+      return { previous };
+    },
+    onError: (_e, _v, ctx) => {
+      if (ctx?.previous) queryClient.setQueryData(ALL_KEY, ctx.previous);
+      toast.error("Couldn't update", { description: "Please try again." });
+    },
     onSuccess: (res) => {
       if (!res.ok) {
         toast.error("Couldn't update", { description: res.error });
         return;
       }
       toast.success("All notifications marked as read");
+    },
+    onSettled: () => {
       queryClient.invalidateQueries({ queryKey: ALL_KEY });
       queryClient.invalidateQueries({ queryKey: BELL_KEY });
     },
@@ -197,7 +241,9 @@ export function AdminNotifications({
         intro="Everything the platform has told you, newest first."
         actions={
           <Btn
-            disabled={unread === 0 || readAllMutation.isPending}
+            disabled={unread === 0}
+            pending={readAllMutation.isPending}
+            pendingLabel="Marking all read…"
             onClick={() => readAllMutation.mutate()}
           >
             <CheckIcon size={15} />
@@ -231,9 +277,7 @@ export function AdminNotifications({
       <div className="grid grid-cols-1 items-start gap-4 min-[1240px]:grid-cols-[minmax(0,1.6fr)_minmax(0,1fr)]">
         <Card>
           {isLoading ? (
-            <p className="text-ink-600 m-0 px-5 py-10 text-center text-[13px]">
-              Loading notifications…
-            </p>
+            <RowsSkeleton rows={6} />
           ) : visible.length === 0 ? (
             <EmptyState
               title={
@@ -248,52 +292,75 @@ export function AdminNotifications({
               }
             />
           ) : (
-            visible.map((n) => {
+            visible.map((n, i) => {
               const band = BAND_OF[n.type];
               const tint = BAND_TINT[band];
               return (
-                <button
+                <div
                   key={n.id}
-                  type="button"
-                  onClick={() => open(n.id, n.is_read, n.type, n.link)}
+                  style={{ animationDelay: `${Math.min(i, 8) * 28}ms` }}
                   className={cn(
-                    "border-line-soft hover:bg-marine-50 flex w-full gap-4 border-b px-5 py-4 text-left outline-none last:border-b-0",
+                    "border-line-soft hover:bg-marine-50 wt-row-enter group flex gap-4 border-b px-5 py-4 transition-colors last:border-b-0",
                     n.is_read ? "bg-white" : "bg-marine-50"
                   )}
                 >
-                  <span
-                    style={{
-                      background: n.is_read ? "var(--color-ink-300)" : tint.dot,
-                    }}
-                    className="mt-1.5 block size-2 flex-none rounded-full"
-                  />
-                  <span className="flex min-w-0 flex-1 flex-col gap-1">
+                  <button
+                    type="button"
+                    onClick={() => open(n.id, n.is_read, n.type, n.link)}
+                    className="flex min-w-0 flex-1 gap-4 border-0 bg-transparent p-0 text-left outline-none"
+                  >
+                    <span
+                      style={{
+                        background: n.is_read
+                          ? "var(--color-ink-300)"
+                          : tint.dot,
+                      }}
+                      className="mt-1.5 block size-2 flex-none rounded-full"
+                    />
+                    <span className="flex min-w-0 flex-1 flex-col gap-1">
+                      <span
+                        className={cn(
+                          "text-ink-800 text-[13px] leading-[1.5] text-pretty",
+                          n.is_read ? "font-normal" : "font-semibold"
+                        )}
+                      >
+                        {sentence(n.title, n.actor_name)}
+                      </span>
+                      {n.body ? (
+                        <span className="text-ink-600 text-[12.5px] leading-[1.5] font-normal text-pretty">
+                          {n.body}
+                        </span>
+                      ) : null}
+                      <span className="text-ink-500 text-[11.5px] font-normal">
+                        {fmtRelative(n.created_at)}
+                      </span>
+                    </span>
+                  </button>
+                  <span className="flex flex-none items-center gap-2 self-center">
+                    {/* Deal with one notification without opening it — the
+                        control that was missing entirely. Only rendered while
+                        unread, so a read row has nothing to click. */}
+                    {!n.is_read ? (
+                      <button
+                        type="button"
+                        title="Mark as read"
+                        aria-label="Mark as read"
+                        onClick={() => readMutation.mutate(n.id)}
+                        className="border-line-field text-ink-500 hover:border-ok-edge hover:text-ok-ink flex size-[26px] items-center justify-center rounded-full border bg-white opacity-0 outline-none group-hover:opacity-100 focus-visible:opacity-100 max-lg:opacity-100"
+                      >
+                        <CheckIcon size={13} width={3} />
+                      </button>
+                    ) : null}
                     <span
                       className={cn(
-                        "text-ink-800 text-[13px] leading-[1.5] text-pretty",
-                        n.is_read ? "font-normal" : "font-semibold"
+                        "rounded-full px-3 py-1 text-[11px] font-medium whitespace-nowrap",
+                        tint.pill
                       )}
                     >
-                      {sentence(n.title, n.actor_name)}
-                    </span>
-                    {n.body ? (
-                      <span className="text-ink-600 text-[12.5px] leading-[1.5] font-normal text-pretty">
-                        {n.body}
-                      </span>
-                    ) : null}
-                    <span className="text-ink-500 text-[11.5px] font-normal">
-                      {fmtRelative(n.created_at)}
+                      {band}
                     </span>
                   </span>
-                  <span
-                    className={cn(
-                      "flex-none self-center rounded-full px-3 py-1 text-[11px] font-medium whitespace-nowrap",
-                      tint.pill
-                    )}
-                  >
-                    {band}
-                  </span>
-                </button>
+                </div>
               );
             })
           )}

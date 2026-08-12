@@ -32,6 +32,8 @@ import {
   ViewButton,
   type PillTone,
 } from "@/components/admin/ui";
+import { HowItWorks } from "@/components/admin/how-it-works";
+import { LoadMore } from "@/components/admin/load-more";
 
 const KEY = ["admin", "parent-verifications"] as const;
 const PAGE_SIZE = 8;
@@ -131,6 +133,29 @@ export default function AdminParentsVerificationPage() {
       <PageHead
         title="Verifications"
         intro="Identity checks for Parents Tickets. Every traveller and every family is reviewed by hand before their listing can be approved or matched."
+      />
+
+      <HowItWorks
+        title="How verification works"
+        cta={{ href: "/admin/parents-listings", label: "Open parent listings" }}
+        steps={[
+          {
+            label: "They submit details and an ID",
+            body: "From their own portal. The document goes straight to a private bucket — nothing holds a document URL at rest.",
+          },
+          {
+            label: "You open the document once",
+            body: "Clicking it mints a one-hour signed link. It is never rendered back to its owner, only to a reviewing admin.",
+          },
+          {
+            label: "Approve or reject with a reason",
+            body: "A rejection reason is shown to the person, so they can fix it rather than guess.",
+          },
+          {
+            label: "Verified people can send listings",
+            body: "Anyone can draft. Only a verified profile can submit one for review.",
+          },
+        ]}
       />
 
       <Card>
@@ -262,10 +287,12 @@ export default function AdminParentsVerificationPage() {
               noun="records"
               action={
                 remaining > 0 ? (
-                  <Btn onClick={() => setLimit((l) => l + PAGE_SIZE)}>
-                    Load {Math.min(PAGE_SIZE, remaining)} more — {remaining}{" "}
-                    remaining
-                  </Btn>
+                  <LoadMore
+                    remaining={remaining}
+                    pageSize={PAGE_SIZE}
+                    noun="verifications"
+                    onLoad={() => setLimit((l) => l + PAGE_SIZE)}
+                  />
                 ) : undefined
               }
             />

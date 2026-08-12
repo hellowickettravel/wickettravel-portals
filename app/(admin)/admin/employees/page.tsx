@@ -25,6 +25,7 @@ import {
   ViewButton,
   focusRing,
 } from "@/components/admin/ui";
+import { LoadMore } from "@/components/admin/load-more";
 import {
   CheckCircleIcon,
   EditIcon,
@@ -103,12 +104,26 @@ export default function EmployeesPage() {
   const [editName, setEditName] = useState("");
   const [editEmail, setEditEmail] = useState("");
   const [editAccess, setEditAccess] = useState<AccessLevel>("full");
+  /* The Edit sheet used to carry three fields — name, email, access level —
+     while Add carried eight. Everything else about an employee could be set
+     once at creation and never corrected, which is why "make it fully
+     editable" was the ask. These mirror the Add form exactly. */
+  const [editJobTitle, setEditJobTitle] = useState(JOB_TITLES[0]);
+  const [editPhone, setEditPhone] = useState("");
+  const [editStartDate, setEditStartDate] = useState("");
+  const [editCommission, setEditCommission] = useState(COMMISSION_BANDS[0]);
+  const [editStatus, setEditStatus] = useState("active");
 
   function openEdit(emp: Profile) {
     setEditing(emp);
     setEditName(emp.full_name ?? "");
     setEditEmail(emp.email ?? "");
     setEditAccess(normalizeAccess(emp.access_level));
+    setEditJobTitle(emp.job_title?.trim() || JOB_TITLES[0]);
+    setEditPhone(emp.phone ?? "");
+    setEditStartDate(emp.start_date ?? "");
+    setEditCommission(emp.commission_rate?.trim() || COMMISSION_BANDS[0]);
+    setEditStatus(emp.is_active ? "active" : "suspended");
   }
 
   const createMutation = useMutation({
@@ -154,12 +169,10 @@ export default function EmployeesPage() {
   });
 
   const editMutation = useMutation({
-    mutationFn: (input: {
-      id: string;
-      fullName: string;
-      email: string;
-      accessLevel: AccessLevel;
-    }) => updateEmployee(input),
+    // Typed straight off the action so the sheet and the server can never
+    // disagree about which fields are editable.
+    mutationFn: (input: Parameters<typeof updateEmployee>[0]) =>
+      updateEmployee(input),
     onSuccess: (res) => {
       if (!res.ok) {
         toast.error("Update failed", { description: res.error });
@@ -422,10 +435,12 @@ export default function EmployeesPage() {
               noun="employees"
               action={
                 remaining > 0 ? (
-                  <Btn onClick={() => setLimit((l) => l + PAGE_SIZE)}>
-                    Load {Math.min(PAGE_SIZE, remaining)} more — {remaining}{" "}
-                    remaining
-                  </Btn>
+                  <LoadMore
+                    remaining={remaining}
+                    pageSize={PAGE_SIZE}
+                    noun="employees"
+                    onLoad={() => setLimit((l) => l + PAGE_SIZE)}
+                  />
                 ) : undefined
               }
             />
@@ -570,6 +585,7 @@ export default function EmployeesPage() {
         title="Edit employee"
         subtitle="Change their name, sign-in email or what they can reach in the portal."
         cta="Save changes"
+        busyLabel="Saving…"
         note="Changing the email changes the address they sign in with."
         busy={editMutation.isPending}
         onSubmit={() =>
@@ -579,6 +595,11 @@ export default function EmployeesPage() {
             fullName: editName,
             email: editEmail,
             accessLevel: editAccess,
+            jobTitle: editJobTitle,
+            phone: editPhone,
+            startDate: editStartDate,
+            commissionRate: editCommission,
+            active: editStatus === "active",
           })
         }
         sections={[
@@ -594,6 +615,14 @@ export default function EmployeesPage() {
                 onChange: setEditName,
               },
               {
+                kind: "select",
+                id: "edit-emp-title",
+                label: "Job title",
+                options: JOB_TITLES.map((t) => ({ value: t, label: t })),
+                value: editJobTitle,
+                onChange: setEditJobTitle,
+              },
+              {
                 kind: "text",
                 id: "edit-emp-email",
                 label: "Work email",
@@ -601,6 +630,46 @@ export default function EmployeesPage() {
                 required: true,
                 value: editEmail,
                 onChange: setEditEmail,
+              },
+              {
+                kind: "text",
+                id: "edit-emp-phone",
+                label: "Phone number",
+                type: "tel",
+                value: editPhone,
+                onChange: setEditPhone,
+              },
+              {
+                kind: "text",
+                id: "edit-emp-start",
+                label: "Start date",
+                type: "date",
+                value: editStartDate,
+                onChange: setEditStartDate,
+              },
+              {
+                kind: "select",
+                id: "edit-emp-commission",
+                label: "Commission rate",
+                options: COMMISSION_BANDS.map((c) => ({ value: c, label: c })),
+                value: editCommission,
+                onChange: setEditCommission,
+              },
+            ],
+          },
+          {
+            title: "Account",
+            fields: [
+              {
+                kind: "select",
+                id: "edit-emp-status",
+                label: "Account status",
+                options: [
+                  { value: "active", label: "Active" },
+                  { value: "suspended", label: "Suspended" },
+                ],
+                value: editStatus,
+                onChange: setEditStatus,
               },
             ],
           },

@@ -85,11 +85,14 @@ export async function CustomerPortalShell({
   userId,
   userName,
   userEmail,
+  avatarUrl,
   children,
 }: {
   userId: string;
   userName: string;
   userEmail: string;
+  /** The signed-in person's own picture. Never the company logo. */
+  avatarUrl?: string | null;
   children: React.ReactNode;
 }) {
   const [counts, logoUrl] = await Promise.all([
@@ -117,6 +120,7 @@ export async function CustomerPortalShell({
       userEmail={userEmail}
       userId={userId}
       logoUrl={logoUrl}
+      avatarUrl={avatarUrl}
       roleLabel="Traveller"
       homeHref="/customer"
       settingsHref="/customer/profile"

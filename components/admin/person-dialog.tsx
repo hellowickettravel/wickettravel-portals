@@ -3,7 +3,8 @@
 import { useEffect, useId, useRef } from "react";
 import { cn } from "@/lib/utils";
 import { CheckIcon, CloseIcon } from "@/components/admin/icons";
-import { focusRing } from "@/components/admin/ui";
+import { Btn, focusRing } from "@/components/admin/ui";
+import { lockScroll } from "@/components/admin/sheet";
 
 /**
  * The design's "Add customer" / "Add employee" modal, built from the design's
@@ -162,6 +163,7 @@ export function PersonDialog({
   note,
   cta,
   busy,
+  busyLabel = "Creating…",
   onSubmit,
 }: {
   open: boolean;
@@ -175,10 +177,20 @@ export function PersonDialog({
   note: string;
   cta: string;
   busy?: boolean;
+  /**
+   * What the CTA says while the server is working. It used to be hard-coded
+   * to "Creating…", so the EDIT dialogs claimed to be creating a second
+   * employee every time you saved a change to an existing one.
+   */
+  busyLabel?: string;
   onSubmit: () => void;
 }) {
   const headingId = useId();
   const sheetRef = useRef<HTMLDivElement>(null);
+  // useId() returns a value containing ":" / "«»" depending on the React
+  // build; both are fine in an id attribute but neither is a valid CSS
+  // identifier, so keep the form association attribute-only (never a selector).
+  const formId = `person-form-${headingId.replace(/[^a-zA-Z0-9_-]/g, "")}`;
 
   // Escape closes, and the body underneath must not scroll while the sheet is
   // up — the design's overlay covers the whole viewport.
@@ -186,27 +198,44 @@ export function PersonDialog({
     if (!open) return;
     const onKey = (e: KeyboardEvent) => {
       if (e.key === "Escape") onClose();
+      if (e.key !== "Tab" || !sheetRef.current) return;
+      const focusable = sheetRef.current.querySelectorAll<HTMLElement>(
+        'a[href],button:not(:disabled),input:not(:disabled),select:not(:disabled),textarea:not(:disabled),[tabindex]:not([tabindex="-1"])'
+      );
+      if (focusable.length === 0) return;
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+      if (e.shiftKey && document.activeElement === first) {
+        e.preventDefault();
+        last.focus();
+      } else if (!e.shiftKey && document.activeElement === last) {
+        e.preventDefault();
+        first.focus();
+      }
     };
     document.addEventListener("keydown", onKey);
-    const prev = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
+    // See lockScroll(): plain `overflow: hidden` shifts the whole page sideways
+    // by the scrollbar's width, which is what made these dialogs look like
+    // they were tearing the screen apart as they opened.
+    const unlock = lockScroll();
     sheetRef.current
       ?.querySelector<HTMLElement>("input, select, textarea")
       ?.focus();
     return () => {
       document.removeEventListener("keydown", onKey);
-      document.body.style.overflow = prev;
+      unlock();
     };
   }, [open, onClose]);
 
   if (!open) return null;
 
   return (
-    <div className="fixed inset-0 z-90 flex items-center justify-center bg-[oklch(0.205_0.038_258_/_0.42)] p-[clamp(12px,3vw,40px)] backdrop-blur-[3px]">
+    <div className="wt-scrim fixed inset-0 z-90 flex items-center justify-center bg-[oklch(0.205_0.038_258_/_0.42)] p-[clamp(12px,3vw,40px)] backdrop-blur-[3px]">
       <button
         type="button"
         aria-label="Close"
         tabIndex={-1}
+        data-scrim
         onClick={onClose}
         className="absolute inset-0 cursor-default"
       />
@@ -215,7 +244,7 @@ export function PersonDialog({
         role="dialog"
         aria-modal="true"
         aria-labelledby={headingId}
-        className="relative flex max-h-[90vh] w-full max-w-[780px] flex-col overflow-hidden rounded-2xl bg-white shadow-[0_24px_70px_oklch(0.205_0.038_258_/_0.28)]"
+        className="wt-sheet relative flex max-h-[90vh] w-full max-w-[780px] flex-col overflow-hidden rounded-2xl bg-white shadow-[0_24px_70px_oklch(0.205_0.038_258_/_0.28)]"
       >
         <div className="border-line-soft flex flex-none items-start gap-4 border-b p-[20px_24px]">
           <span className="bg-marine-tint text-marine-600 flex size-10 flex-none items-center justify-center rounded-[11px]">
@@ -243,12 +272,15 @@ export function PersonDialog({
         </div>
 
         <form
-          id={`${headingId}-form`}
+          id={formId}
           onSubmit={(e) => {
             e.preventDefault();
             onSubmit();
           }}
-          className="om-scroll min-h-0 flex-1 overflow-y-auto px-6 pt-1 pb-6"
+          className={cn(
+            "om-scroll min-h-0 flex-1 overflow-y-auto px-6 pt-1 pb-6",
+            busy && "is-busy"
+          )}
         >
           {sections.map((s) => (
             <div key={s.title} className="flex flex-col gap-[14px] pt-5">
@@ -270,22 +302,18 @@ export function PersonDialog({
             {note}
           </span>
           <div className="flex gap-2.5">
-            <button
-              type="button"
-              onClick={onClose}
-              disabled={busy}
-              className="border-line-field text-ink-800 h-10 rounded-full border bg-white px-5 text-[13px] font-medium outline-none hover:bg-[var(--color-surface-2)] disabled:opacity-60"
-            >
+            <Btn onClick={onClose} disabled={busy}>
               Cancel
-            </button>
-            <button
+            </Btn>
+            <Btn
               type="submit"
-              form={`${headingId}-form`}
-              disabled={busy}
-              className="bg-ember-600 hover:bg-ember-700 h-10 rounded-full border-0 px-6 text-[13px] font-medium whitespace-nowrap text-white outline-none disabled:opacity-60"
+              form={formId}
+              variant="ember"
+              pending={busy}
+              pendingLabel={busyLabel}
             >
-              {busy ? "Creating…" : cta}
-            </button>
+              {cta}
+            </Btn>
           </div>
         </div>
       </div>

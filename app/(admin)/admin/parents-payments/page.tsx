@@ -33,6 +33,8 @@ import {
   ViewButton,
   type PillTone,
 } from "@/components/admin/ui";
+import { HowItWorks } from "@/components/admin/how-it-works";
+import { LoadMore } from "@/components/admin/load-more";
 import { PoundIcon, RouteIcon, UnlockIcon } from "@/components/admin/icons";
 
 const KEY = ["admin", "parent-payments"] as const;
@@ -150,6 +152,29 @@ export default function AdminParentsPaymentsPage() {
       <PageHead
         title="Parent payments"
         intro="Money recorded by hand against a match. Nothing here is taken through the portal — an admin writes down a bank transfer, cash or a card machine, and that record is what unlocks an introduction."
+      />
+
+      <HowItWorks
+        title="How payments work"
+        cta={{ href: "/admin/parents-matches", label: "Open matches" }}
+        steps={[
+          {
+            label: "Money moves outside the system",
+            body: "Stage A is a ledger, not a processor. Bank transfer, card link, cash — you record what actually happened.",
+          },
+          {
+            label: "Record it on the match",
+            body: "Open the match and fill in the payment card there. Payer and payee come from the match, so they cannot be entered wrongly.",
+          },
+          {
+            label: "The payout is derived",
+            body: "Gross minus commission. It is never typed, and a commission above gross is rejected rather than silently zeroed.",
+          },
+          {
+            label: "Marking it paid unlocks the introduction",
+            body: "Both parties accepted plus a paid payment is the whole gate. Every row here is one of those decisions.",
+          },
+        ]}
       />
 
       <KpiGrid>
@@ -305,9 +330,12 @@ export default function AdminParentsPaymentsPage() {
               noun="payments"
               action={
                 remaining > 0 ? (
-                  <Btn onClick={() => setLimit((l) => l + PAGE_SIZE)}>
-                    Load {Math.min(PAGE_SIZE, remaining)} more — {remaining} remaining
-                  </Btn>
+                  <LoadMore
+                    remaining={remaining}
+                    pageSize={PAGE_SIZE}
+                    noun="payments"
+                    onLoad={() => setLimit((l) => l + PAGE_SIZE)}
+                  />
                 ) : undefined
               }
             />

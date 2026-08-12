@@ -32,6 +32,7 @@ import {
   inputInsetClass,
   type PillTone,
 } from "@/components/admin/ui";
+import { LoadMore } from "@/components/admin/load-more";
 import {
   CheckCircleIcon,
   ClockIcon,
@@ -376,12 +377,12 @@ export function CustomerOrders({ todayIso }: { todayIso: string }) {
             noun="orders"
             action={
               hasMore ? (
-                <Btn
-                  className="text-[12.5px]"
-                  onClick={() => setLimit((n) => n + PAGE_SIZE)}
-                >
-                  Load {PAGE_SIZE} more — {filtered.length - limit} remaining
-                </Btn>
+                <LoadMore
+                  remaining={filtered.length - limit}
+                  pageSize={PAGE_SIZE}
+                  noun="orders"
+                  onLoad={() => setLimit((n) => n + PAGE_SIZE)}
+                />
               ) : null
             }
           />

@@ -37,6 +37,7 @@ export default async function BookLayout({
       userId={user.id}
       userName={name}
       userEmail={user.email ?? ""}
+      avatarUrl={profile?.avatar_url ?? null}
     >
       {children}
     </CustomerPortalShell>

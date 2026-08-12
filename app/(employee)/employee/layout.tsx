@@ -138,6 +138,7 @@ export default async function EmployeeLayout({
       userEmail={user.email ?? ""}
       userId={user.id}
       logoUrl={logoUrl}
+      avatarUrl={profile?.avatar_url ?? null}
       roleLabel="Employee"
       homeHref="/employee"
       settingsHref="/employee/settings"

@@ -482,6 +482,74 @@ in all three portals.
   anyone who isn't one of the two people in the match is our team. Do not
   "simplify" that back to reading `sender.role`.
 
+**Round three (2026-08-12) — interaction, loading and the missing loops.**
+A client review of the admin portal found it "feels frozen". It was not slow;
+it was silent. The fixes are mostly one layer deep:
+- **Tailwind v4 dropped `button { cursor: pointer }` from preflight.** That is
+  a documented v3→v4 breaking change, and it is why nothing in the portal
+  showed a hand cursor — only 35 controls in the whole codebase carried an
+  explicit `cursor-pointer`. `app/globals.css` restores it in the base layer
+  for buttons, links, selects, switches, radios and `[role=…]` widgets, with
+  `not-allowed` on disabled and `progress` on `[aria-busy]`. Never "fix" this
+  per-component again.
+- **Hover/press motion is one block in `globals.css`**, scoped to
+  `.admin-root/.ds-root/.auth-root`. Hover changes colour, press changes size
+  (0.97), everything ≤160ms. `[data-no-press]` opts a control out;
+  `[data-lift]` is the CTA's hover elevation.
+- **`Btn` takes `pending`** (spinner + `aria-busy` + disabled + `pendingLabel`).
+  Every mutation should use it rather than hand-rolling `{busy ? "…" : "…"}`.
+- **A modal must not move the page.** `body { overflow: hidden }` alone
+  removes the scrollbar and the whole layout jumps ~15px sideways behind the
+  scrim — that lurch under a blurred overlay is what read as the dialogs
+  "crashing the screen". Fixed with `scrollbar-gutter: stable` on `<html>` plus
+  `lockScroll()` in `sheet.tsx` (padding compensation). Both sheets also gained
+  a focus trap and an enter animation.
+- **Loading is asked BEFORE emptiness, everywhere.** The inbox rendered "No
+  conversations yet" during its first fetch. `ui.tsx` now carries `Shimmer`,
+  `KpiSkeleton`, `RowsSkeleton` and `LoadingNote`; `skeletons.tsx` gained
+  `AnalyticsSkeleton` + `SettingsSkeleton` (both routes had no `loading.tsx`).
+- `components/admin/load-more.tsx` — `LoadMore` (React 19 async transition ⇒
+  real `isPending`) + `useArrivals()` so new rows animate and old ones don't.
+  All 12 "Load more" call sites use it.
+- `components/admin/live-refresh.tsx` — `LiveRefresh` makes a SERVER-rendered
+  screen live by subscribing to tables and calling `router.refresh()`,
+  coalesced. Analytics uses it; anything computed during an RSC render can.
+- **`components/admin/how-it-works.tsx`** — a permanent numbered explainer on
+  the four marketplace queues. Their rows are consequences of decisions taken
+  on *other* screens, so an empty table there reads as a broken feature.
+- **Real bugs found and fixed while auditing**, none of them reported:
+  `OrderDetail` is rendered by the EMPLOYEE portal but called admin-only
+  actions (`setOrderStatus`/`updateOrder` both start with `requireAdmin()`), so
+  a semi-admin's Edit and Mark-complete could never succeed — it now dispatches
+  on `basePath`. `updateEmployeeOrder` silently dropped every 0021 field.
+  `updateEmployee` accepted 3 of the 8 fields Add offers. Settings rendered the
+  logo "Remove" button **twice**. `AdminBell` hard-coded
+  `/admin/notifications`, sending employees and customers to a route their role
+  cannot open. `next/image` had no `remotePatterns`, so uploading a business
+  logo would have crashed every portal shell.
+- `lib/db/errors.ts` — `isMissingColumn` / `isMissingTable`, shared. A
+  `"use server"` module may only export async functions, which is why these
+  could not live in `lib/actions/admin.ts` where they started.
+- **`sql/APPLY_ADMIN_ROUND3.sql` is APPLIED (2026-08-12)** — `orders.delivered_at`,
+  `profiles.avatar_url`, `support_messages`, `conversation_reads`. All four
+  were verified live after it ran: a support reply persists and renders, the
+  inbox read receipt clears the badge, the delivery → customer-approve loop
+  closes an order across two signed-in roles, the lazy 24h sweep completes a
+  backdated one, and a profile picture reaches the top bar WITHOUT touching the
+  sidebar. Every feature still detects the schema's absence and hides the
+  control, so the code remains safe against an unmigrated database.
+- **Order lifecycle** (`lib/actions/order-lifecycle.ts`): assigning an employee
+  moves `new → in_progress`; staff "Mark as delivered" starts a 24-hour clock;
+  the customer's `ApproveOrder` card closes it early. The 24-hour sweep is
+  LAZY (on read), not scheduled — there is no pg_cron and no worker here, so a
+  cron would be a job that never runs.
+- **The avatar and the sidebar logo are different things and stay unconnected.**
+  `profiles.avatar_url` is one person (account button, inbox rows, chat
+  bubbles); `business_settings.logo_url` is the company (sidebar only).
+- **Live data was trimmed 2026-08-12**: 67 placeholder orders → 15 (4 new,
+  3 in progress, 6 completed, 2 cancelled), completed revenue £13,700. The
+  52 deleted orders + 287 order_messages are backed up in the scratchpad.
+
 **The driver portal was REMOVED 2026-08-10** at the client's request — it was
 mock-only, had no auth, was half-migrated, and its ₹/India content never
 matched this UK business. `app/(driver)`, `app/(driver-auth)`,

@@ -60,11 +60,14 @@ export async function HelperPortalShell({
   userId,
   userName,
   userEmail,
+  avatarUrl,
   children,
 }: {
   userId: string;
   userName: string;
   userEmail: string;
+  /** The signed-in person's own picture. Never the company logo. */
+  avatarUrl?: string | null;
   children: React.ReactNode;
 }) {
   const logoUrl = await getBrandLogoUrl();
@@ -76,6 +79,7 @@ export async function HelperPortalShell({
       userEmail={userEmail}
       userId={userId}
       logoUrl={logoUrl}
+      avatarUrl={avatarUrl}
       roleLabel="Helper"
       homeHref="/helper"
       settingsHref="/helper/profile"

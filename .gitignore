@@ -46,3 +46,6 @@ skills-lock.json
 
 # local brand source assets (already copied into app/ and public/)
 /refrence/
+
+# Throwaway QA harness (Playwright drivers, service-role scripts, data backups).
+.qa/

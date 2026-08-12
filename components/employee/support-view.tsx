@@ -10,6 +10,7 @@ import {
 import { MY_SUPPORT_TICKETS_KEY } from "@/lib/query-keys";
 import { fmtStamp } from "@/lib/format";
 import { cn } from "@/lib/utils";
+import { SupportThread } from "@/components/admin/support-thread";
 import {
   Btn,
   Card,
@@ -60,6 +61,8 @@ const FAQS = [
  * Support queue. `listMySupportTickets` is scoped to the tickets they raised.
  */
 export function EmployeeSupport({ adminEmail }: { adminEmail: string }) {
+  // One thread open at a time — see the admin queue for the same reason.
+  const [openTicket, setOpenTicket] = useState<string | null>(null);
   const queryClient = useQueryClient();
   const [open, setOpen] = useState<number | null>(0);
   const [subject, setSubject] = useState("");
@@ -220,27 +223,48 @@ export function EmployeeSupport({ adminEmail }: { adminEmail: string }) {
             body="Anything you raise above appears here, with its status, so you can see when an administrator has picked it up."
           />
         ) : (
-          myTickets.map((t) => (
-            <div
-              key={t.id}
-              className="border-line-soft flex items-start gap-4 border-b px-5 py-4 last:border-b-0"
-            >
-              <span className="flex min-w-0 flex-1 flex-col gap-1">
-                <span className="text-ink-800 truncate text-[13px] font-medium">
-                  {t.subject}
-                </span>
-                <span className="text-ink-600 line-clamp-2 text-[12.5px] leading-[1.5] font-normal">
-                  {t.message}
-                </span>
-                <span className="text-ink-500 text-[11.5px] font-normal">
-                  {fmtStamp(t.created_at)}
-                </span>
-              </span>
-              <Pill tone={t.status === "resolved" ? "ok" : "warn"}>
-                {t.status === "resolved" ? "Resolved" : "Open"}
-              </Pill>
-            </div>
-          ))
+          myTickets.map((t) => {
+            const isOpen = openTicket === t.id;
+            return (
+              <div
+                key={t.id}
+                className="border-line-soft flex flex-col gap-3 border-b px-5 py-4 last:border-b-0"
+              >
+                <div className="flex items-start gap-4">
+                  <span className="flex min-w-0 flex-1 flex-col gap-1">
+                    <span className="text-ink-800 truncate text-[13px] font-medium">
+                      {t.subject}
+                    </span>
+                    <span className="text-ink-600 line-clamp-2 text-[12.5px] leading-[1.5] font-normal">
+                      {t.message}
+                    </span>
+                    <span className="text-ink-500 text-[11.5px] font-normal">
+                      {fmtStamp(t.created_at)}
+                    </span>
+                  </span>
+                  <span className="flex flex-none items-center gap-2.5">
+                    <Pill tone={t.status === "resolved" ? "ok" : "warn"}>
+                      {t.status === "resolved" ? "Resolved" : "Open"}
+                    </Pill>
+                    {/* Answering on your own ticket — the exchange used to
+                        happen off-platform and leave no record. */}
+                    <Btn
+                      size="sm"
+                      aria-expanded={isOpen}
+                      onClick={() => setOpenTicket(isOpen ? null : t.id)}
+                    >
+                      {isOpen ? "Hide replies" : "View & reply"}
+                    </Btn>
+                  </span>
+                </div>
+                {isOpen ? (
+                  <div className="border-line-soft bg-surface-1 wt-fade-in rounded-[12px] border p-4">
+                    <SupportThread ticketId={t.id} audience="employee" />
+                  </div>
+                ) : null}
+              </div>
+            );
+          })
         )}
       </Card>
     </Screen>

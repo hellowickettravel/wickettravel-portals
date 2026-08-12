@@ -29,6 +29,7 @@ import {
   Tr,
   ViewButton,
 } from "@/components/admin/ui";
+import { LoadMore } from "@/components/admin/load-more";
 
 const TICKETS_KEY = ["admin", "parent-tickets", "list"] as const;
 const PAGE_SIZE = 5;
@@ -233,10 +234,12 @@ export default function AdminParentsTicketsPage() {
               noun="tickets"
               action={
                 remaining > 0 ? (
-                  <Btn onClick={() => setLimit((l) => l + PAGE_SIZE)}>
-                    Load {Math.min(PAGE_SIZE, remaining)} more — {remaining}{" "}
-                    remaining
-                  </Btn>
+                  <LoadMore
+                    remaining={remaining}
+                    pageSize={PAGE_SIZE}
+                    noun="tickets"
+                    onLoad={() => setLimit((l) => l + PAGE_SIZE)}
+                  />
                 ) : undefined
               }
             />

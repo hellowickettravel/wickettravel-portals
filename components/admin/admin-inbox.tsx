@@ -10,6 +10,7 @@ import {
   listAdminInbox,
   listAdminMessages,
   listEmployees,
+  markAdminConversationRead,
   setConversationAssignee,
   setConversationStatus,
 } from "@/lib/actions/admin";
@@ -30,11 +31,71 @@ import { cn } from "@/lib/utils";
 import {
   Avatar,
   Card,
+  Shimmer,
+  Spinner,
   avatarFor,
   focusRing,
   initialsOf,
 } from "@/components/admin/ui";
-import { AttachIcon, ImageIcon, SendIcon } from "@/components/admin/icons";
+import {
+  AttachIcon,
+  CheckIcon,
+  ImageIcon,
+  SendIcon,
+} from "@/components/admin/icons";
+
+/**
+ * The left pane while the first fetch is in flight. Shaped like the real rows
+ * (34px avatar, two lines, a timestamp) so the pane doesn't reflow when the
+ * conversations land.
+ */
+function ThreadListSkeleton({ rows = 6 }: { rows?: number }) {
+  return (
+    <div aria-hidden>
+      {Array.from({ length: rows }, (_, i) => (
+        <div
+          key={i}
+          style={{ animationDelay: `${i * 70}ms` }}
+          className="after:bg-line-soft wt-fade-in relative flex gap-3 p-4 after:absolute after:right-0 after:bottom-0 after:left-[62px] after:h-px after:content-['']"
+        >
+          <Shimmer w={34} h={34} className="rounded-full" />
+          <span className="flex min-w-0 flex-1 flex-col gap-2 pt-1">
+            <Shimmer w="58%" />
+            <Shimmer w="82%" h={8} />
+          </span>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+/** The reading pane while a thread's history loads: alternating bubbles. */
+function ThreadSkeleton() {
+  return (
+    <div aria-hidden className="flex flex-col gap-4">
+      {[0, 1, 2, 3].map((i) => {
+        const mine = i % 2 === 1;
+        return (
+          <div
+            key={i}
+            style={{ animationDelay: `${i * 80}ms` }}
+            className={cn(
+              "wt-fade-in flex w-full gap-2.5",
+              mine ? "flex-row-reverse" : "flex-row"
+            )}
+          >
+            <Shimmer w={32} h={32} className="rounded-full" />
+            <Shimmer
+              w={i % 3 === 0 ? 240 : 180}
+              h={48}
+              className="rounded-[14px]"
+            />
+          </div>
+        );
+      })}
+    </div>
+  );
+}
 
 /**
  * The Admin Portal's two-pane inbox, built to the Claude Design "Admin Portal
@@ -65,10 +126,13 @@ function dayKey(iso: string) {
 export function AdminInbox({
   currentUserId,
   currentUserName = "Wicket Travel",
+  currentUserAvatar = null,
 }: {
   currentUserId: string;
   /** The design names the person behind each staff bubble, not just the role. */
   currentUserName?: string;
+  /** The signed-in admin's own picture, for the bubbles they send. */
+  currentUserAvatar?: string | null;
 }) {
   const queryClient = useQueryClient();
   const supabase = useMemo(() => createClient(), []);
@@ -81,7 +145,7 @@ export function AdminInbox({
   const imageRef = useRef<HTMLInputElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
 
-  const { data: inbox } = useQuery({
+  const { data: inbox, isLoading: inboxLoading } = useQuery({
     queryKey: ADMIN_INBOX_KEY,
     queryFn: listAdminInbox,
   });
@@ -97,6 +161,10 @@ export function AdminInbox({
   );
   const employeeName = (id?: string | null) =>
     employees.find((e) => e.id === id)?.full_name ?? null;
+  /* A staff member's own photo, if they've set one in Settings. Falls back to
+     the deterministic initials tint, which is what most rows will show. */
+  const employeeAvatar = (id?: string | null) =>
+    employees.find((e) => e.id === id)?.avatar_url ?? null;
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
@@ -114,7 +182,7 @@ export function AdminInbox({
     [conversations, activeId]
   );
 
-  const { data: messages } = useQuery({
+  const { data: messages, isPending: messagesLoading } = useQuery({
     queryKey: activeId ? adminMessagesKey(activeId) : ["admin", "messages", "none"],
     queryFn: () => listAdminMessages(activeId as string),
     enabled: !!activeId,
@@ -186,6 +254,40 @@ export function AdminInbox({
       queryClient.invalidateQueries({ queryKey: ADMIN_INBOX_KEY });
     },
     onError: () => toast.error("Couldn't reassign", { description: "Please try again." }),
+  });
+
+  /**
+   * Per-admin read receipt. Optimistic on the cached inbox so the badge clears
+   * on the click rather than after the round trip — and rolls back with a
+   * toast if the write fails (which it will, honestly, on a database that
+   * hasn't had APPLY_ADMIN_ROUND3.sql run yet).
+   */
+  const readMutation = useMutation({
+    mutationFn: markAdminConversationRead,
+    onMutate: async (conversationId: string) => {
+      await queryClient.cancelQueries({ queryKey: ADMIN_INBOX_KEY });
+      const previous =
+        queryClient.getQueryData<InboxConversation[]>(ADMIN_INBOX_KEY);
+      queryClient.setQueryData<InboxConversation[]>(ADMIN_INBOX_KEY, (old) =>
+        (old ?? []).map((c) =>
+          c.id === conversationId ? { ...c, unreadCount: 0 } : c
+        )
+      );
+      return { previous };
+    },
+    onSuccess: (res, _v, ctx) => {
+      if (!res.ok) {
+        if (ctx?.previous)
+          queryClient.setQueryData(ADMIN_INBOX_KEY, ctx.previous);
+        toast.error("Couldn't mark as read", { description: res.error });
+      }
+    },
+    onError: (_e, _v, ctx) => {
+      if (ctx?.previous) queryClient.setQueryData(ADMIN_INBOX_KEY, ctx.previous);
+      toast.error("Couldn't mark as read", { description: "Please try again." });
+    },
+    onSettled: () =>
+      queryClient.invalidateQueries({ queryKey: ADMIN_INBOX_KEY }),
   });
 
   const statusMutation = useMutation({
@@ -265,7 +367,9 @@ export function AdminInbox({
     setDraft("");
   }
 
+  const myAvatar = currentUserAvatar;
   const threadOpen = !!activeId;
+  const waiting = active?.unreadCount ?? 0;
 
   return (
     // The design gives both panes their own scroller (`om-scroll` + flex-1 +
@@ -296,7 +400,14 @@ export function AdminInbox({
           />
         </div>
         <div className="om-scroll min-h-0 flex-1 overflow-y-auto">
-          {filtered.length === 0 ? (
+          {/* The list used to render its "No conversations yet" empty state
+              while the very first fetch was still in flight, so every visit
+              began by telling the user they had no messages and then
+              contradicting itself a second later. `isLoading` has to be asked
+              BEFORE `length === 0`, always. */}
+          {inboxLoading ? (
+            <ThreadListSkeleton />
+          ) : filtered.length === 0 ? (
             <p className="text-ink-600 m-0 px-4 py-10 text-center text-[13px] text-pretty">
               {conversations.length === 0
                 ? "No conversations yet. They appear the moment a customer messages you."
@@ -380,41 +491,78 @@ export function AdminInbox({
                 </span>
               </span>
               <div className="flex flex-none flex-wrap items-center gap-2">
-                <select
-                  value={active.assignedEmployeeId ?? ""}
-                  onChange={(e) =>
-                    assignMutation.mutate({
-                      conversationId: active.id,
-                      employeeId: e.target.value || null,
-                    })
-                  }
-                  aria-label="Assign to employee"
-                  className={cn(
-                    // appearance-none: at rest this reads as the design's
-                    // static pill, but it stays a one-click reassign.
-                    "h-[34px] cursor-pointer appearance-none rounded-full border bg-white px-3.5 text-[12px] font-medium outline-none",
-                    active.assignedEmployeeId
-                      ? "border-marine-200 text-marine-600"
-                      : "border-warn-bg bg-warn-bg text-warn-ink"
-                  )}
-                >
-                  <option value="">Unassigned</option>
-                  {employees.map((e) => (
-                    <option key={e.id} value={e.id}>
-                      {e.full_name ?? e.email ?? e.id}
-                    </option>
-                  ))}
-                </select>
+                {/* Every control here now shows that it is working. The
+                    select, the Close toggle and the mark-read tick all took a
+                    round trip during which nothing on screen moved — the
+                    "it changes in a few seconds but for that second it feels
+                    like nothing is going to happen" complaint. */}
+                <span className="relative flex items-center">
+                  <select
+                    value={active.assignedEmployeeId ?? ""}
+                    disabled={assignMutation.isPending}
+                    onChange={(e) =>
+                      assignMutation.mutate({
+                        conversationId: active.id,
+                        employeeId: e.target.value || null,
+                      })
+                    }
+                    aria-label="Assign to employee"
+                    aria-busy={assignMutation.isPending || undefined}
+                    className={cn(
+                      // appearance-none: at rest this reads as the design's
+                      // static pill, but it stays a one-click reassign.
+                      "h-[34px] cursor-pointer appearance-none rounded-full border bg-white px-3.5 text-[12px] font-medium outline-none transition-[opacity,border-color,background-color] duration-[140ms] disabled:cursor-progress",
+                      assignMutation.isPending && "pr-8 opacity-70",
+                      active.assignedEmployeeId
+                        ? "border-marine-200 text-marine-600"
+                        : "border-warn-bg bg-warn-bg text-warn-ink"
+                    )}
+                  >
+                    <option value="">Unassigned</option>
+                    {employees.map((e) => (
+                      <option key={e.id} value={e.id}>
+                        {e.full_name ?? e.email ?? e.id}
+                      </option>
+                    ))}
+                  </select>
+                  {assignMutation.isPending ? (
+                    <span className="text-marine-600 pointer-events-none absolute right-2.5">
+                      <Spinner size={12} />
+                    </span>
+                  ) : null}
+                </span>
+
+                {waiting > 0 ? (
+                  <button
+                    type="button"
+                    disabled={readMutation.isPending}
+                    aria-busy={readMutation.isPending || undefined}
+                    onClick={() => readMutation.mutate(active.id)}
+                    title="Mark this conversation as read"
+                    className="border-line-field text-ink-700 hover:bg-surface-1 hover:border-ok-edge inline-flex h-[34px] items-center gap-1.5 rounded-full border bg-white px-3.5 text-[12px] font-medium whitespace-nowrap outline-none disabled:opacity-60"
+                  >
+                    {readMutation.isPending ? (
+                      <Spinner size={12} />
+                    ) : (
+                      <CheckIcon size={13} width={2.4} />
+                    )}
+                    Mark as read
+                  </button>
+                ) : null}
+
                 <button
                   type="button"
+                  disabled={statusMutation.isPending}
+                  aria-busy={statusMutation.isPending || undefined}
                   onClick={() =>
                     statusMutation.mutate({
                       conversationId: active.id,
                       status: active.status === "open" ? "closed" : "open",
                     })
                   }
-                  className="border-line-field text-ink-700 hover:bg-surface-1 h-[34px] rounded-full border bg-white px-3.5 text-[12px] font-medium whitespace-nowrap outline-none"
+                  className="border-line-field text-ink-700 hover:bg-surface-1 inline-flex h-[34px] items-center gap-1.5 rounded-full border bg-white px-3.5 text-[12px] font-medium whitespace-nowrap outline-none disabled:opacity-60"
                 >
+                  {statusMutation.isPending ? <Spinner size={12} /> : null}
                   {active.status === "open" ? "Close" : "Open"}
                 </button>
                 <Link
@@ -430,7 +578,9 @@ export function AdminInbox({
               ref={scrollRef}
               className="om-scroll bg-surface-1 flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto p-5"
             >
-              {(messages ?? []).length === 0 ? (
+              {messagesLoading ? (
+                <ThreadSkeleton />
+              ) : (messages ?? []).length === 0 ? (
                 <p className="text-ink-600 m-0 py-10 text-center text-[13px]">
                   No messages in this conversation yet.
                 </p>
@@ -450,7 +600,6 @@ export function AdminInbox({
                         name: active.customer?.name ?? "Customer",
                         role: "User",
                       };
-                  const tint = avatarFor(who.name);
                   const newDay =
                     i === 0 || dayKey(arr[i - 1].created_at) !== dayKey(m.created_at);
                   return (
@@ -478,12 +627,12 @@ export function AdminInbox({
                             mine ? "flex-row-reverse" : "flex-row"
                           )}
                         >
-                          <span
-                            style={{ background: tint.bg, color: tint.ink }}
-                            className="flex size-8 flex-none items-center justify-center rounded-full text-[11px] font-semibold"
-                          >
-                            {initialsOf(who.name)}
-                          </span>
+                          <Avatar
+                            name={who.name}
+                            size={32}
+                            src={mine ? employeeAvatar(m.sender_id) ?? myAvatar : null}
+                            className="text-[11px]"
+                          />
                           <div
                             className={cn(
                               "flex min-w-0 flex-col gap-[5px]",

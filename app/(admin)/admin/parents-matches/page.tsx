@@ -35,6 +35,8 @@ import {
   Tr,
   ViewButton,
 } from "@/components/admin/ui";
+import { HowItWorks } from "@/components/admin/how-it-works";
+import { LoadMore } from "@/components/admin/load-more";
 
 const KEY = ["admin", "parent-matches"] as const;
 const PAGE_SIZE = 8;
@@ -127,6 +129,29 @@ export default function AdminParentsMatchesPage() {
       <PageHead
         title="Matches"
         intro="Traveller and requester pairings. Both sides have to accept before contact details can be released, and releasing them is a separate step tied to a payment."
+      />
+
+      <HowItWorks
+        title="How matches work"
+        cta={{ href: "/admin/parents-listings", label: "Open parent listings" }}
+        steps={[
+          {
+            label: "A listing is approved",
+            body: "Someone posts a trip they are already taking, or asks for help for a parent. You approve it under Parent listings.",
+          },
+          {
+            label: "You propose the match",
+            body: "An approved listing shows its ranked candidates. Only staff can create a match — the introduction is the service being paid for.",
+          },
+          {
+            label: "Both sides answer",
+            body: "Each party accepts or declines from their own portal. Nothing is released while either is still deciding.",
+          },
+          {
+            label: "Payment, then introduction",
+            body: "Once both have accepted AND the payment is marked paid, releasing contact opens the thread. That step is irreversible.",
+          },
+        ]}
       />
 
       <Card>
@@ -257,9 +282,12 @@ export default function AdminParentsMatchesPage() {
               noun="matches"
               action={
                 remaining > 0 ? (
-                  <Btn onClick={() => setLimit((l) => l + PAGE_SIZE)}>
-                    Load {Math.min(PAGE_SIZE, remaining)} more — {remaining} remaining
-                  </Btn>
+                  <LoadMore
+                    remaining={remaining}
+                    pageSize={PAGE_SIZE}
+                    noun="matches"
+                    onLoad={() => setLimit((l) => l + PAGE_SIZE)}
+                  />
                 ) : undefined
               }
             />

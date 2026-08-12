@@ -3,6 +3,11 @@
 import { createClient as createSupabaseJsClient } from "@supabase/supabase-js";
 import { getUserAndProfile } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
+import { isMissingColumn } from "@/lib/db/errors";
+import {
+  getConversationReads,
+  setConversationRead,
+} from "@/lib/db/conversation-reads";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { ATTACHMENT_BUCKET } from "@/lib/storage";
 import { getEmployees, getProfileById } from "@/lib/db/profiles";
@@ -37,20 +42,6 @@ import { normalizeOrderInput, type OrderFormInput } from "@/lib/orders/form";
  * policies grant all); privileged writes use the service-role client AFTER an
  * explicit admin check here, since service-role bypasses RLS.
  */
-
-/**
- * True when PostgREST rejected a write because a column is not there yet —
- * i.e. migration 0021 has not been applied to this database. Callers retry
- * with the pre-0021 payload so the feature degrades instead of failing.
- */
-function isMissingColumn(error: { message?: string; code?: string }): boolean {
-  return (
-    error?.code === "PGRST204" ||
-    /column .* does not exist|could not find the .* column/i.test(
-      error?.message ?? ""
-    )
-  );
-}
 
 type ActionResult = { ok: true } | { ok: false; error: string };
 type DataResult<T> = { ok: true; data: T } | { ok: false; error: string };
@@ -358,7 +349,15 @@ export async function setOrderStatus(input: {
   return { ok: true };
 }
 
-/** Assign (or, with null, unassign) an order to an employee. */
+/**
+ * Assign (or, with null, unassign) an order to an employee.
+ *
+ * Assigning also advances a `new` order to `in_progress`. Somebody is now
+ * working it — that IS what in-progress means, and leaving the status for a
+ * human to remember is how the pipeline filled up with "new" orders that had
+ * been worked for a week. Only `new` moves: an order that is already completed
+ * or cancelled is not reopened by a reassignment.
+ */
 export async function assignOrder(input: {
   id: string;
   employeeId: string | null;
@@ -370,12 +369,22 @@ export async function assignOrder(input: {
   }
 
   const supabase = await createClient();
-  const { error } = await supabase
+  const { data, error } = await supabase
     .from("orders")
     .update({ assigned_employee_id: input.employeeId || null })
-    .eq("id", input.id);
+    .eq("id", input.id)
+    .select("id, status, order_number");
 
   if (error) return { ok: false, error: error.message };
+
+  const order = data?.[0];
+  if (input.employeeId && order?.status === "new") {
+    await supabase
+      .from("orders")
+      .update({ status: "in_progress" })
+      .eq("id", input.id)
+      .eq("status", "new");
+  }
   return { ok: true };
 }
 
@@ -679,11 +688,25 @@ export async function getEmployeeDetail(
   return { profile, ordersCreated, assignmentCount: count ?? 0 };
 }
 
+/**
+ * Edit an employee. This used to accept only name / email / access level, so
+ * every other field on the Add-employee sheet — job title, phone, start date,
+ * commission band, whether the account is active — could be set once at
+ * creation and never corrected. It now takes the same field set as
+ * `createEmployee`, and steps its payload down 0022 → 0021 → base the same
+ * way, so an unmigrated database still saves everything it understands rather
+ * than failing the whole edit.
+ */
 export async function updateEmployee(input: {
   id: string;
   fullName: string;
   email: string;
   accessLevel: AccessLevel;
+  jobTitle?: string | null;
+  phone?: string | null;
+  startDate?: string | null;
+  commissionRate?: string | null;
+  active?: boolean;
 }): Promise<ActionResult> {
   try {
     await requireAdmin();
@@ -710,12 +733,37 @@ export async function updateEmployee(input: {
     });
     if (authError) return { ok: false, error: authError.message };
 
-    const { error } = await admin
-      .from("profiles")
-      .update({ full_name: fullName, email, access_level: input.accessLevel })
-      .eq("id", input.id);
+    const base = {
+      full_name: fullName,
+      email,
+      access_level: input.accessLevel,
+      ...(input.active === undefined ? {} : { is_active: input.active }),
+    };
+    const with21 =
+      input.jobTitle === undefined
+        ? base
+        : { ...base, job_title: input.jobTitle?.trim() || null };
+    const with22 = {
+      ...with21,
+      ...(input.phone === undefined ? {} : { phone: input.phone?.trim() || null }),
+      ...(input.startDate === undefined
+        ? {}
+        : { start_date: input.startDate?.trim() || null }),
+      ...(input.commissionRate === undefined
+        ? {}
+        : { commission_rate: input.commissionRate?.trim() || null }),
+    };
 
-    if (error) return { ok: false, error: error.message };
+    let error: { message?: string; code?: string } | null = null;
+    for (const payload of [with22, with21, base]) {
+      ({ error } = await admin
+        .from("profiles")
+        .update(payload)
+        .eq("id", input.id));
+      if (!error || !isMissingColumn(error)) break;
+    }
+
+    if (error) return { ok: false, error: error.message ?? "Update failed." };
     return { ok: true };
   } catch (e) {
     return { ok: false, error: e instanceof Error ? e.message : "Update failed." };
@@ -882,14 +930,57 @@ export async function deleteCustomer(id: string): Promise<ActionResult> {
  * messages are waiting on a reply rather than a per-viewer unread count.
  */
 export async function listAdminInbox(): Promise<InboxConversation[]> {
-  await requireAdmin();
-  const overview = await getConversationsOverview();
-  return overview.map((c) => ({
-    ...c,
-    unreadCount: c.waitingCount,
-    lastReadAt: null,
-    assignedEmployeeId: c.assignedEmployeeId,
-  }));
+  const { user, profile } = await getUserAndProfile();
+  if (!user || profile?.role !== "admin") throw new Error("Unauthorized");
+
+  const [overview, reads] = await Promise.all([
+    getConversationsOverview(),
+    getConversationReads(user.id),
+  ]);
+
+  return overview.map((c) => {
+    const lastReadAt = reads.get(c.id) ?? null;
+    /**
+     * A thread I have explicitly marked read shows no badge until the
+     * customer says something new. Without a read receipt (the table isn't
+     * there yet) this falls back to `waitingCount` — messages awaiting a
+     * reply — which is exactly the old behaviour.
+     */
+    const seen =
+      lastReadAt &&
+      c.last_message_at &&
+      new Date(c.last_message_at) <= new Date(lastReadAt);
+
+    return {
+      ...c,
+      unreadCount: seen ? 0 : c.waitingCount,
+      lastReadAt,
+      assignedEmployeeId: c.assignedEmployeeId,
+    };
+  });
+}
+
+/**
+ * "I've seen this thread." Writes a per-admin read receipt so the badge stops
+ * counting a conversation that has been handled, without pretending it was
+ * replied to. A no-op (reported honestly) on a database without the table.
+ */
+export async function markAdminConversationRead(
+  conversationId: string
+): Promise<ActionResult> {
+  const { user, profile } = await getUserAndProfile();
+  if (!user || profile?.role !== "admin") {
+    return { ok: false, error: "Unauthorized" };
+  }
+  const ok = await setConversationRead(user.id, conversationId);
+  if (!ok) {
+    return {
+      ok: false,
+      error:
+        "Read receipts aren't enabled on this database yet — run APPLY_ADMIN_ROUND3.sql.",
+    };
+  }
+  return { ok: true };
 }
 
 /**

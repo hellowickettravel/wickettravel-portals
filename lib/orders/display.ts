@@ -5,6 +5,15 @@
  * customer portals cannot drift on how the same record reads.
  */
 
+/**
+ * Hours a delivered order waits for the customer to approve before completing
+ * itself. Lives here rather than beside the lifecycle actions because those
+ * are `"use server"` (async exports only) and `lib/orders/lifecycle.ts` is
+ * `server-only` — but the customer's approve card and the admin's delivered
+ * banner both have to state the number, and it must be the same number.
+ */
+export const AUTO_COMPLETE_HOURS = 24;
+
 /** "Dubai Int'l (DXB)" → "DXB" for the boarding pass, "Dubai Int'l" beneath it. */
 export function splitPlace(value: string | null): { code: string; city: string } {
   if (!value) return { code: "—", city: "" };

@@ -80,6 +80,13 @@ export type Profile = {
   start_date?: string | null;
   /** Commission band label, e.g. "Standard — 8%". Not a computed rate. */
   commission_rate?: string | null;
+  /**
+   * Personal profile picture. Used for THIS person's avatar only — the account
+   * button, their inbox rows, their chat bubbles. Deliberately unrelated to
+   * `business_settings.logo_url`, which is the company mark in the sidebar.
+   * Optional: added by APPLY_ADMIN_ROUND3.sql.
+   */
+  avatar_url?: string | null;
 };
 
 export type Customer = {
@@ -170,6 +177,13 @@ export type Order = {
   created_by: string | null; // -> profiles.id (the employee/admin); null for customer-created
   assigned_employee_id: string | null; // -> profiles.id (added in 0008)
   closed_at: string | null; // completion timestamp; set when status becomes 'completed'
+  /**
+   * When staff handed the booking over to the customer. Starts the 24-hour
+   * approval window after which the order completes itself
+   * (`lib/actions/order-lifecycle.ts`). Optional because it arrives with
+   * APPLY_ADMIN_ROUND3.sql — the portal runs without it, minus the hand-off.
+   */
+  delivered_at?: string | null;
   created_at: string;
 };
 
@@ -242,6 +256,24 @@ export type Notification = {
 };
 
 export type SupportTicketStatus = "open" | "resolved";
+
+/**
+ * One reply on a support ticket. Arrives with APPLY_ADMIN_ROUND3.sql — before
+ * it is applied, `listSupportMessages` returns [] and the composer is hidden,
+ * so a ticket reads exactly as it does today.
+ *
+ * `author_role` is stamped by the server from the caller's own profile, never
+ * sent by the client, so a reply cannot claim to be from staff.
+ */
+export type SupportMessage = {
+  id: string;
+  ticket_id: string;
+  author_id: string | null;
+  author_role: "admin" | "employee" | "customer";
+  author_name: string | null;
+  body: string;
+  created_at: string;
+};
 
 /** Who raised a support ticket (added in 0015). */
 export type SupportSubmitterRole = "employee" | "customer";
