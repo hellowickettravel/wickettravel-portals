@@ -3,6 +3,7 @@
 import { getUserAndProfile } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { tooManyRecentRows } from "@/lib/security/rate-limit";
+import { isUuid } from "@/lib/db/errors";
 import { notify, notifyAdmins } from "@/lib/notify";
 import {
   ASSISTANCE_KINDS,
@@ -198,6 +199,10 @@ export async function getMyListing(
 ): Promise<ParentTicketListing | null> {
   const me = await currentUser();
   if (!me) return null;
+  // A dynamic segment matches any path segment, so this can be reached with
+  // junk from the URL bar. Postgres would raise 22P02 and the page would 500;
+  // "no such listing" is the honest answer.
+  if (!isUuid(id)) return null;
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("parent_ticket_listings")
@@ -529,6 +534,10 @@ export async function getListingForAdmin(
   id: string
 ): Promise<AdminListingRow | null> {
   await requireAdmin();
+  // A dynamic route segment matches ANY path segment, so this is reachable
+  // with junk from the URL bar. Postgres raises 22P02 on a malformed uuid,
+  // which an RSC turns into a 500 — "no such record" is the honest answer.
+  if (!isUuid(id)) return null;
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("parent_ticket_listings")

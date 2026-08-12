@@ -3,6 +3,7 @@
 import { randomUUID } from "crypto";
 import { getUserAndProfile } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
+import { isUuid } from "@/lib/db/errors";
 import {
   PARENT_TICKET_STATUSES,
   type ParentTicketEnquiry,
@@ -52,6 +53,10 @@ export async function getParentTicket(
   id: string
 ): Promise<ParentTicketEnquiry | null> {
   await requireAdmin();
+  // A dynamic route segment matches ANY path segment, so this is reachable
+  // with junk from the URL bar. Postgres raises 22P02 on a malformed uuid,
+  // which an RSC turns into a 500 — "no such record" is the honest answer.
+  if (!isUuid(id)) return null;
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("parent_ticket_enquiries")

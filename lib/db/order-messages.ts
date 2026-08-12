@@ -2,6 +2,7 @@ import { createClient } from "@/lib/supabase/server";
 import { withSignedOrderMedia } from "@/lib/storage-server";
 import { ORDER_ATTACHMENT_BUCKET, SIGNED_URL_TTL } from "@/lib/storage";
 import type { OrderMessage, OrderAttachment } from "./types";
+import { isUuid } from "@/lib/db/errors";
 
 /** An order attachment with a freshly minted, short-lived signed download URL. */
 export type SignedOrderAttachment = OrderAttachment & { url: string };
@@ -57,6 +58,10 @@ export async function getOrderAttachments(
 export async function getPreOrderAttachments(
   orderId: string
 ): Promise<SignedOrderAttachment[]> {
+  // Runs in PARALLEL with the order fetch on the detail page, so it cannot
+  // rely on that having already rejected a malformed id — it has to guard for
+  // itself or Postgres raises 22P02 and the whole render 500s.
+  if (!isUuid(orderId)) return [];
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("order_attachments")

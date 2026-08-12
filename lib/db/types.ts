@@ -276,7 +276,13 @@ export type SupportMessage = {
 };
 
 /** Who raised a support ticket (added in 0015). */
-export type SupportSubmitterRole = "employee" | "customer";
+/**
+ * Who raised a support ticket. `helper` arrives with
+ * sql/APPLY_HELPER_SUPPORT.sql — the row still lands in `customer_id`, which
+ * is a `profiles(id)` reference meaning "the non-staff submitter", not a
+ * `customers` row (a helper has none by design).
+ */
+export type SupportSubmitterRole = "employee" | "customer" | "helper";
 
 export type SupportTicket = {
   id: string;

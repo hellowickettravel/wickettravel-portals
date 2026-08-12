@@ -18,10 +18,15 @@ import { fmtInboxTime } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import {
   AttachIcon,
+  CheckIcon,
   ImageIcon,
   SearchIcon,
   SendIcon,
 } from "@/components/admin/icons";
+import {
+  ThreadListSkeleton,
+  ThreadSkeleton,
+} from "@/components/admin/inbox-skeletons";
 import {
   AdminMessageAttachment,
   AdminMessageText,
@@ -29,10 +34,12 @@ import {
 import {
   Avatar,
   Card,
-  avatarFor,
+  Spinner,
   focusRing,
-  initialsOf,
 } from "@/components/admin/ui";
+
+/** The inbox rows as the server action returns them — kept in step with it. */
+type Conversations = Awaited<ReturnType<typeof listMyInbox>>;
 
 /** The design's day divider: "29 July 2026". */
 const DAY = new Intl.DateTimeFormat("en-GB", {
@@ -61,9 +68,16 @@ function clock(iso: string) {
  */
 export function EmployeeInbox({
   currentUserName,
+  currentUserAvatar = null,
   accessLevel,
 }: {
   currentUserName: string;
+  /**
+   * The signed-in employee's own picture, so their bubbles and the composer
+   * show the photo they uploaded in Settings rather than initials. Mirrors
+   * `AdminInbox`'s prop of the same name.
+   */
+  currentUserAvatar?: string | null;
   accessLevel: AccessLevel;
 }) {
   const queryClient = useQueryClient();
@@ -80,7 +94,7 @@ export function EmployeeInbox({
   const scrollRef = useRef<HTMLDivElement>(null);
   const opened = useRef(false);
 
-  const { data: inbox } = useQuery({
+  const { data: inbox, isLoading: inboxLoading } = useQuery({
     queryKey: MY_INBOX_KEY,
     queryFn: listMyInbox,
   });
@@ -105,7 +119,7 @@ export function EmployeeInbox({
     ? myMessagesKey(activeId)
     : ["employee", "messages", "none"];
 
-  const { data: messageData } = useQuery({
+  const { data: messageData, isPending: messagesLoading } = useQuery({
     queryKey: messagesKey,
     queryFn: () => listMyMessages(activeId as string),
     enabled: !!activeId,
@@ -134,13 +148,47 @@ export function EmployeeInbox({
     };
   }, [supabase, queryClient]);
 
-  // Opening a thread clears its unread badge.
+  /**
+   * The read receipt.
+   *
+   * The employee side has a real one already — `assignments.last_read_at`,
+   * written by `markConversationRead()`. It does NOT use `conversation_reads`;
+   * that table exists only because an admin holds no assignment row to hang
+   * the timestamp on.
+   *
+   * Optimistic on the cached inbox so the badge clears on the click rather
+   * than after the round trip, and rolls back with a toast if the write fails.
+   */
+  const readMutation = useMutation({
+    mutationFn: markConversationRead,
+    onMutate: async (conversationId: string) => {
+      await queryClient.cancelQueries({ queryKey: MY_INBOX_KEY });
+      const previous = queryClient.getQueryData<Conversations>(MY_INBOX_KEY);
+      queryClient.setQueryData<Conversations>(MY_INBOX_KEY, (old) =>
+        (old ?? []).map((c) =>
+          c.id === conversationId ? { ...c, unreadCount: 0 } : c
+        )
+      );
+      return { previous };
+    },
+    onError: (_e, _v, ctx) => {
+      if (ctx?.previous) queryClient.setQueryData(MY_INBOX_KEY, ctx.previous);
+      toast.error("Couldn't mark as read", {
+        description: "Please try again.",
+      });
+    },
+    onSettled: () =>
+      queryClient.invalidateQueries({ queryKey: MY_INBOX_KEY }),
+  });
+
+  // Opening a thread clears its unread badge. `mutate` rather than a bare call
+  // so this shares the optimistic update above — otherwise the badge would sit
+  // there for a whole round trip after the thread was plainly already open.
+  const markRead = readMutation.mutate;
   useEffect(() => {
     if (!activeId) return;
-    markConversationRead(activeId).then(() =>
-      queryClient.invalidateQueries({ queryKey: MY_INBOX_KEY })
-    );
-  }, [activeId, queryClient]);
+    markRead(activeId);
+  }, [activeId, markRead]);
 
   useEffect(() => {
     const el = scrollRef.current;
@@ -231,7 +279,13 @@ export function EmployeeInbox({
         </div>
 
         <div className="om-scroll min-h-0 flex-1 overflow-y-auto">
-          {rows.length === 0 ? (
+          {/* Loading is asked BEFORE emptiness. Without this the pane
+              announced "No conversations assigned to you yet" during its very
+              first fetch and then contradicted itself a moment later — which
+              reads as "the portal is broken", not "the portal is loading". */}
+          {inboxLoading ? (
+            <ThreadListSkeleton />
+          ) : rows.length === 0 ? (
             <p className="text-ink-600 m-0 px-5 py-10 text-center text-[13px]">
               {conversations.length === 0
                 ? "No conversations assigned to you yet. An admin routes them here."
@@ -289,22 +343,30 @@ export function EmployeeInbox({
           threadOpen ? "flex" : "hidden"
         )}
       >
+        {/* Same ordering rule as the list: while the inbox is still arriving,
+            "pick a conversation" is an instruction the reader cannot act on. */}
         {!active ? (
-          <div className="text-ink-600 m-auto max-w-[320px] px-6 text-center text-[13px]">
-            Pick a conversation on the left to read it and reply.
-          </div>
+          inboxLoading ? (
+            <div className="min-h-0 flex-1 overflow-hidden p-5">
+              <ThreadSkeleton />
+            </div>
+          ) : (
+            <div className="text-ink-600 m-auto max-w-[320px] px-6 text-center text-[13px]">
+              Pick a conversation on the left to read it and reply.
+            </div>
+          )
         ) : (
           <>
-            <div className="border-line-soft flex flex-none items-center gap-3 border-b px-5 py-3">
+            <div className="border-line-soft flex flex-none flex-wrap items-center gap-3 border-b px-5 py-3">
               <button
                 type="button"
                 onClick={() => setThreadOpen(false)}
-                className="text-marine-600 text-[12.5px] font-medium min-[940px]:hidden"
+                className="text-marine-600 flex-none text-[12.5px] font-medium min-[940px]:hidden"
               >
                 ← Back
               </button>
               <Avatar name={customerName} size={36} />
-              <span className="flex min-w-0 flex-col gap-0.5">
+              <span className="flex min-w-0 flex-[1_1_140px] flex-col gap-0.5">
                 <span className="text-ink-800 truncate text-[13.5px] font-semibold">
                   {customerName}
                 </span>
@@ -312,13 +374,36 @@ export function EmployeeInbox({
                   {active.customer?.wa_phone ?? "Customer conversation"}
                 </span>
               </span>
+              {/* Opening a thread marks it read, but a thread can go unread
+                  again underneath you while you are reading it — so there has
+                  to be a way to say "I've seen that" without leaving and
+                  coming back. */}
+              {active.unreadCount > 0 ? (
+                <button
+                  type="button"
+                  disabled={readMutation.isPending}
+                  aria-busy={readMutation.isPending || undefined}
+                  onClick={() => readMutation.mutate(active.id)}
+                  title="Mark this conversation as read"
+                  className="border-line-field text-ink-700 hover:bg-surface-1 hover:border-ok-edge inline-flex h-[34px] flex-none items-center gap-1.5 rounded-full border bg-white px-3.5 text-[12px] font-medium whitespace-nowrap outline-none disabled:opacity-60"
+                >
+                  {readMutation.isPending ? (
+                    <Spinner size={12} />
+                  ) : (
+                    <CheckIcon size={13} width={2.4} />
+                  )}
+                  Mark as read
+                </button>
+              ) : null}
             </div>
 
             <div
               ref={scrollRef}
               className="om-scroll bg-surface-1 flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto p-5"
             >
-              {thread.length === 0 ? (
+              {messagesLoading ? (
+                <ThreadSkeleton />
+              ) : thread.length === 0 ? (
                 <span className="text-ink-500 m-auto text-[13px]">
                   No messages yet — say hello.
                 </span>
@@ -355,15 +440,16 @@ export function EmployeeInbox({
                             mine ? "flex-row-reverse" : "flex-row"
                           )}
                         >
-                          <span
-                            style={{
-                              background: avatarFor(name).bg,
-                              color: avatarFor(name).ink,
-                            }}
-                            className="flex size-8 flex-none items-center justify-center rounded-full text-[11px] font-semibold"
-                          >
-                            {initialsOf(name)}
-                          </span>
+                          {/* The employee's own bubbles carry their uploaded
+                              picture; the customer's stay on initials, because
+                              a customer's avatar isn't fetched into this
+                              stream. `Avatar` falls back to initials on its
+                              own when `src` is null. */}
+                          <Avatar
+                            name={name}
+                            size={32}
+                            src={mine ? currentUserAvatar : null}
+                          />
                           <div
                             className={cn(
                               "flex min-w-0 flex-col gap-[5px]",

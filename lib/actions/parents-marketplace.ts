@@ -5,6 +5,7 @@ import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { ID_DOCUMENT_BUCKET, SIGNED_URL_TTL } from "@/lib/storage";
 import { notify, notifyAdmins } from "@/lib/notify";
+import { isUuid } from "@/lib/db/errors";
 import {
   ID_DOCUMENT_TYPES,
   type IdDocumentType,
@@ -339,6 +340,10 @@ export async function getVerification(
   profileId: string
 ): Promise<VerificationQueueRow | null> {
   await requireAdmin();
+  // A dynamic route segment matches ANY path segment, so this is reachable
+  // with junk from the URL bar. Postgres raises 22P02 on a malformed uuid,
+  // which an RSC turns into a 500 — "no such record" is the honest answer.
+  if (!isUuid(profileId)) return null;
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("parent_ticket_identities")

@@ -67,6 +67,12 @@
   --color-ember-600: oklch(0.565 0.172 47); /* primary CTA */
   --color-ember-700: oklch(0.505 0.155 45); /* CTA hover */
 
+  /* The dot on the logo's opening vertex. Its own value from the Logo System
+     file — it sits between ember-500 and ember-600 and is deliberately NOT
+     either of them, because the CTA colour is free to be retuned and the mark
+     is not. Never substitute an ember step here. */
+  --color-logo-dot: oklch(0.612 0.172 45);
+
   --color-alert-bg: oklch(0.955 0.028 25);
   --color-alert-line: oklch(0.898 0.050 25);
   --color-alert-ink: oklch(0.455 0.160 25);

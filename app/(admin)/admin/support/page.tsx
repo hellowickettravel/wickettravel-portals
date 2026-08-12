@@ -31,6 +31,7 @@ type Tab = (typeof TABS)[number];
 const SUBMITTERS = [
   { label: "Everyone", value: "all" },
   { label: "Customers", value: "customer" },
+  { label: "Helpers", value: "helper" },
   { label: "Team", value: "employee" },
 ] as const;
 type Submitter = (typeof SUBMITTERS)[number]["value"];
@@ -92,10 +93,17 @@ export default function AdminSupportPage() {
       toast.error("Couldn't update ticket", { description: "Please try again." }),
   });
 
+  // A helper's ticket lands in `customer_id` too — that column is the non-staff
+  // submitter, not a `customers` row — so both read the same embed and only
+  // `submitter_role` tells them apart.
   const submitterName = (t: (typeof tickets)[number]) =>
-    t.submitter_role === "customer"
-      ? t.customer?.full_name || "Customer"
-      : t.employee?.full_name || "Employee";
+    t.submitter_role === "employee"
+      ? t.employee?.full_name || "Employee"
+      : t.customer?.full_name ||
+        (t.submitter_role === "helper" ? "Helper" : "Customer");
+
+  const submitterLabel = (role: string) =>
+    role === "customer" ? "Customer" : role === "helper" ? "Helper" : "Employee";
 
   // Counts respect the submitter filter and the top-bar search, so a tab's
   // number always matches what selecting it would show.
@@ -238,7 +246,7 @@ export default function AdminSupportPage() {
                     </span>
                     <span className="text-ink-500 text-[11.5px] font-normal">
                       {submitterName(t)} ·{" "}
-                      {t.submitter_role === "customer" ? "Customer" : "Employee"}{" "}
+                      {submitterLabel(t.submitter_role)}{" "}
                       · {fmtStamp(t.created_at)}
                     </span>
                   </span>

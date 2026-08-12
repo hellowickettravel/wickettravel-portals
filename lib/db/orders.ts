@@ -1,5 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import type { Order, OrderWithRelations } from "./types";
+import { isUuid } from "@/lib/db/errors";
 
 /**
  * Orders access. RLS scopes rows: admins all; employees their own/assigned;
@@ -32,6 +33,10 @@ export async function getOrders(): Promise<OrderWithRelations[]> {
 export async function getOrderById(
   id: string
 ): Promise<OrderWithRelations | null> {
+  // A dynamic route segment matches ANY path segment, so this is reachable
+  // with junk from the URL bar. Postgres raises 22P02 on a malformed uuid,
+  // which an RSC turns into a 500 — "no such record" is the honest answer.
+  if (!isUuid(id)) return null;
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("orders")

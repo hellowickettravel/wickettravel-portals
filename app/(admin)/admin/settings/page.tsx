@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import { useRouter } from "next/navigation";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { createClient } from "@/lib/supabase/client";
@@ -14,8 +13,7 @@ import {
   getMyNotificationPrefs,
   saveMyNotificationPrefs,
 } from "@/lib/actions/notifications";
-import { uploadBrandingLogo, uploadProfileAvatar } from "@/lib/storage";
-import { getMyAvatar, updateMyAvatar } from "@/lib/actions/account";
+import { uploadBrandingLogo } from "@/lib/storage";
 import { ADMIN_SETTINGS_KEY } from "@/lib/query-keys";
 import { cn } from "@/lib/utils";
 import {
@@ -29,11 +27,11 @@ import {
   focusRing,
   inputClass,
 } from "@/components/admin/ui";
-import { CheckIcon, UploadIcon, UserIcon } from "@/components/admin/icons";
+import { CheckIcon, UploadIcon } from "@/components/admin/icons";
+import { AvatarUpload } from "@/components/admin/avatar-upload";
 import { ResetEverything } from "@/components/admin/reset-everything";
 
 const PREFS_KEY = ["notification-prefs"] as const;
-const AVATAR_KEY = ["my-avatar"] as const;
 
 const TABS = ["Business profile", "Notifications", "Security"] as const;
 type Tab = (typeof TABS)[number];
@@ -41,13 +39,9 @@ type Tab = (typeof TABS)[number];
 export default function SettingsPage() {
   const queryClient = useQueryClient();
   const supabase = useMemo(() => createClient(), []);
-  const router = useRouter();
   const logoInputRef = useRef<HTMLInputElement>(null);
-  const avatarInputRef = useRef<HTMLInputElement>(null);
   const [uploadingLogo, setUploadingLogo] = useState(false);
   const [logoError, setLogoError] = useState("");
-  const [uploadingAvatar, setUploadingAvatar] = useState(false);
-  const [avatarError, setAvatarError] = useState("");
   const [tab, setTab] = useState<Tab>("Business profile");
 
   const { data: settings, isLoading } = useQuery({
@@ -60,10 +54,6 @@ export default function SettingsPage() {
     queryFn: getMyNotificationPrefs,
   });
 
-  const { data: avatar } = useQuery({
-    queryKey: AVATAR_KEY,
-    queryFn: getMyAvatar,
-  });
 
   // Business profile form state.
   const [name, setName] = useState("");
@@ -215,48 +205,7 @@ export default function SettingsPage() {
     queryClient.invalidateQueries({ queryKey: ADMIN_SETTINGS_KEY });
   }
 
-  async function handleAvatar(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0];
-    e.target.value = "";
-    if (!file) return;
-    setAvatarError("");
-    setUploadingAvatar(true);
-    const uploaded = await uploadProfileAvatar(file);
-    if (!uploaded.ok) {
-      setUploadingAvatar(false);
-      setAvatarError(uploaded.error);
-      toast.error("Upload failed", { description: uploaded.error });
-      return;
-    }
-    const saved = await updateMyAvatar(uploaded.url);
-    setUploadingAvatar(false);
-    if (!saved.ok) {
-      setAvatarError(saved.error);
-      toast.error("Couldn't save your picture", { description: saved.error });
-      return;
-    }
-    toast.success("Profile picture updated", {
-      description: "It shows on your account button and your messages.",
-    });
-    queryClient.invalidateQueries({ queryKey: AVATAR_KEY });
-    router.refresh();
-  }
-
-  async function removeAvatar() {
-    setAvatarError("");
-    const saved = await updateMyAvatar(null);
-    if (!saved.ok) {
-      setAvatarError(saved.error);
-      toast.error("Couldn't remove it", { description: saved.error });
-      return;
-    }
-    toast.success("Profile picture removed");
-    queryClient.invalidateQueries({ queryKey: AVATAR_KEY });
-    router.refresh();
-  }
-
   const logoUrl = settings?.logo_url ?? null;
-  const avatarUrl = avatar ?? null;
 
   // The design's nine Business-profile fields, in its own order.
   const FIELDS = [
@@ -400,62 +349,7 @@ export default function SettingsPage() {
             </div>
           </div>
 
-          {/* ------------------------------------------- profile picture */}
-          {/* Kept visually and functionally apart from the logo above: this is
-              the signed-in person's own picture and appears ONLY where they
-              appear — the account button, their inbox rows, their chat
-              bubbles. It never touches the sidebar mark. */}
-          <div className="border-line-soft flex flex-wrap items-center gap-5 border-b p-5">
-            <span className="border-line-field bg-marine-500 relative flex size-[76px] flex-none items-center justify-center overflow-hidden rounded-full border text-[22px] font-medium text-white">
-              {avatarUrl ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img
-                  src={avatarUrl}
-                  alt="Your profile picture"
-                  className="absolute inset-0 size-full object-cover"
-                />
-              ) : (
-                <UserIcon size={30} />
-              )}
-            </span>
-            <div className="flex min-w-0 flex-[1_1_260px] flex-col gap-1.5">
-              <span className="text-ink-800 text-[13px] font-medium">
-                Your profile picture
-              </span>
-              <span className="text-ink-500 text-[12.5px] leading-[1.5] font-normal text-pretty">
-                PNG, JPG or WebP, up to 4MB. This is you — it shows on your
-                account button, beside your name in the inbox and on the
-                messages you send. It is not the sidebar logo.
-              </span>
-              {avatarError ? (
-                <span className="text-danger-ink text-[12px] font-medium">
-                  {avatarError}
-                </span>
-              ) : null}
-            </div>
-            <div className="flex flex-wrap items-center gap-2.5">
-              <input
-                ref={avatarInputRef}
-                type="file"
-                accept=".png,.jpg,.jpeg,.webp"
-                className="hidden"
-                onChange={handleAvatar}
-              />
-              <Btn
-                pending={uploadingAvatar}
-                pendingLabel="Uploading…"
-                onClick={() => avatarInputRef.current?.click()}
-              >
-                <UploadIcon size={15} />
-                {avatarUrl ? "Replace picture" : "Upload picture"}
-              </Btn>
-              {avatarUrl ? (
-                <Btn disabled={uploadingAvatar} onClick={removeAvatar}>
-                  Remove
-                </Btn>
-              ) : null}
-            </div>
-          </div>
+          <AvatarUpload />
 
           {/* ---------------------------------------------------- fields */}
           <form onSubmit={save}>

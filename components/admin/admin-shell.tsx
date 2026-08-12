@@ -7,6 +7,7 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { signOut } from "@/lib/actions/auth";
 import { cn } from "@/lib/utils";
 import { AdminBell } from "@/components/admin/admin-bell";
+import { WicketWordmark } from "@/components/admin/brand";
 import { shadowE3 } from "@/components/admin/ui";
 import {
   LinkPending,
@@ -270,20 +271,25 @@ export function AdminShell({
             href={homeHref}
             className="flex min-w-0 items-center gap-3 no-underline hover:no-underline"
           >
+            {/* A business that has uploaded its own logo gets that plus a plain
+                name; everyone else gets the real lockup, where the mark IS the
+                W. The design's section 06 sets it at 16px on the sidebar. */}
             {logoUrl ? (
-              <Image
-                src={logoUrl}
-                alt=""
-                width={22}
-                height={22}
-                className="size-[22px] flex-none rounded-[6px] object-cover"
-              />
+              <>
+                <Image
+                  src={logoUrl}
+                  alt=""
+                  width={22}
+                  height={22}
+                  className="size-[22px] flex-none rounded-[6px] object-cover"
+                />
+                <span className="font-poppins truncate text-[16px] font-medium tracking-[-0.006em] text-white">
+                  Wicket Travel
+                </span>
+              </>
             ) : (
-              <span className="bg-ember-500 block size-2.5 flex-none rounded-full" />
+              <WicketWordmark size={16} className="truncate text-white" />
             )}
-            <span className="font-poppins truncate text-[15px] font-medium tracking-[-0.012em] text-white">
-              Wicket Travel
-            </span>
           </Link>
           <button
             type="button"
@@ -415,19 +421,23 @@ export function AdminShell({
               className="flex flex-none items-center gap-2.5 no-underline hover:no-underline lg:hidden"
             >
               {logoUrl ? (
-                <Image
-                  src={logoUrl}
-                  alt=""
-                  width={22}
-                  height={22}
-                  className="size-[22px] flex-none rounded-[6px] object-cover"
-                />
+                <>
+                  <Image
+                    src={logoUrl}
+                    alt=""
+                    width={22}
+                    height={22}
+                    className="size-[22px] flex-none rounded-[6px] object-cover"
+                  />
+                  <span className="font-poppins text-ink-800 truncate text-[16px] font-medium tracking-[-0.006em]">
+                    Wicket Travel
+                  </span>
+                </>
               ) : (
-                <span className="bg-ember-500 block size-2.5 flex-none rounded-full" />
+                /* On the light top bar the same lockup inherits ink instead of
+                   white — one component, the colour comes from currentColor. */
+                <WicketWordmark size={16} className="text-ink-800 truncate" />
               )}
-              <span className="font-poppins text-ink-800 truncate text-[15px] font-medium tracking-[-0.012em]">
-                Wicket Travel
-              </span>
             </Link>
           ) : (
             <button

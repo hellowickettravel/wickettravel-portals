@@ -15,6 +15,7 @@ export default async function EmployeeMessagesPage() {
       />
       <EmployeeInbox
         currentUserName={profile?.full_name?.trim() || "Support"}
+        currentUserAvatar={profile?.avatar_url ?? null}
         accessLevel={access}
       />
     </Screen>

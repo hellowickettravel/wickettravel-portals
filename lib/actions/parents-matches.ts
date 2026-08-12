@@ -3,6 +3,7 @@
 import { getUserAndProfile } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { notify, notifyAdmins } from "@/lib/notify";
+import { isUuid } from "@/lib/db/errors";
 import {
   scoreMatch,
   type MatchStatus,
@@ -198,6 +199,10 @@ export async function listMatches(): Promise<AdminMatchRow[]> {
 
 export async function getMatchForAdmin(id: string): Promise<AdminMatchRow | null> {
   await requireAdmin();
+  // A dynamic route segment matches ANY path segment, so this is reachable
+  // with junk from the URL bar. Postgres raises 22P02 on a malformed uuid,
+  // which an RSC turns into a 500 — "no such record" is the honest answer.
+  if (!isUuid(id)) return null;
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("parent_ticket_matches")

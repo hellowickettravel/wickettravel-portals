@@ -21,6 +21,11 @@ A custom "Shared Team Inbox + Orders CRM + Admin panel" for a UK-based flight-ti
 - Supabase clients exist: lib/supabase/client.ts (browser), lib/supabase/server.ts (server), lib/supabase/middleware.ts + root middleware.ts (session + route protection for /admin and /employee).
 - DB schema live with 6 tables: profiles, customers, conversations, assignments, messages, orders. A trigger auto-creates a profile row on signup. RLS is ON; only a basic "own profile read" policy exists so far — fuller role policies come later.
 - Auth = Email + Password. "Confirm email" is OFF.
+- **SQL waiting to be applied** (the portal runs without all of them — each
+  feature detects its absence and degrades honestly):
+  `sql/APPLY_HELPER_SUPPORT.sql` (helper support tickets) and
+  `sql/APPLY_REALTIME_PAYMENTS.sql` (`parent_ticket_payments` on the realtime
+  publication). Both from round five.
 - Migration `0022_person_fields.sql` is written but **not applied** to the live
   DB — no DDL channel from here (the Supabase MCP connector is signed in to a
   different account than the one owning this project). Until it is run,
@@ -608,6 +613,90 @@ it was silent. The fixes are mostly one layer deep:
   sign-ins (6 failures per email / 10 per IP in 15 minutes, `auth_attempts`).
   Save a Playwright `storageState` once and reuse it rather than logging in
   per script.
+
+**Round five (2026-08-12) — portal parity: customer, employee and helper.**
+`PORTAL_PARITY_PLAN.md` drove the other three portals up to the admin's level.
+Two thirds of the nineteen client findings were already live everywhere because
+they had landed in shared components — that was verified, not rebuilt. What
+follows is what was actually missing, plus what the verification turned up.
+
+- **The brand is real now.** `components/admin/brand.tsx` carries the Claude
+  Design **"Logo System"**: the mark is a single stroked path that folds into a
+  W, with an ember dot on its opening vertex, and in the lockup it **is** the W
+  of "Wicket" — the text after it is literally `icket Travel`. Three tiers, and
+  the small one is a DIFFERENT construction (stroke 13.5, dot r9, a wider
+  viewBox so the round caps don't clip), not the big one scaled down. Do not
+  collapse them. Colour is `currentColor` so one component serves the navy
+  sidebar and the light top bar; only the dot is fixed (`--color-logo-dot`,
+  its own value, deliberately not an ember step). The visible run is
+  `aria-hidden` with an `sr-only` "Wicket Travel" beside it, or a screen reader
+  reads "icket Travel". `app/icon.png`, `app/apple-icon.png` and
+  `app/favicon.ico` are generated from the same geometry by `.qa/mkicon.mjs`.
+- **`isUuid()` in `lib/db/errors.ts` — read this before adding a detail page.**
+  A dynamic segment matches ANY path segment, and a dynamic segment beats a
+  catch-all, so `/helper/whatever` lands on `/helper/[id]`. Every detail getter
+  in the product passed that straight to Postgres, which raised
+  `22P02 invalid input syntax for type uuid`, which an RSC turns into a 500.
+  **Ten routes did this** — every admin detail screen, both order screens and
+  the listing screens. All the getters now guard the id and return null so the
+  portal's own "not found" renders. `getPreOrderAttachments` needed its own
+  guard because it runs in PARALLEL with the order fetch and so cannot rely on
+  that having already rejected the id.
+- **One unpublished table killed an entire realtime channel.** Supabase
+  Realtime validates a channel's whole `postgres_changes` list on join; if any
+  table is missing from the `supabase_realtime` publication it replies
+  `status: "error"` and tears down the WHOLE channel. `parent_ticket_payments`
+  was never added (APPLY_PARENTS_FULLSCOPE_0.sql added the other three), so
+  subscribing to the four marketplace tables together silently killed live
+  updates for the three that were configured correctly — while the indicator
+  still said "Live". `LiveRefresh` now opens **one channel per table**, so a
+  gap costs that table and not the screen. They share the one WebSocket (the
+  browser client is a per-tab singleton), so this costs topics, not sockets.
+  `sql/APPLY_REALTIME_PAYMENTS.sql` puts the ledger on the wire — NOT YET
+  APPLIED, and the portals work without it.
+- The **employee inbox** finally got round three: loading asked before
+  emptiness (it announced "No conversations assigned to you yet" during its
+  first fetch), a real Mark-as-read with an optimistic badge clear, and the
+  employee's own avatar on their bubbles. Its two skeletons moved to
+  `components/admin/inbox-skeletons.tsx` rather than being copied.
+  The employee read receipt is `assignments.last_read_at` — it does NOT use
+  `conversation_reads`, which exists only because an admin holds no assignment
+  row to hang a timestamp on.
+- **`components/admin/avatar-upload.tsx` is the one profile-picture control**,
+  now in all four settings screens (the admin's inline copy was replaced by
+  it). The server side was always role-agnostic. It takes a `note` so each
+  portal can name where that picture actually shows up, and every one of them
+  says out loud that it is not the sidebar logo.
+- **Helper support is a real ticket now**, not a contact card.
+  `sql/APPLY_HELPER_SUPPORT.sql` (**NOT YET APPLIED**) widens the CHECK
+  constraint and adds an INSERT policy for `role = 'helper'`, and teaches the
+  author trigger 'helper'. A helper's ticket lands in `customer_id` — that
+  column is a `profiles(id)` reference meaning "the non-staff submitter", not a
+  `customers` row, which a helper has none of by design. `CustomerSupport`
+  took an `audience` prop instead of being forked. Until the SQL is run,
+  `createHelperSupportTicket` returns an error naming the file, and
+  `SupportThread` treats `helper` as matching `customer` too so old rows and
+  unmigrated databases both read correctly.
+- The **customer and helper marketplace screens are live** (listings, matches,
+  payments, identities) and carry a party-voiced `HowItWorks` — the admin's
+  panels are written from the business's side; these answer "who decides and
+  what am I waiting for".
+- **Nav badges stream in every portal now.** The employee layout used to await
+  `getInboxForEmployee()` AND `getMyVisibleOrders()` — every row of both — for
+  two numbers; they are `count(*)` head queries handed over unawaited. Proven
+  by reading the raw HTML stream: `<aside>` arrives in the first chunk at 0ms
+  while the response is still streaming 600–790ms later.
+  **No latency delta is claimed** — the database is empty, which is exactly the
+  condition under which the last such claim turned out to be noise.
+- Verification lives in `.qa/` (git-ignored): `drive.mjs` (every route in all
+  four portals as each role — status, console errors, hand cursors, in-shell
+  404s, dialog geometry), `dynamic-ids.mjs`, `accept.mjs`, `realtime.mjs`,
+  `stream.mjs`, plus `provision.mjs`/`cleanup.mjs` for QA accounts.
+  **84/84 passing.** Assert the shell with `waitForSelector`, never a bare
+  `count()` — the count can land mid-RSC-swap and read 0 for a shell that is
+  plainly there a frame later.
+  `waitUntil: "networkidle"` NEVER settles on a screen carrying `LiveRefresh`:
+  the realtime WebSocket keeps the connection open forever. Use `"load"`.
 
 **The driver portal was REMOVED 2026-08-10** at the client's request — it was
 mock-only, had no auth, was half-migrated, and its ₹/India content never

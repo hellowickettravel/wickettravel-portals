@@ -3,7 +3,7 @@
 import { createClient as createSupabaseJsClient } from "@supabase/supabase-js";
 import { getUserAndProfile } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
-import { isMissingColumn } from "@/lib/db/errors";
+import { isMissingColumn, isUuid } from "@/lib/db/errors";
 import {
   getConversationReads,
   setConversationRead,
@@ -155,6 +155,10 @@ export type CustomerDetail = {
 /** A single customer with their orders + conversations for the detail page. */
 export async function getCustomerDetail(id: string): Promise<CustomerDetail | null> {
   await requireAdmin();
+  // A dynamic route segment matches ANY path segment, so this is reachable
+  // with junk from the URL bar. Postgres raises 22P02 on a malformed uuid,
+  // which an RSC turns into a 500 — "no such record" is the honest answer.
+  if (!isUuid(id)) return null;
   const customer = await getCustomerById(id);
   if (!customer) return null;
 
@@ -673,6 +677,10 @@ export async function getEmployeeDetail(
   id: string
 ): Promise<EmployeeDetail | null> {
   await requireAdmin();
+  // A dynamic route segment matches ANY path segment, so this is reachable
+  // with junk from the URL bar. Postgres raises 22P02 on a malformed uuid,
+  // which an RSC turns into a 500 — "no such record" is the honest answer.
+  if (!isUuid(id)) return null;
   const profile = await getProfileById(id);
   if (!profile || profile.role !== "employee") return null;
 

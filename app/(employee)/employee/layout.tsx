@@ -5,12 +5,12 @@ import {
   canAccessSection,
   type EmployeeSection,
 } from "@/lib/access";
+import { createClient } from "@/lib/supabase/server";
 import { getBrandLogoUrl } from "@/lib/db/branding";
-import { getInboxForEmployee } from "@/lib/db/conversations";
-import { getMyVisibleOrders } from "@/lib/db/orders";
 import {
   AdminShell,
   type AdminNavSection,
+  type NavCounts,
   type SearchScreen,
 } from "@/components/admin/admin-shell";
 import type { NavIconName } from "@/components/admin/icons";
@@ -34,8 +34,8 @@ const NAV: {
     exact?: boolean;
     emphasize?: boolean;
     section: EmployeeSection;
-    /** Which live count, if any, sits on this row. */
-    count?: "messages" | "orders";
+    /** Which live count, if any, sits on this row — resolved by the shell. */
+    countKey?: "messages" | "orders";
   }[];
 }[] = [
   {
@@ -58,14 +58,14 @@ const NAV: {
         href: "/employee/orders",
         icon: "orders",
         section: "orders",
-        count: "orders",
+        countKey: "orders",
       },
       {
         label: "Messages",
         href: "/employee/messages",
         icon: "messages",
         section: "messages",
-        count: "messages",
+        countKey: "messages",
       },
     ],
   },
@@ -84,6 +84,54 @@ const SEARCH: SearchScreen[] = [
   { prefix: "/employee/orders", exact: true, placeholder: "Search orders", label: "Search orders" },
   { prefix: "/employee/messages", exact: true, placeholder: "Search conversations", label: "Search conversations" },
 ];
+
+/**
+ * The rail's warm figures: what is actually waiting on this employee.
+ *
+ * This used to `await getInboxForEmployee()` AND `getMyVisibleOrders()` — the
+ * entire inbox and every order this employee can see, every row and every
+ * column of both — to produce two small numbers, before a single pixel of the
+ * shell was allowed to render. Now they are `count(*)` head queries (the rows
+ * are never transferred) and, more importantly, the promise is handed to
+ * `AdminShell` UNAWAITED and unwrapped with `use()` inside a `<Suspense>`.
+ * The sidebar, top bar and page paint immediately; the badges arrive after.
+ *
+ * Never `await` decoration.
+ *
+ * A count that throws must not take the portal down, so each one falls back to
+ * zero and the whole thing is wrapped again — an empty map renders no badge,
+ * which is the right degraded state.
+ */
+async function loadNavCounts(userId: string): Promise<NavCounts> {
+  try {
+    const supabase = await createClient();
+    const zero = () => 0;
+
+    const [messages, orders] = await Promise.all([
+      // Conversations assigned to this employee that are still open. RLS
+      // already scopes the table, but the assignment join is what makes this
+      // "mine" rather than "everyone's".
+      supabase
+        .from("assignments")
+        .select("conversation_id, conversations!inner(status)", {
+          count: "exact",
+          head: true,
+        })
+        .eq("employee_id", userId)
+        .eq("conversations.status", "open")
+        .then((r) => r.count ?? 0, zero),
+      supabase
+        .from("orders")
+        .select("id", { count: "exact", head: true })
+        .in("status", ["new", "in_progress"])
+        .then((r) => r.count ?? 0, zero),
+    ]);
+
+    return { messages, orders };
+  } catch {
+    return {};
+  }
+}
 
 export default async function EmployeeLayout({
   children,
@@ -106,27 +154,15 @@ export default async function EmployeeLayout({
 
   const access = normalizeAccess(profile?.access_level);
 
-  // The rail's warm figures: what is actually waiting on this employee.
-  const [inbox, orders, logoUrl] = await Promise.all([
-    getInboxForEmployee(user.id).catch(() => []),
-    getMyVisibleOrders().catch(() => []),
-    getBrandLogoUrl(),
-  ]);
-  const counts = {
-    messages: inbox.filter((c) => (c.unreadCount ?? 0) > 0).length,
-    orders: orders.filter(
-      (o) => o.status === "new" || o.status === "in_progress"
-    ).length,
-  };
+  // Started, NOT awaited — see loadNavCounts below.
+  const navCounts = loadNavCounts(user.id);
+  const logoUrl = await getBrandLogoUrl();
 
   const sections: AdminNavSection[] = NAV.map((group) => ({
     heading: group.heading,
     items: group.items
       .filter((item) => canAccessSection(item.section, access))
-      .map(({ section: _section, count, ...item }) => ({
-        ...item,
-        count: count ? counts[count] : undefined,
-      })),
+      .map(({ section: _section, ...item }) => item),
   })).filter((group) => group.items.length > 0);
 
   const userName = profile?.full_name?.trim() || user.email || "Employee";
@@ -138,6 +174,7 @@ export default async function EmployeeLayout({
       userEmail={user.email ?? ""}
       userId={user.id}
       logoUrl={logoUrl}
+      navCounts={navCounts}
       avatarUrl={profile?.avatar_url ?? null}
       roleLabel="Employee"
       homeHref="/employee"

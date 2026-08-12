@@ -3,6 +3,7 @@ import { getCustomerNavCounts } from "@/lib/db/customer-portal";
 import {
   AdminShell,
   type AdminNavSection,
+  type NavCounts,
   type MobileTab,
   type SearchScreen,
 } from "@/components/admin/admin-shell";
@@ -95,20 +96,30 @@ export async function CustomerPortalShell({
   avatarUrl?: string | null;
   children: React.ReactNode;
 }) {
-  const [counts, logoUrl] = await Promise.all([
-    getCustomerNavCounts(userId).catch(() => ({ orders: 0, messages: 0 })),
-    getBrandLogoUrl(),
-  ]);
+  /**
+   * Started, NOT awaited. These two badge numbers used to hold the entire
+   * shell — sidebar, top bar and page — behind their round trips. Handed to
+   * `AdminShell` as a promise, it unwraps them with `use()` inside a
+   * `<Suspense>`, so the portal paints immediately and the figures land after.
+   * Never `await` decoration.
+   */
+  const navCounts: Promise<NavCounts> = getCustomerNavCounts(userId).then(
+    (c) => ({ orders: c.orders, messages: c.messages }),
+    // A failed count must never take the portal down; no badge is the right
+    // degraded state.
+    () => ({})
+  );
+  const logoUrl = await getBrandLogoUrl();
 
   const sections: AdminNavSection[] = NAV.map((section) => ({
     ...section,
     items: section.items.map((item) => ({
       ...item,
-      count:
+      countKey:
         item.href === "/customer/orders"
-          ? counts.orders
+          ? "orders"
           : item.href === "/customer/messages"
-            ? counts.messages
+            ? "messages"
             : undefined,
     })),
   }));
@@ -120,6 +131,7 @@ export async function CustomerPortalShell({
       userEmail={userEmail}
       userId={userId}
       logoUrl={logoUrl}
+      navCounts={navCounts}
       avatarUrl={avatarUrl}
       roleLabel="Traveller"
       homeHref="/customer"

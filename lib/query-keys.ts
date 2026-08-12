@@ -33,6 +33,7 @@ export const CUSTOMER_SUPPORT_TICKETS_KEY = [
   "customer",
   "support-tickets",
 ] as const;
+export const HELPER_SUPPORT_TICKETS_KEY = ["helper", "support-tickets"] as const;
 
 // "Route a conversation" on the Messages screen
 export const ADMIN_TOOLS_EMPLOYEES_KEY = ["admin", "tools", "employees"] as const;

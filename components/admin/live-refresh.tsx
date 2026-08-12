@@ -45,27 +45,58 @@ export function LiveRefresh({
 
   useEffect(() => {
     const list = key.split(",").filter(Boolean);
-    let ch = supabase.channel(channel);
-    for (const table of list) {
-      ch = ch.on(
-        "postgres_changes",
-        { event: "*", schema: "public", table },
-        () => {
-          setRefreshing(true);
-          if (timer.current) clearTimeout(timer.current);
-          timer.current = setTimeout(() => {
-            router.refresh();
-            // The refresh is a server round trip; give the indicator long
-            // enough to be seen rather than flashing for one frame.
-            setTimeout(() => setRefreshing(false), 600);
-          }, settleMs);
-        }
-      );
-    }
-    ch.subscribe();
+
+    const onChange = () => {
+      setRefreshing(true);
+      if (timer.current) clearTimeout(timer.current);
+      timer.current = setTimeout(() => {
+        router.refresh();
+        // The refresh is a server round trip; give the indicator long
+        // enough to be seen rather than flashing for one frame.
+        setTimeout(() => setRefreshing(false), 600);
+      }, settleMs);
+    };
+
+    /**
+     * ONE CHANNEL PER TABLE, and that is not a style choice.
+     *
+     * All the tables used to share a single channel. Supabase Realtime
+     * validates the whole `postgres_changes` list when the channel joins, and
+     * if ANY table in it is missing from the `supabase_realtime` publication
+     * it replies:
+     *
+     *   status: "error" — "Unable to subscribe to changes with given
+     *   parameters. Please check Realtime is enabled…"
+     *
+     * and tears down the ENTIRE channel. One table nobody had added to the
+     * publication silently killed live updates for the three that were
+     * correctly configured, with no error anywhere in the app — the indicator
+     * still said "Live". Per-table channels isolate that: a missing table
+     * costs you that table, not the screen.
+     *
+     * They all still ride the one WebSocket — the browser client is a per-tab
+     * singleton — so this costs topics, not sockets.
+     */
+    const channels = list.map((table) =>
+      supabase
+        .channel(`${channel}:${table}`)
+        .on("postgres_changes", { event: "*", schema: "public", table }, onChange)
+        .subscribe((status, err) => {
+          if (status === "CHANNEL_ERROR" && process.env.NODE_ENV !== "production") {
+            // Loud in development, silent in production: a screen that cannot
+            // go live is degraded, not broken, and the visitor can still read
+            // it and reload.
+            console.warn(
+              `[LiveRefresh] "${table}" did not subscribe — is it in the supabase_realtime publication?`,
+              err?.message ?? ""
+            );
+          }
+        })
+    );
+
     return () => {
       if (timer.current) clearTimeout(timer.current);
-      void supabase.removeChannel(ch);
+      for (const ch of channels) void supabase.removeChannel(ch);
     };
   }, [supabase, channel, key, router, settleMs]);
 

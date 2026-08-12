@@ -4,6 +4,8 @@ import Link from "next/link";
 import { cn } from "@/lib/utils";
 import { fmtDate } from "@/lib/format";
 import { MatchList } from "@/components/customer/match-list";
+import { HowItWorks } from "@/components/admin/how-it-works";
+import { LiveRefresh } from "@/components/admin/live-refresh";
 import type { MyMatch } from "@/lib/actions/parents-matches";
 import type { ReleasedContact } from "@/lib/parents-marketplace";
 import {
@@ -88,7 +90,7 @@ export function ListingsView({
   const noun = forHelper ? "trip" : "listing";
   const verified = verificationStatus === "verified";
   const live = listings.filter((l) =>
-    ["pending_review", "approved", "matched"].includes(l.listing_status)
+    ["pending_review", "approved", "matched"].includes(l.listing_status),
   );
 
   return (
@@ -101,11 +103,86 @@ export function ListingsView({
             : "Ask for someone to keep an eye on your parent on their flight — we pair you with a checked traveller going the same way."
         }
         actions={
-          <Btn as="link" href={`${basePath}/new`} variant="ember">
-            <PlusIcon size={15} />
-            New {noun}
-          </Btn>
+          <>
+            {/*
+             * Realtime, for the side that is WAITING.
+             *
+             * Every state change on this screen is decided somewhere else: an admin
+             * approves the listing, proposes the match, marks the payment and
+             * releases the contact. Until now none of that reached the person it
+             * was about — they found out by reloading. That is the wrong way round:
+             * the admin already knows what they just did.
+             *
+             * `LiveRefresh` rather than client-side fetching, because these records
+             * arrive as server-rendered props and re-fetching them in the browser
+             * would ship the whole dataset over to recompute what the server has
+             * already computed. RLS scopes each stream to this person's own rows.
+             */}
+            <LiveRefresh
+              channel={`parents-${audience}`}
+              tables={[
+                "parent_ticket_listings",
+                "parent_ticket_matches",
+                "parent_ticket_payments",
+                "parent_ticket_identities",
+              ]}
+            />
+            <Btn as="link" href={`${basePath}/new`} variant="ember">
+              <PlusIcon size={15} />
+              New {noun}
+            </Btn>
+          </>
         }
+      />
+
+      {/* The four steps, from the side that is waiting. The admin's panels are
+          written from the business's side ("review this queue"); these answer
+          the questions someone actually has here — who decides, what happens
+          next, and what they are waiting on. */}
+      <HowItWorks
+        title={
+          forHelper ? "How being a helper works" : "How Parents Tickets works"
+        }
+        steps={
+          forHelper
+            ? [
+                {
+                  label: "Get verified",
+                  body: "We check photo ID by hand, once. Families are trusting a stranger with someone they love.",
+                },
+                {
+                  label: "Post a trip",
+                  body: "A flight you were taking anyway. Tell us the route, the date and what help you can offer.",
+                },
+                {
+                  label: "We find a family",
+                  body: "Our team pairs your trip with a request going the same way and proposes it to you both.",
+                },
+                {
+                  label: "Meet and get paid",
+                  body: "Once you both accept and the family has paid, contact details are released and you can message here.",
+                },
+              ]
+            : [
+                {
+                  label: "Get verified",
+                  body: "Photo ID, checked by hand. Everyone on the board goes through it — the travellers too.",
+                },
+                {
+                  label: "Ask for help",
+                  body: "Tell us your parent's flight and what they need. You can write it before you're verified.",
+                },
+                {
+                  label: "We find a traveller",
+                  body: "Our team pairs your request with a checked traveller on the same flight and proposes it.",
+                },
+                {
+                  label: "Accept and connect",
+                  body: "When you both accept and the fee is settled, we release contact details and you can message here.",
+                },
+              ]
+        }
+        cta={{ href: `${basePath}/verify`, label: "Your verification" }}
       />
 
       {/* ------------------------------------------------- verification gate */}
@@ -113,7 +190,7 @@ export function ListingsView({
         <div
           className={cn(
             "border-ok-edge bg-ok-bg text-ok-ink flex flex-wrap items-center gap-2.5 rounded-[12px] border px-4 py-3 text-[13px] font-medium",
-            shadowE1
+            shadowE1,
           )}
         >
           <CheckCircleIcon size={16} />
@@ -131,7 +208,9 @@ export function ListingsView({
             icon={<ShieldIcon size={15} />}
             title="Get verified first"
             action={
-              <Pill tone={verificationStatus === "pending_review" ? "warn" : "ink"}>
+              <Pill
+                tone={verificationStatus === "pending_review" ? "warn" : "ink"}
+              >
                 {VERIFICATION_STATUS_LABELS[verificationStatus]}
               </Pill>
             }
@@ -210,7 +289,10 @@ export function ListingsView({
         ) : (
           <ul className="m-0 flex list-none flex-col p-0">
             {listings.map((l) => (
-              <li key={l.id} className="border-line-soft border-b last:border-b-0">
+              <li
+                key={l.id}
+                className="border-line-soft border-b last:border-b-0"
+              >
                 <Link
                   href={`${basePath}/${l.id}`}
                   className="flex flex-wrap items-center gap-x-4 gap-y-2.5 px-5 py-4 leading-[normal] no-underline hover:bg-surface-1 hover:no-underline"
@@ -220,7 +302,7 @@ export function ListingsView({
                       "flex size-10 flex-none items-center justify-center rounded-full",
                       l.listing_kind === "traveller"
                         ? "bg-cyan-bg text-cyan-ink"
-                        : "bg-warn-bg text-warn-ink"
+                        : "bg-warn-bg text-warn-ink",
                     )}
                   >
                     {l.listing_kind === "traveller" ? (

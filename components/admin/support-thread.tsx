@@ -38,7 +38,7 @@ export function SupportThread({
   className,
 }: {
   ticketId: string;
-  audience?: "admin" | "employee" | "customer";
+  audience?: "admin" | "employee" | "customer" | "helper";
   className?: string;
 }) {
   const queryClient = useQueryClient();
@@ -99,8 +99,22 @@ export function SupportThread({
     reply.mutate({ ticketId, body });
   }
 
+  /**
+   * Which bubbles are the reader's own.
+   *
+   * A helper also matches `customer`, deliberately. The author trigger in
+   * APPLY_ADMIN_ROUND3.sql was written when helpers had no support form and
+   * files anything non-staff as 'customer'; APPLY_HELPER_SUPPORT.sql teaches
+   * it 'helper'. Accepting both means a helper's own replies read as theirs
+   * whether or not that migration has been run, and old rows written before it
+   * keep working afterwards.
+   */
   const isMine = (role: string) =>
-    audience === "admin" ? role === "admin" : role === audience;
+    audience === "admin"
+      ? role === "admin"
+      : audience === "helper"
+        ? role === "helper" || role === "customer"
+        : role === audience;
 
   return (
     <div className={cn("flex flex-col gap-3", className)}>

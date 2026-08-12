@@ -23,6 +23,7 @@ import {
   focusRing,
   inputClass,
 } from "@/components/admin/ui";
+import { AvatarUpload } from "@/components/admin/avatar-upload";
 import { CheckIcon, LockIcon } from "@/components/admin/icons";
 
 type PrefKey = "new_message" | "new_order" | "status_change";
@@ -153,6 +154,7 @@ export function SettingsForm({
       {/* ------------------------------------------------------- profile */}
       <Card>
         <CardHead title="My profile" />
+        <AvatarUpload note="PNG, JPG or WebP, up to 4MB. This is you — it shows on your account button, beside your name in the inbox and on every message you send a customer. It is not the sidebar logo." />
         <form onSubmit={saveName}>
           <div className="grid grid-cols-[repeat(auto-fit,minmax(230px,1fr))] gap-4 p-5">
             <label className="flex min-w-0 flex-col gap-2">

@@ -41,3 +41,22 @@ export function isMissingTable(error: PgError): boolean {
     )
   );
 }
+
+/**
+ * True for a canonical UUID.
+ *
+ * Needed because a portal's dynamic segment matches ANY single path segment:
+ * `/helper/definitely-not-a-page` matches `/helper/[id]` (a dynamic segment
+ * beats a catch-all), so a mistyped URL reached the record query with a value
+ * Postgres cannot cast. That surfaced as `22P02 invalid input syntax for type
+ * uuid`, which an RSC turns into a 500 error page — instead of the portal's
+ * own "not found", which is what a bad URL should give you.
+ *
+ * Guard the id BEFORE the query, then `notFound()`.
+ */
+export function isUuid(value: string | null | undefined): boolean {
+  if (!value) return false;
+  return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(
+    value
+  );
+}

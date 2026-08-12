@@ -3,6 +3,7 @@
 import { getUserAndProfile } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { notify } from "@/lib/notify";
+import { isUuid } from "@/lib/db/errors";
 import {
   MATCH_CONTACT_RPC,
   PAYMENT_METHODS,
@@ -63,6 +64,10 @@ export async function getMatchPayment(
   matchId: string
 ): Promise<MatchPayment | null> {
   await requireAdmin();
+  // A dynamic route segment matches ANY path segment, so this is reachable
+  // with junk from the URL bar. Postgres raises 22P02 on a malformed uuid,
+  // which an RSC turns into a 500 — "no such record" is the honest answer.
+  if (!isUuid(matchId)) return null;
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("parent_ticket_payments")

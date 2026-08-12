@@ -8,6 +8,7 @@ import {
   AdminOrderForm,
   type AdminOrderCustomer,
 } from "@/components/admin/admin-order-form";
+import { FormSkeleton } from "@/components/admin/skeletons";
 
 /**
  * Employee create-order screen — the design's three-step wizard, with the
@@ -24,7 +25,7 @@ export function EmployeeOrderCreate({
 }: {
   presetConversationId?: string;
 }) {
-  const { data: inbox } = useQuery({
+  const { data: inbox, isLoading } = useQuery({
     queryKey: MY_INBOX_KEY,
     queryFn: listMyInbox,
   });
@@ -54,6 +55,12 @@ export function EmployeeOrderCreate({
     }
     return { customers: list, conversationFor: map };
   }, [inbox, presetConversationId]);
+
+  // Loading before empty, again. The customer picker is sourced from the
+  // inbox, so during the first fetch `customers` is [] — and the wizard would
+  // open on an empty picker telling the employee they have no customers, which
+  // is a different and much more alarming statement than "still loading".
+  if (isLoading) return <FormSkeleton />;
 
   return (
     <AdminOrderForm

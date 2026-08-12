@@ -132,6 +132,88 @@ export async function createCustomerSupportTicket(input: {
   return { ok: true };
 }
 
+/**
+ * A helper raises a support query.
+ *
+ * Separate from `createCustomerSupportTicket` only so `submitter_role` stays
+ * honest — a helper is a service provider, not a customer, and the admin queue
+ * filters on that. The row lands in `customer_id`, which is a `profiles(id)`
+ * reference meaning "the non-staff submitter"; a helper has no `customers` row
+ * by design, so there is nothing else it could be.
+ *
+ * Needs `sql/APPLY_HELPER_SUPPORT.sql`. Until that is run the CHECK constraint
+ * and the INSERT policy both reject the row, so the error names the file
+ * rather than surfacing a raw Postgres message.
+ */
+export async function createHelperSupportTicket(input: {
+  subject: string;
+  message: string;
+}): Promise<ActionResult> {
+  const { user, profile } = await getUserAndProfile();
+  if (!user) return { ok: false, error: "Unauthorized" };
+  if (profile?.role !== "helper") return { ok: false, error: "Unauthorized" };
+
+  if (
+    await tooManyRecentRows({
+      table: "support_tickets",
+      column: "customer_id",
+      value: user.id,
+      windowSec: 60 * 60,
+      max: 10,
+    })
+  ) {
+    return {
+      ok: false,
+      error: "You've opened several tickets already — we'll reply to those first.",
+    };
+  }
+
+  const subject = sanitizeLine(input.subject, LIMITS.SUPPORT_SUBJECT);
+  const message = sanitizeText(input.message, LIMITS.SUPPORT_BODY).trim();
+  if (!subject || !message) {
+    return { ok: false, error: "Subject and details are both required." };
+  }
+
+  const supabase = await createClient();
+  const { error } = await supabase.from("support_tickets").insert({
+    customer_id: user.id,
+    employee_id: null,
+    submitter_role: "helper",
+    subject,
+    message,
+  });
+
+  if (error) {
+    // 23514 = check constraint, 42501 = RLS refusal. Both mean the same thing
+    // here: the migration hasn't been applied.
+    if (error.code === "23514" || error.code === "42501") {
+      return {
+        ok: false,
+        error:
+          "Helper support tickets aren't enabled on this database yet — run sql/APPLY_HELPER_SUPPORT.sql.",
+      };
+    }
+    return { ok: false, error: error.message };
+  }
+  return { ok: true };
+}
+
+/** The signed-in helper's own tickets, newest first. */
+export async function listMyHelperSupportTickets(): Promise<SupportTicket[]> {
+  const { user, profile } = await getUserAndProfile();
+  if (!user || profile?.role !== "helper") return [];
+
+  const supabase = await createClient();
+  const { data } = await supabase
+    .from("support_tickets")
+    .select(TICKET_COLUMNS)
+    .eq("customer_id", user.id)
+    .order("created_at", { ascending: false })
+    .returns<SupportTicket[]>();
+
+  return data ?? [];
+}
+
 /** The signed-in customer's own tickets, newest first. */
 export async function listMyCustomerSupportTickets(): Promise<SupportTicket[]> {
   const { user, profile } = await getUserAndProfile();
@@ -281,12 +363,16 @@ export async function replyToSupportTicket(input: {
     >();
   if (!ticket) return { ok: false, error: "That ticket isn't available." };
 
+  // Mirrors the BEFORE-trigger, which overwrites this anyway — the trigger is
+  // the authority, this only keeps the optimistic value honest.
   const role =
     profile?.role === "admin"
       ? "admin"
       : profile?.role === "employee"
         ? "employee"
-        : "customer";
+        : profile?.role === "helper"
+          ? "helper"
+          : "customer";
 
   const { error } = await supabase.from("support_messages").insert({
     ticket_id: input.ticketId,
@@ -321,7 +407,12 @@ export async function replyToSupportTicket(input: {
   // person answering tells every admin, because no single admin owns a ticket.
   if (role === "admin") {
     if (submitterId) {
-      const base = ticket.submitter_role === "customer" ? "/customer" : "/employee";
+      const base =
+        ticket.submitter_role === "customer"
+          ? "/customer"
+          : ticket.submitter_role === "helper"
+            ? "/helper"
+            : "/employee";
       await notify({
         recipientId: submitterId,
         type: "support_ticket",

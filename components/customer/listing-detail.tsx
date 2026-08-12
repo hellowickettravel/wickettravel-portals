@@ -32,6 +32,7 @@ import {
   Screen,
   Spinner,
 } from "@/components/admin/ui";
+import { LiveRefresh } from "@/components/admin/live-refresh";
 import {
   CheckIcon,
   CloseIcon,
@@ -120,6 +121,13 @@ export function ListingDetail({
         </div>
 
         <div className="flex flex-wrap items-center gap-3">
+          {/* This record's status is decided by an admin on another screen —
+              approved, rejected, matched. The owner is the one waiting on it,
+              so the page has to move on its own. */}
+          <LiveRefresh
+            channel={`parents-listing-${listing.id}`}
+            tables={["parent_ticket_listings", "parent_ticket_matches"]}
+          />
           {editable ? (
             <Btn as="link" href={`${basePath}/${listing.id}/edit`}>
               <EditIcon size={15} />

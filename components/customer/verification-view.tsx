@@ -38,6 +38,7 @@ import {
   shadowE1,
   type PillTone,
 } from "@/components/admin/ui";
+import { LiveRefresh } from "@/components/admin/live-refresh";
 import {
   CheckCircleIcon,
   IdCardIcon,
@@ -183,7 +184,20 @@ export function VerificationView({
       <PageHead
         title="Get verified"
         intro="Parents Tickets pairs a traveller with a family trusting them with someone they love. Everyone on the board is checked by hand first — this is that check."
-        actions={<Pill tone={STATUS_TONE[status]}>{VERIFICATION_STATUS_LABELS[status]}</Pill>}
+        actions={
+          <>
+            {/* An admin approving or rejecting the ID happens on their screen;
+                this is the person waiting to hear. Without this the pill sits
+                on "In review" until they think to reload. */}
+            <LiveRefresh
+              channel="parents-verification-self"
+              tables={["parent_ticket_identities"]}
+            />
+            <Pill tone={STATUS_TONE[status]}>
+              {VERIFICATION_STATUS_LABELS[status]}
+            </Pill>
+          </>
+        }
       />
 
       {/* ------------------------------------------------- where things stand */}

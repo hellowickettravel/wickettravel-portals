@@ -23,6 +23,7 @@ import {
   focusRing,
   inputClass,
 } from "@/components/admin/ui";
+import { AvatarUpload } from "@/components/admin/avatar-upload";
 import { CheckIcon, LockIcon } from "@/components/admin/icons";
 
 // Customer-facing labels mapped onto the shared notification_prefs columns.
@@ -158,6 +159,10 @@ export function CustomerProfileForm({
       {/* -------------------------------------------------- personal info */}
       <Card>
         <CardHead title="Your details" />
+        {/* The same component the staff portals use — one upload feature, four
+            portals. Only the wording differs, because a customer's picture
+            shows up in different places from an admin's. */}
+        <AvatarUpload note="PNG, JPG or WebP, up to 4MB. This is you — it shows beside the messages you send to our team. Nobody outside Wicket Travel sees it." />
         <form onSubmit={saveName}>
           <div className="grid grid-cols-[repeat(auto-fit,minmax(230px,1fr))] gap-4 p-5">
             <label className="flex min-w-0 flex-col gap-2">
