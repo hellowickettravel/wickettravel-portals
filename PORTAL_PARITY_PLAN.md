@@ -22,8 +22,53 @@ that produced it. Everything needed is either here or named by exact path.
    up, and do not silently drop them either.
 5. §7 lists traps that already cost real time in this project. Read it before
    debugging anything that looks like CSS, auth or "it works locally".
+6. §0b records exactly how far the work has got. Start there.
 
 ---
+
+## 0b. STATUS as of 2026-08-12 — read this before doing anything
+
+Most of this plan has already been executed. The working tree builds clean
+(`tsc` clean, `eslint` 0 errors, `next build` succeeds). Verify rather than
+rebuild.
+
+### Done (in the working tree, not yet committed at time of writing)
+
+| Phase | State | Evidence |
+|---|---|---|
+| 1 — Employee inbox | **Done** | `components/employee/employee-inbox.tsx` has `isLoading: inboxLoading` asked before the empty state, `ThreadListSkeleton`/`ThreadSkeleton` (lifted into the new `components/admin/inbox-skeletons.tsx`), and a "Mark as read" control |
+| 2 — Profile pictures | **Done for admin, customer, employee** | New shared `components/admin/avatar-upload.tsx`, mounted in `app/(admin)/admin/settings/page.tsx`, `components/customer/profile-form.tsx`, `components/employee/settings-form.tsx` |
+| 3 — Marketplace realtime | **Done for customer** | `LiveRefresh`/`HowItWorks` in `listings-view.tsx`, `verification-view.tsx`, `listing-detail.tsx` |
+| 4 — Layout streaming | **Done for employee + customer** | `navCounts` in `app/(employee)/employee/layout.tsx` and `components/customer/customer-portal-shell.tsx` |
+| 5 — Loading gaps | **Done** | All four previously-missing `loading.tsx` now exist; `components/employee/order-create.tsx` gates on `isLoading` with `FormSkeleton` |
+| 6 — Helper support | **Server side done, page NOT wired** | `createHelperSupportTicket` + `listMyHelperSupportTickets` in `lib/actions/support.ts`, and `sql/APPLY_HELPER_SUPPORT.sql` exists |
+| Branding | **Done** | `components/admin/brand.tsx` (`WicketMark`, `WicketWordmark`) built from the Logo System file, used by `AdminShell`; `app/icon.png`, `app/apple-icon.png`, `app/favicon.ico` all replaced |
+
+### NOT done — this is the remaining work, and it is almost entirely the helper portal
+
+1. **`app/(helper)/helper/profile/page.tsx`** — no `AvatarUpload`. The other
+   three portals have it. Mount the same shared component.
+2. **`components/helper/helper-portal-shell.tsx`** — no `navCounts`; still
+   blocks the shell. Apply the §3.4 / Phase 4 pattern.
+3. **`app/(helper)/helper/support/page.tsx`** — still the read-only contact
+   card. The action and the SQL both exist now, so wire the real form +
+   `SupportThread`, and keep it failing soft with the message that names
+   `sql/APPLY_HELPER_SUPPORT.sql` until that migration is run.
+4. **No `LiveRefresh` anywhere under `app/(helper)`** — `/helper`,
+   `/helper/[id]`, `/helper/verify` all still need it.
+5. **`components/customer/match-list.tsx`** — the one customer marketplace
+   screen still with no realtime and no explainer.
+
+### Blocking / needs the user
+
+- **`sql/APPLY_HELPER_SUPPORT.sql` has NOT been applied** to the live database.
+  Until it is, helper ticket inserts are refused by the CHECK constraint and
+  the INSERT policy; the action already detects `23514`/`42501` and returns a
+  message naming the file. Ask the user to run it.
+- The live database was **deliberately wiped by the user on 2026-08-12** —
+  one admin profile remains. Seed fixtures before UI verification and delete
+  them afterwards (§5.2).
+
 
 ## 1. Ground rules (these are project invariants, not preferences)
 
