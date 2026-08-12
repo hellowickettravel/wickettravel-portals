@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
+import { Suspense } from "react";
 import { getOrders } from "@/lib/db/orders";
 import { getRecentActivity, type ActivityTone } from "@/lib/db/activity";
 import {
@@ -19,6 +20,7 @@ import {
   PageHead,
   Pill,
   Screen,
+  Shimmer,
 } from "@/components/admin/ui";
 import {
   ChatIcon,
@@ -42,6 +44,101 @@ function sinceDays(n: number) {
   return d.toISOString();
 }
 
+/**
+ * The activity feed, fetched inside its own async component.
+ *
+ * It used to sit in the page's `Promise.all`, which meant the KPI figures, the
+ * recent-orders list and the book-of-business panel all waited on it — three
+ * more queries and three count(*)s — before ANY of the dashboard could be sent.
+ * Nothing else on the screen depends on it, so nothing else should wait for it.
+ * Wrapped in <Suspense> by the page, React streams it in on its own.
+ */
+async function RecentActivity() {
+  const activity = await getRecentActivity(7);
+  return (
+        <Card className="flex h-full flex-col">
+          <CardHead title="Recent activity" />
+          <div className="min-h-0 flex-1 px-5 pt-2 pb-1">
+            {activity.items.length === 0 ? (
+              <p className="text-ink-600 m-0 py-10 text-center text-[13px]">
+                Nothing has happened yet. Orders, replies and assignments show
+                up here as your team works.
+              </p>
+            ) : (
+              activity.items.map((a) => (
+                /* The design's rule is a ::after inset to left:24px — it
+                   starts past the dot and its 16px gap, never under them —
+                   and it is drawn on every row, the last one included. */
+                <div
+                  key={a.id}
+                  className="after:bg-line-soft relative flex gap-4 py-3 after:absolute after:right-0 after:bottom-0 after:left-6 after:h-px after:content-['']"
+                >
+                  <span
+                    style={{ background: ACTIVITY_DOT[a.tone] }}
+                    className="mt-1.5 block size-2 flex-none rounded-full"
+                  />
+                  <div className="flex min-w-0 flex-1 flex-col gap-1">
+                    <span className="text-ink-700 text-[12.5px] leading-[1.5] font-normal text-pretty">
+                      <span className="text-ink-800 font-medium">{a.actor}</span>{" "}
+                      {a.verb}{" "}
+                      <Link href={a.link} className="font-medium">
+                        {a.record}
+                      </Link>
+                    </span>
+                    <span className="text-ink-500 text-[11.5px] font-normal">
+                      {fmtRelative(a.at)}
+                    </span>
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+          <div className="border-line-soft mt-auto flex flex-none items-center justify-between gap-3 border-t px-5 py-3.5">
+            <span className="text-ink-600 text-[12px] font-normal">
+              Showing {activity.items.length} of {activity.total} events
+            </span>
+            <Btn as="link" href="/admin/notifications" size="sm">
+              Load more
+            </Btn>
+          </div>
+        </Card>
+  );
+}
+
+/**
+ * The real card frame while the feed is still in flight — the header, the
+ * footer and the border are known, so they are drawn for real rather than
+ * replaced by a grey rectangle pretending to be them. Only the rows shimmer.
+ */
+function RecentActivityFallback() {
+  return (
+    <Card className="flex h-full flex-col">
+      <CardHead title="Recent activity" />
+      <div className="min-h-0 flex-1 px-5 pt-2 pb-1">
+        {[0, 1, 2, 3, 4].map((i) => (
+          <div
+            key={i}
+            style={{ animationDelay: `${i * 70}ms` }}
+            className="after:bg-line-soft wt-fade-in relative flex gap-4 py-3 after:absolute after:right-0 after:bottom-0 after:left-6 after:h-px after:content-['']"
+          >
+            <Shimmer w={8} h={8} className="mt-1.5 rounded-full" />
+            <div className="flex min-w-0 flex-1 flex-col gap-2">
+              <Shimmer w="72%" />
+              <Shimmer w="30%" h={8} />
+            </div>
+          </div>
+        ))}
+      </div>
+      <div className="border-line-soft mt-auto flex flex-none items-center justify-between gap-3 border-t px-5 py-3.5">
+        <span className="text-ink-600 text-[12px] font-normal">Loading activity…</span>
+        <Btn as="link" href="/admin/notifications" size="sm">
+          Load more
+        </Btn>
+      </div>
+    </Card>
+  );
+}
+
 export default async function AdminDashboardPage() {
   const supabase = await createClient();
   const head = { count: "exact" as const, head: true };
@@ -54,7 +151,6 @@ export default async function AdminDashboardPage() {
     employeesOff,
     conversationsCount,
     conversationsNew,
-    activity,
   ] = await Promise.all([
     getOrders(),
     supabase
@@ -75,7 +171,6 @@ export default async function AdminDashboardPage() {
       .select("id", head)
       .gte("created_at", last30)
       .then((r) => r.count ?? 0),
-    getRecentActivity(7),
   ]);
 
   const active = orders.filter(
@@ -198,53 +293,9 @@ export default async function AdminDashboardPage() {
           </div>
         </Card>
 
-        {/* ----------------------------------------- Recent activity */}
-        <Card className="flex h-full flex-col">
-          <CardHead title="Recent activity" />
-          <div className="min-h-0 flex-1 px-5 pt-2 pb-1">
-            {activity.items.length === 0 ? (
-              <p className="text-ink-600 m-0 py-10 text-center text-[13px]">
-                Nothing has happened yet. Orders, replies and assignments show
-                up here as your team works.
-              </p>
-            ) : (
-              activity.items.map((a) => (
-                /* The design's rule is a ::after inset to left:24px — it
-                   starts past the dot and its 16px gap, never under them —
-                   and it is drawn on every row, the last one included. */
-                <div
-                  key={a.id}
-                  className="after:bg-line-soft relative flex gap-4 py-3 after:absolute after:right-0 after:bottom-0 after:left-6 after:h-px after:content-['']"
-                >
-                  <span
-                    style={{ background: ACTIVITY_DOT[a.tone] }}
-                    className="mt-1.5 block size-2 flex-none rounded-full"
-                  />
-                  <div className="flex min-w-0 flex-1 flex-col gap-1">
-                    <span className="text-ink-700 text-[12.5px] leading-[1.5] font-normal text-pretty">
-                      <span className="text-ink-800 font-medium">{a.actor}</span>{" "}
-                      {a.verb}{" "}
-                      <Link href={a.link} className="font-medium">
-                        {a.record}
-                      </Link>
-                    </span>
-                    <span className="text-ink-500 text-[11.5px] font-normal">
-                      {fmtRelative(a.at)}
-                    </span>
-                  </div>
-                </div>
-              ))
-            )}
-          </div>
-          <div className="border-line-soft mt-auto flex flex-none items-center justify-between gap-3 border-t px-5 py-3.5">
-            <span className="text-ink-600 text-[12px] font-normal">
-              Showing {activity.items.length} of {activity.total} events
-            </span>
-            <Btn as="link" href="/admin/notifications" size="sm">
-              Load more
-            </Btn>
-          </div>
-        </Card>
+        <Suspense fallback={<RecentActivityFallback />}>
+          <RecentActivity />
+        </Suspense>
       </div>
 
       {/* --------------------------------------------- Book of business */}

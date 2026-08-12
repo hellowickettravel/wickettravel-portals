@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { Suspense, use, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
@@ -29,9 +29,54 @@ export type AdminNavItem = {
   exact?: boolean;
   /** Live unactioned count — rendered as a small warm figure, per the design. */
   count?: number;
+  /**
+   * Key into the streamed counts map. Prefer this over `count`: it lets the
+   * shell paint before the numbers are known (see `navCounts` below).
+   */
+  countKey?: string;
   /** The design weights Dashboard at 600 even when it is not the active row. */
   emphasize?: boolean;
 };
+
+/**
+ * The sidebar's live badges, streamed rather than awaited.
+ *
+ * These are nine `count(*)` queries. The layout used to `await Promise.all`
+ * them before rendering ANYTHING — so the sidebar, the top bar and the whole
+ * page waited on nine round trips whose only job is to draw a small warm
+ * number next to five nav items. At ~180ms to Supabase that was most of the
+ * time-to-first-paint, spent on decoration.
+ *
+ * Now the layout hands the promise straight through and React streams the
+ * numbers in when they land. Nothing else waits. This is the honest version of
+ * "don't show a skeleton": the real sidebar, the real header and the real page
+ * are on screen immediately, and only the part that genuinely isn't known yet
+ * arrives late.
+ */
+export type NavCounts = Record<string, number>;
+
+function NavCount({
+  counts,
+  countKey,
+  active,
+}: {
+  counts: Promise<NavCounts>;
+  countKey: string;
+  active: boolean;
+}) {
+  const n = use(counts)[countKey] ?? 0;
+  if (!n) return null;
+  return (
+    <span
+      className={cn(
+        "-mt-0.5 flex-none text-[10px] leading-none font-bold tracking-normal tabular-nums",
+        active ? "text-nav-count-on" : "text-nav-count"
+      )}
+    >
+      {n > 9 ? "9+" : n}
+    </span>
+  );
+}
 
 export type AdminNavSection = { heading?: string; items: AdminNavItem[] };
 
@@ -89,6 +134,7 @@ const SEARCH: { prefix: string; exact?: boolean; placeholder: string; label: str
  */
 export function AdminShell({
   sections,
+  navCounts,
   userName,
   userEmail,
   userId,
@@ -110,6 +156,8 @@ export function AdminShell({
   signOutHref,
 }: {
   sections: AdminNavSection[];
+  /** Unawaited counts for the sidebar badges — see NavCounts above. */
+  navCounts?: Promise<NavCounts>;
   userName: string;
   userEmail: string;
   userId: string;
@@ -306,6 +354,18 @@ export function AdminShell({
                             >
                               {item.count > 9 ? "9+" : item.count}
                             </span>
+                          ) : null}
+                          {navCounts && item.countKey ? (
+                            /* fallback={null}: an absent badge is the truthful
+                               state while the number is unknown, and a
+                               placeholder here would make the row twitch. */
+                            <Suspense fallback={null}>
+                              <NavCount
+                                counts={navCounts}
+                                countKey={item.countKey}
+                                active={active}
+                              />
+                            </Suspense>
                           ) : null}
                         </span>
                         <LinkSpinner />

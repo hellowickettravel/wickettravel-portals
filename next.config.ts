@@ -124,6 +124,26 @@ const nextConfig: NextConfig = {
   // reach a client bundle. Behaviour is identical — purely a payload trim.
   experimental: {
     optimizePackageImports: ["lucide-react", "@base-ui/react", "sonner"],
+    /**
+     * Client Router Cache.
+     *
+     * Every route here is dynamic (they all read auth), so Next was throwing
+     * away the RSC payload the instant you navigated away and re-rendering the
+     * whole layout on the server when you came back — sidebar counts, brand
+     * logo, session profile, the lot. On a connection ~180ms from Supabase
+     * that is most of a second to return to a screen you were just looking at.
+     *
+     * 30 seconds is deliberately short. It is long enough that bouncing
+     * between Orders and a record feels instant, and short enough that nothing
+     * goes visibly stale — and it is belt-and-braces anyway, because the data
+     * inside these screens comes from TanStack Query with its own realtime
+     * invalidation, and every mutation calls `router.refresh()`, which busts
+     * this cache immediately.
+     */
+    staleTimes: {
+      dynamic: 30,
+      static: 180,
+    },
   },
   async headers() {
     return [{ source: "/:path*", headers: securityHeaders }];

@@ -4,7 +4,7 @@ import { useEffect, useId, useRef } from "react";
 import { cn } from "@/lib/utils";
 import { CheckIcon, CloseIcon } from "@/components/admin/icons";
 import { Btn, focusRing } from "@/components/admin/ui";
-import { lockScroll } from "@/components/admin/sheet";
+import { DialogPortal, lockScroll } from "@/components/admin/sheet";
 
 /**
  * The design's "Add customer" / "Add employee" modal, built from the design's
@@ -230,93 +230,96 @@ export function PersonDialog({
   if (!open) return null;
 
   return (
-    <div className="wt-scrim fixed inset-0 z-90 flex items-center justify-center bg-[oklch(0.205_0.038_258_/_0.42)] p-[clamp(12px,3vw,40px)] backdrop-blur-[3px]">
-      <button
-        type="button"
-        aria-label="Close"
-        tabIndex={-1}
-        data-scrim
-        onClick={onClose}
-        className="absolute inset-0 cursor-default"
-      />
-      <div
-        ref={sheetRef}
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby={headingId}
-        className="wt-sheet relative flex max-h-[90vh] w-full max-w-[780px] flex-col overflow-hidden rounded-2xl bg-white shadow-[0_24px_70px_oklch(0.205_0.038_258_/_0.28)]"
-      >
-        <div className="border-line-soft flex flex-none items-start gap-4 border-b p-[20px_24px]">
-          <span className="bg-marine-tint text-marine-600 flex size-10 flex-none items-center justify-center rounded-[11px]">
-            {icon}
-          </span>
-          <div className="flex min-w-0 flex-1 flex-col gap-1">
-            <h2
-              id={headingId}
-              className="font-poppins text-ink-880 m-0 text-[17px] font-medium tracking-[-0.016em]"
-            >
-              {title}
-            </h2>
-            <p className="text-ink-600 m-0 text-[12.5px] leading-[1.5] font-normal text-pretty">
-              {subtitle}
-            </p>
-          </div>
-          <button
-            type="button"
-            onClick={onClose}
-            aria-label="Close"
-            className="border-line-base text-ink-600 hover:bg-surface-1 flex size-[34px] flex-none items-center justify-center rounded-full border bg-white outline-none"
-          >
-            <CloseIcon size={15} />
-          </button>
-        </div>
-
-        <form
-          id={formId}
-          onSubmit={(e) => {
-            e.preventDefault();
-            onSubmit();
-          }}
-          className={cn(
-            "om-scroll min-h-0 flex-1 overflow-y-auto px-6 pt-1 pb-6",
-            busy && "is-busy"
-          )}
+    /* Portalled to <body> — see DialogPortal in sheet.tsx for why. */
+    <DialogPortal>
+      <div className="admin-root wt-scrim fixed inset-0 z-90 flex items-center justify-center bg-[oklch(0.205_0.038_258_/_0.42)] p-[clamp(12px,3vw,40px)] backdrop-blur-[3px]">
+        <button
+          type="button"
+          aria-label="Close"
+          tabIndex={-1}
+          data-scrim
+          onClick={onClose}
+          className="absolute inset-0 cursor-default"
+        />
+        <div
+          ref={sheetRef}
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby={headingId}
+          className="wt-sheet relative flex max-h-[90vh] w-full max-w-[780px] flex-col overflow-hidden rounded-2xl bg-white shadow-[0_24px_70px_oklch(0.205_0.038_258_/_0.28)]"
         >
-          {sections.map((s) => (
-            <div key={s.title} className="flex flex-col gap-[14px] pt-5">
-              <span className="text-ink-500 text-[11px] font-semibold tracking-[0.11em] uppercase">
-                {s.title}
-              </span>
-              <div className="grid grid-cols-[repeat(auto-fit,minmax(240px,1fr))] gap-4">
-                {s.fields.map((f) => (
-                  <Field key={f.id} field={f} />
-                ))}
-              </div>
+          <div className="border-line-soft flex flex-none items-start gap-4 border-b p-[20px_24px]">
+            <span className="bg-marine-tint text-marine-600 flex size-10 flex-none items-center justify-center rounded-[11px]">
+              {icon}
+            </span>
+            <div className="flex min-w-0 flex-1 flex-col gap-1">
+              <h2
+                id={headingId}
+                className="font-poppins text-ink-880 m-0 text-[17px] font-medium tracking-[-0.016em]"
+              >
+                {title}
+              </h2>
+              <p className="text-ink-600 m-0 text-[12.5px] leading-[1.5] font-normal text-pretty">
+                {subtitle}
+              </p>
             </div>
-          ))}
-          {extra}
-        </form>
-
-        <div className="border-line-soft bg-surface-1 flex flex-none flex-wrap items-center justify-between gap-3 border-t p-[16px_24px]">
-          <span className="text-ink-500 text-[11.5px] font-normal text-pretty">
-            {note}
-          </span>
-          <div className="flex gap-2.5">
-            <Btn onClick={onClose} disabled={busy}>
-              Cancel
-            </Btn>
-            <Btn
-              type="submit"
-              form={formId}
-              variant="ember"
-              pending={busy}
-              pendingLabel={busyLabel}
+            <button
+              type="button"
+              onClick={onClose}
+              aria-label="Close"
+              className="border-line-base text-ink-600 hover:bg-surface-1 flex size-[34px] flex-none items-center justify-center rounded-full border bg-white outline-none"
             >
-              {cta}
-            </Btn>
+              <CloseIcon size={15} />
+            </button>
+          </div>
+
+          <form
+            id={formId}
+            onSubmit={(e) => {
+              e.preventDefault();
+              onSubmit();
+            }}
+            className={cn(
+              "om-scroll min-h-0 flex-1 overflow-y-auto px-6 pt-1 pb-6",
+              busy && "is-busy"
+            )}
+          >
+            {sections.map((s) => (
+              <div key={s.title} className="flex flex-col gap-[14px] pt-5">
+                <span className="text-ink-500 text-[11px] font-semibold tracking-[0.11em] uppercase">
+                  {s.title}
+                </span>
+                <div className="grid grid-cols-[repeat(auto-fit,minmax(240px,1fr))] gap-4">
+                  {s.fields.map((f) => (
+                    <Field key={f.id} field={f} />
+                  ))}
+                </div>
+              </div>
+            ))}
+            {extra}
+          </form>
+
+          <div className="border-line-soft bg-surface-1 flex flex-none flex-wrap items-center justify-between gap-3 border-t p-[16px_24px]">
+            <span className="text-ink-500 text-[11.5px] font-normal text-pretty">
+              {note}
+            </span>
+            <div className="flex gap-2.5">
+              <Btn onClick={onClose} disabled={busy}>
+                Cancel
+              </Btn>
+              <Btn
+                type="submit"
+                form={formId}
+                variant="ember"
+                pending={busy}
+                pendingLabel={busyLabel}
+              >
+                {cta}
+              </Btn>
+            </div>
           </div>
         </div>
       </div>
-    </div>
+    </DialogPortal>
   );
 }

@@ -1,9 +1,42 @@
 "use client";
 
 import { useEffect, useId, useRef } from "react";
+import { createPortal } from "react-dom";
 import { cn } from "@/lib/utils";
 import { CloseIcon } from "@/components/admin/icons";
 import { Btn } from "@/components/admin/ui";
+
+/**
+ * Render a modal as a direct child of <body>.
+ *
+ * `position: fixed` is only relative to the VIEWPORT while no ancestor has a
+ * transform, filter, backdrop-filter, `will-change` or `contain: paint`. Any
+ * one of those makes that ancestor the containing block instead, and traps the
+ * element in its stacking context.
+ *
+ * This project hit exactly that. The page-entrance wrapper in `template.tsx`
+ * used `animation-fill-mode: both`, which pins the final keyframe forever —
+ * and that keyframe's `transform: none` computes to `matrix(1,0,0,1,0,0)`, a
+ * real transform rather than the keyword. So every dialog was measured against
+ * the content column instead of the window: on a 1440x900 screen the scrim came
+ * out 1105x560 at (288, 98), leaving the sticky header and the sidebar OUTSIDE
+ * it — undimmed, and painting over the dialog because their z-30/z-50 sat in
+ * the root stacking context while the dialog's z-90 was trapped below.
+ *
+ * Fixing the animation removes today's cause. Portalling removes the whole
+ * CLASS of cause: there are no ancestors between this overlay and <body>, so
+ * nothing anyone adds to a layout later can reach it.
+ */
+function DialogPortal({ children }: { children: React.ReactNode }) {
+  /* No mounted-state dance: every caller already returns null while closed,
+     and a dialog only ever opens from a client interaction, so this never runs
+     during SSR and there is nothing for hydration to mismatch. The guard is
+     belt-and-braces for a future caller that opens one by default. */
+  if (typeof document === "undefined") return null;
+  return createPortal(children, document.body);
+}
+
+export { DialogPortal };
 
 /**
  * Lock the page behind a modal WITHOUT moving it.
@@ -97,30 +130,34 @@ export function Sheet({
   if (!open) return null;
 
   return (
-    <div className="wt-scrim fixed inset-0 z-90 flex items-center justify-center bg-[oklch(0.205_0.038_258_/_0.42)] p-[clamp(12px,3vw,40px)] backdrop-blur-[3px]">
-      <button
-        type="button"
-        aria-label="Close"
-        tabIndex={-1}
-        data-sheet-close
-        data-scrim
-        onClick={onClose}
-        className="absolute inset-0 cursor-default"
-      />
-      <div
-        ref={ref}
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby={labelledBy}
-        style={{ maxWidth: width }}
-        className={cn(
-          "wt-sheet relative flex max-h-[90vh] w-full flex-col overflow-hidden rounded-2xl bg-white shadow-[0_24px_70px_oklch(0.205_0.038_258_/_0.28)]",
-          className
-        )}
-      >
-        {children}
+    /* `admin-root` is repeated on the overlay: it now hangs off <body>, so it
+       no longer inherits the design system's base layer from the portal shell. */
+    <DialogPortal>
+      <div className="admin-root wt-scrim fixed inset-0 z-90 flex items-center justify-center bg-[oklch(0.205_0.038_258_/_0.42)] p-[clamp(12px,3vw,40px)] backdrop-blur-[3px]">
+        <button
+          type="button"
+          aria-label="Close"
+          tabIndex={-1}
+          data-sheet-close
+          data-scrim
+          onClick={onClose}
+          className="absolute inset-0 cursor-default"
+        />
+        <div
+          ref={ref}
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby={labelledBy}
+          style={{ maxWidth: width }}
+          className={cn(
+            "wt-sheet relative flex max-h-[90vh] w-full flex-col overflow-hidden rounded-2xl bg-white shadow-[0_24px_70px_oklch(0.205_0.038_258_/_0.28)]",
+            className
+          )}
+        >
+          {children}
+        </div>
       </div>
-    </div>
+    </DialogPortal>
   );
 }
 

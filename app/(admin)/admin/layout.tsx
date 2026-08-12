@@ -12,26 +12,19 @@ import { countUnsettledPayments } from "@/lib/actions/parents-payments";
 import {
   AdminShell,
   type AdminNavSection,
+  type NavCounts,
 } from "@/components/admin/admin-shell";
-
-type NavCounts = {
-  orders: number;
-  messages: number;
-  visa: number;
-  parents: number;
-  verifications: number;
-  listings: number;
-  matches: number;
-  payments: number;
-  support: number;
-};
 
 /**
  * The design's sidebar: Dashboard on its own, then Work / Enquiries / Peoples
  * / Admin. Orders, Messages, the two enquiry queues and Support each carry a
  * live unactioned count; everything else is a plain destination.
+ *
+ * The counts are referenced by KEY, not by value: they stream in separately
+ * (see `navCounts` in admin-shell.tsx) so the sidebar renders instantly rather
+ * than waiting on nine `count(*)` queries.
  */
-function buildNav(c: NavCounts): AdminNavSection[] {
+function buildNav(): AdminNavSection[] {
   return [
     {
       items: [
@@ -47,12 +40,12 @@ function buildNav(c: NavCounts): AdminNavSection[] {
     {
       heading: "Work",
       items: [
-        { label: "Orders", href: "/admin/orders", icon: "orders", count: c.orders },
+        { label: "Orders", href: "/admin/orders", icon: "orders", countKey: "orders" },
         {
           label: "Messages",
           href: "/admin/messages",
           icon: "messages",
-          count: c.messages,
+          countKey: "messages",
         },
         { label: "Analytics", href: "/admin/analytics", icon: "analytics" },
         {
@@ -69,37 +62,37 @@ function buildNav(c: NavCounts): AdminNavSection[] {
           label: "Visa queries",
           href: "/admin/visa-queries",
           icon: "visa",
-          count: c.visa,
+          countKey: "visa",
         },
         {
           label: "Parent tickets",
           href: "/admin/parents-tickets",
           icon: "parents",
-          count: c.parents,
+          countKey: "parents",
         },
         {
           label: "Parent listings",
           href: "/admin/parents-listings",
           icon: "board",
-          count: c.listings,
+          countKey: "listings",
         },
         {
           label: "Matches",
           href: "/admin/parents-matches",
           icon: "match",
-          count: c.matches,
+          countKey: "matches",
         },
         {
           label: "Verifications",
           href: "/admin/parents-verification",
           icon: "shield",
-          count: c.verifications,
+          countKey: "verifications",
         },
         {
           label: "Parent payments",
           href: "/admin/parents-payments",
           icon: "transactions",
-          count: c.payments,
+          countKey: "payments",
         },
       ],
     },
@@ -113,11 +106,85 @@ function buildNav(c: NavCounts): AdminNavSection[] {
     {
       heading: "Admin",
       items: [
-        { label: "Support", href: "/admin/support", icon: "support", count: c.support },
+        { label: "Support", href: "/admin/support", icon: "support", countKey: "support" },
         { label: "Settings", href: "/admin/settings", icon: "settings" },
       ],
     },
   ];
+}
+
+/**
+ * Every sidebar badge in one unawaited promise.
+ *
+ * Deliberately NOT awaited by the layout. Each of these is its own round trip
+ * to Supabase; awaiting them held the entire shell — sidebar, top bar, page —
+ * behind nine queries that only decorate five nav rows. Handing the promise to
+ * the shell lets React stream the numbers in after the UI is already usable.
+ *
+ * `.catch()` per group: a failing count must never take the portal down. A
+ * missing badge is a far smaller problem than a blank screen.
+ */
+async function loadNavCounts(): Promise<NavCounts> {
+  try {
+    return await readNavCounts();
+  } catch {
+    // An unhandled rejection here would surface through `use()` in the shell
+    // and take the whole sidebar down. Badges are decoration; an empty map
+    // renders no badge, which is the correct degraded state.
+    return {};
+  }
+}
+
+async function readNavCounts(): Promise<NavCounts> {
+  const supabase = await createClient();
+  const head = { count: "exact" as const, head: true };
+  const zero = () => 0;
+
+  const [
+    visa,
+    parents,
+    verifications,
+    listings,
+    matches,
+    payments,
+    orders,
+    messages,
+    support,
+  ] = await Promise.all([
+    countNewVisaEnquiries().catch(zero),
+    countNewParentTickets().catch(zero),
+    countPendingVerifications().catch(zero),
+    countPendingListings().catch(zero),
+    countOpenMatches().catch(zero),
+    countUnsettledPayments().catch(zero),
+    supabase
+      .from("orders")
+      .select("id", head)
+      .in("status", ["new", "in_progress"])
+      .then((r) => r.count ?? 0, zero),
+    supabase
+      .from("conversations")
+      .select("id", head)
+      .eq("status", "open")
+      .then((r) => r.count ?? 0, zero),
+    supabase
+      .from("support_tickets")
+      .select("id", head)
+      .eq("status", "open")
+      .then((r) => r.count ?? 0, zero),
+  ]);
+
+  return {
+    orders,
+    messages,
+    visa,
+    parents,
+    verifications,
+    listings,
+    matches,
+    payments,
+    support,
+  };
 }
 
 export default async function AdminLayout({
@@ -125,6 +192,11 @@ export default async function AdminLayout({
 }: {
   children: React.ReactNode;
 }) {
+  /* Started before the auth round trips, because the company logo does not
+     depend on who is asking. Awaiting it after the guard cost a serial ~180ms
+     on top of auth's two hops. */
+  const logoPromise = getBrandLogoUrl();
+
   const { user, profile } = await getUserAndProfile();
 
   if (!user) {
@@ -140,60 +212,18 @@ export default async function AdminLayout({
   }
 
   const userName = profile?.full_name?.trim() || user.email || "Admin";
-  const supabase = await createClient();
-  const head = { count: "exact" as const, head: true };
-  const [
-    logoUrl,
-    newVisaCount,
-    newParentTicketCount,
-    pendingVerifications,
-    pendingListings,
-    openMatches,
-    unsettledPayments,
-    activeOrders,
-    openConversations,
-    openTickets,
-  ] = await Promise.all([
-    getBrandLogoUrl(),
-    countNewVisaEnquiries(),
-    countNewParentTickets(),
-    countPendingVerifications(),
-    countPendingListings(),
-    countOpenMatches(),
-    countUnsettledPayments(),
-    supabase
-      .from("orders")
-      .select("id", head)
-      .in("status", ["new", "in_progress"])
-      .then((r) => r.count ?? 0),
-    supabase
-      .from("conversations")
-      .select("id", head)
-      .eq("status", "open")
-      .then((r) => r.count ?? 0),
-    supabase
-      .from("support_tickets")
-      .select("id", head)
-      .eq("status", "open")
-      .then((r) => r.count ?? 0),
-  ]);
+
+  // Started, NOT awaited — the shell renders while these are still in flight.
+  const navCounts = loadNavCounts();
+  const logoUrl = await logoPromise;
 
   return (
     // AdminShell reads ?q= to seed the top-bar search, so it needs a Suspense
     // boundary — useSearchParams opts its subtree out of static rendering.
     <Suspense fallback={null}>
       <AdminShell
-        sections={buildNav({
-          orders: activeOrders,
-          messages: openConversations,
-          visa: newVisaCount,
-          parents: newParentTicketCount,
-          verifications: pendingVerifications,
-          listings: pendingListings,
-          matches: openMatches,
-          payments: unsettledPayments,
-          support: openTickets,
-        })}
+        sections={buildNav()}
+        navCounts={navCounts}
         userName={userName}
         userEmail={user.email ?? ""}
         userId={user.id}

@@ -550,6 +550,65 @@ it was silent. The fixes are mostly one layer deep:
   3 in progress, 6 completed, 2 cancelled), completed revenue £13,700. The
   52 deleted orders + 287 order_messages are backed up in the scratchpad.
 
+**Round four (2026-08-12) — the dialog trap and the latency.**
+- **`position: fixed` was not fixed to the viewport.** `template.tsx` wraps
+  every page in `.wt-page-enter`, whose animation used `animation-fill-mode:
+  both`. `both` pins the final keyframe forever, and that keyframe's
+  `transform: none` computes to `matrix(1,0,0,1,0,0)` — a real transform, not
+  the keyword. A non-`none` transform makes the element the CONTAINING BLOCK
+  for fixed descendants and creates a stacking context, so every modal was
+  measured against the content column: the scrim came out **1105x560 on a
+  1440x900 screen**, leaving the sticky header (z-30) and sidebar (z-50)
+  outside it, undimmed and painting over the dialog. That is the "white crash
+  screen around the edges", and it is why checking only that the header's
+  WIDTH didn't change (round three) missed it — the header never moved, the
+  scrim simply never reached it.
+  Two fixes, both kept: the fill-mode is now `backwards` (no lingering
+  transform), and `DialogPortal` in `sheet.tsx` renders every modal into
+  `document.body`, which removes the whole class of bug — no ancestor exists
+  to trap them. Any new overlay MUST portal; do not rely on z-index alone.
+  Portalled overlays repeat `admin-root` because they no longer inherit it.
+- **Latency is sequential round trips, not RLS.** One Supabase hop is ~180ms
+  from the app server. `getUserAndProfile()` costs TWO (auth.getUser, then the
+  profile select) and is called from 138 places — the layout, the page and
+  every server-action guard — so a request pays it repeatedly. It is now
+  wrapped in React `cache()` (request-scoped; a new request still re-validates
+  the JWT, so revoked sessions are still caught), and `getBrandLogoUrl()` is
+  cached the same way and started before the auth await.
+  **Measure before claiming.** A stash/rebuild A/B of these changes on an
+  EMPTY database showed no page-TTFB difference (553ms before, 567ms after —
+  noise). They remove redundant work and pay off on server actions and on a
+  populated database, but they did NOT move first-paint. An earlier
+  "805ms → 186ms" note in this file was a bad measurement (different dataset,
+  two servers competing on the box) and has been withdrawn.
+  **The real remaining floor is ~500ms and it is structural**: `auth.getUser()`
+  is a network call, and it runs TWICE per request — once in `middleware.ts`
+  and once in the layout — which React `cache()` cannot dedupe across the
+  middleware/handler boundary. Removing the second one means trusting the
+  middleware's validation and switching the layout to `getSession()` (local,
+  no network). That is a real ~180ms win but it is security-sensitive: it is
+  only safe while the middleware `matcher` provably covers every portal route.
+  Do it deliberately, with the matcher audited, or not at all.
+  Client-side navigation between screens measures **64–113ms** (the sidebar
+  links), which is what `experimental.staleTimes` is for.
+- **Never `await` decoration.** The admin layout used to `await Promise.all`
+  NINE `count(*)` queries before rendering anything, just to draw small badge
+  numbers on five nav rows. `loadNavCounts()` is now handed to `AdminShell` as
+  an unawaited promise and unwrapped with `use()` inside `<Suspense>`, so the
+  sidebar, top bar and page paint immediately and the numbers arrive after.
+  The dashboard's activity feed is split out the same way.
+  This is the answer to "skeletons are fake": the real chrome renders for
+  real, and only genuinely-unknown data streams. Skeletons remain only where
+  the whole card is unknowable up front.
+- `experimental.staleTimes` (dynamic 30s) keeps the client Router Cache, so
+  returning to a screen is instant instead of re-rendering the layout on the
+  server. TanStack `staleTime` is 5 minutes because realtime — not the clock —
+  is the invalidation signal on every list screen.
+- The login brute-force guard is real and WILL lock out repeated automated
+  sign-ins (6 failures per email / 10 per IP in 15 minutes, `auth_attempts`).
+  Save a Playwright `storageState` once and reuse it rather than logging in
+  per script.
+
 **The driver portal was REMOVED 2026-08-10** at the client's request — it was
 mock-only, had no auth, was half-migrated, and its ₹/India content never
 matched this UK business. `app/(driver)`, `app/(driver-auth)`,

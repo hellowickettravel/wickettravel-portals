@@ -34,8 +34,24 @@ export function Providers({ children }: { children: React.ReactNode }) {
       new QueryClient({
         defaultOptions: {
           queries: {
-            staleTime: 30_000, // 30s — avoid refetching freshly-loaded data
+            /**
+             * Five minutes, not thirty seconds.
+             *
+             * Every list screen in this portal subscribes to `postgres_changes`
+             * for the tables it renders and calls `invalidateQueries` when one
+             * moves. Realtime IS the invalidation signal — the clock is only a
+             * fallback for a dropped socket. At 30s the app was re-fetching
+             * data it already knew was current every time you navigated back
+             * to a screen, which is a ~200ms round trip per visit buying
+             * nothing.
+             *
+             * `refetchOnReconnect` stays on so a laptop coming out of sleep
+             * (where the socket died and missed events) resyncs immediately.
+             */
+            staleTime: 5 * 60_000,
+            gcTime: 30 * 60_000,
             refetchOnWindowFocus: false,
+            refetchOnReconnect: true,
             retry: 1,
           },
         },
