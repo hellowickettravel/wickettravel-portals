@@ -321,6 +321,12 @@ const GLYPHS = {
     ["path", { d: "M3.5 19.5c0-3.3 2.9-5.5 6.5-5.5 1.2 0 2.3.2 3.2.6" }],
     ["path", { d: "M17.5 14v6M14.5 17h6" }],
   ],
+  cake: [
+    ["rect", { x: 4, y: 12, width: 16, height: 8, rx: 1.6 }],
+    ["path", { d: "M4 15.5c1.3 1 2.7 1 4 0s2.7-1 4 0 2.7 1 4 0 2.7-1 4 0" }],
+    ["path", { d: "M8 12V9.5M12 12V9.5M16 12V9.5" }],
+    ["path", { d: "M8 6.8v.1M12 6.3v.1M16 6.8v.1" }],
+  ],
 } satisfies Record<string, Node[]>;
 
 export type IconName = keyof typeof GLYPHS;
@@ -394,6 +400,7 @@ export const WarningIcon = glyph("warning", 1.9);
 export const AlertIcon = glyph("alert", 2);
 export const PowerIcon = glyph("power", 1.9);
 export const UserPlusIcon = glyph("userPlus");
+export const CakeIcon = glyph("cake");
 export const RouteIcon = glyph("route");
 export const ChatIcon = glyph("chat");
 export const BellIcon = glyph("bell");
@@ -471,6 +478,7 @@ export const NAV_ICONS = {
   match: FamilyIcon,
   employees: StaffIcon,
   customers: CustomersIcon,
+  birthdays: CakeIcon,
   analytics: AnalyticsIcon,
   support: LifebuoyIcon,
   settings: SettingsIcon,

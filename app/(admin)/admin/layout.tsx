@@ -9,6 +9,7 @@ import { countPendingVerifications } from "@/lib/actions/parents-marketplace";
 import { countPendingListings } from "@/lib/actions/parents-listings";
 import { countOpenMatches } from "@/lib/actions/parents-matches";
 import { countUnsettledPayments } from "@/lib/actions/parents-payments";
+import { countBirthdaysToSend } from "@/lib/actions/birthdays";
 import {
   AdminShell,
   type AdminNavSection,
@@ -101,6 +102,12 @@ function buildNav(): AdminNavSection[] {
       items: [
         { label: "Employees", href: "/admin/employees", icon: "employees" },
         { label: "Customers", href: "/admin/customers", icon: "customers" },
+        {
+          label: "Birthdays",
+          href: "/admin/birthdays",
+          icon: "birthdays",
+          countKey: "birthdays",
+        },
       ],
     },
     {
@@ -150,6 +157,7 @@ async function readNavCounts(): Promise<NavCounts> {
     orders,
     messages,
     support,
+    birthdays,
   ] = await Promise.all([
     countNewVisaEnquiries().catch(zero),
     countNewParentTickets().catch(zero),
@@ -172,9 +180,11 @@ async function readNavCounts(): Promise<NavCounts> {
       .select("id", head)
       .eq("status", "open")
       .then((r) => r.count ?? 0, zero),
+    countBirthdaysToSend().catch(zero),
   ]);
 
   return {
+    birthdays,
     orders,
     messages,
     visa,

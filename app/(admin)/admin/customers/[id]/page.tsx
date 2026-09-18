@@ -1,6 +1,8 @@
 import { notFound } from "next/navigation";
 import { getCustomerDetail } from "@/lib/actions/admin";
 import { CustomerDangerZone } from "@/components/admin/customer-danger-zone";
+import { CustomerBirthday } from "@/components/admin/customer-birthday";
+import { createClient } from "@/lib/supabase/server";
 import { gbp, fmtDate, fmtRelative, routeLabel, titleCase } from "@/lib/format";
 import {
   BackLink,
@@ -31,6 +33,12 @@ export default async function AdminCustomerDetailPage({
   if (!detail) notFound();
 
   const { customer, orders, conversations } = detail;
+  // Its own read so a database without 0022 still renders the record.
+  const { data: dobRow } = await (await createClient())
+    .from("customers")
+    .select("date_of_birth")
+    .eq("id", customer.id)
+    .maybeSingle<{ date_of_birth: string | null }>();
   const name = customer.name || "Unnamed customer";
   const tint = avatarFor(name);
 
@@ -182,6 +190,11 @@ export default async function AdminCustomerDetailPage({
               ))}
             </div>
           </Card>
+
+          <CustomerBirthday
+            customerId={customer.id}
+            initial={dobRow?.date_of_birth ?? null}
+          />
 
           <Card>
             <CardHead title="Conversations" />

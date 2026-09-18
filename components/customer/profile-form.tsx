@@ -5,6 +5,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { createClient } from "@/lib/supabase/client";
 import { updateMyName } from "@/lib/actions/account";
+import { updateMyBirthday } from "@/lib/actions/customer";
 import {
   getMyNotificationPrefs,
   saveMyNotificationPrefs,
@@ -56,16 +57,24 @@ const PREF_ITEMS: { key: PrefKey; label: string; desc: string }[] = [
  */
 export function CustomerProfileForm({
   initialName,
+  initialBirthday,
   email,
   phone,
 }: {
   initialName: string;
+  /** Customers only; omit to hide the field (the helper portal reuses this form). */
+  initialBirthday?: string;
   email: string;
   phone: string;
 }) {
   const queryClient = useQueryClient();
   const [name, setName] = useState(initialName);
+  const showBirthday = initialBirthday !== undefined;
+  const [birthday, setBirthday] = useState(initialBirthday ?? "");
+  const [saved, setSaved] = useState({ name: initialName, birthday: initialBirthday ?? "" });
   const [savingName, setSavingName] = useState(false);
+  const nameChanged = name.trim() !== saved.name.trim();
+  const birthdayChanged = birthday !== saved.birthday;
 
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -113,10 +122,18 @@ export function CustomerProfileForm({
   async function saveName(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setSavingName(true);
-    const res = await updateMyName(name);
+    const [nameRes, birthdayRes] = await Promise.all([
+      nameChanged ? updateMyName(name) : null,
+      birthdayChanged ? updateMyBirthday(birthday || null) : null,
+    ]);
     setSavingName(false);
-    if (!res.ok) {
-      toast.error("Couldn't save", { description: res.error });
+    const failed = [nameRes, birthdayRes].find((r) => r && !r.ok);
+    setSaved((s) => ({
+      name: nameRes?.ok ? name : s.name,
+      birthday: birthdayRes?.ok ? birthday : s.birthday,
+    }));
+    if (failed && !failed.ok) {
+      toast.error("Couldn't save", { description: failed.error });
       return;
     }
     toast.success("Profile saved");
@@ -209,12 +226,30 @@ export function CustomerProfileForm({
                 Message the team to add or change this.
               </span>
             </label>
+            {showBirthday ? (
+              <label className="flex min-w-0 flex-col gap-2">
+                <FieldLabel htmlFor="cust-dob" optional>
+                  Date of birth
+                </FieldLabel>
+                <input
+                  id="cust-dob"
+                  type="date"
+                  value={birthday}
+                  max={new Date().toISOString().slice(0, 10)}
+                  onChange={(e) => setBirthday(e.target.value)}
+                  className={cn(inputClass, focusRing)}
+                />
+                <span className="text-ink-500 text-[11.5px] font-normal">
+                  So we can send you birthday wishes.
+                </span>
+              </label>
+            ) : null}
           </div>
           <div className="px-5 pb-5">
             <Btn
               type="submit"
               variant="ember"
-              disabled={savingName || name.trim() === initialName.trim()}
+              disabled={savingName || (!nameChanged && !birthdayChanged) || !name.trim()}
             >
               {savingName ? <Spinner /> : <CheckIcon size={15} />}
               Save changes

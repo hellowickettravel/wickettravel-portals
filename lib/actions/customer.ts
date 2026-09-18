@@ -15,6 +15,7 @@ import type {
 import { normalizeOrderInput, type OrderFormInput } from "@/lib/orders/form";
 import { LIMITS, sanitizeText } from "@/lib/security/limits";
 import { tooManyRecentRows } from "@/lib/security/rate-limit";
+import { isPlausibleDob } from "@/lib/birthdays";
 
 /**
  * Customer-portal server actions. The signed-in user is linked to a customers
@@ -90,6 +91,32 @@ async function ensureConversation(customerId: string): Promise<string> {
     throw new Error(error?.message ?? "Could not start your conversation.");
   }
   return created.id;
+}
+
+// ----- Profile -----
+
+/**
+ * Set (or clear) my own date of birth. Service-role write, but only ever to the
+ * customers row ensureCustomer resolved from my own session, and only this column.
+ */
+export async function updateMyBirthday(
+  dateOfBirth: string | null
+): Promise<{ ok: true } | { ok: false; error: string }> {
+  let customer: Customer;
+  try {
+    ({ customer } = await ensureCustomer());
+  } catch {
+    return { ok: false, error: "Unauthorized" };
+  }
+  const dob = dateOfBirth?.trim() || null;
+  if (dob && !isPlausibleDob(dob)) return { ok: false, error: "Enter your real date of birth." };
+
+  const { error } = await createAdminClient()
+    .from("customers")
+    .update({ date_of_birth: dob })
+    .eq("id", customer.id);
+  if (error) return { ok: false, error: "Couldn't save your birthday. Please try again." };
+  return { ok: true };
 }
 
 // ----- Orders -----
