@@ -3,7 +3,14 @@
 import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import { Home } from "lucide-react";
 import { cn } from "@/lib/utils";
+import {
+  MARKETING_PRIVACY_URL,
+  MARKETING_SITE_URL,
+  MARKETING_TERMS_URL,
+} from "@/lib/links";
+import { WicketWordmark } from "@/components/admin/brand";
 
 export type AuthScreen = "signin" | "signup" | "forgot" | "sent" | "reset" | "helper";
 
@@ -120,14 +127,27 @@ export function AuthShell({
         <div className="bg-hero-tint absolute inset-0" />
         <div className="auth-hero-scrim absolute inset-0" />
 
-        {/* Brand lockup */}
-        <div className="relative flex items-center gap-2.5">
-          <span className="flex size-7 flex-none items-center justify-center rounded-[8px] border border-white/22 bg-white/16">
-            <span className="bg-ember-500 block size-[9px] rounded-full" />
-          </span>
-          <span className="font-poppins text-[17px] font-medium tracking-[-0.014em] text-white">
-            Wicket Travel
-          </span>
+        {/* Brand lockup — the real mark (components/admin/brand.tsx), the same
+            one already used inside the portal shell. This used to be a plain
+            badge-and-text placeholder that never got swapped for it. Linked
+            back to the marketing site, same as the "Website" pill beside it:
+            the mark itself is the obvious click target for anyone who tries
+            it out of habit, even with an explicit link right next to it. */}
+        <div className="relative flex items-center justify-between gap-2.5">
+          <a
+            href={MARKETING_SITE_URL}
+            aria-label="Wicket Travel — visit the main website"
+            className="flex items-center"
+          >
+            <WicketWordmark size={26} className="text-white" />
+          </a>
+          <a
+            href={MARKETING_SITE_URL}
+            className="inline-flex items-center gap-1.5 rounded-full border border-white/22 bg-white/8 px-3 py-1.5 text-[12px] font-medium text-white/85 transition-colors hover:bg-white/16 hover:text-white"
+          >
+            <Home className="h-3.5 w-3.5" aria-hidden="true" />
+            Website
+          </a>
         </div>
 
         {/* Screen message — pinned above the footer */}
@@ -175,7 +195,7 @@ export function AuthShell({
           <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 text-[12.5px] text-white/48">
             <span>© 2026 Wicket Travel Ltd. All rights reserved.</span>
             <a
-              href="https://www.wickettravel.com/terms-of-service"
+              href={MARKETING_TERMS_URL}
               target="_blank"
               rel="noopener noreferrer"
               className="text-white/74 transition-colors hover:text-white"
@@ -183,7 +203,7 @@ export function AuthShell({
               Terms
             </a>
             <a
-              href="https://www.wickettravel.com/privacy-policy"
+              href={MARKETING_PRIVACY_URL}
               target="_blank"
               rel="noopener noreferrer"
               className="text-white/74 transition-colors hover:text-white"

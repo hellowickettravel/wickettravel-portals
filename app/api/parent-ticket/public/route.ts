@@ -24,7 +24,7 @@ import {
  *     of the database at all — so they cannot leak through a serialisation slip
  *     or a future field being added to the response by accident.
  *   • full_name IS selected, but only to derive a masked display name
- *     ("Rajesh Kumar" → "Rajesh K.") — the raw value never reaches the response
+ *     ("James Wilson" → "James W.") — the raw value never reaches the response
  *     body. See maskDisplayName in lib/parents-tickets.ts.
  *   • Filters are whitelisted/sanitised, so the query string cannot widen the
  *     result set or be used to probe for hidden rows.

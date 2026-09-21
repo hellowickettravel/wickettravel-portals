@@ -81,7 +81,34 @@ type Draft = {
   extra: string;
   /** Customer audience only — a number the team can reach them on. */
   phone: string;
+  /**
+   * Staff audience only — the travel details of everyone on the booking.
+   * Row 0 is the account holder: its name is NOT typed, it comes from the
+   * customer picker, so only its email / DOB / IBE cells are ever edited.
+   * Rows after it are companions and carry all four.
+   */
+  people: PersonRow[];
 };
+
+/** One row of the "Passenger travel details" grid. */
+type PersonRow = { name: string; email: string; dob: string; ibe: string };
+
+const emptyPerson = (): PersonRow => ({
+  name: "",
+  email: "",
+  dob: "",
+  ibe: "",
+});
+
+/** Matches LIMITS.MAX_PASSENGERS and the 0024 check constraint. */
+const MAX_PEOPLE = 20;
+
+/**
+ * Deliberately loose. This is a staff-entry field, not a signup: the job is
+ * to catch a typo like a missing "@", not to adjudicate RFC 5322. Anything
+ * stricter rejects addresses that genuinely exist.
+ */
+const EMAIL_SHAPE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 const CHILD_AGES = [
   "Select age",
@@ -153,6 +180,7 @@ function blank(): Draft {
     assist: ASSIST[0],
     extra: "",
     phone: "",
+    people: [emptyPerson()],
   };
 }
 
@@ -212,10 +240,22 @@ function seed(prefill: BookPrefill | undefined, phone: string | null): Draft {
   if (prefill.airline) d.airline = prefill.airline;
   if (prefill.adults) d.adults = String(prefill.adults);
   if (prefill.children != null) d.children = String(prefill.children);
+  // Deliberately a note, not the "Extra luggage" select: the homepage asks
+  // whether the FARE includes a checked bag, while that field counts bags on
+  // top of an allowance. Putting it here states what was actually requested
+  // and leaves the select for the customer to answer themselves.
+  if (prefill.baggage) d.extra = "Checked baggage must be included in the fare.";
   return d;
 }
 
-export type AdminOrderCustomer = { id: string; label: string };
+export type AdminOrderCustomer = {
+  id: string;
+  label: string;
+  /** Pre-fills the account holder's row when they are picked. */
+  email?: string | null;
+  /** ISO "YYYY-MM-DD" from customers.date_of_birth (0022), when recorded. */
+  dob?: string | null;
+};
 
 /* ------------------------------------------------------------------ fields */
 
@@ -448,8 +488,71 @@ export function AdminOrderForm({
   const totalPax = adults + children;
   const oneWay = draft.trip === "One way";
 
-  const customerLabel =
-    customers.find((c) => c.id === draft.customerId)?.label ?? "";
+  const chosenCustomer = customers.find((c) => c.id === draft.customerId);
+  const customerLabel = chosenCustomer?.label ?? "";
+
+  /* --------------------------------- passenger travel details (staff only) */
+
+  /** Never render an empty grid — a resumed draft could carry no rows. */
+  const people: PersonRow[] = draft.people?.length
+    ? draft.people
+    : [emptyPerson()];
+
+  function setPerson(i: number, field: keyof PersonRow, v: string) {
+    setDraft((d) => {
+      const next = d.people?.length ? [...d.people] : [emptyPerson()];
+      next[i] = { ...(next[i] ?? emptyPerson()), [field]: v };
+      return { ...d, people: next };
+    });
+    setErrors((e) =>
+      e[`person${i}${field}`] ? { ...e, [`person${i}${field}`]: "" } : e
+    );
+  }
+
+  function addPerson() {
+    setDraft((d) => ({
+      ...d,
+      people: [...(d.people?.length ? d.people : [emptyPerson()]), emptyPerson()],
+    }));
+  }
+
+  function removePerson(i: number) {
+    // Row 0 is the account holder and has no remove control, so this only
+    // ever drops a companion. Errors are re-keyed by index, so clear them
+    // all rather than leave a message pointing at the wrong row.
+    setDraft((d) => ({
+      ...d,
+      people: (d.people ?? []).filter((_, n) => n !== i),
+    }));
+    setErrors((e) =>
+      Object.fromEntries(
+        Object.entries(e).filter(([k]) => !k.startsWith("person"))
+      )
+    );
+  }
+
+  /**
+   * Picking a customer fills their row from the record we hold.
+   *
+   * Done here, in the change handler, rather than in an effect on
+   * `draft.customerId`: an effect would also fire on a resumed draft and on
+   * unrelated re-renders, quietly overwriting something staff had typed. A
+   * pre-fill should only ever be the consequence of choosing someone.
+   */
+  function chooseCustomer(id: string) {
+    const picked = customers.find((c) => c.id === id);
+    setStr("customerId")(id);
+    setDraft((d) => {
+      const next = d.people?.length ? [...d.people] : [emptyPerson()];
+      next[0] = {
+        ...(next[0] ?? emptyPerson()),
+        email: picked?.email ?? "",
+        dob: picked?.dob ?? "",
+      };
+      return { ...d, people: next };
+    });
+    setErrors((e) => ({ ...e, person0email: "", person0dob: "" }));
+  }
 
   /** One slot per traveller, re-shaped whenever the counts change. */
   const passengers = useMemo(() => {
@@ -495,27 +598,9 @@ export function AdminOrderForm({
   const sections: SectionDef[] = useMemo(() => {
     if (step === 1) {
       return [
-        // A customer is the customer — there is nobody to choose.
-        ...(forCustomer
-          ? []
-          : [
-              {
-                title: "Customer",
-                hint: "The order is filed against this customer's portal account.",
-                cols: 2 as const,
-                fields: [
-                  {
-                    key: "customerId",
-                    label: "Customer",
-                    icon: "user" as IconName,
-                    kind: "select" as FieldKind,
-                    options: ["", ...customers.map((c) => c.id)],
-                    value: draft.customerId,
-                    onValue: setStr("customerId"),
-                  },
-                ],
-              },
-            ]),
+        // The staff "Passenger travel details" grid is not a generic section —
+        // it is a repeating four-column row with its own add/remove — so it is
+        // rendered as its own card above these. See the JSX below.
         {
           title: "Where & when",
           hint: "Just like a flight search — we'll take the details from here.",
@@ -586,7 +671,7 @@ export function AdminOrderForm({
             },
             {
               key: "airline",
-              label: "Preferred airline",
+              label: "Airline name",
               icon: "plane",
               kind: "select",
               options: [...AIRLINES],
@@ -757,7 +842,7 @@ export function AdminOrderForm({
         ],
       },
     ];
-  }, [step, draft, children, oneWay, customers, forCustomer, contactEmail]);
+  }, [step, draft, children, oneWay, forCustomer, contactEmail]);
 
   /* ---------------------------------------------------------- validation */
 
@@ -778,6 +863,24 @@ export function AdminOrderForm({
         if (!draft.childAges[i] || draft.childAges[i] === CHILD_AGES[0]) {
           e[`child${i}`] = "Pick an age.";
         }
+      }
+      if (!forCustomer) {
+        const today = new Date().toISOString().slice(0, 10);
+        people.forEach((r, i) => {
+          // Row 0's identity is the picker, which is checked above. Every
+          // other row is only worth keeping if somebody is named on it —
+          // an email with no name attached is not a passenger.
+          const filled = r.name.trim() || r.email.trim() || r.dob || r.ibe.trim();
+          if (i > 0 && filled && !r.name.trim()) {
+            e[`person${i}name`] = "Add a name, or remove this row.";
+          }
+          if (r.email.trim() && !EMAIL_SHAPE.test(r.email.trim())) {
+            e[`person${i}email`] = "That email address doesn't look right.";
+          }
+          if (r.dob && r.dob > today) {
+            e[`person${i}dob`] = "A date of birth can't be in the future.";
+          }
+        });
       }
     }
     if (target >= 2 && !draft.checked) {
@@ -883,6 +986,17 @@ export function AdminOrderForm({
       // Stored on its own column too, so the boarding pass and the Airline
       // tile can name the carrier instead of digging it out of the note.
       airline: draft.airline !== ANY_AIRLINE ? draft.airline : null,
+      // Row 0 is the chosen customer, so its name comes from the picker
+      // rather than a text box. The server sanitises and drops nameless
+      // rows; this only decides who is on the list.
+      passengerDetails: forCustomer
+        ? null
+        : people.map((r, i) => ({
+            name: (i === 0 ? customerLabel : r.name).trim(),
+            email: r.email.trim() || null,
+            dob: r.dob || null,
+            ibe: r.ibe.trim() || null,
+          })),
     };
 
     let res;
@@ -1030,12 +1144,12 @@ export function AdminOrderForm({
       <div className="flex flex-col gap-1.5">
         <Eyebrow>{forCustomer ? "New booking" : "New order"}</Eyebrow>
         <h1 className="font-poppins text-ink-700 m-0 text-[clamp(20px,1.5vw,24px)] leading-[1.5] font-medium tracking-[-0.02em]">
-          {forCustomer ? "Book a flight" : "Create an order"}
+          {forCustomer ? "Book a flight" : "Passenger Travel details"}
         </h1>
         <p className="text-ink-600 m-0 mt-0.5 max-w-[640px] text-[13.5px] font-normal text-pretty">
           {forCustomer
             ? "Three quick steps — tell us the trip and our team will come back with the best fare we can find."
-            : "Capture the trip, flight check and passenger details in three steps."}
+            : "Enter details below — the trip, the flight check and who is travelling, in three steps."}
         </p>
       </div>
 
@@ -1237,6 +1351,172 @@ export function AdminOrderForm({
                   </span>
                 </div>
               ) : null}
+            </div>
+          </Card>
+        ) : null}
+
+        {/* ------------------------------------- passenger travel details */}
+        {/* Staff only: a customer IS the customer, so there is nobody to pick
+            and no companion roster to key in on their own booking form. */}
+        {step === 1 && !forCustomer ? (
+          <Card>
+            <CardHead
+              title="Passenger travel details"
+              hint="The first row is the customer the order is filed against. Add a row for anyone else travelling with them."
+            />
+            <div className="flex flex-col gap-4 px-5 pt-2 pb-5">
+              {people.map((row, i) => {
+                const isHolder = i === 0;
+                return (
+                  <div
+                    key={i}
+                    className={cn(
+                      "flex flex-col gap-3",
+                      !isHolder && "border-line-soft border-t pt-4"
+                    )}
+                  >
+                    <div className="flex items-center gap-2.5">
+                      <span className="bg-marine-tint text-marine-600 flex size-[26px] flex-none items-center justify-center rounded-[8px] text-[11.5px] font-semibold tabular-nums">
+                        {i + 1}
+                      </span>
+                      <span className="text-ink-800 text-[12.5px] font-medium">
+                        {isHolder ? "Customer" : "Passenger " + (i + 1)}
+                      </span>
+                      {isHolder ? (
+                        <Pill tone="ink" className="px-2.5 py-[3px] text-[10.5px]">
+                          Order is filed here
+                        </Pill>
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={() => removePerson(i)}
+                          aria-label={"Remove passenger " + (i + 1)}
+                          className={cn(
+                            "text-ink-500 hover:text-danger-ink ml-auto inline-flex size-7 flex-none items-center justify-center rounded-[8px]",
+                            focusRing
+                          )}
+                        >
+                          <CloseIcon size={15} />
+                        </button>
+                      )}
+                    </div>
+
+                    <div className="grid grid-cols-1 gap-4 min-[620px]:grid-cols-2 min-[1040px]:grid-cols-4">
+                      {/* Column 1 — the account holder is CHOSEN, everyone
+                          else is typed. Keeping the picker here is what keeps
+                          createOrder able to file the order and open its
+                          message thread. */}
+                      {isHolder ? (
+                        <div className="flex min-w-0 flex-col gap-[7px]">
+                          <label
+                            htmlFor="co-customerId"
+                            className="text-ink-700 flex items-center gap-[7px] text-[11.5px] font-medium"
+                          >
+                            <span className="text-marine-icon flex flex-none">
+                              <Ico name="user" size={15} />
+                            </span>
+                            Customer first name
+                          </label>
+                          <select
+                            id="co-customerId"
+                            value={draft.customerId}
+                            aria-invalid={!!errors.customerId}
+                            onChange={(e) => chooseCustomer(e.target.value)}
+                            className={cn(
+                              inputClass,
+                              focusRing,
+                              // 14px gutter, as on every other select here.
+                              "cursor-pointer px-3.5",
+                              errors.customerId && "border-danger-edge"
+                            )}
+                          >
+                            <option value="">Choose a customer…</option>
+                            {customers.map((c) => (
+                              <option key={c.id} value={c.id}>
+                                {c.label}
+                              </option>
+                            ))}
+                          </select>
+                          {errors.customerId ? (
+                            <ErrorNote>{errors.customerId}</ErrorNote>
+                          ) : null}
+                        </div>
+                      ) : (
+                        <FieldRow
+                          err={errors["person" + i + "name"]}
+                          f={{
+                            key: "person" + i + "name",
+                            label: "Customer first name",
+                            icon: "user",
+                            ph: "As shown on passport",
+                            value: row.name,
+                            onValue: (v) => setPerson(i, "name", v),
+                          }}
+                        />
+                      )}
+
+                      <FieldRow
+                        err={errors["person" + i + "email"]}
+                        f={{
+                          key: "person" + i + "email",
+                          label: "Email id",
+                          icon: "mail",
+                          optional: true,
+                          ph: "name@example.com",
+                          value: row.email,
+                          onValue: (v) => setPerson(i, "email", v),
+                        }}
+                      />
+                      <FieldRow
+                        err={errors["person" + i + "dob"]}
+                        f={{
+                          key: "person" + i + "dob",
+                          label: "DOB",
+                          icon: "calendar",
+                          kind: "date",
+                          optional: true,
+                          value: row.dob,
+                          onValue: (v) => setPerson(i, "dob", v),
+                        }}
+                      />
+                      <FieldRow
+                        err={errors["person" + i + "ibe"]}
+                        f={{
+                          key: "person" + i + "ibe",
+                          label: "IBE number",
+                          icon: "idcard",
+                          optional: true,
+                          ph: "Booking engine reference",
+                          value: row.ibe,
+                          onValue: (v) => setPerson(i, "ibe", v),
+                        }}
+                      />
+                    </div>
+                  </div>
+                );
+              })}
+
+              <div className="flex flex-wrap items-center gap-3">
+                <button
+                  type="button"
+                  onClick={addPerson}
+                  disabled={people.length >= MAX_PEOPLE}
+                  className={cn(
+                    "border-line-field text-ink-800 hover:bg-surface-1 inline-flex h-9 items-center gap-2 rounded-full border border-dashed bg-white px-4 text-[12.5px] font-medium disabled:cursor-not-allowed disabled:opacity-60",
+                    focusRing
+                  )}
+                >
+                  Add
+                  <span aria-hidden className="text-marine-600 text-[15px] leading-none">
+                    +
+                  </span>
+                </button>
+                {people.length >= MAX_PEOPLE ? (
+                  <span className="text-ink-500 text-[11.5px]">
+                    {MAX_PEOPLE} passengers is the most one order can carry.
+                  </span>
+                ) : null}
+              </div>
             </div>
           </Card>
         ) : null}

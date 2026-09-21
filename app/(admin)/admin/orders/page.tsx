@@ -7,7 +7,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { createClient } from "@/lib/supabase/client";
 import { listOrders } from "@/lib/actions/admin";
 import type { OrderStatus } from "@/lib/db/types";
-import { gbp, fmtDate, routeLabel, statusLabel } from "@/lib/format";
+import { gbp, fmtDate, fmtStamp, routeLabel, statusLabel } from "@/lib/format";
 import { downloadCsv } from "@/lib/csv";
 import { cn } from "@/lib/utils";
 import {
@@ -54,12 +54,37 @@ const TABS: { label: string; value: "all" | OrderStatus }[] = [
 ];
 type Tab = (typeof TABS)[number]["value"];
 
+/**
+ * Row order. Deliberately a separate axis from the status chips above rather
+ * than a sixth chip alongside them: the chips decide WHICH rows are shown and
+ * are mutually exclusive, so folding a sort into that group would make
+ * "New" and "newest first" impossible to hold at the same time. Kept apart,
+ * every status can be read in either order.
+ */
+type SortKey = "departing" | "created";
+
+const SORTS: { label: string; value: SortKey; intro: string }[] = [
+  {
+    label: "Departing next",
+    value: "departing",
+    intro:
+      "Sorted by the flight that departs next. Orders without a travel date fall to the bottom.",
+  },
+  {
+    label: "Created date",
+    value: "created",
+    intro:
+      "Sorted by when the order was placed — the most recent first, then the one before it, and so on.",
+  },
+];
+
 const ORDERS_KEY = ["admin", "orders"] as const;
 
 export default function OrdersPage() {
   const queryClient = useQueryClient();
   const supabase = useMemo(() => createClient(), []);
   const [tab, setTab] = useState<Tab>("all");
+  const [sort, setSort] = useState<SortKey>("departing");
 
   // The top bar's search hands this screen its term as ?q= (see SEARCH in
   // admin-shell). It seeds the in-card box and re-syncs whenever the top bar
@@ -99,12 +124,25 @@ export default function OrdersPage() {
     };
   }, [supabase, queryClient]);
 
-  // Sorted by the flight that departs next — the design's own rule, which means
-  // the *soonest upcoming* departure, not the oldest date on file. Flights that
-  // have already gone sit below the upcoming ones (most recent first), and
-  // orders with no travel date fall to the bottom of all.
+  // Two orderings, chosen by the sort control in the card header.
+  //
+  // "departing" is the design's own rule: the *soonest upcoming* departure,
+  // not the oldest date on file. Flights that have already gone sit below the
+  // upcoming ones (most recent first), and orders with no travel date fall to
+  // the bottom of all.
+  //
+  // "created" is newest-placed first. `created_at` is a non-null timestamptz
+  // and Postgres hands it back in ISO 8601, where lexical order *is*
+  // chronological order — so this compares strings and never parses a Date.
   const all = useMemo(() => {
     const rows = orders ?? [];
+
+    if (sort === "created") {
+      return [...rows].sort((a, b) =>
+        (b.created_at ?? "").localeCompare(a.created_at ?? "")
+      );
+    }
+
     const today = new Date().toISOString().slice(0, 10);
     const rank = (d: string | null) => (!d ? 2 : d >= today ? 0 : 1);
     return [...rows].sort((a, b) => {
@@ -115,7 +153,7 @@ export default function OrdersPage() {
       if (ra === 1) return a.travel_date! > b.travel_date! ? -1 : a.travel_date! < b.travel_date! ? 1 : 0;
       return (b.created_at ?? "").localeCompare(a.created_at ?? "");
     });
-  }, [orders]);
+  }, [orders, sort]);
   const [limit, setLimit] = useState(PAGE_SIZE);
 
   const totals = useMemo(() => {
@@ -178,6 +216,12 @@ export default function OrdersPage() {
   const visible = filtered.slice(0, limit);
   const hasMore = filtered.length > limit;
 
+  const activeSort = SORTS.find((s) => s.value === sort) ?? SORTS[0];
+  // The created stamp only earns a column when it is the thing being sorted
+  // on — otherwise the pipeline is ordered by a date you cannot see, and you
+  // have no way to check the order is what you asked for.
+  const showCreated = sort === "created";
+
   function exportCsv() {
     downloadCsv(
       "orders.csv",
@@ -214,7 +258,7 @@ export default function OrdersPage() {
     <Screen>
       <PageHead
         title="Order pipeline"
-        intro="Sorted by the flight that departs next. Orders without a travel date fall to the bottom."
+        intro={activeSort.intro}
         actions={
           <>
             <Btn onClick={exportCsv} disabled={all.length === 0}>
@@ -229,41 +273,47 @@ export default function OrdersPage() {
         }
       />
 
-      <KpiGrid>
+      {/* Compact: on this screen the figures are context, the pipeline is the
+          work. Full-size tiles pushed the first table row near the fold. */}
+      <KpiGrid compact>
         <Kpi
+          compact
           label="Total orders"
           value={totals.total}
           meta="All time"
           tone="marine"
-          icon={<OrdersIcon size={18} />}
+          icon={<OrdersIcon size={16} />}
         />
         <Kpi
+          compact
           label="Active orders"
           value={totals.active}
           meta="New and In progress"
           tone="warn"
-          icon={<ClockIcon size={18} />}
+          icon={<ClockIcon size={16} />}
         />
         <Kpi
+          compact
           label="Revenue"
           value={gbp(totals.revenue)}
           meta="Completed orders only"
           tone="teal"
-          icon={<PoundIcon size={18} />}
+          icon={<PoundIcon size={16} />}
         />
         <Kpi
+          compact
           label="Commission"
           value={gbp(totals.commission)}
-          meta="Earned on completed orders"
+          meta="Earned on completed"
           tone="ok"
           valueClass="text-ok-ink"
-          icon={<PercentIcon size={18} />}
+          icon={<PercentIcon size={16} />}
         />
       </KpiGrid>
 
       <Card>
         <div className="border-line-soft flex flex-wrap items-center gap-3 border-b px-5 py-4">
-          <div className="relative flex min-w-0 flex-[1_1_260px]">
+          <div className="relative flex min-w-0 flex-[1_1_240px] sm:max-w-[340px]">
             <input
               type="search"
               value={query}
@@ -297,6 +347,43 @@ export default function OrdersPage() {
               );
             })}
           </div>
+
+          {/* Its own group, its own tint: the status chips above are black
+              when on, so a marine segmented pair reads as a different kind
+              of control rather than a sixth status. */}
+          <div className="ml-auto flex items-center gap-2">
+            <span
+              id="orders-sort-label"
+              className="text-ink-500 text-[10.5px] font-medium tracking-[0.09em] uppercase"
+            >
+              Sort
+            </span>
+            <div
+              role="group"
+              aria-labelledby="orders-sort-label"
+              className="border-line-field flex items-center gap-1 rounded-full border bg-white p-[3px]"
+            >
+              {SORTS.map((s) => {
+                const active = sort === s.value;
+                return (
+                  <button
+                    key={s.value}
+                    type="button"
+                    onClick={() => setSort(s.value)}
+                    aria-pressed={active}
+                    className={cn(
+                      "flex h-[26px] items-center rounded-full px-3 text-[12px] font-medium whitespace-nowrap outline-none",
+                      active
+                        ? "bg-marine-tint text-marine-600"
+                        : "text-ink-600 hover:text-ink-800"
+                    )}
+                  >
+                    {s.label}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
         </div>
 
         {isLoading ? (
@@ -323,12 +410,13 @@ export default function OrdersPage() {
           />
         ) : (
           <TableScroll>
-            <Table min={1000}>
+            <Table min={showCreated ? 1120 : 1000}>
               <Thead>
                 <Th>Order</Th>
                 <Th>Customer</Th>
                 <Th>Route</Th>
                 <Th>Travel date</Th>
+                {showCreated ? <Th>Created</Th> : null}
                 <Th align="right">Pax</Th>
                 <Th align="right">Selling price</Th>
                 <Th>Status</Th>
@@ -367,6 +455,13 @@ export default function OrdersPage() {
                     >
                       {o.travel_date ? fmtDate(o.travel_date) : "No travel date"}
                     </Td>
+                    {showCreated ? (
+                      /* fmtStamp, not fmtDate: today's orders want a clock so
+                         a run placed this morning is still readable in order. */
+                      <Td className="text-ink-600 text-[12.5px] whitespace-nowrap">
+                        {fmtStamp(o.created_at)}
+                      </Td>
+                    ) : null}
                     <Td align="right" className="text-[12.5px] tabular-nums">
                       {o.passengers ?? "—"}
                     </Td>

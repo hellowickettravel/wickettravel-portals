@@ -84,6 +84,73 @@ export async function listCustomers(): Promise<Customer[]> {
   return getCustomers();
 }
 
+/** A customer as the order wizard's first passenger row needs them. */
+export type OrderCustomerOption = {
+  id: string;
+  label: string;
+  email: string | null;
+  /** ISO "YYYY-MM-DD" from customers.date_of_birth (0022), if recorded. */
+  dob: string | null;
+};
+
+/**
+ * The picker list, plus the two details the wizard pre-fills once a customer
+ * is chosen. Kept separate from `listCustomers` because that one is the plain
+ * record shape several screens share, and separate from
+ * `listCustomersWithStats` because that counts every order and conversation
+ * in the system — far too much work to populate a dropdown.
+ *
+ * Two queries rather than an embed: `date_of_birth` lives on customers (0022)
+ * and the sign-in address on the linked profile, and the same split is how
+ * listCustomersWithStats already reads emails.
+ */
+export async function listOrderCustomers(): Promise<OrderCustomerOption[]> {
+  await requireAdmin();
+  const supabase = await createClient();
+
+  // date_of_birth arrives with 0022, so ask for it and retry without it if the
+  // migration has not been applied — the picker still works, minus the prefill.
+  type Row = {
+    id: string;
+    name: string | null;
+    wa_phone: string | null;
+    profile_id: string | null;
+    date_of_birth?: string | null;
+  };
+  const select = (cols: string) =>
+    supabase.from("customers").select(cols).order("name", { ascending: true });
+
+  let { data, error } = await select(
+    "id, name, wa_phone, profile_id, date_of_birth"
+  ).returns<Row[]>();
+  if (error && isMissingColumn(error)) {
+    ({ data, error } = await select("id, name, wa_phone, profile_id").returns<
+      Row[]
+    >());
+  }
+  if (error || !data) return [];
+
+  const profileIds = data
+    .map((c) => c.profile_id)
+    .filter((id): id is string => !!id);
+  const emails = new Map<string, string | null>();
+  if (profileIds.length) {
+    const { data: profiles } = await supabase
+      .from("profiles")
+      .select("id, email")
+      .in("id", profileIds)
+      .returns<{ id: string; email: string | null }[]>();
+    for (const p of profiles ?? []) emails.set(p.id, p.email);
+  }
+
+  return data.map((c) => ({
+    id: c.id,
+    label: c.name || c.wa_phone || "Unnamed customer",
+    email: (c.profile_id ? emails.get(c.profile_id) : null) ?? null,
+    dob: c.date_of_birth ?? null,
+  }));
+}
+
 export type CustomerWithStats = Customer & {
   orderCount: number;
   conversationCount: number;
@@ -230,9 +297,16 @@ export async function createOrder(
 
   let { data, error } = await insert(row);
   if (error && isMissingColumn(error)) {
-    // Migration 0021 not applied yet — drop its column and insert the rest, so
-    // creating an order never depends on a pending migration.
-    const { airline: _airline, ...legacy } = row;
+    // Migration 0024 not applied yet — drop the passenger roster and retry.
+    // Tried on its own first so a database that has 0021 but not 0024 keeps
+    // its airline; only if that still fails do we fall back to the pre-0021
+    // payload. Creating an order never depends on a pending migration.
+    const { passenger_details: _details, ...noDetails } = row;
+    ({ data, error } = await insert(noDetails));
+  }
+  if (error && isMissingColumn(error)) {
+    // Migration 0021 not applied either — drop its column too.
+    const { passenger_details: _details, airline: _airline, ...legacy } = row;
     ({ data, error } = await insert(legacy));
   }
 

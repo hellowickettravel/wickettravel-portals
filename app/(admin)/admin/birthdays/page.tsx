@@ -138,7 +138,7 @@ export default function AdminBirthdaysPage() {
     !!draft &&
     !!savedTemplate &&
     (draft.subject !== savedTemplate.subject || draft.message !== savedTemplate.message);
-  const sampleName = data.today[0]?.name ?? data.upcoming[0]?.name ?? "Sarah Khan";
+  const sampleName = data.today[0]?.name ?? data.upcoming[0]?.name ?? "James Wilson";
   const [dd, mm] = [data.todayISO.slice(8), data.todayISO.slice(5, 7)];
 
   const pick = (rows: BirthdayRow[], sel: Set<string>) => rows.filter((r) => sel.has(r.customerId));

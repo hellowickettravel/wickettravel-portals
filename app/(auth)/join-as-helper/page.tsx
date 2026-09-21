@@ -3,10 +3,37 @@ import Link from "next/link";
 import { AuthShell } from "@/components/auth/auth-shell";
 import { AuthHeading } from "@/components/auth/auth-heading";
 
+/**
+ * THE ONE INDEXABLE PAGE ON THIS DOMAIN.
+ *
+ * The root layout sets `robots: { index: false, follow: false }` for the
+ * whole portal; Next REPLACES that object rather than merging into it, so
+ * re-stating index/follow here is what opts this page back in. It is also
+ * the only entry in app/sitemap.ts — those two facts have to stay in step,
+ * because a sitemap URL that returns `noindex` is an error Search Console
+ * reports rather than a hint it ignores.
+ *
+ * It earns the exception: it is a real landing page explaining an unfamiliar
+ * job to someone who has never heard of us, and it is the page the public
+ * site's Assist Family section should send willing travellers to. The title
+ * leads with the words people actually search — "travel companion",
+ * "elderly" — rather than the internal word "helper", which nobody types.
+ */
 export const metadata: Metadata = {
-  title: "Become a helper · Wicket Travel",
+  title: "Become a Travel Companion — Get Paid to Help Elderly Passengers",
   description:
-    "Already flying? Keep an eye on someone's parent on the way and get paid for it.",
+    "Already flying UK–India or UK–Dubai? Accompany an elderly passenger on a flight you are already taking and get paid for it. ID-verified, you set your own fee, and every introduction is made by a real person.",
+  alternates: { canonical: "/join-as-helper" },
+  robots: { index: true, follow: true },
+  openGraph: {
+    type: "website",
+    siteName: "Wicket Travel",
+    locale: "en_GB",
+    url: "/join-as-helper",
+    title: "Become a Travel Companion — Wicket Travel",
+    description:
+      "Accompany an elderly passenger on a flight you are already taking, and get paid for it.",
+  },
 };
 
 /**

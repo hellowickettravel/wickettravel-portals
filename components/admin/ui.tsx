@@ -272,9 +272,37 @@ const KPI_TREND: Record<KpiTone, string> = {
   danger: "bg-danger-bg text-danger-ink",
 };
 
-export function KpiGrid({ children }: { children: React.ReactNode }) {
+export function KpiGrid({
+  children,
+  compact = false,
+}: {
+  children: React.ReactNode;
+  /**
+   * Shorter, narrower tiles for a screen whose real subject is the table
+   * underneath rather than the figures above it (the order pipeline).
+   *
+   * The default row stretches its tracks to `1fr`, so the tiles always eat
+   * the full content width however small their contents are. Compact caps
+   * each track instead, which is the only way to make them narrower — the
+   * four figures then read as a strip across the top and the table starts
+   * higher up the page.
+   */
+  compact?: boolean;
+}) {
   return (
-    <div className="grid grid-cols-[repeat(auto-fit,minmax(196px,1fr))] gap-4">
+    <div
+      className={cn(
+        "grid",
+        compact
+          ? // Capping the CONTAINER, not the tracks. Capping tracks at 200px
+            // left a phone showing one 200px tile in a 311px column with dead
+            // space beside it; flexible tracks inside a capped box give four
+            // 200px tiles on a desktop and two full-width ones on a phone.
+            // The cap is 4 x 200 + 3 x 12 gap — sized for a four-figure row.
+            "max-w-[836px] grid-cols-[repeat(auto-fit,minmax(132px,1fr))] gap-3"
+          : "grid-cols-[repeat(auto-fit,minmax(196px,1fr))] gap-4"
+      )}
+    >
       {children}
     </div>
   );
@@ -290,6 +318,7 @@ export function Kpi({
   trendDir = "up",
   valueClass,
   metaClass,
+  compact = false,
 }: {
   label: string;
   value: React.ReactNode;
@@ -302,31 +331,61 @@ export function Kpi({
   /** Money is ink; commission is the one figure allowed a success tint. */
   valueClass?: string;
   metaClass?: string;
+  /** See KpiGrid — pass it to both or the tiles and tracks disagree. */
+  compact?: boolean;
 }) {
+  const chip = icon ? (
+    <span
+      className={cn(
+        "flex shrink-0 items-center justify-center",
+        compact ? "size-8 rounded-[8px]" : "size-9 rounded-[10px]",
+        KPI_CHIP[tone]
+      )}
+    >
+      {icon}
+    </span>
+  ) : null;
+
+  const name = (
+    <span
+      className={cn(
+        "text-ink-600 font-medium uppercase",
+        compact
+          ? "text-[10.5px] tracking-[0.09em]"
+          : "text-[11px] tracking-[0.11em]"
+      )}
+    >
+      {label}
+    </span>
+  );
+
   return (
     <div
       className={cn(
-        "border-line-base flex flex-col gap-3 rounded-[12px] border bg-white p-5",
+        "border-line-base flex flex-col rounded-[12px] border bg-white",
+        compact ? "gap-1.5 p-3.5" : "gap-3 p-5",
         shadowE1
       )}
     >
-      {icon ? (
-        <span
-          className={cn(
-            "flex size-9 items-center justify-center rounded-[10px]",
-            KPI_CHIP[tone]
-          )}
-        >
-          {icon}
+      {/* Compact sets the icon beside the label rather than above it. That
+          one change is most of the height saving — it removes a whole row
+          plus its gap before any padding or type size is touched. */}
+      {compact ? (
+        <span className="flex items-center gap-2">
+          {chip}
+          {name}
         </span>
-      ) : null}
-      <span className="text-ink-600 text-[11px] font-medium tracking-[0.11em] uppercase">
-        {label}
-      </span>
+      ) : (
+        <>
+          {chip}
+          {name}
+        </>
+      )}
       <span className="flex flex-wrap items-baseline gap-2.5">
         <span
           className={cn(
-            "font-poppins text-ink-800 text-[24px] leading-none font-medium tracking-[-0.022em] tabular-nums",
+            "font-poppins text-ink-800 leading-none font-medium tracking-[-0.022em] tabular-nums",
+            compact ? "text-[20px]" : "text-[24px]",
             valueClass
           )}
         >
@@ -346,7 +405,8 @@ export function Kpi({
       {meta ? (
         <span
           className={cn(
-            "text-ink-600 text-[11.5px] font-normal text-pretty",
+            "text-ink-600 font-normal text-pretty",
+            compact ? "text-[10.5px] leading-[1.35]" : "text-[11.5px]",
             metaClass
           )}
         >

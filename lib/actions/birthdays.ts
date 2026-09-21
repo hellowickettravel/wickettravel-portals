@@ -456,7 +456,7 @@ export async function sendBirthdayTest(
   const rendered = renderBirthdayEmail({
     subject: `[Test] ${subject}`,
     message,
-    recipient: { fullName: profile?.full_name || "Alex Traveller" },
+    recipient: { fullName: profile?.full_name || "James Wilson" },
     brand,
   });
   const res = await sendMail({ to: user.email, ...rendered, replyTo: brand.businessEmail });

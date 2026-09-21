@@ -83,7 +83,7 @@ export type ParentTicketEnquiry = {
 
 /**
  * Mask a submitter's name for public display: first name + last initial, e.g.
- * "Rajesh Kumar" → "Rajesh K.". Single-word names are returned as-is (there is
+ * "James Wilson" → "James W.". Single-word names are returned as-is (there is
  * no surname to drop), and anything unusable falls back to "Traveller".
  *
  * This is the ONLY form of a person's name that ever leaves the portal — see

@@ -1,5 +1,6 @@
 import type { TripType, CabinClass } from "@/lib/db/types";
 import { LIMITS, sanitizeText, sanitizeLine } from "@/lib/security/limits";
+import type { OrderPassenger } from "@/lib/db/types";
 
 /**
  * Shared shape for the create-order flow (Chunk 1). One reusable form
@@ -30,6 +31,11 @@ export type OrderFormInput = {
    * employee/customer form is unaffected. Persisted by migration 0021.
    */
   airline?: string | null;
+  /**
+   * Per-traveller identity from the admin wizard. Optional so the shared
+   * employee/customer form is unaffected. Persisted by migration 0024.
+   */
+  passengerDetails?: OrderPassenger[] | null;
 };
 
 export const TRIP_TYPES: { value: TripType; label: string; hint: string }[] = [
@@ -144,6 +150,8 @@ export type OrderInsertFields = {
   customer_note: string | null;
   /** Preferred carrier — the column migration 0021 adds. */
   airline: string | null;
+  /** Per-traveller identity — the column migration 0024 adds. */
+  passenger_details: OrderPassenger[] | null;
   status: "new";
 };
 
@@ -156,6 +164,36 @@ const CABIN_SET: CabinClass[] = ["economy", "premium_economy", "business", "firs
  * Trims/limits text, drops blank passenger names, and reconciles any 18+ child
  * age into the adult count so the stored counts are always consistent.
  */
+/**
+ * Clean the wizard's passenger roster into what the jsonb column stores.
+ *
+ * A row is kept only if it carries a name — a half-typed email with nobody
+ * attached to it is noise, not a traveller. Blank optional cells collapse to
+ * null rather than "", so a reader never has to treat the two as the same
+ * thing. A malformed date is dropped instead of rejecting the whole order:
+ * the wizard validates it client-side, and losing a DOB is a smaller failure
+ * than losing the booking.
+ */
+const ISO_DATE = /^\d{4}-\d{2}-\d{2}$/;
+
+function normalizePassengerDetails(
+  rows: OrderPassenger[] | null | undefined
+): OrderPassenger[] | null {
+  if (!Array.isArray(rows)) return null;
+  const cleaned = rows
+    .slice(0, LIMITS.MAX_PASSENGERS)
+    .map((r) => ({
+      name: sanitizeLine(r?.name, LIMITS.PASSENGER_NAME),
+      email: sanitizeLine(r?.email, LIMITS.PASSENGER_EMAIL) || null,
+      dob: ISO_DATE.test(sanitizeLine(r?.dob, 10))
+        ? sanitizeLine(r?.dob, 10)
+        : null,
+      ibe: sanitizeLine(r?.ibe, LIMITS.PASSENGER_REF) || null,
+    }))
+    .filter((r) => r.name);
+  return cleaned.length ? cleaned : null;
+}
+
 export function normalizeOrderInput(
   input: OrderFormInput
 ): { ok: true; fields: OrderInsertFields } | { ok: false; error: string } {
@@ -227,6 +265,7 @@ export function normalizeOrderInput(
       passengers: adults + children,
       customer_note: sanitizeText(input.customerNote ?? "", LIMITS.ORDER_NOTE).trim() || null,
       airline: sanitizeLine(input.airline ?? "", LIMITS.PASSENGER_NAME) || null,
+      passenger_details: normalizePassengerDetails(input.passengerDetails),
       status: "new",
     },
   };

@@ -25,7 +25,7 @@ import { AIRLINES } from "@/lib/orders/form";
 /**
  * Trip fields the public homepage search widget can hand to /customer/book via
  * query params (?from=&to=&tripType=&depart=&return=&cabin=&adults=&children=
- * &airline=). Everything is optional and strictly validated — a malformed param
+ * &airline=&baggage=). Everything is optional and strictly validated — a malformed param
  * is simply dropped, never trusted.
  */
 export type BookPrefill = {
@@ -38,6 +38,14 @@ export type BookPrefill = {
   adults?: number;
   children?: number;
   airline?: string;
+  /**
+   * The widget's "Checked baggage included" tick. NOT the same thing as the
+   * wizard's "Extra luggage" field, which is about bags BEYOND an allowance
+   * — this says the fare must carry an allowance at all. Mapping it onto
+   * "1 extra bag" would quietly change what the traveller asked for, so it
+   * is seeded as a note for the team instead.
+   */
+  baggage?: boolean;
 };
 
 const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
@@ -94,6 +102,8 @@ export function parseBookPrefill(
     cabin: cabin && CABIN_SET.has(cabin) ? (cabin as CabinClass) : undefined,
     adults: int(sp.adults, 1, 9),
     children: int(sp.children, 0, 8),
+    // The widget sends this as "1" when ticked and omits it otherwise.
+    baggage: str(sp.baggage, 4) === "1" ? true : undefined,
     airline: airline && (AIRLINES as readonly string[]).includes(airline) ? airline : undefined,
   };
 }

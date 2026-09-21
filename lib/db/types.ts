@@ -137,6 +137,20 @@ export type PaymentMethod = "card" | "bank_transfer" | "cash" | "unpaid";
 /** Where that payment got to (0021). */
 export type PaymentStatus = "paid_in_full" | "deposit" | "unpaid" | "refunded";
 
+/**
+ * One traveller on an order, as captured by the create-order wizard. Persisted
+ * to orders.passenger_details (jsonb) by migration 0024 — optional everywhere,
+ * because the app runs unchanged before that migration is applied.
+ */
+export type OrderPassenger = {
+  name: string;
+  email: string | null;
+  /** ISO "YYYY-MM-DD". A date, never a timestamp, so it is never ambiguous. */
+  dob: string | null;
+  /** Booking-engine reference for this traveller. */
+  ibe: string | null;
+};
+
 export type Order = {
   id: string;
   order_number: string; // human ref "#7343490", auto-generated on insert (0016)
@@ -174,6 +188,12 @@ export type Order = {
   payment_status?: PaymentStatus | null;
   notes: string | null; // internal staff notes
   customer_note: string | null; // pre-order gate note from the customer (0016)
+  /**
+   * Per-traveller identity (0024). Distinct from `passengers`, which is the
+   * integer headcount, and from `passenger_names`, which stays the plain list.
+   * Optional: the app degrades to the pre-0024 payload if unapplied.
+   */
+  passenger_details?: OrderPassenger[] | null;
   created_by: string | null; // -> profiles.id (the employee/admin); null for customer-created
   assigned_employee_id: string | null; // -> profiles.id (added in 0008)
   closed_at: string | null; // completion timestamp; set when status becomes 'completed'

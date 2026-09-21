@@ -1,5 +1,6 @@
 import { getBrandLogoUrl } from "@/lib/db/branding";
 import { getCustomerNavCounts } from "@/lib/db/customer-portal";
+import { MARKETING_SITE_URL } from "@/lib/links";
 import {
   AdminShell,
   type AdminNavSection,
@@ -140,6 +141,11 @@ export async function CustomerPortalShell({
       supportHref="/customer/support"
       searchScreens={SEARCH}
       mobileTabs={TABS}
+      // A traveller signing out is done with the portal, not locked out of
+      // it — send them to the public marketing site rather than straight
+      // back to a login form. New visitors still register from there same
+      // as always; this only changes where an existing session ends up.
+      signOutRedirectTo={MARKETING_SITE_URL}
     >
       {children}
     </AdminShell>

@@ -155,6 +155,7 @@ export function AdminShell({
   topBarExtra,
   showBell = true,
   signOutHref,
+  signOutRedirectTo,
 }: {
   sections: AdminNavSection[];
   /** Unawaited counts for the sidebar badges — see NavCounts above. */
@@ -194,6 +195,11 @@ export function AdminShell({
   /** Set when the portal has no real session to end (the driver portal is
       still UI-only): renders a link instead of the signOut server action. */
   signOutHref?: string;
+  /** Where signing out lands, once the session is actually ended. Omit for
+   *  "/login" (every staff portal); the customer portal sets this to the
+   *  public marketing site — a departing traveller shouldn't be dropped
+   *  straight back on a login form. */
+  signOutRedirectTo?: string;
 }) {
   const pathname = usePathname();
   const router = useRouter();
@@ -202,6 +208,14 @@ export function AdminShell({
   const [acctOpen, setAcctOpen] = useState(false);
   const [query, setQuery] = useState(params.get("q") ?? "");
   const acctRef = useRef<HTMLDivElement>(null);
+
+  /* Always bind, even to the default: a <form action> must be a zero-arg
+     (formData) => Promise<void>, and signOut's first param is now a string,
+     not FormData — passing it unbound stopped type-checking as a form
+     action. Bind the destination once, up front, rather than re-binding it
+     inline at each <form> below — there are two (desktop rail + mobile
+     account menu). */
+  const doSignOut = signOut.bind(null, signOutRedirectTo ?? "/login");
 
   const search = useMemo(
     () =>
@@ -396,7 +410,7 @@ export function AdminShell({
               <span>Sign out</span>
             </Link>
           ) : (
-            <form action={signOut}>
+            <form action={doSignOut}>
               <button
                 type="submit"
                 className="text-nav-ink flex h-[42px] w-full items-center gap-2.5 rounded-[10px] px-3 text-[13.5px] font-medium tracking-[0.4px] transition-colors hover:bg-white/[0.10] hover:text-white"
@@ -554,7 +568,7 @@ export function AdminShell({
                     Sign out
                   </Link>
                 ) : (
-                  <form action={signOut} className="border-line-soft border-t">
+                  <form action={doSignOut} className="border-line-soft border-t">
                     <button
                       type="submit"
                       className="text-danger-ink hover:bg-surface-1 block w-full px-4 py-3 text-left text-[12.5px] font-medium"

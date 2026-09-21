@@ -11,6 +11,8 @@ export const LIMITS = {
   ROUTE_FIELD: 120, // route_from / route_to
   PASSENGER_NAME: 100, // one passenger name
   MAX_PASSENGERS: 20, // names array length
+  PASSENGER_EMAIL: 254, // RFC 5321 maximum for a full address
+  PASSENGER_REF: 40, // IBE / booking-engine reference
   FULL_NAME: 120,
   SUPPORT_SUBJECT: 200,
   SUPPORT_BODY: 5000,

@@ -6,6 +6,7 @@ import { Plane } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { guardSignup, recordSignup } from "@/lib/actions/auth-guard";
 import { checkPassword, MIN_PASSWORD_LENGTH } from "@/lib/security/password";
+import { MARKETING_PRIVACY_URL, MARKETING_TERMS_URL } from "@/lib/links";
 import { AuthShell } from "@/components/auth/auth-shell";
 import { AuthHeading } from "@/components/auth/auth-heading";
 import { AuthAlert } from "@/components/auth/auth-alert";
@@ -228,7 +229,7 @@ export default function SignupPage() {
             id="fullName"
             type="text"
             autoComplete="name"
-            placeholder="Ananya Rao"
+            placeholder="James Wilson"
             value={fullName}
             onChange={(e) => setFullName(e.target.value)}
             required
@@ -284,7 +285,7 @@ export default function SignupPage() {
         <p className="text-ink-500 m-0 text-[12px] leading-[1.55] font-normal text-pretty">
           By creating an account you agree to our{" "}
           <a
-            href="https://www.wickettravel.com/terms-of-service"
+            href={MARKETING_TERMS_URL}
             target="_blank"
             rel="noopener noreferrer"
             className={authLinkClass}
@@ -293,7 +294,7 @@ export default function SignupPage() {
           </a>{" "}
           and{" "}
           <a
-            href="https://www.wickettravel.com/privacy-policy"
+            href={MARKETING_PRIVACY_URL}
             target="_blank"
             rel="noopener noreferrer"
             className={authLinkClass}

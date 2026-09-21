@@ -29,9 +29,32 @@ const poppins = Poppins({
   display: "swap",
 });
 
+const PORTAL_ORIGIN = "https://portal.wickettravel.com";
+
 export const metadata: Metadata = {
-  title: "Wicket Travel — Portal",
+  metadataBase: new URL(PORTAL_ORIGIN),
+  title: {
+    default: "Wicket Travel — Portal",
+    template: "%s — Wicket Travel",
+  },
   description: "Shared team inbox, orders CRM and admin panel for Wicket Travel.",
+  /**
+   * DEFAULT-DENY INDEXING for the whole portal.
+   *
+   * This is an application, not a publication: sign-in screens, dashboards
+   * and order forms have nothing to offer a searcher, and a /login page
+   * ranking for the brand name competes with wickettravel.com for the same
+   * query while sending the visitor somewhere they can't use.
+   *
+   * robots.ts blocks the CRAWL of the app areas; this blocks the INDEX of
+   * everything that is still crawlable. Both are needed — a URL blocked in
+   * robots.txt can still be indexed from an external link, because Google
+   * never reads the page to discover the noindex.
+   *
+   * One page opts back in: /join-as-helper exports its own `robots`, since
+   * Next replaces this object wholesale rather than merging into it.
+   */
+  robots: { index: false, follow: false },
 };
 
 // Warm the TLS connection to Supabase before the first data/auth call. Every
