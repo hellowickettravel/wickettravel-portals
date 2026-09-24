@@ -4,7 +4,7 @@ Things that are true of this project, aren't obvious from reading the code,
 and cost real time to rediscover. The same file lives at the root of both
 repos (Website and Portals), because most of it is about how the two connect.
 
-Last updated: 2026-09-22.
+Last updated: 2026-09-25.
 
 ---
 
@@ -96,11 +96,32 @@ fallback so the app runs whether or not a migration has been applied.
 | 0022 person fields (`customers.date_of_birth`) | applied |
 | 0023 birthday wishes | applied |
 | 0024 order passenger details | **not applied** — the order form silently drops the passenger list until it is |
+| 0025 travel details | applied 2026-09-25 |
 
 `orders.passengers` is an **integer headcount**. The passenger list is
 `passenger_details` (jsonb). Don't reuse the name.
 
 ---
+
+## Travel details (Portal, admin only)
+
+- `/admin/travel-details`: a directory of every person the business books
+  for — customers AND the companions on their orders, who have no account.
+  Search covers name, email, phone, passport, order number, route and IBE.
+- **It fills itself.** Each visit imports orders and customers not yet seen
+  (`traveller_imports` marks them), so a traveller the admin deletes is never
+  re-created. Matching rules live in `lib/travellers-import.ts` (pure, tested
+  by hand with jiti): a same name only merges with a matching DOB, email or
+  booker; a differing DOB never merges. Families share emails, so email
+  alone never merges either.
+- The IBE number belongs to a trip (`traveller_trips.ibe`), not a person.
+- An account holder's DOB is read from, and written through to,
+  `customers.date_of_birth`, so Birthdays and Travel details agree.
+- Birthday wishes: account holders from Birthdays (`birthday_emails`);
+  account-less travellers from Travel details (`traveller_birthday_emails`),
+  same saved message, footer reworded to "you have travelled with".
+- Built without touching existing screens (client's instruction, 2026-09-25):
+  `deleteCustomer` and `resetEverything` do NOT clear travellers yet.
 
 ## Birthday emails (Portal)
 

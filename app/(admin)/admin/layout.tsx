@@ -54,6 +54,11 @@ function buildNav(): AdminNavSection[] {
           href: "/admin/transactions",
           icon: "transactions",
         },
+        {
+          label: "Travel details",
+          href: "/admin/travel-details",
+          icon: "travellers",
+        },
       ],
     },
     {

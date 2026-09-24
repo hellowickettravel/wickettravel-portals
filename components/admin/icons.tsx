@@ -479,6 +479,8 @@ export const NAV_ICONS = {
   employees: StaffIcon,
   customers: CustomersIcon,
   birthdays: CakeIcon,
+  /** Travel details — the directory of everyone the business books for. */
+  travellers: IdCardIcon,
   analytics: AnalyticsIcon,
   support: LifebuoyIcon,
   settings: SettingsIcon,

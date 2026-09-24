@@ -114,6 +114,7 @@ const SEARCH: { prefix: string; exact?: boolean; placeholder: string; label: str
   { prefix: "/admin/customers", exact: true, placeholder: "Search customers", label: "Search customers" },
   { prefix: "/admin/employees", exact: true, placeholder: "Search staff", label: "Search staff" },
   { prefix: "/admin/transactions", exact: true, placeholder: "Search transactions", label: "Search transactions" },
+  { prefix: "/admin/travel-details", exact: true, placeholder: "Search travellers", label: "Search travel details" },
   { prefix: "/admin/messages", exact: true, placeholder: "Search conversations", label: "Search conversations" },
   { prefix: "/admin/visa-queries", exact: true, placeholder: "Search visa queries", label: "Search visa queries" },
   { prefix: "/admin/parents-tickets", exact: true, placeholder: "Search tickets", label: "Search parent tickets" },
