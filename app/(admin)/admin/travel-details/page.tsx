@@ -13,8 +13,12 @@ import {
 } from "@/lib/actions/travellers";
 import {
   BIRTHDAY_WINDOW_DAYS,
+  TRAVEL_WEEK_DAYS,
+  addDaysISO,
+  departsIn,
   relationLine,
   type BirthdayStatus,
+  type TravelWindow,
   type TravellerListItem,
 } from "@/lib/travellers";
 import { fmtBirthday, fmtDaysUntil } from "@/lib/birthdays";
@@ -28,7 +32,6 @@ import {
   CardHead,
   EmptyState,
   Kpi,
-  KpiGrid,
   KpiSkeleton,
   PageHead,
   Pill,
@@ -51,26 +54,37 @@ import { TravellerForm } from "@/components/admin/traveller-form";
 import {
   AlertIcon,
   CakeIcon,
+  CalendarIcon,
   ExportIcon,
   FlightIcon,
   IdCardIcon,
+  PlaneIcon,
   PlusIcon,
   SendIcon,
-  UserIcon,
 } from "@/components/admin/icons";
 
 const KEY = ["admin", "travel-details"] as const;
 const PAGE_SIZE = 15;
 
-type Tab = "all" | "birthdays" | "travelling" | "missing";
+type Tab = "all" | TravelWindow | "birthdays" | "missing";
 type Sort = "recent" | "name" | "birthday";
 
 const TABS: { value: Tab; label: string }[] = [
   { value: "all", label: "All" },
+  { value: "today", label: "Travelling today" },
+  { value: "tomorrow", label: "Tomorrow" },
+  { value: "week", label: "This week" },
   { value: "birthdays", label: "Birthdays soon" },
-  { value: "travelling", label: "Travelling soon" },
   { value: "missing", label: "Missing details" },
 ];
+
+const isTravelTab = (tab: Tab): tab is TravelWindow => tab === "today" || tab === "tomorrow" || tab === "week";
+
+/** "Fri 25 Sep". The date is a calendar day, so format it in UTC. */
+const dayLabel = (iso: string) =>
+  new Intl.DateTimeFormat("en-GB", { weekday: "short", day: "numeric", month: "short", timeZone: "UTC" }).format(
+    new Date(`${iso}T00:00:00Z`)
+  );
 
 const SORTS: { value: Sort; label: string }[] = [
   { value: "recent", label: "Recent trip" },
@@ -127,26 +141,28 @@ export default function TravelDetailsPage() {
 
   const searched = useMemo(() => all.filter(matches), [all, matches]);
 
+  // The server's today (UK time), so every admin sees the same "today".
+  const todayISO = data?.todayISO ?? "";
+  const inTab = useMemo(() => {
+    return (t: TravellerListItem, which: Tab) =>
+      which === "all"
+        ? true
+        : which === "birthdays"
+          ? isBirthdaySoon(t)
+          : which === "missing"
+            ? isMissing(t)
+            : // nextTrip is their earliest trip from today on, so it is the
+              // one that decides today / tomorrow / this week.
+              departsIn(t.nextTrip?.travelDate, todayISO, which);
+  }, [todayISO]);
+
   const counts = useMemo(
-    () => ({
-      all: searched.length,
-      birthdays: searched.filter(isBirthdaySoon).length,
-      travelling: searched.filter((t) => !!t.nextTrip).length,
-      missing: searched.filter(isMissing).length,
-    }),
-    [searched]
+    () => Object.fromEntries(TABS.map((x) => [x.value, searched.filter((t) => inTab(t, x.value)).length])) as Record<Tab, number>,
+    [searched, inTab]
   );
 
   const rows = useMemo(() => {
-    const list = searched.filter((t) =>
-      tab === "birthdays"
-        ? isBirthdaySoon(t)
-        : tab === "travelling"
-          ? !!t.nextTrip
-          : tab === "missing"
-            ? isMissing(t)
-            : true
-    );
+    const list = searched.filter((t) => inTab(t, tab));
     const byName = (a: TravellerListItem, b: TravellerListItem) => a.fullName.localeCompare(b.fullName);
     if (sort === "name") return list.sort(byName);
     if (sort === "birthday") {
@@ -154,13 +170,23 @@ export default function TravelDetailsPage() {
         (a, b) => (a.birthday?.daysUntil ?? 999) - (b.birthday?.daysUntil ?? 999) || byName(a, b)
       );
     }
-    if (tab === "travelling") {
-      return list.sort((a, b) => (a.nextTrip?.travelDate ?? "").localeCompare(b.nextTrip?.travelDate ?? ""));
+    if (isTravelTab(tab)) {
+      return list.sort(
+        (a, b) => (a.nextTrip?.travelDate ?? "").localeCompare(b.nextTrip?.travelDate ?? "") || byName(a, b)
+      );
     }
     // Most recently travelled first; people with no trips yet by when saved.
     const stamp = (t: TravellerListItem) => t.nextTrip?.travelDate ?? t.lastTrip?.travelDate ?? t.createdAt;
     return list.sort((a, b) => stamp(b).localeCompare(stamp(a)) || byName(a, b));
-  }, [searched, tab, sort]);
+  }, [searched, inTab, tab, sort]);
+
+  /** Pick a filter from a card or a tab. Birthdays read best soonest first,
+   *  and departures by date, so each brings its natural order with it. */
+  function pickTab(next: Tab) {
+    setTab(next);
+    if (next === "birthdays") setSort("birthday");
+    else if (isTravelTab(next) && sort === "birthday") setSort("recent");
+  }
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
@@ -180,6 +206,7 @@ export default function TravelDetailsPage() {
         "Date of birth",
         "Next birthday",
         "Nationality",
+        "IBE number",
         "Books through",
         "Relationship",
         "Customer account",
@@ -198,6 +225,7 @@ export default function TravelDetailsPage() {
         t.dateOfBirth ?? "",
         t.birthday?.date ?? "",
         t.nationality ?? "",
+        t.ibeNumber ?? "",
         t.bookedBy?.name ?? "",
         t.relationship ?? "",
         t.customerId ? "Yes" : "No",
@@ -234,7 +262,7 @@ export default function TravelDetailsPage() {
     return (
       <Screen>
         {header}
-        <KpiSkeleton />
+        <KpiSkeleton count={5} />
         <Card>
           <TableSkeleton rows={8} />
         </Card>
@@ -286,39 +314,72 @@ export default function TravelDetailsPage() {
         </Notice>
       ) : null}
 
-      <KpiGrid compact>
-        <Kpi
-          compact
-          label="People saved"
-          value={all.length}
-          meta={`${all.filter((t) => t.customerId).length} with a customer account`}
-          icon={<UserIcon size={16} />}
-        />
-        <Kpi
-          compact
-          label="Birthdays soon"
-          value={all.filter(isBirthdaySoon).length}
-          meta={`Next ${BIRTHDAY_WINDOW_DAYS} days · ${withBirthday} on file`}
-          tone="warn"
-          icon={<CakeIcon size={16} />}
-        />
-        <Kpi
-          compact
-          label="Travelling soon"
-          value={all.filter((t) => t.nextTrip).length}
-          meta="Have an upcoming trip"
-          tone="teal"
-          icon={<FlightIcon size={16} />}
-        />
-        <Kpi
-          compact
-          label="Missing details"
-          value={all.filter(isMissing).length}
-          meta="No birthday, or no way to contact"
-          tone={all.some(isMissing) ? "danger" : "ok"}
-          icon={<IdCardIcon size={16} />}
-        />
-      </KpiGrid>
+      {/* Five figures, each one also a shortcut: clicking a card shows exactly
+          those people in the table below (click it again to show everyone). */}
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-5">
+        {[
+          {
+            tab: "today" as const,
+            label: "Travelling today",
+            meta: dayLabel(todayISO),
+            tone: "teal" as const,
+            icon: <PlaneIcon size={16} />,
+          },
+          {
+            tab: "tomorrow" as const,
+            label: "Travelling tomorrow",
+            meta: dayLabel(addDaysISO(todayISO, 1)),
+            tone: "marine" as const,
+            icon: <FlightIcon size={16} />,
+          },
+          {
+            tab: "week" as const,
+            label: "Travelling this week",
+            meta: `${dayLabel(todayISO)} – ${dayLabel(addDaysISO(todayISO, TRAVEL_WEEK_DAYS - 1))}`,
+            tone: "violet" as const,
+            icon: <CalendarIcon size={16} />,
+          },
+          {
+            tab: "birthdays" as const,
+            label: "Birthdays soon",
+            meta: `Next ${BIRTHDAY_WINDOW_DAYS} days · ${withBirthday} on file`,
+            tone: "warn" as const,
+            icon: <CakeIcon size={16} />,
+          },
+          {
+            tab: "missing" as const,
+            label: "Missing details",
+            meta: "No birthday, or no way to contact",
+            tone: all.some(isMissing) ? ("danger" as const) : ("ok" as const),
+            icon: <IdCardIcon size={16} />,
+          },
+        ].map((k) => {
+          const active = tab === k.tab;
+          return (
+            <button
+              key={k.tab}
+              type="button"
+              aria-pressed={active}
+              title={active ? "Show everyone" : `Show only: ${k.label.toLowerCase()}`}
+              onClick={() => pickTab(active ? "all" : k.tab)}
+              className={cn(
+                "min-w-0 rounded-[12px] text-left outline-none transition-[box-shadow,transform] duration-150 [&>div]:h-full",
+                "hover:-translate-y-px focus-visible:ring-marine-500 focus-visible:ring-2 focus-visible:ring-offset-2",
+                active && "ring-ink-800 ring-2"
+              )}
+            >
+              <Kpi
+                compact
+                label={k.label}
+                value={all.filter((t) => inTab(t, k.tab)).length}
+                meta={k.meta}
+                tone={k.tone}
+                icon={k.icon}
+              />
+            </button>
+          );
+        })}
+      </div>
 
       <Card>
         <div className="border-line-soft flex flex-wrap items-center gap-3 border-b px-5 py-4">
@@ -340,10 +401,7 @@ export default function TravelDetailsPage() {
                   key={t.value}
                   type="button"
                   aria-pressed={active}
-                  onClick={() => {
-                    setTab(t.value);
-                    if (t.value === "birthdays") setSort("birthday");
-                  }}
+                  onClick={() => pickTab(t.value)}
                   className={cn(
                     "flex h-[34px] items-center gap-2 rounded-full border px-4 text-[13px] font-medium whitespace-nowrap outline-none",
                     active
@@ -389,11 +447,19 @@ export default function TravelDetailsPage() {
 
         {rows.length === 0 ? (
           <EmptyState
-            title={all.length === 0 ? "Nobody saved yet" : "Nobody matches"}
+            title={
+              all.length === 0
+                ? "Nobody saved yet"
+                : isTravelTab(tab) && !query.trim()
+                  ? `Nobody travelling ${tab === "week" ? "this week" : tab}`
+                  : "Nobody matches"
+            }
             body={
               all.length === 0
                 ? "Customers and everyone on their bookings appear here automatically. You can also add someone by hand."
-                : "Try part of a name, an email, a phone number, an order number like 7343490, or a place like DXB."
+                : isTravelTab(tab) && !query.trim()
+                  ? "Departures come from the travel date on each booking. Cancelled bookings aren't counted."
+                  : "Try part of a name, an email, a phone number, an order number like 7343490, or a place like DXB."
             }
             action={
               all.length === 0 ? (
@@ -421,7 +487,7 @@ export default function TravelDetailsPage() {
                   <Th>Traveller</Th>
                   <Th>Contact</Th>
                   <Th>Birthday</Th>
-                  <Th>{tab === "travelling" ? "Next trip" : "Last trip"}</Th>
+                  <Th>{isTravelTab(tab) ? "Next trip" : "Last trip"}</Th>
                   <Th align="right">Trips</Th>
                   <Th align="right" />
                 </Thead>
@@ -430,7 +496,7 @@ export default function TravelDetailsPage() {
                     <TravellerRow
                       key={t.id}
                       t={t}
-                      showNext={tab === "travelling"}
+                      showNext={isTravelTab(tab)}
                       onOpen={() => router.push(`/admin/travel-details/${t.id}`)}
                     />
                   ))}

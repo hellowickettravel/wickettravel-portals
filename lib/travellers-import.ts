@@ -30,6 +30,9 @@ export type TravellerRow = {
   passport_number: string | null;
   passport_expiry: string | null;
   address: string | null;
+  /** Migration 0026. Optional: absent until it has been run, and the
+   *  importer never writes it, so its inserts work either way. */
+  ibe_number?: string | null;
   notes: string | null;
   customer_id: string | null;
   booked_by_customer_id: string | null;

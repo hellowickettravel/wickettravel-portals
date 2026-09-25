@@ -97,6 +97,7 @@ fallback so the app runs whether or not a migration has been applied.
 | 0023 birthday wishes | applied |
 | 0024 order passenger details | **not applied** — the order form silently drops the passenger list until it is |
 | 0025 travel details | applied 2026-09-25 |
+| 0026 traveller IBE number | **not applied yet** — Travel details works without it; only saving an IBE number is refused until it is |
 
 `orders.passengers` is an **integer headcount**. The passenger list is
 `passenger_details` (jsonb). Don't reuse the name.

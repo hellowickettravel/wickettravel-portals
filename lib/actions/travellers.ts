@@ -64,6 +64,10 @@ async function requireAdmin() {
 /** The message the screen shows until migration 0025 has been run. */
 const SETUP_ERROR = "Run migration 0025_travel_details.sql in Supabase first.";
 
+/** Saving an IBE number before migration 0026 has been run. */
+const IBE_SETUP_ERROR =
+  "To save IBE numbers, run migration 0026_traveller_ibe.sql in Supabase first. Clear the IBE field to save everything else now.";
+
 /* ================================================================== rows */
 
 type TripRow = {
@@ -343,8 +347,10 @@ export async function getTravelDetailsOverview(): Promise<TravelDetailsOverview>
       })
     );
     const live = trips.filter((x) => x.status !== "cancelled");
+    // Only trips they are actually on: an account holder who booked for
+    // others isn't "travelling today" when their family flies.
     const upcoming = live
-      .filter((x) => x.travelDate && x.travelDate >= iso)
+      .filter((x) => x.role !== "booker" && x.travelDate && x.travelDate >= iso)
       .sort((a, b) => a.travelDate!.localeCompare(b.travelDate!));
     // "Last trip" is the most recent booking by departure date that has
     // already gone — or, failing that, the most recently placed booking.
@@ -373,7 +379,9 @@ export async function getTravelDetailsOverview(): Promise<TravelDetailsOverview>
     }
 
     const bookerName = booker ? booker.name?.trim() || "Unnamed customer" : null;
+    const latestIbe = [...trips].sort((a, b) => b.createdAt.localeCompare(a.createdAt)).find((x) => x.ibe)?.ibe ?? null;
     const haystack = [
+      t.ibe_number,
       t.full_name,
       t.preferred_name,
       email,
@@ -405,6 +413,7 @@ export async function getTravelDetailsOverview(): Promise<TravelDetailsOverview>
       dateOfBirth: dob ?? null,
       nationality: t.nationality,
       passportExpiry: t.passport_expiry,
+      ibeNumber: t.ibe_number || latestIbe,
       customerId: t.customer_id,
       bookedBy: booker ? { id: booker.id, name: bookerName! } : null,
       relationship: t.relationship,
@@ -461,6 +470,10 @@ export type TravellerDetail = {
   passportNumber: string | null;
   passportExpiry: string | null;
   address: string | null;
+  /** The IBE number saved on their profile (migration 0026). */
+  ibeNumber: string | null;
+  /** When nothing is saved: the IBE on their latest booking, and which one. */
+  bookingIbe: { ibe: string; orderNumber: string } | null;
   notes: string | null;
   relationship: string | null;
   marketingOptOut: boolean;
@@ -634,6 +647,11 @@ export async function getTravellerDetail(id: string): Promise<TravellerDetail | 
     passportNumber: t.passport_number,
     passportExpiry: t.passport_expiry,
     address: t.address,
+    ibeNumber: t.ibe_number || null,
+    bookingIbe: (() => {
+      const latest = [...trips].sort((a, b) => b.createdAt.localeCompare(a.createdAt)).find((x) => x.ibe);
+      return latest ? { ibe: latest.ibe!, orderNumber: latest.orderNumber } : null;
+    })(),
     notes: t.notes,
     relationship: t.relationship,
     marketingOptOut: t.marketing_opt_out,
@@ -662,7 +680,10 @@ export async function getTravellerDetail(id: string): Promise<TravellerDetail | 
       nationality: t.nationality ?? "",
       passportNumber: t.passport_number ?? "",
       passportExpiry: t.passport_expiry ?? "",
-      address: t.address ?? "",
+      // The form's address is one line now (it sits beside the IBE number),
+      // and a text input silently drops line breaks — so join them here.
+      address: (t.address ?? "").trim().replace(/\s*[\r\n]+\s*/g, ", "),
+      ibeNumber: t.ibe_number ?? "",
       bookedByCustomerId: t.booked_by_customer_id ?? "",
       relationship: t.relationship ?? "",
       marketingOptOut: t.marketing_opt_out,
@@ -721,8 +742,24 @@ export async function saveTraveller(input: TravellerInput): Promise<SaveTravelle
     marketing_opt_out: !!input.marketingOptOut,
     updated_at: new Date().toISOString(),
   };
+  const ibe = sanitizeLine(input.ibeNumber ?? "", L.IBE).toUpperCase() || null;
 
   const sb = await createClient();
+
+  /**
+   * Write with the IBE number, and if the database doesn't have that column
+   * yet (migration 0026 not run): write everything else when no IBE was
+   * typed — so nothing that worked before stops working — or explain the
+   * one step needed when one was.
+   */
+  async function write<R extends { error: { code?: string; message: string } | null }>(
+    run: (row: typeof fields & { ibe_number?: string | null }) => PromiseLike<R>
+  ): Promise<R | { data: null; error: { message: string } }> {
+    const first = await run({ ...fields, ibe_number: ibe });
+    if (!first.error || !isMissingColumn(first.error)) return first;
+    if (ibe) return { data: null, error: { message: IBE_SETUP_ERROR } };
+    return run(fields);
+  }
 
   // ---------------------------------------------------------------- edit
   if (input.id) {
@@ -735,14 +772,17 @@ export async function saveTraveller(input: TravellerInput): Promise<SaveTravelle
     if (readErr) return { ok: false, error: isMissingTable(readErr) ? SETUP_ERROR : readErr.message };
     if (!current) return { ok: false, error: "That traveller no longer exists." };
 
-    const { error } = await sb
-      .from("travellers")
-      .update({
-        ...fields,
-        // An account holder books for others; they are nobody's companion.
-        booked_by_customer_id: current.customer_id ? null : bookedBy,
-      })
-      .eq("id", input.id);
+    const id = input.id;
+    const { error } = await write((row) =>
+      sb
+        .from("travellers")
+        .update({
+          ...row,
+          // An account holder books for others; they are nobody's companion.
+          booked_by_customer_id: current.customer_id ? null : bookedBy,
+        })
+        .eq("id", id)
+    );
     if (error) return { ok: false, error: error.message };
 
     // An account holder's birthday lives on their customer record — that is
@@ -782,11 +822,13 @@ export async function saveTraveller(input: TravellerInput): Promise<SaveTravelle
     };
   }
 
-  const { data, error } = await sb
-    .from("travellers")
-    .insert({ ...fields, booked_by_customer_id: bookedBy, source: "manual", created_by: auth.user.id })
-    .select("id")
-    .single<{ id: string }>();
+  const { data, error } = await write((row) =>
+    sb
+      .from("travellers")
+      .insert({ ...row, booked_by_customer_id: bookedBy, source: "manual", created_by: auth.user.id })
+      .select("id")
+      .single<{ id: string }>()
+  );
   if (error || !data) return { ok: false, error: error ? (isMissingTable(error) ? SETUP_ERROR : error.message) : "Couldn't save." };
   return { ok: true, id: data.id };
 }

@@ -78,6 +78,19 @@ export default async function TravellerDetailPage({
       ),
     },
     { label: "Address", value: t.address ? <span className="whitespace-pre-line">{t.address}</span> : "—" },
+    {
+      label: "IBE number",
+      value: t.ibeNumber ? (
+        <span className="tabular-nums">{t.ibeNumber}</span>
+      ) : t.bookingIbe ? (
+        <span className="flex flex-wrap items-center gap-2">
+          <span className="tabular-nums">{t.bookingIbe.ibe}</span>
+          <span className="text-ink-500 text-[12px]">from booking {t.bookingIbe.orderNumber}</span>
+        </span>
+      ) : (
+        "—"
+      ),
+    },
   ];
 
   return (

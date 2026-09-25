@@ -19,6 +19,7 @@ export const TRAVELLER_LIMITS = {
   NATIONALITY: 60,
   PASSPORT: 30,
   ADDRESS: 400,
+  IBE: 40,
   RELATIONSHIP: 60,
   NOTES: 4000,
 } as const;
@@ -99,6 +100,8 @@ export type TravellerListItem = {
   dateOfBirth: string | null;
   nationality: string | null;
   passportExpiry: string | null;
+  /** Their saved IBE number, or failing that the one on their latest booking. */
+  ibeNumber: string | null;
   customerId: string | null;
   bookedBy: { id: string; name: string } | null;
   relationship: string | null;
@@ -134,6 +137,7 @@ export type TravellerInput = {
   passportNumber: string;
   passportExpiry: string;
   address: string;
+  ibeNumber: string;
   bookedByCustomerId: string;
   relationship: string;
   marketingOptOut: boolean;
@@ -150,6 +154,7 @@ export const EMPTY_TRAVELLER: TravellerInput = {
   passportNumber: "",
   passportExpiry: "",
   address: "",
+  ibeNumber: "",
   bookedByCustomerId: "",
   relationship: "",
   marketingOptOut: false,
@@ -215,6 +220,30 @@ export function passportState(expiry: string | null | undefined, todayISO: strin
   if (!expiry || !/^\d{4}-\d{2}-\d{2}$/.test(expiry)) return null;
   if (expiry < todayISO) return "expired";
   return monthsUntil(expiry, todayISO) < PASSPORT_WARN_MONTHS ? "soon" : "ok";
+}
+
+/** "2026-09-30" + 2 → "2026-10-02". Calendar arithmetic in UTC, so no
+ *  daylight-saving change can land it on the wrong day. */
+export function addDaysISO(iso: string, days: number): string {
+  const [y, m, d] = iso.split("-").map(Number);
+  return new Date(Date.UTC(y, m - 1, d + days)).toISOString().slice(0, 10);
+}
+
+/** "This week" on Travel details: today and the six days after it. */
+export const TRAVEL_WEEK_DAYS = 7;
+
+export type TravelWindow = "today" | "tomorrow" | "week";
+
+/**
+ * Is this departure date inside the window? `todayISO` is the business's own
+ * today (see `todayYMD`), so "today" means today in the UK, not wherever the
+ * admin's laptop thinks it is.
+ */
+export function departsIn(travelDate: string | null | undefined, todayISO: string, w: TravelWindow): boolean {
+  if (!travelDate) return false;
+  if (w === "today") return travelDate === todayISO;
+  if (w === "tomorrow") return travelDate === addDaysISO(todayISO, 1);
+  return travelDate >= todayISO && travelDate <= addDaysISO(todayISO, TRAVEL_WEEK_DAYS - 1);
 }
 
 /** Age in whole years on `todayISO`, or null for a missing / odd date. */
