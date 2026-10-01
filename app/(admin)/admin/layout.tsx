@@ -100,6 +100,11 @@ function buildNav(): AdminNavSection[] {
           icon: "transactions",
           countKey: "payments",
         },
+        {
+          label: "Board options",
+          href: "/admin/parents-options",
+          icon: "settings",
+        },
       ],
     },
     {

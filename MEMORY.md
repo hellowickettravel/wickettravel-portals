@@ -98,11 +98,28 @@ fallback so the app runs whether or not a migration has been applied.
 | 0024 order passenger details | **not applied** — the order form silently drops the passenger list until it is |
 | 0025 travel details | applied 2026-09-25 |
 | 0026 traveller IBE number | **not applied yet** — Travel details works without it; only saving an IBE number is refused until it is |
+| 0027 parent assist options | **not applied yet** — the website board uses its built-in lists and /admin/parents-options says to run it until it is |
 
 `orders.passengers` is an **integer headcount**. The passenger list is
 `passenger_details` (jsonb). Don't reuse the name.
 
 ---
+
+## Parent Travel Assist board options (both repos)
+
+- The board's airports, airlines, languages and "help needed" lists are
+  admin-managed: Portal `/admin/parents-options` (table
+  `parent_assist_options`, migration 0027) → public
+  `GET /api/parent-ticket/options` (active rows, 5-min edge cache) → Website
+  relay `/api/parent-ticket/options` → `lib/useBoardOptions.ts`.
+- **The Website never depends on it.** Until 0027 runs, or if the portal is
+  unreachable, it uses `DEFAULT_BOARD_OPTIONS` (`lib/boardOptions.ts`),
+  which is exactly what 0027 seeds. Keep the two in sync if defaults change.
+- Contract: Portal `lib/parent-assist-options.ts` `PublicBoardOptions` ↔
+  Website `lib/boardOptions.ts` `BoardOptions`.
+- The board matches routes in both directions by default ("Search both
+  directions": LHR → HYD also finds HYD → LHR); every airport is offered
+  under both "Flying from" and "Flying to".
 
 ## Travel details (Portal, admin only)
 

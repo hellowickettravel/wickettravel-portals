@@ -37,3 +37,6 @@ export const HELPER_SUPPORT_TICKETS_KEY = ["helper", "support-tickets"] as const
 
 // "Route a conversation" on the Messages screen
 export const ADMIN_TOOLS_EMPLOYEES_KEY = ["admin", "tools", "employees"] as const;
+
+// Parent Travel Assist board options (admin)
+export const ADMIN_BOARD_OPTIONS_KEY = ["admin", "board-options"] as const;
