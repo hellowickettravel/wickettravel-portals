@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useId, useRef } from "react";
+import { useEffect, useEffectEvent, useId, useRef } from "react";
 import { createPortal } from "react-dom";
 import { cn } from "@/lib/utils";
 import { CloseIcon } from "@/components/admin/icons";
@@ -92,10 +92,20 @@ export function Sheet({
 }) {
   const ref = useRef<HTMLDivElement>(null);
 
+  /* Callers pass `onClose` inline (`onClose={() => setOpen(false)}`), so it is
+     a new function on every render — and a form re-renders on every
+     keystroke. With `onClose` as an effect dependency, each keystroke tore
+     the effect down and ran it again, and the re-run's "focus the first
+     field" pulled the caret back into field one: type in any other field and
+     everything after the first letter landed in the first field. Read the
+     latest onClose through an effect event instead, so the effect runs once
+     per open. */
+  const close = useEffectEvent(() => onClose());
+
   useEffect(() => {
     if (!open) return;
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onClose();
+      if (e.key === "Escape") close();
       /* Focus trap. Without it, tabbing past the last control walks out of the
          dialog and into the page behind the scrim — which the user can see
          highlighting but cannot reach, another reason the sheets felt broken. */
@@ -125,7 +135,7 @@ export function Sheet({
       document.removeEventListener("keydown", onKey);
       unlock();
     };
-  }, [open, onClose]);
+  }, [open]);
 
   if (!open) return null;
 

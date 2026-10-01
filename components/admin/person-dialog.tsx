@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useId, useRef } from "react";
+import { useEffect, useEffectEvent, useId, useRef } from "react";
 import { cn } from "@/lib/utils";
 import { CheckIcon, CloseIcon } from "@/components/admin/icons";
 import { Btn, focusRing } from "@/components/admin/ui";
@@ -192,12 +192,18 @@ export function PersonDialog({
   // identifier, so keep the form association attribute-only (never a selector).
   const formId = `person-form-${headingId.replace(/[^a-zA-Z0-9_-]/g, "")}`;
 
+  /* Read onClose through an effect event, never as a dependency: callers pass
+     it inline, so depending on it re-ran this effect on every keystroke and
+     its "focus the first field" dragged typing back into field one. See
+     Sheet in sheet.tsx. */
+  const close = useEffectEvent(() => onClose());
+
   // Escape closes, and the body underneath must not scroll while the sheet is
   // up — the design's overlay covers the whole viewport.
   useEffect(() => {
     if (!open) return;
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onClose();
+      if (e.key === "Escape") close();
       if (e.key !== "Tab" || !sheetRef.current) return;
       const focusable = sheetRef.current.querySelectorAll<HTMLElement>(
         'a[href],button:not(:disabled),input:not(:disabled),select:not(:disabled),textarea:not(:disabled),[tabindex]:not([tabindex="-1"])'
@@ -225,7 +231,7 @@ export function PersonDialog({
       document.removeEventListener("keydown", onKey);
       unlock();
     };
-  }, [open, onClose]);
+  }, [open]);
 
   if (!open) return null;
 
