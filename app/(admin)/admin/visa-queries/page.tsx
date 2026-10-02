@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { createClient } from "@/lib/supabase/client";
-import { listVisaEnquiries } from "@/lib/actions/visa";
+import { deleteVisaEnquiry, listVisaEnquiries } from "@/lib/actions/visa";
 import {
   VISA_STATUSES,
   VISA_STATUS_LABELS,
@@ -31,6 +31,7 @@ import {
   focusRing,
 } from "@/components/admin/ui";
 import { LoadMore } from "@/components/admin/load-more";
+import { DeleteRowButton } from "@/components/admin/delete-row";
 
 const ENQUIRIES_KEY = ["admin", "visa-enquiries", "list"] as const;
 const PAGE_SIZE = 5;
@@ -251,7 +252,16 @@ export default function AdminVisaQueriesPage() {
                         <Pill>{VISA_STATUS_LABELS[e.status]}</Pill>
                       </Td>
                       <Td align="right" onClick={(ev) => ev.stopPropagation()}>
-                        <ViewButton href={`/admin/visa-queries/${e.id}`} />
+                        <span className="inline-flex items-center gap-2">
+                          <DeleteRowButton
+                            what="visa query"
+                            name={e.reference_number}
+                            body={`This permanently removes ${e.first_name} ${e.last_name}'s visa query, its notes and the documents they uploaded. This can't be undone.`}
+                            action={() => deleteVisaEnquiry(e.id)}
+                            onDeleted={() => queryClient.invalidateQueries({ queryKey: ENQUIRIES_KEY })}
+                          />
+                          <ViewButton href={`/admin/visa-queries/${e.id}`} />
+                        </span>
                       </Td>
                     </Tr>
                   ))}

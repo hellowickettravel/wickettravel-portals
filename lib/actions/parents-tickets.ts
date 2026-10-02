@@ -125,6 +125,28 @@ export async function setParentTicketPublic(input: {
   return { ok: true };
 }
 
+/**
+ * Permanently delete a lead, with its internal notes (they live on the row).
+ * If it was published, it leaves the website board with it.
+ */
+export async function deleteParentTicket(id: string): Promise<ActionResult> {
+  try {
+    await requireAdmin();
+  } catch {
+    return { ok: false, error: "Only an admin can delete tickets." };
+  }
+  if (!isUuid(id)) return { ok: false, error: "That ticket no longer exists." };
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("parent_ticket_enquiries")
+    .delete()
+    .eq("id", id)
+    .select("id");
+  if (error) return { ok: false, error: error.message };
+  if (!data?.length) return { ok: false, error: "That ticket no longer exists." };
+  return { ok: true };
+}
+
 /** Append a timestamped internal note. Returns the saved note. */
 export async function addParentTicketNote(input: {
   id: string;

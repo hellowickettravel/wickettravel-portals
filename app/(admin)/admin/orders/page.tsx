@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { createClient } from "@/lib/supabase/client";
-import { listOrders } from "@/lib/actions/admin";
+import { deleteOrder, listOrders } from "@/lib/actions/admin";
 import type { OrderStatus } from "@/lib/db/types";
 import { gbp, fmtDate, fmtStamp, routeLabel, statusLabel } from "@/lib/format";
 import { downloadCsv } from "@/lib/csv";
@@ -42,6 +42,7 @@ import {
   PoundIcon,
   ClockIcon,
 } from "@/components/admin/icons";
+import { DeleteRowButton } from "@/components/admin/delete-row";
 
 const PAGE_SIZE = 10;
 
@@ -484,7 +485,21 @@ export default function OrdersPage() {
                       {o.assigned_employee?.full_name ?? "—"}
                     </Td>
                     <Td align="right">
-                      <ViewButton href={`/admin/orders/${o.id}`} />
+                      <span className="inline-flex items-center gap-2">
+                        <DeleteRowButton
+                          what="order"
+                          name={o.order_number}
+                          body={`This permanently removes order ${o.order_number} with its messages and attachments. This can't be undone.`}
+                          action={() => deleteOrder(o.id)}
+                          onDeleted={() => queryClient.invalidateQueries({ queryKey: ORDERS_KEY })}
+                          disabledReason={
+                            o.status === "completed"
+                              ? "Completed orders are kept for your revenue history and can't be deleted."
+                              : undefined
+                          }
+                        />
+                        <ViewButton href={`/admin/orders/${o.id}`} />
+                      </span>
                     </Td>
                   </Tr>
                 ))}

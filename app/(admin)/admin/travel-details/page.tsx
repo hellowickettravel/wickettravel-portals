@@ -8,6 +8,7 @@ import { toast } from "sonner";
 import {
   getTravelDetailsOverview,
   sendTravellerBirthdayWishes,
+  deleteTraveller,
   type TravelDetailsOverview,
   type TravellerSendOutcome,
 } from "@/lib/actions/travellers";
@@ -62,6 +63,7 @@ import {
   PlusIcon,
   SendIcon,
 } from "@/components/admin/icons";
+import { DeleteRowButton } from "@/components/admin/delete-row";
 
 const KEY = ["admin", "travel-details"] as const;
 const PAGE_SIZE = 15;
@@ -498,6 +500,7 @@ export default function TravelDetailsPage() {
                       t={t}
                       showNext={isTravelTab(tab)}
                       onOpen={() => router.push(`/admin/travel-details/${t.id}`)}
+                      onDeleted={() => queryClient.invalidateQueries({ queryKey: KEY })}
                     />
                   ))}
                 </tbody>
@@ -543,10 +546,12 @@ function TravellerRow({
   t,
   showNext,
   onOpen,
+  onDeleted,
 }: {
   t: TravellerListItem;
   showNext: boolean;
   onOpen: () => void;
+  onDeleted: () => void;
 }) {
   const sub = t.customerId ? null : relationLine(t.relationship, t.bookedBy?.name);
   const trip = showNext ? t.nextTrip : t.lastTrip;
@@ -615,7 +620,16 @@ function TravellerRow({
         {t.tripCount}
       </Td>
       <Td align="right" onClick={(e) => e.stopPropagation()}>
-        <ViewButton href={`/admin/travel-details/${t.id}`} />
+        <span className="inline-flex items-center gap-2">
+          <DeleteRowButton
+            what="traveller"
+            name={t.fullName}
+            body={`This permanently removes ${t.fullName} and their trip history from Travel details. Orders are not affected. This can't be undone.`}
+            action={() => deleteTraveller(t.id)}
+            onDeleted={onDeleted}
+          />
+          <ViewButton href={`/admin/travel-details/${t.id}`} />
+        </span>
       </Td>
     </Tr>
   );

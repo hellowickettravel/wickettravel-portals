@@ -9,7 +9,7 @@ import {
   setConversationRead,
 } from "@/lib/db/conversation-reads";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { ATTACHMENT_BUCKET } from "@/lib/storage";
+import { ATTACHMENT_BUCKET, ORDER_ATTACHMENT_BUCKET } from "@/lib/storage";
 import { getEmployees, getProfileById } from "@/lib/db/profiles";
 import {
   getOrders,
@@ -900,6 +900,56 @@ export async function deleteEmployee(id: string): Promise<ActionResult> {
     const { error: authErr } = await admin.auth.admin.deleteUser(id);
     if (authErr) return { ok: false, error: authErr.message };
 
+    return { ok: true };
+  } catch (e) {
+    return { ok: false, error: e instanceof Error ? e.message : "Delete failed." };
+  }
+}
+
+/**
+ * Permanently delete an order with its chat messages, attachments and
+ * traveller trip links (all `on delete cascade`). A completed order is part
+ * of the revenue history the Transactions and Analytics screens are built
+ * from, so it is refused; cancel an order you don't want counted instead.
+ * Uses the service client because orders have no admin delete policy in RLS
+ * (only admins reach this, checked first).
+ */
+export async function deleteOrder(id: string): Promise<ActionResult> {
+  try {
+    await requireAdmin();
+  } catch {
+    return { ok: false, error: "Only an admin can delete orders." };
+  }
+  if (!isUuid(id)) return { ok: false, error: "That order no longer exists." };
+
+  try {
+    const admin = createAdminClient();
+    const { data: order, error: readErr } = await admin
+      .from("orders")
+      .select("status")
+      .eq("id", id)
+      .maybeSingle<{ status: string }>();
+    if (readErr) return { ok: false, error: readErr.message };
+    if (!order) return { ok: false, error: "That order no longer exists." };
+    if (order.status === "completed") {
+      return {
+        ok: false,
+        error: "Completed orders are kept for your revenue history and can't be deleted.",
+      };
+    }
+
+    const { data: files } = await admin
+      .from("order_attachments")
+      .select("storage_path")
+      .eq("order_id", id)
+      .returns<{ storage_path: string }[]>();
+
+    const { error } = await admin.from("orders").delete().eq("id", id);
+    if (error) return { ok: false, error: error.message };
+
+    // Best-effort: an orphaned file in a private bucket is harmless.
+    const paths = (files ?? []).map((f) => f.storage_path).filter(Boolean);
+    if (paths.length > 0) await admin.storage.from(ORDER_ATTACHMENT_BUCKET).remove(paths);
     return { ok: true };
   } catch (e) {
     return { ok: false, error: e instanceof Error ? e.message : "Delete failed." };
