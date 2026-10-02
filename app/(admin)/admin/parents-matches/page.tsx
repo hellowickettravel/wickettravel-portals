@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { createClient } from "@/lib/supabase/client";
-import { listMatches } from "@/lib/actions/parents-matches";
+import { deleteMatch, listMatches } from "@/lib/actions/parents-matches";
 import {
   MATCH_STATUSES,
   MATCH_STATUS_LABELS,
@@ -37,6 +37,7 @@ import {
 } from "@/components/admin/ui";
 import { HowItWorks } from "@/components/admin/how-it-works";
 import { LoadMore } from "@/components/admin/load-more";
+import { DeleteRowButton } from "@/components/admin/delete-row";
 
 const KEY = ["admin", "parent-matches"] as const;
 const PAGE_SIZE = 8;
@@ -269,7 +270,16 @@ export default function AdminParentsMatchesPage() {
                         </Pill>
                       </Td>
                       <Td align="right" onClick={(ev) => ev.stopPropagation()}>
-                        <ViewButton href={`/admin/parents-matches/${m.id}`} />
+                        <span className="inline-flex items-center gap-2">
+                          <DeleteRowButton
+                            what="match"
+                            name={m.reference_number ?? "this match"}
+                            body={`This permanently removes the match between ${m.traveller?.profile?.full_name ?? "the traveller"} and ${m.requester?.profile?.full_name ?? "the requester"}, with its messages. Both listings stay and can be matched again. Matches with a payment pending, paid or refunded can't be deleted. This can't be undone.`}
+                            action={() => deleteMatch(m.id)}
+                            onDeleted={() => queryClient.invalidateQueries({ queryKey: KEY })}
+                          />
+                          <ViewButton href={`/admin/parents-matches/${m.id}`} />
+                        </span>
                       </Td>
                     </Tr>
                   ))}

@@ -4,6 +4,7 @@ import { getUserAndProfile } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { notify, notifyAdmins } from "@/lib/notify";
 import { isUuid } from "@/lib/db/errors";
+import { MONEY_BLOCK_MESSAGE, matchesHaveMoney } from "@/lib/parents-delete-guard";
 import {
   scoreMatch,
   type MatchStatus,
@@ -328,6 +329,34 @@ export async function setMatchStatus(input: {
     .eq("id", input.id);
 
   if (error) return { ok: false, error: error.message };
+  return { ok: true };
+}
+
+/**
+ * Permanently delete a match, with its messages and placeholder payment rows
+ * (cascade). Refused when money on it is pending, paid or refunded. The two
+ * listings are untouched and can be matched again.
+ */
+export async function deleteMatch(id: string): Promise<ActionResult> {
+  try {
+    await requireAdmin();
+  } catch {
+    return { ok: false, error: "Only an admin can delete matches." };
+  }
+  if (!isUuid(id)) return { ok: false, error: "That match no longer exists." };
+  const supabase = await createClient();
+
+  const money = await matchesHaveMoney(supabase, [id]);
+  if (!money.ok) return money;
+  if (money.blocked) return { ok: false, error: MONEY_BLOCK_MESSAGE };
+
+  const { data, error } = await supabase
+    .from("parent_ticket_matches")
+    .delete()
+    .eq("id", id)
+    .select("id");
+  if (error) return { ok: false, error: error.message };
+  if (!data?.length) return { ok: false, error: "That match no longer exists." };
   return { ok: true };
 }
 

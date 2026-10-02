@@ -5,6 +5,7 @@ import { createClient } from "@/lib/supabase/server";
 import { tooManyRecentRows } from "@/lib/security/rate-limit";
 import { isUuid } from "@/lib/db/errors";
 import { notify, notifyAdmins } from "@/lib/notify";
+import { MONEY_BLOCK_MESSAGE, matchesHaveMoney } from "@/lib/parents-delete-guard";
 import {
   ASSISTANCE_KINDS,
   LANGUAGES,
@@ -679,6 +680,42 @@ export async function setListingPublic(input: {
     .eq("id", input.id);
 
   if (error) return { ok: false, error: error.message };
+  return { ok: true };
+}
+
+/**
+ * Permanently delete a listing (admin). Matches it is part of go with it, by
+ * cascade, along with their messages and placeholder payment rows, so a
+ * listing whose match has money pending, paid or refunded is refused. A
+ * website lead that was converted into this listing is kept; it just loses
+ * the link (converted_listing_id is `on delete set null`).
+ */
+export async function adminDeleteListing(id: string): Promise<ActionResult> {
+  try {
+    await requireAdmin();
+  } catch {
+    return { ok: false, error: "Only an admin can delete listings." };
+  }
+  if (!isUuid(id)) return { ok: false, error: "That listing no longer exists." };
+  const supabase = await createClient();
+
+  const { data: matches, error: matchError } = await supabase
+    .from("parent_ticket_matches")
+    .select("id")
+    .or(`traveller_listing_id.eq.${id},requester_listing_id.eq.${id}`)
+    .returns<{ id: string }[]>();
+  if (matchError) return { ok: false, error: matchError.message };
+  const money = await matchesHaveMoney(supabase, (matches ?? []).map((m) => m.id));
+  if (!money.ok) return money;
+  if (money.blocked) return { ok: false, error: MONEY_BLOCK_MESSAGE };
+
+  const { data, error } = await supabase
+    .from("parent_ticket_listings")
+    .delete()
+    .eq("id", id)
+    .select("id");
+  if (error) return { ok: false, error: error.message };
+  if (!data?.length) return { ok: false, error: "That listing no longer exists." };
   return { ok: true };
 }
 

@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { createClient } from "@/lib/supabase/client";
-import { listAllListings } from "@/lib/actions/parents-listings";
+import { adminDeleteListing, listAllListings } from "@/lib/actions/parents-listings";
 import {
   LISTING_STATUSES,
   LISTING_STATUS_LABELS,
@@ -34,6 +34,7 @@ import {
 import { HowItWorks } from "@/components/admin/how-it-works";
 import { LoadMore } from "@/components/admin/load-more";
 import { GlobeIcon } from "@/components/admin/icons";
+import { DeleteRowButton } from "@/components/admin/delete-row";
 
 const KEY = ["admin", "parent-listings"] as const;
 const PAGE_SIZE = 8;
@@ -278,7 +279,16 @@ export default function AdminParentsListingsPage() {
                         {fmtRelative(l.updated_at)}
                       </Td>
                       <Td align="right" onClick={(ev) => ev.stopPropagation()}>
-                        <ViewButton href={`/admin/parents-listings/${l.id}`} />
+                        <span className="inline-flex items-center gap-2">
+                          <DeleteRowButton
+                            what="listing"
+                            name={l.reference_number ?? "this listing"}
+                            body={`This permanently removes the listing posted by ${l.profile?.full_name ?? "this person"}. Any match it's part of is removed too, with its messages. Listings with a payment pending, paid or refunded can't be deleted. This can't be undone.`}
+                            action={() => adminDeleteListing(l.id)}
+                            onDeleted={() => queryClient.invalidateQueries({ queryKey: KEY })}
+                          />
+                          <ViewButton href={`/admin/parents-listings/${l.id}`} />
+                        </span>
                       </Td>
                     </Tr>
                   ))}

@@ -122,6 +122,37 @@ export async function setVisaEnquiryStatus(input: {
   return { ok: true };
 }
 
+/**
+ * Permanently delete an enquiry and the documents it uploaded. The row goes
+ * first; the files are then removed best-effort (an orphaned file in a
+ * private bucket is harmless, a row pointing at missing files is not).
+ */
+export async function deleteVisaEnquiry(id: string): Promise<ActionResult> {
+  try {
+    await requireAdmin();
+  } catch {
+    return { ok: false, error: "Only an admin can delete visa queries." };
+  }
+  if (!isUuid(id)) return { ok: false, error: "That enquiry no longer exists." };
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("visa_enquiries")
+    .delete()
+    .eq("id", id)
+    .select("documents");
+  if (error) return { ok: false, error: error.message };
+  if (!data?.length) return { ok: false, error: "That enquiry no longer exists." };
+
+  const docs = (data[0] as { documents?: unknown }).documents;
+  const paths = (Array.isArray(docs) ? docs : [])
+    .map((d) => (d as { path?: unknown })?.path)
+    .filter((p): p is string => typeof p === "string" && p.length > 0);
+  if (paths.length > 0) {
+    await supabase.storage.from(VISA_DOCUMENTS_BUCKET).remove(paths);
+  }
+  return { ok: true };
+}
+
 /** Append a timestamped internal note. Returns the saved note. */
 export async function addVisaEnquiryNote(input: {
   id: string;

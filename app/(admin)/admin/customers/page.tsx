@@ -27,10 +27,12 @@ import {
 import { LoadMore } from "@/components/admin/load-more";
 import { PlusIcon, UserPlusIcon } from "@/components/admin/icons";
 import { PersonDialog } from "@/components/admin/person-dialog";
+import { DeleteRowButton } from "@/components/admin/delete-row";
 import {
   listCustomersWithStats,
   createCustomer,
   listEmployees,
+  deleteCustomer,
 } from "@/lib/actions/admin";
 import { cn } from "@/lib/utils";
 
@@ -263,7 +265,16 @@ export default function AdminCustomersPage() {
                           </Pill>
                         </Td>
                         <Td align="right" onClick={(e) => e.stopPropagation()}>
-                          <ViewButton href={`/admin/customers/${c.id}`} />
+                          <span className="inline-flex items-center gap-2">
+                            <DeleteRowButton
+                              what="customer"
+                              name={name}
+                              body={`This permanently removes ${name}, their portal login and their conversations. Their orders are kept for revenue history but un-linked from the customer. This can't be undone.`}
+                              action={() => deleteCustomer(c.id)}
+                              onDeleted={() => queryClient.invalidateQueries({ queryKey: CUSTOMERS_KEY })}
+                            />
+                            <ViewButton href={`/admin/customers/${c.id}`} />
+                          </span>
                         </Td>
                       </Tr>
                     );

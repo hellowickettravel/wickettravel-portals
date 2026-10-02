@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { createClient } from "@/lib/supabase/client";
-import { listParentTickets } from "@/lib/actions/parents-tickets";
+import { deleteParentTicket, listParentTickets } from "@/lib/actions/parents-tickets";
 import {
   PARENT_TICKET_STATUSES,
   PARENT_TICKET_STATUS_LABELS,
@@ -30,6 +30,7 @@ import {
   ViewButton,
 } from "@/components/admin/ui";
 import { LoadMore } from "@/components/admin/load-more";
+import { DeleteRowButton } from "@/components/admin/delete-row";
 
 const TICKETS_KEY = ["admin", "parent-tickets", "list"] as const;
 const PAGE_SIZE = 5;
@@ -221,7 +222,16 @@ export default function AdminParentsTicketsPage() {
                         <Pill>{PARENT_TICKET_STATUS_LABELS[t.status]}</Pill>
                       </Td>
                       <Td align="right" onClick={(ev) => ev.stopPropagation()}>
-                        <ViewButton href={`/admin/parents-tickets/${t.id}`} />
+                        <span className="inline-flex items-center gap-2">
+                          <DeleteRowButton
+                            what="ticket"
+                            name={t.reference_number}
+                            body={`This permanently removes ${t.full_name}'s request and its internal notes. If it's on the website board, it comes off too. This can't be undone.`}
+                            action={() => deleteParentTicket(t.id)}
+                            onDeleted={() => queryClient.invalidateQueries({ queryKey: TICKETS_KEY })}
+                          />
+                          <ViewButton href={`/admin/parents-tickets/${t.id}`} />
+                        </span>
                       </Td>
                     </Tr>
                   ))}
