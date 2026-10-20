@@ -10,7 +10,7 @@ import {
   VISA_STATUS_LABELS,
   type VisaEnquiryStatus,
 } from "@/lib/visa";
-import { fmtStamp } from "@/lib/format";
+import { fmtDate } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import {
   Btn,
@@ -227,7 +227,7 @@ export default function AdminVisaQueriesPage() {
                   <Th>Reference</Th>
                   <Th>Name</Th>
                   <Th>Visa type</Th>
-                  <Th>Received</Th>
+                  <Th>Created on</Th>
                   <Th>Status</Th>
                   <Th align="right" />
                 </Thead>
@@ -246,7 +246,7 @@ export default function AdminVisaQueriesPage() {
                       </Td>
                       <Td>{e.visa_type}</Td>
                       <Td className="text-ink-600 text-[13px]">
-                        {fmtStamp(e.created_at)}
+                        {fmtDate(e.created_at)}
                       </Td>
                       <Td>
                         <Pill>{VISA_STATUS_LABELS[e.status]}</Pill>

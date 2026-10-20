@@ -176,13 +176,14 @@ export default function AdminParentsTicketsPage() {
         ) : (
           <>
             <TableScroll>
-              <Table min={940}>
+              <Table min={1050}>
                 <Thead>
                   <Th>Reference</Th>
                   <Th>Requester</Th>
                   <Th>Type</Th>
                   <Th>Route</Th>
                   <Th>Preferred date</Th>
+                  <Th>Created on</Th>
                   <Th>Status</Th>
                   <Th align="right" />
                 </Thead>
@@ -217,6 +218,9 @@ export default function AdminParentsTicketsPage() {
                       </Td>
                       <Td className="text-ink-600 text-[13px]">
                         {t.travel_date ? fmtDate(t.travel_date) : "No date"}
+                      </Td>
+                      <Td className="text-ink-600 text-[12.5px] whitespace-nowrap">
+                        {fmtDate(t.created_at)}
                       </Td>
                       <Td>
                         <Pill>{PARENT_TICKET_STATUS_LABELS[t.status]}</Pill>

@@ -4,7 +4,7 @@ Things that are true of this project, aren't obvious from reading the code,
 and cost real time to rediscover. The same file lives at the root of both
 repos (Website and Portals), because most of it is about how the two connect.
 
-Last updated: 2026-09-25.
+Last updated: 2026-10-20.
 
 ---
 
@@ -140,6 +140,33 @@ fallback so the app runs whether or not a migration has been applied.
   same saved message, footer reworded to "you have travelled with".
 - Built without touching existing screens (client's instruction, 2026-09-25):
   `deleteCustomer` and `resetEverything` do NOT clear travellers yet.
+
+## Booking wizard (Portal `/customer/book`, client round 2026-10-20)
+
+- **Website → portal params.** `trip=oneway|return` is the Return / One way
+  toggle; `tripType=direct` is the *stops* filter (direct flights only) and
+  lands as a note, never as one-way. Website widget: `components/FlightSearch.tsx`
+  in `hellowickettravel/wickettravel-website`. Until it sends `trip`, a search
+  with no return date opens as One way.
+- Adults default to **1** (website only sends `adults` when changed).
+- Contact number is **required** for customers.
+- Signed-out send: the guest types their email on step 3.
+  `bookingEmailHasAccount` (`lib/actions/auth-guard.ts`) checks `profiles.email`.
+  Existing account → sign-in popup (`components/customer/booking-sign-in.tsx`)
+  and the order is created straight after. New → `/signup?email=…` with the
+  draft saved; coming back with `?resume=1` while signed in **sends it
+  automatically**. The check reveals whether an email is registered — the
+  client asked for that; it is throttled as a failed login per IP.
+- **New-order email**: every customer-placed order emails
+  `ORDER_ALERT_EMAIL` (default `shobha@wickettravel.com`) via `lib/order-alert.ts`,
+  sent with `after()` so it never slows or fails the booking. Needs the SMTP
+  settings below. Staff-created orders don't send it.
+
+## Admin lists
+
+- Every record list shows **Created on** and opens newest-created first
+  (`newestFirst` in `lib/format.ts`). Orders and Travel details keep their
+  other sorts as options, but default to Created date.
 
 ## Birthday emails (Portal)
 

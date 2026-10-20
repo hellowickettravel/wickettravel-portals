@@ -16,6 +16,8 @@ import { normalizeOrderInput, type OrderFormInput } from "@/lib/orders/form";
 import { LIMITS, sanitizeText } from "@/lib/security/limits";
 import { tooManyRecentRows } from "@/lib/security/rate-limit";
 import { isPlausibleDob } from "@/lib/birthdays";
+import { after } from "next/server";
+import { sendNewOrderAlert } from "@/lib/order-alert";
 
 /**
  * Customer-portal server actions. The signed-in user is linked to a customers
@@ -40,6 +42,7 @@ const CUSTOMER_COLUMNS = "id, profile_id, wa_phone, name, created_at";
  */
 async function ensureCustomer(): Promise<{
   userId: string;
+  email: string | null;
   customer: Customer;
 }> {
   const { user, profile } = await getUserAndProfile();
@@ -50,7 +53,7 @@ async function ensureCustomer(): Promise<{
   if (profile?.role !== "customer") throw new Error("Unauthorized");
 
   const existing = await getCustomerByProfileId(user.id);
-  if (existing) return { userId: user.id, customer: existing };
+  if (existing) return { userId: user.id, email: user.email ?? null, customer: existing };
 
   const admin = createAdminClient();
   const { data, error } = await admin
@@ -61,7 +64,7 @@ async function ensureCustomer(): Promise<{
   if (error || !data) {
     throw new Error(error?.message ?? "Could not set up your customer record.");
   }
-  return { userId: user.id, customer: data };
+  return { userId: user.id, email: user.email ?? null, customer: data };
 }
 
 /**
@@ -139,9 +142,13 @@ export async function createCustomerOrder(
 ): Promise<ActionResult<{ orderId: string; orderNumber: string }>> {
   let customerId: string;
   let conversationId: string;
+  let customerName: string | null;
+  let customerEmail: string | null;
   try {
     const ctx = await ensureCustomer();
     customerId = ctx.customer.id;
+    customerName = ctx.customer.name;
+    customerEmail = ctx.email;
     conversationId = await ensureConversation(customerId);
   } catch (e) {
     return { ok: false, error: e instanceof Error ? e.message : "Unauthorized" };
@@ -180,6 +187,28 @@ export async function createCustomerOrder(
     .single<{ id: string; order_number: string }>();
 
   if (error) return { ok: false, error: error.message };
+
+  // Email the office once the response is on its way — the customer isn't
+  // kept waiting on SMTP, and a mail failure can't undo their booking.
+  const f = normalized.fields;
+  after(() =>
+    sendNewOrderAlert({
+      orderId: data.id,
+      orderNumber: data.order_number,
+      customerName,
+      customerEmail,
+      routeFrom: f.route_from,
+      routeTo: f.route_to,
+      travelDate: f.travel_date,
+      returnDate: f.return_date,
+      cabinClass: f.cabin_class,
+      adults: f.adults,
+      children: f.children,
+      passengerNames: f.passenger_names,
+      note: f.customer_note,
+    })
+  );
+
   return {
     ok: true,
     data: { orderId: data.id, orderNumber: data.order_number },

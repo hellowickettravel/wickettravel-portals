@@ -6,6 +6,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import { fmtDate, newestFirst } from "@/lib/format";
 import {
   Avatar,
   Btn,
@@ -214,7 +215,8 @@ export default function EmployeesPage() {
     });
   }
 
-  const all = useMemo(() => employees ?? [], [employees]);
+  // Newest first, like every admin list.
+  const all = useMemo(() => newestFirst(employees ?? []), [employees]);
   const [limit, setLimit] = useState(PAGE_SIZE);
   const [search, setSearch] = useState(topSearch);
 
@@ -365,12 +367,13 @@ export default function EmployeesPage() {
         ) : (
           <>
             <TableScroll>
-              <DTable min={900}>
+              <DTable min={1010}>
                 <Thead>
                   <Th>Employee</Th>
                   <Th>Role</Th>
                   <Th>Email</Th>
                   <Th>Open orders</Th>
+                  <Th>Created on</Th>
                   <Th>Status</Th>
                   <Th align="right" />
                 </Thead>
@@ -411,6 +414,9 @@ export default function EmployeesPage() {
                         </Td>
                         <Td className="font-semibold tabular-nums">
                           {openOrdersBy.get(emp.id) ?? 0}
+                        </Td>
+                        <Td className="text-ink-600 text-[12.5px] whitespace-nowrap">
+                          {fmtDate(emp.created_at)}
                         </Td>
                         <Td>
                           <Pill tone={emp.is_active ? "ok" : "ink"}>

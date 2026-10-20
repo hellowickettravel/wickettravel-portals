@@ -254,7 +254,7 @@ export default function AdminParentsPaymentsPage() {
         ) : (
           <>
             <TableScroll>
-              <Table min={1000}>
+              <Table min={1110}>
                 <Thead>
                   <Th>Reference</Th>
                   <Th>Match</Th>
@@ -262,6 +262,7 @@ export default function AdminParentsPaymentsPage() {
                   <Th align="right">Commission</Th>
                   <Th align="right">Payout</Th>
                   <Th>Method</Th>
+                  <Th>Created on</Th>
                   <Th>Status</Th>
                   <Th>Received</Th>
                   <Th align="right" />
@@ -305,6 +306,9 @@ export default function AdminParentsPaymentsPage() {
                         {p.payment_method
                           ? PAYMENT_METHOD_LABELS[p.payment_method]
                           : "—"}
+                      </Td>
+                      <Td className="text-ink-600 text-[12.5px] whitespace-nowrap">
+                        {fmtDate(p.created_at)}
                       </Td>
                       <Td>
                         <Pill tone={STATUS_TONE[p.payment_status]}>

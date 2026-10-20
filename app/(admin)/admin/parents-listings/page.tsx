@@ -11,7 +11,7 @@ import {
   type ListingStatus,
 } from "@/lib/parents-marketplace";
 import { LISTING_TONE } from "@/components/customer/listings-view";
-import { fmtDate, fmtRelative } from "@/lib/format";
+import { fmtDate, fmtRelative, newestFirst } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import {
   Avatar,
@@ -83,7 +83,8 @@ export default function AdminParentsListingsPage() {
     };
   }, [supabase, queryClient]);
 
-  const all = useMemo(() => data ?? [], [data]);
+  // Newest first, like every admin list.
+  const all = useMemo(() => newestFirst(data ?? []), [data]);
 
   const searched = useMemo(
     () =>
@@ -203,13 +204,14 @@ export default function AdminParentsListingsPage() {
         ) : (
           <>
             <TableScroll>
-              <Table min={1020}>
+              <Table min={1130}>
                 <Thead>
                   <Th>Reference</Th>
                   <Th>Posted by</Th>
                   <Th>Side</Th>
                   <Th>Route</Th>
                   <Th>Travel date</Th>
+                  <Th>Created on</Th>
                   <Th>Status</Th>
                   <Th>Updated</Th>
                   <Th align="right" />
@@ -262,6 +264,9 @@ export default function AdminParentsListingsPage() {
                       </Td>
                       <Td className="text-ink-600 text-[13px]">
                         {l.travel_date ? fmtDate(l.travel_date) : "No date"}
+                      </Td>
+                      <Td className="text-ink-600 text-[12.5px] whitespace-nowrap">
+                        {fmtDate(l.created_at)}
                       </Td>
                       <Td>
                         <span className="flex items-center gap-2">

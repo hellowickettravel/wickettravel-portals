@@ -176,3 +176,12 @@ export function titleCase(value: string): string {
     .map((w) => (w ? w[0].toUpperCase() + w.slice(1) : w))
     .join(" ");
 }
+
+/**
+ * Newest-created first — the order every admin list opens in. `created_at` is
+ * ISO 8601 from Postgres, where lexical order is chronological order. Sorts a
+ * copy so a query cache is never mutated.
+ */
+export function newestFirst<T extends { created_at?: string | null }>(rows: readonly T[]): T[] {
+  return [...rows].sort((a, b) => (b.created_at ?? "").localeCompare(a.created_at ?? ""));
+}

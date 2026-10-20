@@ -25,6 +25,7 @@ import {
   focusRing,
 } from "@/components/admin/ui";
 import { LoadMore } from "@/components/admin/load-more";
+import { fmtDate } from "@/lib/format";
 import { PlusIcon, UserPlusIcon } from "@/components/admin/icons";
 import { PersonDialog } from "@/components/admin/person-dialog";
 import { DeleteRowButton } from "@/components/admin/delete-row";
@@ -222,12 +223,13 @@ export default function AdminCustomersPage() {
         ) : (
           <>
             <TableScroll>
-              <DTable min={900}>
+              <DTable min={1010}>
                 <Thead>
                   <Th>Customer</Th>
                   <Th>Email</Th>
                   <Th>Phone</Th>
                   <Th>Orders</Th>
+                  <Th>Created on</Th>
                   <Th>Status</Th>
                   <Th align="right" />
                 </Thead>
@@ -258,6 +260,9 @@ export default function AdminCustomersPage() {
                         </Td>
                         <Td className="font-semibold tabular-nums">
                           {c.orderCount}
+                        </Td>
+                        <Td className="text-ink-600 text-[12.5px] whitespace-nowrap">
+                          {fmtDate(c.created_at)}
                         </Td>
                         <Td>
                           <Pill tone={c.profile_id ? "ok" : "ink"}>

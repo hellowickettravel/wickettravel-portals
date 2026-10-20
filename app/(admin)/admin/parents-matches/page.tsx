@@ -208,7 +208,7 @@ export default function AdminParentsMatchesPage() {
         ) : (
           <>
             <TableScroll>
-              <Table min={1060}>
+              <Table min={1170}>
                 <Thead>
                   <Th>Match</Th>
                   <Th>Score</Th>
@@ -216,6 +216,7 @@ export default function AdminParentsMatchesPage() {
                   <Th>Requester</Th>
                   <Th>Route</Th>
                   <Th>Date</Th>
+                  <Th>Created on</Th>
                   <Th>Status</Th>
                   <Th align="right" />
                 </Thead>
@@ -263,6 +264,9 @@ export default function AdminParentsMatchesPage() {
                         {m.traveller?.travel_date
                           ? fmtDate(m.traveller.travel_date)
                           : "—"}
+                      </Td>
+                      <Td className="text-ink-600 text-[12.5px] whitespace-nowrap">
+                        {fmtDate(m.created_at)}
                       </Td>
                       <Td>
                         <Pill tone={MATCH_TONE[m.match_status]}>
