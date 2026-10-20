@@ -11,7 +11,7 @@ import {
   ID_DOCUMENT_TYPE_LABELS,
   type VerificationStatus,
 } from "@/lib/parents-marketplace";
-import { fmtRelative } from "@/lib/format";
+import { fmtRelative, fmtDate, newestFirst } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import {
   Avatar,
@@ -91,7 +91,8 @@ export default function AdminParentsVerificationPage() {
     };
   }, [supabase, queryClient]);
 
-  const all = useMemo(() => data ?? [], [data]);
+  // Newest first, like every admin list.
+  const all = useMemo(() => newestFirst(data ?? []), [data]);
 
   const searched = useMemo(
     () =>
@@ -211,12 +212,13 @@ export default function AdminParentsVerificationPage() {
         ) : (
           <>
             <TableScroll>
-              <Table min={900}>
+              <Table min={1010}>
                 <Thead>
                   <Th>Person</Th>
                   <Th>Name on document</Th>
                   <Th>Document</Th>
                   <Th>Email</Th>
+                  <Th>Created on</Th>
                   <Th>Status</Th>
                   <Th>Last activity</Th>
                   <Th align="right" />
@@ -262,6 +264,9 @@ export default function AdminParentsVerificationPage() {
                         ) : (
                           <Pill tone="warn">Unconfirmed</Pill>
                         )}
+                      </Td>
+                      <Td className="text-ink-600 text-[12.5px] whitespace-nowrap">
+                        {fmtDate(v.created_at)}
                       </Td>
                       <Td>
                         <Pill tone={TONE[v.verification_status]}>

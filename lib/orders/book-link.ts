@@ -24,13 +24,23 @@ import { AIRLINES } from "@/lib/orders/form";
 
 /**
  * Trip fields the public homepage search widget can hand to /customer/book via
- * query params (?from=&to=&tripType=&depart=&return=&cabin=&adults=&children=
- * &airline=&baggage=). Everything is optional and strictly validated — a malformed param
- * is simply dropped, never trusted.
+ * query params (?from=&to=&trip=&tripType=&depart=&return=&cabin=&adults=
+ * &children=&airline=&baggage=). Everything is optional and strictly validated —
+ * a malformed param is simply dropped, never trusted.
  */
 export type BookPrefill = {
   from?: string;
   to?: string;
+  /**
+   * The widget's Return / One way toggle (`?trip=return|oneway`). Without it
+   * the wizard can only guess from whether a return date came along, and a
+   * "Return" search with no date yet looks exactly like a one-way one.
+   */
+  trip?: "return" | "oneway";
+  /**
+   * The widget's stops filter: "direct" means direct flights only. It is NOT
+   * the one-way/return choice — that is `trip`.
+   */
   tripType?: TripType;
   depart?: string;
   return?: string;
@@ -50,6 +60,15 @@ export type BookPrefill = {
 
 const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
 const TRIP_SET = new Set<string>(["direct", "connection"]);
+// Spellings of the Return / One way toggle the wizard accepts.
+const TRIP_KIND: Record<string, "return" | "oneway"> = {
+  return: "return",
+  round: "return",
+  roundtrip: "return",
+  oneway: "oneway",
+  "one-way": "oneway",
+  one_way: "oneway",
+};
 const CABIN_SET = new Set<string>([
   "economy",
   "premium_economy",
@@ -87,6 +106,7 @@ export function parseBookPrefill(
   sp: Record<string, string | string[] | undefined>
 ): BookPrefill {
   const tripType = str(sp.tripType, 20);
+  const trip = str(sp.trip, 20)?.toLowerCase();
   const cabinRaw = str(sp.cabin, 20)?.toLowerCase();
   const cabin = cabinRaw ? (CABIN_ALIASES[cabinRaw] ?? cabinRaw) : undefined;
   const depart = str(sp.depart, 10);
@@ -95,6 +115,7 @@ export function parseBookPrefill(
   return {
     from: str(sp.from),
     to: str(sp.to),
+    trip: trip ? TRIP_KIND[trip] : undefined,
     tripType:
       tripType && TRIP_SET.has(tripType) ? (tripType as TripType) : undefined,
     depart: depart && DATE_RE.test(depart) ? depart : undefined,

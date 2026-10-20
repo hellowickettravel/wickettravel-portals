@@ -1,10 +1,12 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useEffectEvent, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { createOrder } from "@/lib/actions/admin";
 import { recordOrderAttachments } from "@/lib/actions/orders";
+import { bookingEmailHasAccount } from "@/lib/actions/auth-guard";
+import { BookingSignIn } from "@/components/customer/booking-sign-in";
 import {
   AIRLINES,
   ANY_AIRLINE,
@@ -82,6 +84,12 @@ type Draft = {
   /** Customer audience only — a number the team can reach them on. */
   phone: string;
   /**
+   * Signed-out customer only — the email they'll book under. Checked at send:
+   * an address that already has an account gets a sign-in popup, a new one
+   * goes on to sign-up with it filled in.
+   */
+  email: string;
+  /**
    * Staff audience only — the travel details of everyone on the booking.
    * Row 0 is the account holder: its name is NOT typed, it comes from the
    * customer picker, so only its email / DOB / IBE cells are ever edited.
@@ -109,6 +117,12 @@ const MAX_PEOPLE = 20;
  * stricter rejects addresses that genuinely exist.
  */
 const EMAIL_SHAPE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+/** A reachable number: digits with the usual separators, 7 to 15 digits. */
+function phoneLooksRight(v: string): boolean {
+  const digits = v.replace(/\D/g, "").length;
+  return /^\+?[\d\s\-().]+$/.test(v) && digits >= 7 && digits <= 15;
+}
 
 const CHILD_AGES = [
   "Select age",
@@ -166,7 +180,7 @@ function blank(): Draft {
     trip: "Round trip",
     cabin: "Economy",
     airline: ANY_AIRLINE,
-    adults: "2",
+    adults: "1",
     adultAges: "",
     children: "0",
     childAges: [],
@@ -180,6 +194,7 @@ function blank(): Draft {
     assist: ASSIST[0],
     extra: "",
     phone: "",
+    email: "",
     people: [emptyPerson()],
   };
 }
@@ -232,7 +247,15 @@ function seed(prefill: BookPrefill | undefined, phone: string | null): Draft {
   if (prefill.to) d.to = prefill.to;
   if (prefill.depart) d.depart = prefill.depart;
   if (prefill.return) d.ret = prefill.return;
-  if (prefill.tripType) d.trip = prefill.return ? "Round trip" : "One way";
+  // The widget's Return / One way toggle wins. Older widget builds don't send
+  // it, so a search that arrives without a return date is read as one way —
+  // the widget only ever drops the return date for a one-way search or a
+  // return with no date picked yet, and the first is what customers mean.
+  // A bare visit to the page (no search at all) keeps the default.
+  if (prefill.trip) d.trip = prefill.trip === "oneway" ? "One way" : "Round trip";
+  else if (prefill.return) d.trip = "Round trip";
+  else if (prefill.from || prefill.to || prefill.depart) d.trip = "One way";
+  if (d.trip === "One way") d.ret = "";
   if (prefill.cabin) {
     d.cabin =
       CABIN_CLASSES.find((c) => c.value === prefill.cabin)?.label ?? d.cabin;
@@ -244,7 +267,14 @@ function seed(prefill: BookPrefill | undefined, phone: string | null): Draft {
   // whether the FARE includes a checked bag, while that field counts bags on
   // top of an allowance. Putting it here states what was actually requested
   // and leaves the select for the customer to answer themselves.
-  if (prefill.baggage) d.extra = "Checked baggage must be included in the fare.";
+  // The widget's stops filter has no field of its own here either, so it
+  // travels the same way: as a line the ticketing team will read.
+  d.extra = [
+    prefill.tripType === "direct" ? "Direct flights only." : null,
+    prefill.baggage ? "Checked baggage must be included in the fare." : null,
+  ]
+    .filter(Boolean)
+    .join("\n");
   return d;
 }
 
@@ -460,6 +490,17 @@ export function AdminOrderForm({
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [busy, setBusy] = useState(false);
   const [created, setCreated] = useState<{ id: string; ref: string } | null>(null);
+  /* A guest whose email already has an account signs in through a popup on
+     top of the wizard. Once they have, the page still carries the guest
+     props it was rendered with, so this is the source of truth for "may
+     this browser place the order now". */
+  const [signedIn, setSignedIn] = useState(false);
+  const [signInOpen, setSignInOpen] = useState(false);
+  const guest = isGuest && !signedIn;
+  /* Set when a guest comes back signed in (after sign-up or sign-in) with
+     their saved draft: the booking is sent for them, not left waiting on
+     a second click they may never make. */
+  const [autoSend, setAutoSend] = useState(false);
 
   // A guest fills the whole wizard, then makes an account. Keep the draft alive
   // across that round trip so they land back on the review step, not an empty
@@ -474,7 +515,8 @@ export function AdminOrderForm({
     setDraft({ ...saved, phone: saved.phone || (contactPhone ?? "") });
     setStep(3);
     setMaxStep(3);
-  }, [forCustomer, contactPhone]);
+    if (!isGuest) setAutoSend(true);
+  }, [forCustomer, contactPhone, isGuest]);
 
   const set = <K extends keyof Draft>(key: K) => (v: Draft[K]) =>
     setDraft((d) => ({ ...d, [key]: v }));
@@ -761,24 +803,31 @@ export function AdminOrderForm({
               hint: "Where the team sends your quote and your tickets.",
               cols: 2 as const,
               fields: [
-                {
-                  key: "email",
-                  label: "Email",
-                  icon: "mail" as IconName,
-                  disabled: true,
-                  hint: contactEmail
-                    ? "Your account email. Change it in Profile."
-                    : "You'll confirm this when you make your account.",
-                  value: contactEmail ?? "",
-                  onValue: () => {},
-                },
+                guest
+                  ? {
+                      key: "email",
+                      label: "Email",
+                      icon: "mail" as IconName,
+                      ph: "you@example.com",
+                      hint: "Already booked with us? Use the same email and you'll just sign in.",
+                      value: draft.email,
+                      onValue: setStr("email"),
+                    }
+                  : {
+                      key: "email",
+                      label: "Email",
+                      icon: "mail" as IconName,
+                      disabled: true,
+                      hint: "Your account email. Change it in Profile.",
+                      value: contactEmail ?? "",
+                      onValue: () => {},
+                    },
                 {
                   key: "phone",
                   label: "Contact number",
                   icon: "phone" as IconName,
-                  optional: true,
                   ph: "e.g. 07700 900123",
-                  hint: "Handy if a fare needs a quick yes or no.",
+                  hint: "So the team can call if a fare needs a quick yes or no.",
                   value: draft.phone,
                   onValue: setStr("phone"),
                 },
@@ -842,7 +891,7 @@ export function AdminOrderForm({
         ],
       },
     ];
-  }, [step, draft, children, oneWay, forCustomer, contactEmail]);
+  }, [step, draft, children, oneWay, forCustomer, contactEmail, guest]);
 
   /* ---------------------------------------------------------- validation */
 
@@ -891,6 +940,16 @@ export function AdminOrderForm({
         if (!p.given.trim()) e[`pax${i}given`] = "Given name is required.";
         if (!p.surname.trim()) e[`pax${i}surname`] = "Surname is required.";
       });
+      if (forCustomer) {
+        const phone = draft.phone.trim();
+        if (!phone) e.phone = "A contact number is required.";
+        else if (!phoneLooksRight(phone)) e.phone = "That number doesn't look right.";
+        if (guest) {
+          const email = draft.email.trim();
+          if (!email) e.email = "Your email is required.";
+          else if (!EMAIL_SHAPE.test(email)) e.email = "That email address doesn't look right.";
+        }
+      }
     }
     setErrors(e);
     return Object.keys(e).length === 0;
@@ -916,17 +975,31 @@ export function AdminOrderForm({
 
   /* -------------------------------------------------------------- submit */
 
-  async function submit() {
+  async function submit(opts?: { signedIn?: boolean }) {
     if (!validate(3) || !validate(1) || !validate(2)) return;
 
     // A signed-out visitor may fill the whole wizard; placing the order is what
-    // needs an account. Flush the draft first (the auto-save is debounced), then
-    // route through sign-up — most guests here are new customers, and existing
-    // ones are one click from sign-in.
-    if (isGuest) {
+    // needs an account. An email that already has one gets a sign-in popup and
+    // the order goes through the moment they're in. A new email is saved with
+    // the draft and taken to sign-up, which brings them back here to send it.
+    if (guest && !opts?.signedIn) {
+      const email = draft.email.trim();
       writeDraft(draft);
+      setBusy(true);
+      // A slow or failed check must never strand the button on "Sending…":
+      // after a few seconds, carry on to sign-up, which handles an existing
+      // address itself.
+      const check = await Promise.race([
+        bookingEmailHasAccount(email).catch(() => ({ ok: false as const })),
+        new Promise<{ ok: false }>((r) => setTimeout(() => r({ ok: false }), 8000)),
+      ]);
+      setBusy(false);
+      if (check.ok && check.exists) {
+        setSignInOpen(true);
+        return;
+      }
       router.push(
-        `/signup?redirect=${encodeURIComponent(`${BOOK_PATH}?resume=1`)}`
+        `/signup?email=${encodeURIComponent(email)}&redirect=${encodeURIComponent(`${BOOK_PATH}?resume=1`)}`
       );
       return;
     }
@@ -1058,6 +1131,17 @@ export function AdminOrderForm({
     toTop();
   }
 
+  // A guest back from sign-up (or sign-in) with a saved draft: send it now.
+  const sendResumed = useEffectEvent(() => {
+    void submit();
+  });
+  useEffect(() => {
+    if (!autoSend) return;
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- one-shot: the flag only ever fires the send once
+    setAutoSend(false);
+    sendResumed();
+  }, [autoSend]);
+
   /* --------------------------------------------------------------- views */
 
   const stepDefs: { n: Step; title: string; sub: string }[] = [
@@ -1135,7 +1219,7 @@ export function AdminOrderForm({
   return (
     <div className="flex max-w-[1080px] flex-col gap-5">
       <div ref={topRef} />
-      {isGuest ? null : (
+      {guest ? null : (
         <BackLink href={`${basePath}/orders`}>
           {forCustomer ? "All my orders" : "All orders"}
         </BackLink>
@@ -1781,8 +1865,12 @@ export function AdminOrderForm({
                         tint: "bg-neutral-bg text-ink-700",
                         step: 3 as Step,
                         lines: [
-                          [contactEmail || "Confirmed at sign-up", false],
-                          [draft.phone.trim() || "No phone given", true],
+                          [
+                            (guest ? draft.email.trim() : contactEmail) ||
+                              "Email not given yet",
+                            false,
+                          ],
+                          [draft.phone.trim() || "Contact number needed", true],
                         ],
                       }
                     : {
@@ -1959,8 +2047,8 @@ export function AdminOrderForm({
               <span className="text-ink-500 text-[11.5px] font-normal text-pretty">
                 {last
                   ? forCustomer
-                    ? isGuest
-                      ? "You'll make an account on the next screen — your answers are kept."
+                    ? guest
+                      ? "Already have an account? You'll sign in here. New? You'll make one next — your answers are kept."
                       : "Sending this opens a thread with the team so you can follow it."
                     : "Creating the order adds it to the pipeline and opens a customer thread."
                   : "Nothing is saved until you send it — you can go back at any point."}
@@ -1972,7 +2060,7 @@ export function AdminOrderForm({
                 wider than the standard 20px control padding. */}
             <Btn
               className="px-[22px]"
-              disabled={step === 1 && isGuest}
+              disabled={step === 1 && guest}
               onClick={() =>
                 step === 1
                   ? router.push(`${basePath}/orders`)
@@ -1984,7 +2072,7 @@ export function AdminOrderForm({
             <Btn
               variant="ember"
               disabled={busy}
-              onClick={() => (last ? submit() : goNext())}
+              onClick={() => (last ? void submit() : goNext())}
             >
               {last
                 ? busy
@@ -1992,8 +2080,8 @@ export function AdminOrderForm({
                     ? "Sending…"
                     : "Creating order…"
                   : forCustomer
-                    ? isGuest
-                      ? "Create account & send"
+                    ? guest
+                      ? "Continue & send"
                       : "Send booking request"
                     : "Create order"
                 : step === 1
@@ -2008,6 +2096,19 @@ export function AdminOrderForm({
           </div>
         </div>
       </div>
+
+      {forCustomer && isGuest ? (
+        <BookingSignIn
+          open={signInOpen}
+          email={draft.email.trim()}
+          onClose={() => setSignInOpen(false)}
+          onSignedIn={() => {
+            setSignInOpen(false);
+            setSignedIn(true);
+            void submit({ signedIn: true });
+          }}
+        />
+      ) : null}
     </div>
   );
 }

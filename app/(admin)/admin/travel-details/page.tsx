@@ -69,7 +69,7 @@ const KEY = ["admin", "travel-details"] as const;
 const PAGE_SIZE = 15;
 
 type Tab = "all" | TravelWindow | "birthdays" | "missing";
-type Sort = "recent" | "name" | "birthday";
+type Sort = "created" | "recent" | "name" | "birthday";
 
 const TABS: { value: Tab; label: string }[] = [
   { value: "all", label: "All" },
@@ -89,6 +89,8 @@ const dayLabel = (iso: string) =>
   );
 
 const SORTS: { value: Sort; label: string }[] = [
+  // Created date leads, as on every admin list: newest-added first.
+  { value: "created", label: "Created date" },
   { value: "recent", label: "Recent trip" },
   { value: "name", label: "Name" },
   { value: "birthday", label: "Birthday" },
@@ -115,7 +117,7 @@ export default function TravelDetailsPage() {
   }, [topSearch]);
 
   const [tab, setTab] = useState<Tab>("all");
-  const [sort, setSort] = useState<Sort>("recent");
+  const [sort, setSort] = useState<Sort>("created");
   const [limit, setLimit] = useState(PAGE_SIZE);
   const [adding, setAdding] = useState(false);
 
@@ -167,6 +169,9 @@ export default function TravelDetailsPage() {
     const list = searched.filter((t) => inTab(t, tab));
     const byName = (a: TravellerListItem, b: TravellerListItem) => a.fullName.localeCompare(b.fullName);
     if (sort === "name") return list.sort(byName);
+    if (sort === "created") {
+      return list.sort((a, b) => b.createdAt.localeCompare(a.createdAt) || byName(a, b));
+    }
     if (sort === "birthday") {
       return list.sort(
         (a, b) => (a.birthday?.daysUntil ?? 999) - (b.birthday?.daysUntil ?? 999) || byName(a, b)
@@ -187,7 +192,7 @@ export default function TravelDetailsPage() {
   function pickTab(next: Tab) {
     setTab(next);
     if (next === "birthdays") setSort("birthday");
-    else if (isTravelTab(next) && sort === "birthday") setSort("recent");
+    else if (isTravelTab(next) && sort === "birthday") setSort("created");
   }
 
   useEffect(() => {
@@ -484,13 +489,14 @@ export default function TravelDetailsPage() {
         ) : (
           <>
             <TableScroll>
-              <Table min={1040}>
+              <Table min={1150}>
                 <Thead>
                   <Th>Traveller</Th>
                   <Th>Contact</Th>
                   <Th>Birthday</Th>
                   <Th>{isTravelTab(tab) ? "Next trip" : "Last trip"}</Th>
                   <Th align="right">Trips</Th>
+                  <Th>Created on</Th>
                   <Th align="right" />
                 </Thead>
                 <tbody>
@@ -618,6 +624,9 @@ function TravellerRow({
       </Td>
       <Td align="right" className="font-semibold tabular-nums">
         {t.tripCount}
+      </Td>
+      <Td className="text-ink-600 text-[12.5px] whitespace-nowrap">
+        {fmtDate(t.createdAt)}
       </Td>
       <Td align="right" onClick={(e) => e.stopPropagation()}>
         <span className="inline-flex items-center gap-2">

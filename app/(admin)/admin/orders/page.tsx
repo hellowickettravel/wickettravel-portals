@@ -7,7 +7,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { createClient } from "@/lib/supabase/client";
 import { deleteOrder, listOrders } from "@/lib/actions/admin";
 import type { OrderStatus } from "@/lib/db/types";
-import { gbp, fmtDate, fmtStamp, routeLabel, statusLabel } from "@/lib/format";
+import { gbp, fmtDate, routeLabel, statusLabel } from "@/lib/format";
 import { downloadCsv } from "@/lib/csv";
 import { cn } from "@/lib/utils";
 import {
@@ -64,18 +64,20 @@ type Tab = (typeof TABS)[number]["value"];
  */
 type SortKey = "departing" | "created";
 
+// Created date leads: the client reads the pipeline newest-placed first, so
+// that is what the screen opens on.
 const SORTS: { label: string; value: SortKey; intro: string }[] = [
-  {
-    label: "Departing next",
-    value: "departing",
-    intro:
-      "Sorted by the flight that departs next. Orders without a travel date fall to the bottom.",
-  },
   {
     label: "Created date",
     value: "created",
     intro:
       "Sorted by when the order was placed — the most recent first, then the one before it, and so on.",
+  },
+  {
+    label: "Departing next",
+    value: "departing",
+    intro:
+      "Sorted by the flight that departs next. Orders without a travel date fall to the bottom.",
   },
 ];
 
@@ -85,7 +87,7 @@ export default function OrdersPage() {
   const queryClient = useQueryClient();
   const supabase = useMemo(() => createClient(), []);
   const [tab, setTab] = useState<Tab>("all");
-  const [sort, setSort] = useState<SortKey>("departing");
+  const [sort, setSort] = useState<SortKey>("created");
 
   // The top bar's search hands this screen its term as ?q= (see SEARCH in
   // admin-shell). It seeds the in-card box and re-syncs whenever the top bar
@@ -218,10 +220,6 @@ export default function OrdersPage() {
   const hasMore = filtered.length > limit;
 
   const activeSort = SORTS.find((s) => s.value === sort) ?? SORTS[0];
-  // The created stamp only earns a column when it is the thing being sorted
-  // on — otherwise the pipeline is ordered by a date you cannot see, and you
-  // have no way to check the order is what you asked for.
-  const showCreated = sort === "created";
 
   function exportCsv() {
     downloadCsv(
@@ -233,6 +231,7 @@ export default function OrdersPage() {
         "To",
         "Travel date",
         "Passengers",
+        "Created on",
         "Status",
         "Selling price",
         "Commission",
@@ -246,6 +245,7 @@ export default function OrdersPage() {
         o.route_to ?? "",
         fmtDate(o.travel_date),
         o.passengers ?? "",
+        fmtDate(o.created_at),
         o.status,
         o.selling_price ?? "",
         o.commission ?? "",
@@ -411,14 +411,14 @@ export default function OrdersPage() {
           />
         ) : (
           <TableScroll>
-            <Table min={showCreated ? 1120 : 1000}>
+            <Table min={1120}>
               <Thead>
                 <Th>Order</Th>
                 <Th>Customer</Th>
                 <Th>Route</Th>
                 <Th>Travel date</Th>
-                {showCreated ? <Th>Created</Th> : null}
                 <Th align="right">Pax</Th>
+                <Th>Created on</Th>
                 <Th align="right">Selling price</Th>
                 <Th>Status</Th>
                 <Th>Assigned</Th>
@@ -456,15 +456,11 @@ export default function OrdersPage() {
                     >
                       {o.travel_date ? fmtDate(o.travel_date) : "No travel date"}
                     </Td>
-                    {showCreated ? (
-                      /* fmtStamp, not fmtDate: today's orders want a clock so
-                         a run placed this morning is still readable in order. */
-                      <Td className="text-ink-600 text-[12.5px] whitespace-nowrap">
-                        {fmtStamp(o.created_at)}
-                      </Td>
-                    ) : null}
                     <Td align="right" className="text-[12.5px] tabular-nums">
                       {o.passengers ?? "—"}
+                    </Td>
+                    <Td className="text-ink-600 text-[12.5px] whitespace-nowrap">
+                      {fmtDate(o.created_at)}
                     </Td>
                     <Td align="right" className="font-medium tabular-nums">
                       {o.selling_price != null ? gbp(o.selling_price) : "—"}
