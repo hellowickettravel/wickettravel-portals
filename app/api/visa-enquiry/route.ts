@@ -36,7 +36,7 @@ import { PREFERRED_CONTACT_METHODS } from "@/lib/visa";
  * Real client IP behind the homepage relay:
  *   The homepage submits through its own server-side API route, so the
  *   connecting IP here is the relay server's — useless for rate limiting
- *   (every visitor would share one bucket). Vercel also OVERWRITES incoming
+ *   (every visitor would share one bucket). The host also OVERWRITES incoming
  *   x-forwarded-for with the connecting IP, so the relay cannot pass the
  *   visitor's address through standard headers alone. Instead the relay sends:
  *     x-wicket-relay-secret: <VISA_RELAY_SECRET>   (proves it's OUR relay)

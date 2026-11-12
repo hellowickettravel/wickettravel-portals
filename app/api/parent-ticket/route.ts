@@ -29,7 +29,7 @@ import { PARENT_TICKET_TYPES, type ParentTicketType } from "@/lib/parents-ticket
  * Real client IP behind the homepage relay:
  *   The homepage submits through its own server-side API route, so the
  *   connecting IP here is the relay server's — useless for rate limiting.
- *   Vercel also OVERWRITES incoming x-forwarded-for with the connecting IP, so
+ *   The host also OVERWRITES incoming x-forwarded-for with the connecting IP, so
  *   the relay cannot pass the visitor's address through standard headers alone.
  *   Instead the relay sends (the SAME mechanism the visa intake uses):
  *     x-wicket-relay-secret: <VISA_RELAY_SECRET>   (proves it's OUR relay)
