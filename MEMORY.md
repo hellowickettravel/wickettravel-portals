@@ -4,7 +4,7 @@ Things that are true of this project, aren't obvious from reading the code,
 and cost real time to rediscover. The same file lives at the root of both
 repos (Website and Portals), because most of it is about how the two connect.
 
-Last updated: 2026-10-20.
+Last updated: 2026-11-12.
 
 ---
 
@@ -14,13 +14,17 @@ Last updated: 2026-10-20.
 |---|---|---|
 | What | Public marketing site | Customer / staff / admin app |
 | Live URL | https://www.wickettravel.com | https://portal.wickettravel.com |
-| Repo | `zahid-growthnexus/wickettravel-old` | `hellowickettravel/wickettravel-portals` |
+| Repo | `hellowickettravel/wickettravel-website` | `hellowickettravel/wickettravel-portals` |
 | Local dev | http://localhost:3000 (`npm run dev`) | http://localhost:3200 (`npx next dev -p 3200`) |
 | Stack | Next 16.2.9, React 19.2.4, Tailwind 4 | Same, plus Supabase |
 
-They deploy from **different Vercel accounts** and **different GitHub owners**.
-The Website repo is named `-old`; confirm it is really the repo production
-deploys from before relying on that.
+**Hosting:** both projects moved from Vercel to **Netlify** on 2026-11-12
+(Vercel's free plan hit its usage limit; the portal was answering 402).
+Netlify team `realgrowthnexus`: project `wickettravel` (Website) and
+`wickettravel-portal` (Portal). Build config is in each repo's
+`netlify.toml`; env vars live only in the Netlify UI.
+Client IP comes from Netlify's `x-nf-client-connection-ip`
+(`lib/security/rate-limit.ts`).
 
 **This is not the Next.js you know.** Next 16 has breaking changes; read
 `node_modules/next/dist/docs/` before writing framework code. Examples that
@@ -176,9 +180,9 @@ fallback so the app runs whether or not a migration has been applied.
   from `support@wickettravel.com`.
 - Blocked on: **`SMTP_PASS` is empty**, and **no customer has a date of
   birth yet**.
-- Vercel needs `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS`,
+- Netlify needs `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS`,
   `EMAIL_FROM`, `SMTP_SECURE`. Paste `EMAIL_FROM` **without quotes** in
-  Vercel — `.env.local` strips them, Vercel doesn't.
+  Netlify — `.env.local` strips them, the dashboard doesn't.
 - The Reply-To is `business_settings.business_email`, currently a Gmail
   address.
 

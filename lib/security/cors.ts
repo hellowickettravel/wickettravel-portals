@@ -14,9 +14,9 @@
  */
 
 /**
- * The homepage deploys from a DIFFERENT Vercel account to this portal, so its
- * preview URLs aren't predictable from here. HOMEPAGE_ORIGINS lets an origin be
- * added from the Vercel dashboard without a code change: comma-separated, full
+ * The homepage is a separate Netlify project, so its deploy-preview URLs
+ * aren't predictable from here. HOMEPAGE_ORIGINS lets an origin be added from
+ * the Netlify dashboard (environment variables) without a code change: comma-separated, full
  * origins ("https://staging.wickettravel.com"). Anything unparseable is dropped
  * rather than trusted, so a typo narrows the list instead of widening it.
  */
@@ -44,7 +44,9 @@ const ALLOWED_ORIGINS = new Set([
   // ever served directly.
   "https://www.wickettravel.com",
   "https://wickettravel.com",
-  // The homepage's Vercel deployment URL, still serving the same site.
+  // The homepage's Netlify project URL, serving the same site.
+  "https://wickettravel.netlify.app",
+  // The homepage's old Vercel URL, kept until that project is removed.
   "https://wicket-travel.vercel.app",
   // Local homepage development.
   "http://localhost:3000",

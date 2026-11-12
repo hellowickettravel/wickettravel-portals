@@ -52,7 +52,7 @@ export default function robots(): MetadataRoute.Robots {
       disallow: APP_AREAS,
     },
     // The canonical host for this property, so a crawler that finds the
-    // Vercel deployment URL knows which one is real.
+    // netlify.app project URL knows which one is real.
     host: "https://portal.wickettravel.com",
   };
 }

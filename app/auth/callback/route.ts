@@ -4,7 +4,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { roleDashboardPath } from "@/lib/auth";
 import { safeInternalPath } from "@/lib/security/redirect";
 
-/** Resolve the public origin, honouring Vercel's forwarding headers. */
+/** Resolve the public origin, honouring the host's forwarding headers. */
 function publicOrigin(request: Request): string {
   const url = new URL(request.url);
   const forwardedHost = request.headers.get("x-forwarded-host");

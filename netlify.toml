@@ -1,0 +1,21 @@
+# Netlify build configuration for the Wicket Travel portal (Next.js 16).
+#
+# Importing this repo into Netlify picks these values up automatically.
+# Environment variables are NOT kept here — set them in Netlify:
+# Project configuration > Environment variables. See README.md for the list.
+# NEXT_PUBLIC_SUPABASE_URL must be available to BUILDS as well as functions:
+# next.config.ts reads it at build time for the CSP and next/image allowlist.
+
+[build]
+  command = "npm run build"
+  # The Next.js runtime reads Next's build output from .next.
+  publish = ".next"
+
+[build.environment]
+  NODE_VERSION = "22"
+  NEXT_TELEMETRY_DISABLED = "1"
+
+# Netlify's official Next.js runtime: API routes, server rendering, proxy.ts
+# and next/image. Pinned as a devDependency in package.json.
+[[plugins]]
+  package = "@netlify/plugin-nextjs"

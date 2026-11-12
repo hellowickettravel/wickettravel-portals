@@ -41,11 +41,15 @@ export function hashEmail(email: string): string {
 }
 
 /**
- * Best-effort client IP from proxy headers (Vercel sets x-forwarded-for). The
- * caller passes the request headers; we take the first hop. Returns null if
- * unknown (limiter then relies on the email-hash key alone).
+ * Best-effort client IP from proxy headers. Netlify sets
+ * x-nf-client-connection-ip from the TCP connection itself, so a caller cannot
+ * spoof it; it wins when present. Otherwise take the first x-forwarded-for hop
+ * (other hosts, local dev). Returns null if unknown (limiter then relies on the
+ * email-hash key alone).
  */
 export function clientIpFrom(headers: Headers): string | null {
+  const nf = headers.get("x-nf-client-connection-ip")?.trim();
+  if (nf) return nf.slice(0, 100);
   const xff = headers.get("x-forwarded-for");
   if (xff) return xff.split(",")[0]!.trim().slice(0, 100) || null;
   return headers.get("x-real-ip")?.slice(0, 100) ?? null;

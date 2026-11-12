@@ -1,6 +1,6 @@
 /**
- * The public marketing site — a separate Next.js project on its own Vercel
- * deployment (see lib/security/cors.ts). Mirrors that project's own
+ * The public marketing site — a separate Next.js project on its own Netlify
+ * project (see lib/security/cors.ts). Mirrors that project's own
  * lib/links.ts, which points PORTAL_LOGIN_URL back at this one.
  */
 export const MARKETING_SITE_URL = "https://www.wickettravel.com";
