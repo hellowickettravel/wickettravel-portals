@@ -2,9 +2,7 @@
 
 import { useState } from "react";
 import Image from "next/image";
-import Link from "next/link";
 import { Home } from "lucide-react";
-import { cn } from "@/lib/utils";
 import {
   MARKETING_PRIVACY_URL,
   MARKETING_SITE_URL,
@@ -65,32 +63,21 @@ const PANEL_COPY: Record<AuthScreen, PanelCopy> = {
 /**
  * One photograph per screen, exactly as the design maps them.
  *
- * Only hero-flight.jpg ships today: the other four are multi-megabyte
- * originals in the design project and the design tool truncates a file read at
- * 192 KiB, so they could not be pulled intact. Nothing here needs changing to
- * fix that — drop the files into public/auth/ under these names and they take
- * over on their next load. Until then `onError` falls back to the sign-in
- * photo, so no screen ever shows a broken image.
+ * Only hero-flight.jpg ships today, so every screen uses it. Pointing at files
+ * that don't exist made each auth page log a 404 before `onError` swapped in
+ * the fallback. To give a screen its own photo, add it to public/auth/ and
+ * change that screen's entry here.
  */
 const HERO_IMAGE: Record<AuthScreen, string> = {
   signin: "/auth/hero-flight.jpg",
-  signup: "/auth/hero-signup.jpg",
-  forgot: "/auth/hero-forgot.png",
-  sent: "/auth/hero-sent.jpg",
-  reset: "/auth/hero-reset.jpg",
-  helper: "/auth/hero-helper.jpg",
+  signup: "/auth/hero-flight.jpg",
+  forgot: "/auth/hero-flight.jpg",
+  sent: "/auth/hero-flight.jpg",
+  reset: "/auth/hero-flight.jpg",
+  helper: "/auth/hero-flight.jpg",
 };
 
 const HERO_FALLBACK = "/auth/hero-flight.jpg";
-
-/** The design's screen switcher, in its order. */
-const SCREEN_NAV: { screen: AuthScreen; label: string; href: string }[] = [
-  { screen: "signin", label: "Sign in", href: "/login" },
-  { screen: "signup", label: "Sign up", href: "/signup" },
-  { screen: "forgot", label: "Reset", href: "/forgot-password" },
-  { screen: "sent", label: "Sent", href: "/forgot-password?sent=1" },
-  { screen: "reset", label: "New password", href: "/reset-password" },
-];
 
 /**
  * Two-pane auth layout: a full-bleed ink-graded photo panel on the left and the
@@ -166,32 +153,8 @@ export function AuthShell({
           </p>
         </div>
 
-        {/* Screen switcher + legal footer */}
+        {/* Legal footer */}
         <div className="relative flex flex-col gap-4">
-          <div className="flex flex-wrap items-center gap-2">
-            <span className="pr-1 text-[11px] font-medium tracking-[0.09em] text-white/40 uppercase">
-              Screens
-            </span>
-            {SCREEN_NAV.map((item) => {
-              const active = item.screen === screen;
-              return (
-                <Link
-                  key={item.screen}
-                  href={item.href}
-                  aria-current={active ? "page" : undefined}
-                  className={cn(
-                    "rounded-full px-3 py-1.5 text-[11.5px] font-medium whitespace-nowrap no-underline transition-colors hover:no-underline",
-                    active
-                      ? "text-ink-900 bg-white"
-                      : "bg-white/12 text-white/78 hover:bg-white/20 hover:text-white"
-                  )}
-                >
-                  {item.label}
-                </Link>
-              );
-            })}
-          </div>
-          <span className="block h-px bg-white/16" />
           <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 text-[12.5px] text-white/48">
             <span>© 2026 Wicket Travel Ltd. All rights reserved.</span>
             <a
