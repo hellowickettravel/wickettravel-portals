@@ -17,6 +17,7 @@ import { LIMITS, sanitizeText } from "@/lib/security/limits";
 import { tooManyRecentRows } from "@/lib/security/rate-limit";
 import { isPlausibleDob } from "@/lib/birthdays";
 import { after } from "next/server";
+import { isMissingColumn } from "@/lib/db/errors";
 import { sendNewOrderAlert } from "@/lib/order-alert";
 
 /**
@@ -175,18 +176,35 @@ export async function createCustomerOrder(
   }
 
   const admin = createAdminClient();
-  const { data, error } = await admin
-    .from("orders")
-    .insert({
-      ...normalized.fields,
-      customer_id: customerId,
-      conversation_id: conversationId,
-      created_by: null,
-    })
-    .select("id, order_number")
-    .single<{ id: string; order_number: string }>();
+  const row = {
+    ...normalized.fields,
+    customer_id: customerId,
+    conversation_id: conversationId,
+    created_by: null,
+  };
+  const insert = (payload: Record<string, unknown>) =>
+    admin
+      .from("orders")
+      .insert(payload)
+      .select("id, order_number")
+      .single<{ id: string; order_number: string }>();
 
-  if (error) return { ok: false, error: error.message };
+  // Same step-down as the admin createOrder: a database without migration
+  // 0024 (passenger_details) or 0021 (airline) must still take the booking,
+  // not reject it with "Could not find the column".
+  let { data, error } = await insert(row);
+  if (error && isMissingColumn(error)) {
+    const { passenger_details: _details, ...noDetails } = row;
+    ({ data, error } = await insert(noDetails));
+  }
+  if (error && isMissingColumn(error)) {
+    const { passenger_details: _details, airline: _airline, ...legacy } = row;
+    ({ data, error } = await insert(legacy));
+  }
+
+  if (error || !data) {
+    return { ok: false, error: error?.message ?? "Couldn't place the booking." };
+  }
 
   // Email the office once the response is on its way — the customer isn't
   // kept waiting on SMTP, and a mail failure can't undo their booking.

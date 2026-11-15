@@ -58,7 +58,10 @@ export async function GET(request: Request) {
   // row, mirroring the email-signup path (/api/signup-profile). The DB trigger
   // already defaults new profiles to 'customer'; this also covers a trigger race
   // or a Google user who arrived before that change.
-  if (role !== "admin" && role !== "employee") {
+  // Helpers are excluded too: /join-as-helper sets role "helper" via
+  // /api/signup-profile BEFORE the verification link lands here, so treating
+  // them as "not yet a customer" would silently convert every new helper.
+  if (role !== "admin" && role !== "employee" && role !== "helper") {
     const admin = createAdminClient();
     const fullName =
       (user.user_metadata?.full_name as string | undefined) ??

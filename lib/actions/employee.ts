@@ -159,18 +159,29 @@ export async function createOrderFromChat(
   if (!normalized.ok) return normalized;
 
   const supabase = await createClient();
-  const { data, error } = await supabase
-    .from("orders")
-    .insert({
-      ...normalized.fields,
-      conversation_id: input.conversationId,
-      customer_id: input.customerId,
-      created_by: userId,
-    })
-    .select("id")
-    .single<{ id: string }>();
+  const row = {
+    ...normalized.fields,
+    conversation_id: input.conversationId,
+    customer_id: input.customerId,
+    created_by: userId,
+  };
+  const insert = (payload: Record<string, unknown>) =>
+    supabase.from("orders").insert(payload).select("id").single<{ id: string }>();
 
-  if (error) return { ok: false, error: error.message };
+  // Same step-down as the admin createOrder for unapplied migrations 0024/0021.
+  let { data, error } = await insert(row);
+  if (error && isMissingColumn(error)) {
+    const { passenger_details: _details, ...noDetails } = row;
+    ({ data, error } = await insert(noDetails));
+  }
+  if (error && isMissingColumn(error)) {
+    const { passenger_details: _details, airline: _airline, ...legacy } = row;
+    ({ data, error } = await insert(legacy));
+  }
+
+  if (error || !data) {
+    return { ok: false, error: error?.message ?? "Couldn't create the order." };
+  }
   return { ok: true, data: { orderId: data.id } };
 }
 

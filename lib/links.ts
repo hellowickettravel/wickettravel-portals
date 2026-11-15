@@ -3,7 +3,7 @@
  * project (see lib/security/cors.ts). Mirrors that project's own
  * lib/links.ts, which points PORTAL_LOGIN_URL back at this one.
  */
-export const MARKETING_SITE_URL = "https://www.wickettravel.com";
+export const MARKETING_SITE_URL = "https://wickettravel.com";
 
 /** The marketing site's real routes are /terms and /privacy — not
  *  /terms-of-service or /privacy-policy, which a couple of pages here still
